@@ -1,7 +1,7 @@
 name: deploy-phase1
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -9,11 +9,7 @@ permissions:
 
 jobs:
   deploy:
-    runs-on:
-      - self-hosted
-      - linux
-      - x64
-      - ecostroycontinent-phase1
+    runs-on: [self-hosted, Linux, X64, ecostroycontinent-phase1]
 
     steps:
       - name: Checkout repository
@@ -41,4 +37,5 @@ jobs:
             up -d
 
       - name: Health probe through Traefik
-        run: curl -ksSf https://127.0.0.1/api/health -H 'Host: ecostroycontinent.ru'
+        run: |
+          curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"
