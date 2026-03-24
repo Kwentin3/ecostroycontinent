@@ -1,0 +1,44 @@
+name: deploy-phase1
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+      - ecostroycontinent-phase1
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify host env file
+        run: test -f /opt/ecostroycontinent/runtime/.env
+
+      - name: Pull and refresh app runtime
+        run: |
+          docker compose \
+            --env-file /opt/ecostroycontinent/runtime/.env \
+            -f compose.yaml \
+            pull app
+          docker compose \
+            --env-file /opt/ecostroycontinent/runtime/.env \
+            -f compose.yaml \
+            up -d
+
+      - name: Health probe through Traefik
+        run: curl -ksSf https://127.0.0.1/api/health -H 'Host: ecostroycontinent.ru'
