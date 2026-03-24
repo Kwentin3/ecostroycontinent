@@ -25,23 +25,18 @@ jobs:
       - name: Verify host env file
         run: test -f /opt/ecostroycontinent/runtime/.env
 
-      - name: Sync host repo state
-        run: |
-          git -C /opt/ecostroycontinent/repo fetch origin main
-          git -C /opt/ecostroycontinent/repo reset --hard origin/main
-
       - name: Pull and refresh app runtime
         run: |
           docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
             --project-name repo \
-            -f /opt/ecostroycontinent/repo/compose.yaml \
+            -f compose.yaml \
             pull app
           docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
             --project-name repo \
-            -f /opt/ecostroycontinent/repo/compose.yaml \
-            up -d
+            -f compose.yaml \
+            up -d --remove-orphans
 
       - name: Health probe through Traefik
         run: |
