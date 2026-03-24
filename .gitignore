@@ -35,3 +35,13 @@ Desktop.ini
 .vscode/
 *.swp
 *.swo
+
+# Local infra secret references
+docs/selectel/rc.sh
+docs/selectel/LOCAL_SECRETS_NOT_FOR_GIT.md
+
+# Common private key / credential bundles
+*.pem
+*.key
+*.p12
+*.pfx
