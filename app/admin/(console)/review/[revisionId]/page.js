@@ -77,8 +77,8 @@ export default async function ReviewDetailPage({ params, searchParams }) {
   const diffRows = buildHumanReadableDiff(entity.entityType, baseline?.payload ?? null, revision.payload);
   const query = await searchParams;
   const basisLabel = baseline
-    ? `Preview basis: published revision #${baseline.revisionNumber}`
-    : "Preview basis: no published baseline yet.";
+    ? `База preview: опубликованная ревизия #${baseline.revisionNumber}`
+    : "База preview: опубликованной основы пока нет.";
 
   return (
     <AdminShell user={user} title="Проверка и approval">
@@ -92,9 +92,9 @@ export default async function ReviewDetailPage({ params, searchParams }) {
             <p className={styles.mutedText}>Ревизия {revision.revisionNumber} | {revision.changeClass}</p>
             <p>{revision.changeIntent}</p>
             <div className={styles.badgeRow}>
-              <span className={styles.badge}>Preview: {revision.previewStatus}</span>
+              <span className={styles.badge}>Превью: {revision.previewStatus}</span>
               {revision.ownerReviewRequired ? <span className={styles.badge}>Требуется owner review</span> : null}
-              {revision.aiInvolvement ? <span className={styles.badge}>AI involved</span> : null}
+              {revision.aiInvolvement ? <span className={styles.badge}>AI задействован</span> : null}
             </div>
             <RevisionDiffPanel
               title="Читаемый diff"

@@ -331,7 +331,7 @@ async function main() {
   const serviceRevisionId = await getCurrentRevisionId({ cookie: seoCookie, entityType: "service", entityId: serviceDraft.entityId });
   await submitForReview({ cookie: seoCookie, revisionId: serviceRevisionId });
   await ownerApprove({ cookie: ownerCookie, revisionId: serviceRevisionId, comment: "Approved for proof slice." });
-  await verifyAdminPage(`/admin/review/${serviceRevisionId}`, ownerCookie, ["Читаемый diff", "Preview кандидата", "База preview"]);
+  await verifyAdminPage(`/admin/review/${serviceRevisionId}`, ownerCookie, ["Читаемый diff", "Preview кандидата", "Сравнение с опубликованной ревизией"]);
   await publishRevisionById({ cookie: superadminCookie, revisionId: serviceRevisionId });
   const firstPublishedServiceRevisionId = serviceRevisionId;
 
