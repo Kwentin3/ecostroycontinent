@@ -60,7 +60,12 @@ jobs:
             }
           ' "$env_file" > "$temp_file"
 
-          install -m 600 "$temp_file" "$env_file"
+          if ! sudo -n true; then
+            echo "runner does not have passwordless sudo access to refresh /opt/ecostroycontinent/runtime/.env"
+            exit 1
+          fi
+
+          sudo -n install -m 600 "$temp_file" "$env_file"
           rm -f "$temp_file"
 
       - name: Pull and refresh app runtime
