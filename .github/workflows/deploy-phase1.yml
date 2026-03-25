@@ -25,6 +25,32 @@ jobs:
       - name: Verify host env file
         run: test -f /opt/ecostroycontinent/runtime/.env
 
+      - name: Refresh host image pin from GHCR main tag
+        run: |
+          digest="$(docker buildx imagetools inspect ghcr.io/kwentin3/ecostroycontinent-app:main | awk '/^Digest:/ { print $2; exit }')"
+          test -n "$digest"
+
+          env_file=/opt/ecostroycontinent/runtime/.env
+          temp_file="$(mktemp)"
+
+          awk -v digest="$digest" '
+            BEGIN { updated = 0 }
+            /^APP_IMAGE=/ {
+              print "APP_IMAGE=ghcr.io/kwentin3/ecostroycontinent-app@" digest
+              updated = 1
+              next
+            }
+            { print }
+            END {
+              if (!updated) {
+                print "APP_IMAGE=ghcr.io/kwentin3/ecostroycontinent-app@" digest
+              }
+            }
+          ' "$env_file" > "$temp_file"
+
+          install -m 600 "$temp_file" "$env_file"
+          rm -f "$temp_file"
+
       - name: Pull and refresh app runtime
         run: |
           docker compose \
