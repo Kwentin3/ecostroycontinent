@@ -10,21 +10,21 @@ export default async function ReviewQueuePage() {
   const queue = await getReviewQueue();
 
   return (
-    <AdminShell user={user} title="Review inbox">
+    <AdminShell user={user} title="Очередь проверки">
       <section className={styles.panel}>
         {queue.length === 0 ? (
           <div className={styles.emptyState}>
-            <p className={styles.mutedText}>Review inbox is empty.</p>
-            <Link href="/admin/entities/service">Open services</Link>
+            <p className={styles.mutedText}>Очередь проверки пуста.</p>
+            <Link href="/admin/entities/service">Открыть услуги</Link>
           </div>
         ) : (
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Entity</th>
-                <th>Revision</th>
-                <th>Owner review</th>
-                <th>Preview</th>
+                <th>Сущность</th>
+                <th>Ревизия</th>
+                <th>Approval владельца</th>
+                <th>Превью</th>
                 <th />
               </tr>
             </thead>
@@ -36,7 +36,7 @@ export default async function ReviewQueuePage() {
                   <td>{item.revision.ownerReviewRequired ? item.revision.ownerApprovalStatus : "not required"}</td>
                   <td>{item.revision.previewStatus}</td>
                   <td>
-                    <Link href={`/admin/review/${item.revision.id}`}>Open review</Link>
+                    <Link href={`/admin/review/${item.revision.id}`}>Открыть проверку</Link>
                   </td>
                 </tr>
               ))}

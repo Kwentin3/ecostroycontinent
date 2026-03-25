@@ -1,6 +1,8 @@
+import { ConfirmActionForm } from "../../../../components/admin/ConfirmActionForm";
 import { AdminShell } from "../../../../components/admin/AdminShell";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { requireUserManager } from "../../../../lib/admin/page-helpers";
+import { getRoleLabel } from "../../../../lib/auth/session";
 import { listUsers } from "../../../../lib/content-core/repository";
 
 export default async function UsersPage({ searchParams }) {
@@ -9,44 +11,45 @@ export default async function UsersPage({ searchParams }) {
   const query = await searchParams;
 
   return (
-    <AdminShell user={user} title="User management">
+    <AdminShell user={user} title="Пользователи">
       <div className={styles.stack}>
         {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
+        {query?.error ? <div className={styles.statusPanelBlocking}>{query.error}</div> : null}
         <section className={styles.panel}>
-          <h3>Create user</h3>
+          <h3>Создать пользователя</h3>
           <form action="/api/admin/users/create" method="post" className={styles.gridTwo}>
             <label className={styles.label}>
-              <span>Username</span>
+              <span>Логин</span>
               <input name="username" required />
             </label>
             <label className={styles.label}>
-              <span>Display name</span>
+              <span>Отображаемое имя</span>
               <input name="displayName" required />
             </label>
             <label className={styles.label}>
-              <span>Role</span>
+              <span>Роль</span>
               <select name="role" defaultValue="seo_manager">
-                <option value="superadmin">superadmin</option>
-                <option value="seo_manager">seo_manager</option>
-                <option value="business_owner">business_owner</option>
+                <option value="superadmin">{getRoleLabel("superadmin")}</option>
+                <option value="seo_manager">{getRoleLabel("seo_manager")}</option>
+                <option value="business_owner">{getRoleLabel("business_owner")}</option>
               </select>
             </label>
             <label className={styles.label}>
-              <span>Password</span>
+              <span>Пароль</span>
               <input name="password" type="password" required />
             </label>
-            <button type="submit" className={styles.primaryButton}>Create user</button>
+            <button type="submit" className={styles.primaryButton}>Создать пользователя</button>
           </form>
         </section>
         <section className={styles.panel}>
-          <h3>Users</h3>
+          <h3>Пользователи</h3>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>User</th>
-                <th>Role</th>
-                <th>Active</th>
-                <th>Latest activity</th>
+                <th>Пользователь</th>
+                <th>Роль</th>
+                <th>Активен</th>
+                <th>Последняя активность</th>
                 <th />
               </tr>
             </thead>
@@ -54,14 +57,17 @@ export default async function UsersPage({ searchParams }) {
               {users.map((item) => (
                 <tr key={item.id}>
                   <td>{item.display_name} ({item.username})</td>
-                  <td>{item.role}</td>
-                  <td>{item.active ? "yes" : "no"}</td>
+                  <td>{getRoleLabel(item.role)}</td>
+                  <td>{item.active ? "да" : "нет"}</td>
                   <td>{item.latest_activity_at ? new Date(item.latest_activity_at).toLocaleString("ru-RU") : "-"}</td>
                   <td>
-                    <form action={`/api/admin/users/${item.id}/toggle`} method="post">
+                    <ConfirmActionForm
+                      action={`/api/admin/users/${item.id}/toggle`}
+                      confirmMessage={item.active ? `Деактивировать пользователя ${item.display_name}?` : `Активировать пользователя ${item.display_name}?`}
+                    >
                       <input type="hidden" name="active" value={item.active ? "false" : "true"} />
-                      <button type="submit" className={styles.secondaryButton}>{item.active ? "Deactivate" : "Activate"}</button>
-                    </form>
+                      <button type="submit" className={styles.secondaryButton}>{item.active ? "Деактивировать" : "Активировать"}</button>
+                    </ConfirmActionForm>
                   </td>
                 </tr>
               ))}

@@ -30,17 +30,18 @@ export default async function EntityListPage({ params, searchParams }) {
     <AdminShell
       user={user}
       title={ENTITY_TYPE_LABELS[normalizedType]}
-      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>New</Link>}
+      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>Новая</Link>}
     >
       <div className={styles.stack}>
         {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
+        {query?.error ? <div className={styles.statusPanelBlocking}>{query.error}</div> : null}
         <section className={styles.panel}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Entity</th>
-                <th>Latest revision</th>
-                <th>Status</th>
+                <th>Сущность</th>
+                <th>Последняя ревизия</th>
+                <th>Статус</th>
                 <th />
               </tr>
             </thead>
@@ -49,8 +50,8 @@ export default async function EntityListPage({ params, searchParams }) {
                 <tr>
                   <td colSpan={4}>
                     <div className={styles.emptyState}>
-                      <p className={styles.mutedText}>No entities of this type exist yet.</p>
-                      <Link href={`/admin/entities/${normalizedType}/new`}>Create the first one</Link>
+                      <p className={styles.mutedText}>Сущностей этого типа пока нет.</p>
+                      <Link href={`/admin/entities/${normalizedType}/new`}>Создать первую</Link>
                     </div>
                   </td>
                 </tr>

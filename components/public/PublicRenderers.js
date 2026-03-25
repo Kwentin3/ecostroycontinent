@@ -2,6 +2,21 @@ import Link from "next/link";
 
 import styles from "./public-ui.module.css";
 
+function MediaHero({ asset, label = "Primary media" }) {
+  if (!asset) {
+    return null;
+  }
+
+  return (
+    <section className={styles.mediaHero}>
+      <p className={styles.eyebrow}>{label}</p>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={asset.previewUrl} alt={asset.alt || asset.title || "Media asset"} />
+      <p className={styles.card}>{asset.caption || asset.title || asset.originalFilename || "Media asset"}</p>
+    </section>
+  );
+}
+
 function GallerySection({ title, galleries, resolveGallery }) {
   const items = galleries
     .map((galleryId) => resolveGallery(galleryId))
@@ -47,7 +62,9 @@ export function PublicListPage({ eyebrow, title, intro, items, itemHrefPrefix })
   );
 }
 
-export function ServicePage({ service, relatedCases, galleries, globalSettings }) {
+export function ServicePage({ service, relatedCases, galleries, resolveMedia, globalSettings }) {
+  const primaryMedia = resolveMedia && service.primaryMediaAssetId ? resolveMedia(service.primaryMediaAssetId) : null;
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -56,6 +73,7 @@ export function ServicePage({ service, relatedCases, galleries, globalSettings }
         <p>{service.summary}</p>
         <p className={styles.note}>CTA: {service.ctaVariant || globalSettings?.defaultCtaLabel || "Get in touch"}</p>
       </section>
+      <MediaHero asset={primaryMedia} />
       <section className={styles.card}>
         <h2>Service scope</h2>
         <p>{service.serviceScope}</p>
@@ -78,7 +96,9 @@ export function ServicePage({ service, relatedCases, galleries, globalSettings }
   );
 }
 
-export function CasePage({ item, relatedServices, galleries }) {
+export function CasePage({ item, relatedServices, galleries, resolveMedia }) {
+  const primaryMedia = resolveMedia && item.primaryMediaAssetId ? resolveMedia(item.primaryMediaAssetId) : null;
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -86,6 +106,7 @@ export function CasePage({ item, relatedServices, galleries }) {
         <h1>{item.title}</h1>
         <p>{item.location}</p>
       </section>
+      <MediaHero asset={primaryMedia} />
       <section className={styles.grid}>
         <article className={styles.card}>
           <h3>Task</h3>
@@ -116,7 +137,9 @@ export function CasePage({ item, relatedServices, galleries }) {
   );
 }
 
-export function StandalonePage({ page, globalSettings, services, cases, galleries }) {
+export function StandalonePage({ page, globalSettings, services, cases, galleries, resolveMedia }) {
+  const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -124,6 +147,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
         <h1>{page.h1}</h1>
         <p>{page.intro}</p>
       </section>
+      <MediaHero asset={primaryMedia} label="Page media" />
       {page.blocks.map((block) => {
         switch (block.type) {
           case "rich_text":

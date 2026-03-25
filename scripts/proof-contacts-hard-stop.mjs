@@ -134,13 +134,22 @@ async function main() {
     redirect: "manual"
   });
 
-  ensureOk(publishResponse.status >= 500, `Blocked contacts publish should surface an error status, got ${publishResponse.status}.`);
+  ensureOk(publishResponse.status >= 300 && publishResponse.status < 400, `Blocked contacts publish should redirect, got ${publishResponse.status}.`);
+  const publishRedirect = parseRedirectUrl(publishResponse);
+  ensureOk(publishRedirect.pathname.includes(`/admin/revisions/${revisionId}/publish`), "Blocked publish should redirect back to publish surface.");
+  ensureOk(publishRedirect.searchParams.has("error"), "Blocked publish redirect should include readable error.");
+  ensureOk(
+    publishRedirect.searchParams.get("error")?.includes("Публикация недоступна") ||
+      publishRedirect.searchParams.get("error")?.includes("readiness"),
+    "Blocked publish redirect should carry an operator-readable reason."
+  );
 
   console.log(JSON.stringify({
     entityId,
     revisionId,
     readinessBlock: "contacts_truth_unconfirmed",
-    publishStatus: publishResponse.status
+    publishStatus: publishResponse.status,
+    publishError: publishRedirect.searchParams.get("error")
   }, null, 2));
 }
 

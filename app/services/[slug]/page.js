@@ -24,6 +24,7 @@ export default async function ServiceDetailPage({ params }) {
       service={service}
       relatedCases={relatedCases}
       galleries={(id) => lookups.galleryMap.get(id) || null}
+      resolveMedia={(id) => lookups.mediaMap.get(id) || null}
       globalSettings={globalSettings}
     />
   );

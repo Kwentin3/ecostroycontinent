@@ -3,15 +3,17 @@ import { EntityEditorForm } from "../../../../../../components/admin/EntityEdito
 import { loadEditorPageData } from "../../../../../../lib/admin/entity-ui";
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
+import { ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types";
 
-export default async function NewEntityPage({ params }) {
+export default async function NewEntityPage({ params, searchParams }) {
   const { entityType } = await params;
   const user = await requireEditorUser();
   const normalizedType = assertEntityType(entityType);
   const data = await loadEditorPageData(normalizedType, null);
+  const query = await searchParams;
 
   return (
-    <AdminShell user={user} title={`New ${normalizedType}`}>
+    <AdminShell user={user} title={`Новая ${ENTITY_TYPE_LABELS[normalizedType]}`}>
       <EntityEditorForm
         entityType={normalizedType}
         entityId={null}
@@ -24,6 +26,8 @@ export default async function NewEntityPage({ params }) {
         relationOptions={data.relationOptions}
         mediaOptions={data.mediaOptions}
         user={user}
+        message={query?.message}
+        error={query?.error}
       />
     </AdminShell>
   );

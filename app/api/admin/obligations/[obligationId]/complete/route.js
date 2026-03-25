@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { completePublishObligation } from "../../../../../../lib/content-ops/workflow";
 import { getString } from "../../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
+import { redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanPublish } from "../../../../../../lib/auth/session";
 
 export async function POST(request, { params }) {
@@ -19,8 +20,11 @@ export async function POST(request, { params }) {
   const { obligationId } = await params;
   const formData = await request.formData();
   const redirectTo = getString(formData, "redirectTo") || "/admin";
+  try {
+    await completePublishObligation(obligationId);
 
-  await completePublishObligation(obligationId);
-
-  return NextResponse.redirect(new URL(`${redirectTo}?message=Obligation%20completed`, request.url));
+    return redirectWithQuery(request, redirectTo, { message: "Obligation completed" });
+  } catch (error) {
+    return redirectWithError(request, redirectTo, error);
+  }
 }

@@ -23,6 +23,7 @@ export default async function CaseDetailPage({ params }) {
       item={item}
       relatedServices={relatedServices}
       galleries={(id) => lookups.galleryMap.get(id) || null}
+      resolveMedia={(id) => lookups.mediaMap.get(id) || null}
     />
   );
 }

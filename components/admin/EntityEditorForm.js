@@ -44,8 +44,8 @@ function HiddenSeoFields({ value }) {
 function renderMediaUpload(redirectTo) {
   return (
     <section className={`${styles.panel} ${styles.panelMuted}`}>
-      <h3>Quick media upload</h3>
-      <p className={styles.helpText}>Upload stays inline and the new asset becomes available in the picker after redirect.</p>
+      <h3>Быстрая загрузка медиа</h3>
+      <p className={styles.helpText}>Загрузка остаётся inline, а новый asset появляется в picker после redirect.</p>
       <form action="/api/admin/media/upload" method="post" encType="multipart/form-data" className={styles.formGrid}>
         <input type="hidden" name="redirectTo" value={redirectTo} />
         <label className={styles.label}>
@@ -68,7 +68,7 @@ function renderMediaUpload(redirectTo) {
           <span>Source note</span>
           <input name="sourceNote" />
         </label>
-        <button type="submit" className={styles.secondaryButton}>Upload and publish asset</button>
+        <button type="submit" className={styles.secondaryButton}>Загрузить и опубликовать asset</button>
       </form>
     </section>
   );
@@ -102,7 +102,7 @@ export function EntityEditorForm({
           <form action={`/api/admin/entities/${entityType}/save`} method="post" className={styles.formGrid}>
             <input type="hidden" name="entityId" value={entityId || ""} />
             <label className={styles.label}>
-              <span>Change intent</span>
+              <span>Смысл изменения</span>
               <input name="changeIntent" defaultValue={currentRevision?.changeIntent || "Draft saved from editor."} required />
             </label>
 
@@ -361,27 +361,27 @@ export function EntityEditorForm({
             <HiddenSeoFields value={value} />
 
             <div className={styles.inlineActions}>
-              <button type="submit" className={styles.primaryButton}>Save draft</button>
+              <button type="submit" className={styles.primaryButton}>Сохранить черновик</button>
               {canSubmit && currentRevision?.state === "draft" ? (
                 <button
                   type="submit"
                   formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
                   className={styles.secondaryButton}
                 >
-                  Submit for review
+                  Отправить на review
                 </button>
               ) : null}
               {canPublish && currentRevision?.state === "review" ? (
-                <Link href={`/admin/revisions/${currentRevision.id}/publish`} className={styles.secondaryButton}>Publish readiness</Link>
+                <Link href={`/admin/revisions/${currentRevision.id}/publish`} className={styles.secondaryButton}>Готовность к публикации</Link>
               ) : null}
-              {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>History</Link> : null}
+              {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>История</Link> : null}
             </div>
           </form>
         </section>
         {entityType !== "global_settings" ? renderMediaUpload(redirectTo) : null}
         {obligations?.length ? (
           <section className={styles.panel}>
-            <h3>Open obligations</h3>
+            <h3>Открытые обязательства</h3>
             <div className={styles.stack}>
               {obligations.map((obligation) => (
                 <div key={obligation.id} className={styles.timelineItem}>
@@ -390,7 +390,7 @@ export function EntityEditorForm({
                   {user.role === "superadmin" && obligation.status === "open" ? (
                     <form action={`/api/admin/obligations/${obligation.id}/complete`} method="post">
                       <input type="hidden" name="redirectTo" value={redirectTo} />
-                      <button type="submit" className={styles.secondaryButton}>Mark completed</button>
+                      <button type="submit" className={styles.secondaryButton}>Пометить выполненным</button>
                     </form>
                   ) : null}
                 </div>
@@ -400,16 +400,16 @@ export function EntityEditorForm({
         ) : null}
       </div>
       <div className={`${styles.stack} ${styles.stickyPanel}`}>
-        <ReadinessPanel readiness={readiness} title="Readiness in flow" />
+        <ReadinessPanel readiness={readiness} title="Readiness в потоке" />
         {activePublishedRevision ? (
           <section className={styles.panel}>
-            <h3>Published revision</h3>
+            <h3>Опубликованная ревизия</h3>
             <p className={styles.mutedText}>Revision {activePublishedRevision.revisionNumber}</p>
           </section>
         ) : (
           <section className={styles.panel}>
-            <h3>Published revision</h3>
-            <p className={styles.mutedText}>Entity has not been published yet.</p>
+            <h3>Опубликованная ревизия</h3>
+            <p className={styles.mutedText}>Сущность ещё не была опубликована.</p>
           </section>
         )}
         <section className={styles.panel}>

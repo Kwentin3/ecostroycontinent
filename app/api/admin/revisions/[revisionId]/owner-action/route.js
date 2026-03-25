@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getString } from "../../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
+import { redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanOwnerApprove } from "../../../../../../lib/auth/session";
 import { processOwnerAction } from "../../../../../../lib/content-ops/workflow";
 
@@ -21,12 +22,16 @@ export async function POST(request, { params }) {
   const action = getString(formData, "action");
   const comment = getString(formData, "comment");
 
-  await processOwnerAction({
-    revisionId,
-    actorUserId: user.id,
-    action,
-    comment
-  });
+  try {
+    await processOwnerAction({
+      revisionId,
+      actorUserId: user.id,
+      action,
+      comment
+    });
 
-  return NextResponse.redirect(new URL(`/admin/review/${revisionId}?message=Owner%20action%20saved`, request.url));
+    return redirectWithQuery(request, `/admin/review/${revisionId}`, { message: "Owner action saved" });
+  } catch (error) {
+    return redirectWithError(request, `/admin/review/${revisionId}`, error);
+  }
 }

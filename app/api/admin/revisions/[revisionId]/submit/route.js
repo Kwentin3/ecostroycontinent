@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
+import { redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanEditContent } from "../../../../../../lib/auth/session";
 import { submitRevisionForReview } from "../../../../../../lib/content-ops/workflow";
 
@@ -16,11 +17,15 @@ export async function POST(request, { params }) {
   }
 
   const { revisionId } = await params;
-  await submitRevisionForReview({
-    revisionId,
-    actorUserId: user.id,
-    canRenderPreview: true
-  });
+  try {
+    await submitRevisionForReview({
+      revisionId,
+      actorUserId: user.id,
+      canRenderPreview: true
+    });
 
-  return NextResponse.redirect(new URL(`/admin/review/${revisionId}?message=Submitted%20for%20review`, request.url));
+    return redirectWithQuery(request, `/admin/review/${revisionId}`, { message: "Submitted for review" });
+  } catch (error) {
+    return redirectWithError(request, `/admin/review/${revisionId}`, error);
+  }
 }

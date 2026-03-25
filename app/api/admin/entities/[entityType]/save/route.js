@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getBoolean, getString, getStringArray } from "../../../../../../lib/admin/form-data";
+import { redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanEditContent } from "../../../../../../lib/auth/session";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
 import { saveDraft } from "../../../../../../lib/content-core/service";
@@ -93,15 +94,20 @@ export async function POST(request, { params }) {
   const entityId = getString(formData, "entityId");
   const changeIntent = getString(formData, "changeIntent") || "Draft saved from editor.";
 
-  const result = await saveDraft({
-    entityType,
-    entityId: entityId || null,
-    userId: user.id,
-    changeIntent,
-    payload: buildPayload(entityType, formData)
-  });
+  try {
+    const result = await saveDraft({
+      entityType,
+      entityId: entityId || null,
+      userId: user.id,
+      changeIntent,
+      payload: buildPayload(entityType, formData)
+    });
 
-  return NextResponse.redirect(
-    new URL(`/admin/entities/${entityType}/${result.entity.id}?message=Draft%20saved`, request.url)
-  );
+    return redirectWithQuery(request, `/admin/entities/${entityType}/${result.entity.id}`, {
+      message: "Draft saved"
+    });
+  } catch (error) {
+    const fallbackPath = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}/new`;
+    return redirectWithError(request, fallbackPath, error);
+  }
 }

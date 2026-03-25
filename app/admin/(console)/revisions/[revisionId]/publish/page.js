@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { ConfirmActionForm } from "../../../../../../components/admin/ConfirmActionForm";
 import { AdminShell } from "../../../../../../components/admin/AdminShell";
 import { ReadinessPanel } from "../../../../../../components/admin/ReadinessPanel";
 import styles from "../../../../../../components/admin/admin-ui.module.css";
@@ -21,27 +22,28 @@ export default async function PublishReadinessPage({ params, searchParams }) {
   const query = await searchParams;
 
   return (
-    <AdminShell user={user} title="Publish readiness">
+    <AdminShell user={user} title="Готовность к публикации">
       <div className={styles.stack}>
+        {query?.error ? <div className={styles.statusPanelBlocking}>{query.error}</div> : null}
         {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
         <section className={styles.panel}>
           <h3>{revision.payload.title || revision.payload.h1 || entity.entityType}</h3>
-          <p className={styles.mutedText}>Revision {revision.revisionNumber}</p>
-          <p className={styles.mutedText}>Preview status: {revision.previewStatus}</p>
+          <p className={styles.mutedText}>Ревизия {revision.revisionNumber}</p>
+          <p className={styles.mutedText}>Статус preview: {revision.previewStatus}</p>
           {readiness.hasBlocking ? (
-            <p className={styles.dangerText}>Publish disabled until blocking issues are resolved.</p>
+            <p className={styles.dangerText}>Публикация недоступна, пока не закрыты blocking issues.</p>
           ) : (
-            <p>Revision is eligible for explicit publish.</p>
+            <p>Ревизия готова к explicit publish.</p>
           )}
           <div className={styles.inlineActions}>
-            <form action={`/api/admin/revisions/${revision.id}/publish`} method="post">
+            <ConfirmActionForm action={`/api/admin/revisions/${revision.id}/publish`} confirmMessage="Опубликовать эту ревизию?">
               <button type="submit" className={styles.primaryButton} disabled={readiness.hasBlocking}>
-                Publish
+                Опубликовать
               </button>
-            </form>
+            </ConfirmActionForm>
           </div>
         </section>
-        <ReadinessPanel readiness={readiness} title="Publish checks" />
+        <ReadinessPanel readiness={readiness} title="Проверки публикации" />
       </div>
     </AdminShell>
   );

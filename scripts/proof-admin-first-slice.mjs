@@ -233,6 +233,16 @@ async function verifyPublicPage(path, expectedText) {
   ensureOk(html.includes(expectedText), `Public route ${path} does not include expected text: ${expectedText}`);
 }
 
+async function verifyAdminPage(path, cookie, expectedTexts) {
+  const html = await getHtml(path, cookie);
+
+  for (const text of expectedTexts) {
+    ensureOk(html.includes(text), `Admin route ${path} does not include expected text: ${text}`);
+  }
+
+  return html;
+}
+
 async function main() {
   if (process.argv.includes("--help")) {
     console.log("Runs the admin first-slice validating vertical proof against a live canonical runtime.");
@@ -272,6 +282,7 @@ async function main() {
   const galleryRevisionId = await getCurrentRevisionId({ cookie: seoCookie, entityType: "gallery", entityId: galleryDraft.entityId });
   await submitForReview({ cookie: seoCookie, revisionId: galleryRevisionId });
   await publishRevisionById({ cookie: superadminCookie, revisionId: galleryRevisionId });
+  await verifyAdminPage(`/admin/revisions/${galleryRevisionId}/publish`, superadminCookie, ["Готовность к публикации", "Опубликовать"]);
 
   logStep("Creating case draft");
   const caseDraft = await saveEntityDraft({
@@ -320,6 +331,7 @@ async function main() {
   const serviceRevisionId = await getCurrentRevisionId({ cookie: seoCookie, entityType: "service", entityId: serviceDraft.entityId });
   await submitForReview({ cookie: seoCookie, revisionId: serviceRevisionId });
   await ownerApprove({ cookie: ownerCookie, revisionId: serviceRevisionId, comment: "Approved for proof slice." });
+  await verifyAdminPage(`/admin/review/${serviceRevisionId}`, ownerCookie, ["Читаемый diff", "Preview кандидата", "База preview"]);
   await publishRevisionById({ cookie: superadminCookie, revisionId: serviceRevisionId });
   const firstPublishedServiceRevisionId = serviceRevisionId;
 
@@ -364,7 +376,8 @@ async function main() {
 
   logStep("Checking history pages for audit visibility");
   const serviceHistory = await getHistoryHtml({ cookie: superadminCookie, entityType: "service", entityId: serviceDraft.entityId });
-  ensureOk(serviceHistory.includes("Audit timeline"), "Service history should expose audit timeline.");
+  ensureOk(serviceHistory.includes("Лента аудита"), "Service history should expose audit timeline.");
+  ensureOk(serviceHistory.includes("Откатить к этой ревизии"), "Service history should expose rollback surface.");
   ensureOk(serviceHistory.includes("published"), "Service history should show published revisions.");
 
   const caseHistory = await getHistoryHtml({ cookie: superadminCookie, entityType: "case", entityId: caseDraft.entityId });

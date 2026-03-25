@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getString } from "../../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
+import { redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanManageUsers } from "../../../../../../lib/auth/session";
 import { updateUserActiveState } from "../../../../../../lib/content-core/repository";
 import { recordAuditEvent } from "../../../../../../lib/content-ops/audit";
@@ -21,17 +22,21 @@ export async function POST(request, { params }) {
   const { userId } = await params;
   const formData = await request.formData();
   const nextActive = getString(formData, "active") === "true";
-  const updated = await updateUserActiveState(userId, nextActive);
+  try {
+    const updated = await updateUserActiveState(userId, nextActive);
 
-  await recordAuditEvent({
-    actorUserId: user.id,
-    eventKey: AUDIT_EVENT_KEYS.USER_STATUS_CHANGED,
-    summary: `User ${updated.username} active state changed.`,
-    details: {
-      targetUserId: updated.id,
-      active: updated.active
-    }
-  });
+    await recordAuditEvent({
+      actorUserId: user.id,
+      eventKey: AUDIT_EVENT_KEYS.USER_STATUS_CHANGED,
+      summary: `User ${updated.username} active state changed.`,
+      details: {
+        targetUserId: updated.id,
+        active: updated.active
+      }
+    });
 
-  return NextResponse.redirect(new URL("/admin/users?message=User%20updated", request.url));
+    return redirectWithQuery(request, "/admin/users", { message: "User updated" });
+  } catch (error) {
+    return redirectWithError(request, "/admin/users", error);
+  }
 }

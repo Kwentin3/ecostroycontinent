@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getString } from "../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../lib/admin/route-helpers";
+import { redirectWithError, redirectWithQuery } from "../../../../../lib/admin/operation-feedback";
 import { userCanManageUsers } from "../../../../../lib/auth/session";
 import { hashPassword } from "../../../../../lib/auth/password";
 import { createUserRecord } from "../../../../../lib/content-core/repository";
@@ -25,22 +26,26 @@ export async function POST(request) {
   const role = getString(formData, "role");
   const password = getString(formData, "password");
 
-  const created = await createUserRecord({
-    username,
-    displayName,
-    role,
-    passwordHash: hashPassword(password)
-  });
+  try {
+    const created = await createUserRecord({
+      username,
+      displayName,
+      role,
+      passwordHash: hashPassword(password)
+    });
 
-  await recordAuditEvent({
-    actorUserId: user.id,
-    eventKey: AUDIT_EVENT_KEYS.USER_CREATED,
-    summary: `User ${created.username} was created.`,
-    details: {
-      createdUserId: created.id,
-      role: created.role
-    }
-  });
+    await recordAuditEvent({
+      actorUserId: user.id,
+      eventKey: AUDIT_EVENT_KEYS.USER_CREATED,
+      summary: `User ${created.username} was created.`,
+      details: {
+        createdUserId: created.id,
+        role: created.role
+      }
+    });
 
-  return NextResponse.redirect(new URL("/admin/users?message=User%20created", request.url));
+    return redirectWithQuery(request, "/admin/users", { message: "User created" });
+  } catch (error) {
+    return redirectWithError(request, "/admin/users", error);
+  }
 }

@@ -3,44 +3,77 @@ import Link from "next/link";
 import styles from "../components/public/public-ui.module.css";
 import { getRuntimeConfig } from "../lib/runtime-config";
 
+const homeImages = [
+  {
+    src: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80",
+    alt: "Строительный кран и металлический каркас"
+  },
+  {
+    src: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=900&q=80",
+    alt: "Рабочие на стройке"
+  },
+  {
+    src: "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=900&q=80",
+    alt: "Городская стройка и леса"
+  },
+  {
+    src: "https://images.unsplash.com/photo-1590496793929-36417f54f4cd?auto=format&fit=crop&w=900&q=80",
+    alt: "Строительные материалы и детали работ"
+  },
+  {
+    src: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=900&q=80",
+    alt: "Бетонные и каменные работы"
+  },
+  {
+    src: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=900&q=80",
+    alt: "Инженерное и строительное планирование"
+  }
+];
+
 export default function HomePage() {
   const config = getRuntimeConfig();
 
   return (
-    <main className={styles.page}>
-      <section className={styles.hero}>
-        <p className={styles.eyebrow}>Ekostroykontinent</p>
-        <h1>Published read-side and admin first slice</h1>
-        <p className={styles.note}>
-          This runtime hosts the public published surface and the admin write-side console as separate layers.
-        </p>
-      </section>
+    <main className={styles.homeShell}>
+      <header className={styles.homeTopBar}>
+        <div>
+          <p className={styles.homeEyebrow}>Экостройконтинент</p>
+          <h1 className={styles.homeTitle}>Экостройконтинент</h1>
+          <p className={styles.homeStatus}>В разработке</p>
+        </div>
+        <Link href="/admin/login" className={styles.loginIcon} aria-label="Войти в админку" title="Войти в админку">
+          ↗
+        </Link>
+      </header>
 
-      <section className={styles.card}>
-        <h2>Runtime facts</h2>
-        <ul>
-          <li>Framework: Next.js App Router</li>
-          <li>Node environment: {config.nodeEnv}</li>
-          <li>Runtime port: {config.port}</li>
-          <li>Database wiring configured: {config.databaseConfigured ? "yes" : "no"}</li>
-        </ul>
-      </section>
-
-      <section className={styles.grid}>
-        <article className={styles.card}>
-          <h2>Published read-side</h2>
-          <p>Public routes should read only published revisions from SQL.</p>
-          <Link href="/services">Services</Link>
-          <Link href="/cases">Cases</Link>
-          <Link href="/about">About</Link>
-          <Link href="/contacts">Contacts</Link>
-        </article>
-        <article className={styles.card}>
-          <h2>Write-side tools</h2>
-          <p>Admin flows stay separate from public templates and operate through explicit domain operations.</p>
-          <Link href="/admin">Admin console</Link>
-          <Link href="/api/health">Health endpoint</Link>
-        </article>
+      <section className={styles.homeHero}>
+        <div className={styles.homeHeroCopy}>
+          <p className={styles.homeNote}>
+            Временный public shell. Источник картинок: Unsplash. Публичная витрина остаётся read-side only.
+          </p>
+          <div className={styles.homeFacts}>
+            <div className={styles.factCard}>
+              <span>Фреймворк</span>
+              <strong>Next.js App Router</strong>
+            </div>
+            <div className={styles.factCard}>
+              <span>Окружение Node</span>
+              <strong>{config.nodeEnv}</strong>
+            </div>
+            <div className={styles.factCard}>
+              <span>Подключение к БД</span>
+              <strong>{config.databaseConfigured ? "настроено" : "отсутствует"}</strong>
+            </div>
+          </div>
+        </div>
+        <div className={styles.homeMosaic}>
+          {homeImages.map((image, index) => (
+            <article key={image.src} className={`${styles.mosaicCard} ${index % 3 === 0 ? styles.mosaicWide : ""}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={image.src} alt={image.alt} loading="lazy" referrerPolicy="no-referrer" />
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   );

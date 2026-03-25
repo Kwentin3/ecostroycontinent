@@ -23,6 +23,7 @@ export default async function AboutPage() {
       services={(id) => lookups.serviceMap.get(id) || null}
       cases={(id) => lookups.caseMap.get(id) || null}
       galleries={(id) => lookups.galleryMap.get(id) || null}
+      resolveMedia={(id) => lookups.mediaMap.get(id) || null}
     />
   );
 }
