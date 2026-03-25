@@ -1,9 +1,7 @@
-import { NextResponse } from "next/server";
-
 import { completePublishObligation } from "../../../../../../lib/content-ops/workflow";
 import { getString } from "../../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
-import { redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
+import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanPublish } from "../../../../../../lib/auth/session";
 
 export async function POST(request, { params }) {
@@ -14,7 +12,7 @@ export async function POST(request, { params }) {
   }
 
   if (!userCanPublish(user)) {
-    return NextResponse.redirect(new URL("/admin/no-access", request.url));
+    return redirectToAdmin("/admin/no-access");
   }
 
   const { obligationId } = await params;

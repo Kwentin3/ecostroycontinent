@@ -1,7 +1,5 @@
-import { NextResponse } from "next/server";
-
 import { getBoolean, getString, getStringArray } from "../../../../../../lib/admin/form-data";
-import { redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
+import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanEditContent } from "../../../../../../lib/auth/session";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
 import { saveDraft } from "../../../../../../lib/content-core/service";
@@ -86,7 +84,7 @@ export async function POST(request, { params }) {
   }
 
   if (!userCanEditContent(user)) {
-    return NextResponse.redirect(new URL("/admin/no-access", request.url));
+    return redirectToAdmin("/admin/no-access");
   }
 
   const { entityType } = await params;

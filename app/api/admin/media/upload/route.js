@@ -1,9 +1,8 @@
 import path from "node:path";
 
-import { NextResponse } from "next/server";
-
 import { getString } from "../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../lib/admin/route-helpers";
+import { redirectToAdmin, redirectWithQuery } from "../../../../../lib/admin/operation-feedback";
 import { userCanEditContent } from "../../../../../lib/auth/session";
 import { saveDraft } from "../../../../../lib/content-core/service";
 import { storeMediaFile } from "../../../../../lib/media/storage";
@@ -16,7 +15,7 @@ export async function POST(request) {
   }
 
   if (!userCanEditContent(user)) {
-    return NextResponse.redirect(new URL("/admin/no-access", request.url));
+    return redirectToAdmin("/admin/no-access");
   }
 
   const formData = await request.formData();
@@ -28,7 +27,7 @@ export async function POST(request) {
   const sourceNote = getString(formData, "sourceNote");
 
   if (!(file instanceof File) || file.size === 0) {
-    return NextResponse.redirect(new URL(`${redirectTo}?error=Choose%20a%20file`, request.url));
+    return redirectWithQuery(request, redirectTo, { error: "Choose a file" });
   }
 
   const storageKey = `${crypto.randomUUID()}${path.extname(file.name)}`;
@@ -59,5 +58,8 @@ export async function POST(request) {
     }
   });
 
-  return NextResponse.redirect(new URL(`${redirectTo}?message=Media%20uploaded&entityId=${saved.entity.id}`, request.url));
+  return redirectWithQuery(request, redirectTo, {
+    message: "Media uploaded",
+    entityId: saved.entity.id
+  });
 }

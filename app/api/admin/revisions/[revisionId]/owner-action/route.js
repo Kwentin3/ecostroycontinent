@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
-
 import { getString } from "../../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
-import { redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
+import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanOwnerApprove } from "../../../../../../lib/auth/session";
 import { processOwnerAction } from "../../../../../../lib/content-ops/workflow";
 
@@ -14,7 +12,7 @@ export async function POST(request, { params }) {
   }
 
   if (!userCanOwnerApprove(user)) {
-    return NextResponse.redirect(new URL("/admin/no-access", request.url));
+    return redirectToAdmin("/admin/no-access");
   }
 
   const { revisionId } = await params;

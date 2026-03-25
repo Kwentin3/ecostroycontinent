@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
-
 import { getString } from "../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../lib/admin/route-helpers";
-import { redirectWithError, redirectWithQuery } from "../../../../../lib/admin/operation-feedback";
+import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../lib/admin/operation-feedback";
 import { userCanManageUsers } from "../../../../../lib/auth/session";
 import { hashPassword } from "../../../../../lib/auth/password";
 import { createUserRecord } from "../../../../../lib/content-core/repository";
@@ -17,7 +15,7 @@ export async function POST(request) {
   }
 
   if (!userCanManageUsers(user)) {
-    return NextResponse.redirect(new URL("/admin/no-access", request.url));
+    return redirectToAdmin("/admin/no-access");
   }
 
   const formData = await request.formData();

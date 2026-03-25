@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
-
 import { logoutCurrentSession } from "../../../../lib/auth/session";
+import { redirectToAdmin } from "../../../../lib/admin/operation-feedback";
 
 export async function POST(request) {
   await logoutCurrentSession();
-  return NextResponse.redirect(new URL("/admin/login?message=Logged%20out", request.url));
+  return redirectToAdmin("/admin/login?message=Logged%20out");
 }

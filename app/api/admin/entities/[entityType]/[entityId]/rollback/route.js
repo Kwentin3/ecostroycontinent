@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
-
 import { getString } from "../../../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../../../lib/admin/route-helpers";
-import { redirectWithError, redirectWithQuery } from "../../../../../../../lib/admin/operation-feedback";
+import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../../lib/admin/operation-feedback";
 import { userCanPublish } from "../../../../../../../lib/auth/session";
 import { rollbackPublishedEntity } from "../../../../../../../lib/content-ops/workflow";
 
@@ -14,7 +12,7 @@ export async function POST(request, { params }) {
   }
 
   if (!userCanPublish(user)) {
-    return NextResponse.redirect(new URL("/admin/no-access", request.url));
+    return redirectToAdmin("/admin/no-access");
   }
 
   const { entityType, entityId } = await params;
