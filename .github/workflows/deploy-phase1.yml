@@ -1,7 +1,12 @@
 name: deploy-phase1
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      image_ref:
+        description: Pinned GHCR image reference to write into /opt/ecostroycontinent/runtime/.env
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -25,25 +30,32 @@ jobs:
       - name: Verify host env file
         run: test -f /opt/ecostroycontinent/runtime/.env
 
-      - name: Refresh host image pin from GHCR main tag
+      - name: Refresh host image pin from dispatched image ref
         run: |
-          digest="$(docker buildx imagetools inspect ghcr.io/kwentin3/ecostroycontinent-app:main | awk '/^Digest:/ { print $2; exit }')"
-          test -n "$digest"
+          image_ref='${{ inputs.image_ref }}'
+          case "$image_ref" in
+            ghcr.io/kwentin3/ecostroycontinent-app@sha256:*)
+              ;;
+            *)
+              echo "image_ref must be a pinned ghcr.io/kwentin3/ecostroycontinent-app@sha256:... reference"
+              exit 1
+              ;;
+          esac
 
           env_file=/opt/ecostroycontinent/runtime/.env
           temp_file="$(mktemp)"
 
-          awk -v digest="$digest" '
+          awk -v image_ref="$image_ref" '
             BEGIN { updated = 0 }
             /^APP_IMAGE=/ {
-              print "APP_IMAGE=ghcr.io/kwentin3/ecostroycontinent-app@" digest
+              print "APP_IMAGE=" image_ref
               updated = 1
               next
             }
             { print }
             END {
               if (!updated) {
-                print "APP_IMAGE=ghcr.io/kwentin3/ecostroycontinent-app@" digest
+                print "APP_IMAGE=" image_ref
               }
             }
           ' "$env_file" > "$temp_file"
