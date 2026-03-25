@@ -6,7 +6,6 @@ import { getString } from "../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../lib/admin/route-helpers";
 import { userCanEditContent } from "../../../../../lib/auth/session";
 import { saveDraft } from "../../../../../lib/content-core/service";
-import { submitRevisionForReview, publishRevision } from "../../../../../lib/content-ops/workflow";
 import { storeMediaFile } from "../../../../../lib/media/storage";
 
 export async function POST(request) {
@@ -58,17 +57,6 @@ export async function POST(request) {
       sizeBytes: file.size,
       status: "ready"
     }
-  });
-
-  await submitRevisionForReview({
-    revisionId: saved.revision.id,
-    actorUserId: user.id,
-    canRenderPreview: true
-  });
-
-  await publishRevision({
-    revisionId: saved.revision.id,
-    actorUserId: user.id
   });
 
   return NextResponse.redirect(new URL(`${redirectTo}?message=Media%20uploaded&entityId=${saved.entity.id}`, request.url));
