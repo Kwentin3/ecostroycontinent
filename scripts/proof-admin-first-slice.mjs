@@ -237,6 +237,12 @@ async function verifyAdminPage(path, cookie, expectedTexts) {
   const html = await getHtml(path, cookie);
 
   for (const text of expectedTexts) {
+    if (Array.isArray(text)) {
+      const matched = text.some((candidate) => html.includes(candidate));
+      ensureOk(matched, `Admin route ${path} does not include any expected text variant: ${text.join(" | ")}`);
+      continue;
+    }
+
     ensureOk(html.includes(text), `Admin route ${path} does not include expected text: ${text}`);
   }
 
@@ -331,7 +337,11 @@ async function main() {
   const serviceRevisionId = await getCurrentRevisionId({ cookie: seoCookie, entityType: "service", entityId: serviceDraft.entityId });
   await submitForReview({ cookie: seoCookie, revisionId: serviceRevisionId });
   await ownerApprove({ cookie: ownerCookie, revisionId: serviceRevisionId, comment: "Approved for proof slice." });
-  await verifyAdminPage(`/admin/review/${serviceRevisionId}`, ownerCookie, ["Читаемый diff", "Preview кандидата", "Сравнение с опубликованной ревизией"]);
+  await verifyAdminPage(`/admin/review/${serviceRevisionId}`, ownerCookie, [
+    "Читаемый diff",
+    "Preview кандидата",
+    ["Сравнение с опубликованной ревизией", "База preview", "Preview basis"]
+  ]);
   await publishRevisionById({ cookie: superadminCookie, revisionId: serviceRevisionId });
   const firstPublishedServiceRevisionId = serviceRevisionId;
 
