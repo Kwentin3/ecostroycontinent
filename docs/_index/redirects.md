@@ -9,3 +9,5 @@
 | `docs/product-ux/Admin_Operations_Contract_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.1.md` | `docs/product-ux/Admin_Operations_Contract_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.2.md` |
 | `docs/product-ux/Admin_Implementation_Backlog_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.1.md` | `docs/product-ux/Admin_Implementation_Backlog_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.2.md` |
 | `reports/Admin_First_Slice_Acceptance_Report_Экостройконтинент_v0.1.md` | `docs/reports/2026-03-25/Admin_First_Slice_Acceptance_Report_Экостройконтинент_v0.1.md` |
+| `reports/Public_Shell_Polish_Plan_Экостройконтинент_v0.1.md` | `docs/reports/2026-03-25/Public_Shell_Polish_Plan_Экостройконтинент_v0.1.md` |
+| `reports/Admin_Closing_Batch_Acceptance_Report_Экостройконтинент_v0.1.md` | `docs/reports/2026-03-25/Admin_Closing_Batch_Acceptance_Report_Экостройконтинент_v0.1.md` |
