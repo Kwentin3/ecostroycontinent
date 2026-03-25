@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import styles from "../components/public/public-ui.module.css";
-import { getRuntimeConfig } from "../lib/runtime-config";
 
 const homeImages = [
   {
@@ -31,8 +30,6 @@ const homeImages = [
 ];
 
 export default function HomePage() {
-  const config = getRuntimeConfig();
-
   return (
     <main className={styles.homeShell}>
       <header className={styles.homeTopBar}>
@@ -57,12 +54,8 @@ export default function HomePage() {
               <strong>Next.js App Router</strong>
             </div>
             <div className={styles.factCard}>
-              <span>Окружение Node</span>
-              <strong>{config.nodeEnv}</strong>
-            </div>
-            <div className={styles.factCard}>
-              <span>Подключение к БД</span>
-              <strong>{config.databaseConfigured ? "настроено" : "отсутствует"}</strong>
+              <span>Статус shell</span>
+              <strong>Только read-side</strong>
             </div>
           </div>
         </div>
