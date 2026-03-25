@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Экостройконтинент",
+  title: "Ekostroykontinent",
   description: "Phase-1 Next.js app baseline for the Ecostroycontinent project."
 };
 

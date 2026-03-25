@@ -26,6 +26,7 @@ pnpm-debug.log*
 
 # Local tooling / deployment
 .vercel/
+var/
 
 # OS / editor noise
 .DS_Store
@@ -39,6 +40,11 @@ Desktop.ini
 # Local infra secret references
 docs/selectel/rc.sh
 docs/selectel/LOCAL_SECRETS_NOT_FOR_GIT.md
+docs/selectel/*_private_key.pem
+docs/selectel/*_cert.pem
+docs/selectel/*.crt
+docs/selectel/*.csr
+docs/selectel/*.p7b
 
 # Common private key / credential bundles
 *.pem

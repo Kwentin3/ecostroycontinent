@@ -1,0 +1,75 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+
+import { AdminShell } from "../../../../../components/admin/AdminShell";
+import styles from "../../../../../components/admin/admin-ui.module.css";
+import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
+import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types";
+import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service";
+
+export default async function EntityListPage({ params, searchParams }) {
+  const { entityType } = await params;
+  const user = await requireEditorUser();
+  const normalizedType = assertEntityType(entityType);
+  const cards = await listEntityCards(normalizedType);
+  const query = await searchParams;
+
+  if (!ENTITY_TYPE_LABELS[normalizedType]) {
+    notFound();
+  }
+
+  if (normalizedType === ENTITY_TYPES.GLOBAL_SETTINGS) {
+    if (cards[0]?.entity?.id) {
+      redirect(`/admin/entities/${normalizedType}/${cards[0].entity.id}`);
+    }
+
+    redirect(`/admin/entities/${normalizedType}/new`);
+  }
+
+  return (
+    <AdminShell
+      user={user}
+      title={ENTITY_TYPE_LABELS[normalizedType]}
+      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>New</Link>}
+    >
+      <div className={styles.stack}>
+        {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
+        <section className={styles.panel}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Entity</th>
+                <th>Latest revision</th>
+                <th>Status</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {cards.length === 0 ? (
+                <tr>
+                  <td colSpan={4}>
+                    <div className={styles.emptyState}>
+                      <p className={styles.mutedText}>No entities of this type exist yet.</p>
+                      <Link href={`/admin/entities/${normalizedType}/new`}>Create the first one</Link>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                cards.map((card) => (
+                  <tr key={card.entity.id}>
+                    <td>{card.latestRevision?.payload?.title || card.latestRevision?.payload?.h1 || card.latestRevision?.payload?.publicBrandName || card.entity.id}</td>
+                    <td>{card.latestRevision ? `#${card.latestRevision.revisionNumber}` : "-"}</td>
+                    <td>{card.latestRevision?.state || "no revisions"}</td>
+                    <td>
+                      <Link href={`/admin/entities/${normalizedType}/${card.entity.id}`}>Open</Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </AdminShell>
+  );
+}

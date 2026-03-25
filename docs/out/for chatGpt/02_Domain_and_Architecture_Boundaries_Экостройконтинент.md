@@ -42,6 +42,45 @@
 - AI cannot publish.
 - AI should surface uncertainty instead of inventing commercial facts.
 
+## Anti-Drift Guardrails
+
+### Mandatory rules
+
+- `Admin Console` remains write-side only.
+- `Public Web` remains read-side only.
+- `Content Core` remains the source of truth for content entities, relations, statuses and published revisions.
+- `Publish` remains explicit domain operation, not save-time status mutation.
+- Published read-side consumes only validated published revisions.
+- `Service` and `Case` own route truth; `Page` does not duplicate or override it.
+- `MediaAsset` and `Gallery` remain first-class supporting entities.
+- `AI` remains assistive only: not source of truth and not autonomous publisher.
+- Contracts outrank backlog convenience, local shortcuts and ad hoc implementation pressure.
+
+### Forbidden moves
+
+- hardcoded content, SEO, CTA or route truth in templates or UI components
+- public web owning publish truth
+- `Page` silently taking route ownership from `Service` or `Case`
+- raw media URLs as source of truth instead of `MediaAsset` / `Gallery`
+- implicit publish through save or edit
+- bypassing revision, review, approval or publish discipline "temporarily"
+- silent AI truth changes
+- second competing model for media, SEO, review or publish
+- mixing content contract with DB or ORM design
+- mixing operations contract with infra runbook or endpoint design
+- broadening first slice into page builder, enterprise DAM or broad CMS
+- ad hoc conflict resolution in code where canon already decides the issue
+
+### Stop-and-escalate triggers
+
+- implementation requires violating route ownership
+- implementation requires bypassing explicit publish
+- truth must be stored outside `Content Core`
+- a second competing model appears for media, SEO, review or publish
+- infra limitation pushes implementation to break canon
+- PRD and contracts read differently
+- backlog task conflicts with contract or domain truth
+
 ## Do not reopen by default
 
 - `Public Web` is read-side only.
