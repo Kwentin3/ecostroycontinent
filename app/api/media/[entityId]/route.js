@@ -1,12 +1,25 @@
-import { readMediaFile } from "../../../../lib/media/storage";
+import { getAppConfig } from "../../../../lib/config";
+import { readMediaFile, getMediaDeliveryUrl } from "../../../../lib/media/storage";
 import { getPublishedMediaAsset } from "../../../../lib/read-side/public-content";
 
 export async function GET(_request, { params }) {
+  const config = getAppConfig();
   const { entityId } = await params;
   const asset = await getPublishedMediaAsset(entityId);
 
   if (!asset) {
     return new Response("Not found", { status: 404 });
+  }
+
+  if (config.mediaStorageMode === "s3") {
+    const publicUrl = getMediaDeliveryUrl({
+      entityId: asset.entityId,
+      storageKey: asset.storageKey
+    }, config);
+
+    if (publicUrl) {
+      return Response.redirect(publicUrl, 302);
+    }
   }
 
   try {

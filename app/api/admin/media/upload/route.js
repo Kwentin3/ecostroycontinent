@@ -46,7 +46,8 @@ export async function POST(request) {
 
   await storeMediaFile({
     storageKey,
-    bytes
+    bytes,
+    contentType: file.type
   });
 
   const saved = await saveDraft({

@@ -14,6 +14,7 @@
     "proof:seo:surface": "node scripts/proof-seo-surface.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1018.0",
     "next": "16.2.1",
     "pg": "^8.16.3",
     "react": "19.2.4",
