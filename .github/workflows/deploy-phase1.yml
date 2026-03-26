@@ -103,4 +103,10 @@ jobs:
 
       - name: Health probe through Traefik
         run: |
+          for attempt in 1 2 3 4 5; do
+            if curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"; then
+              exit 0
+            fi
+            sleep 3
+          done
           curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"
