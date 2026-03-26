@@ -1,4 +1,5 @@
 import { getBoolean, getString, getStringArray } from "../../../../../../lib/admin/form-data";
+import { FEEDBACK_COPY } from "../../../../../../lib/ui-copy.js";
 import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanEditContent } from "../../../../../../lib/auth/session";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
@@ -90,7 +91,7 @@ export async function POST(request, { params }) {
   const { entityType } = await params;
   const formData = await request.formData();
   const entityId = getString(formData, "entityId");
-  const changeIntent = getString(formData, "changeIntent") || "Draft saved from editor.";
+  const changeIntent = getString(formData, "changeIntent") || "Черновик сохранён из редактора.";
 
   try {
     const result = await saveDraft({
@@ -102,7 +103,7 @@ export async function POST(request, { params }) {
     });
 
     return redirectWithQuery(request, `/admin/entities/${entityType}/${result.entity.id}`, {
-      message: "Draft saved"
+      message: FEEDBACK_COPY.draftSaved
     });
   } catch (error) {
     const fallbackPath = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}/new`;

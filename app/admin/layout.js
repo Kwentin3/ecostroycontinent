@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Ekostroykontinent Admin"
+  title: "Экостройконтинент — админка"
 };
 
 export default function AdminRootLayout({ children }) {

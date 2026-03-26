@@ -8,7 +8,7 @@ export default function NoAccessPage() {
       <section className={`${styles.panel} ${styles.authPanel}`}>
         <p className={styles.eyebrow}>Нет доступа</p>
         <h1>Недостаточно прав</h1>
-        <p className={styles.mutedText}>Эта поверхность доступна не всем ролям first slice.</p>
+        <p className={styles.mutedText}>Эта страница доступна только разрешённым ролям текущего запуска.</p>
         <Link href="/admin" className={styles.secondaryButton}>Назад на панель</Link>
       </section>
     </main>

@@ -1,4 +1,5 @@
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
+import { FEEDBACK_COPY } from "../../../../../../lib/ui-copy.js";
 import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
 import { userCanPublish } from "../../../../../../lib/auth/session";
 import { publishRevision } from "../../../../../../lib/content-ops/workflow";
@@ -22,7 +23,7 @@ export async function POST(request, { params }) {
     });
 
     return redirectWithQuery(request, `/admin/entities/${result.entity.entityType}/${result.entity.id}`, {
-      message: "Published"
+      message: FEEDBACK_COPY.published
     });
   } catch (error) {
     return redirectWithError(request, `/admin/revisions/${revisionId}/publish`, error);

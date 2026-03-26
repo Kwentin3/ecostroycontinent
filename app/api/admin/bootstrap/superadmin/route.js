@@ -52,7 +52,7 @@ export async function POST(request) {
     return redirectWithError(
       request,
       "/admin/bootstrap/superadmin",
-      new BootstrapSuperadminError("RUNTIME_FAILURE", "Superadmin bootstrap failed.")
+      new BootstrapSuperadminError("RUNTIME_FAILURE", "Инициализация суперадмина не удалась.")
     );
   }
 }

@@ -1,10 +1,11 @@
 import Link from "next/link";
 
-import { getRoleLabel } from "../../lib/auth/session";
+import { ADMIN_COPY } from "../../lib/ui-copy.js";
+import { getRoleLabel } from "../../lib/auth/session.js";
 import styles from "./admin-ui.module.css";
 
 const navItems = [
-  { href: "/admin", label: "Панель" },
+  { href: "/admin", label: "Главная" },
   { href: "/admin/review", label: "Проверка" },
   { href: "/admin/entities/global_settings", label: "Настройки" },
   { href: "/admin/entities/media_asset", label: "Медиа" },
@@ -40,7 +41,7 @@ export function AdminShell({ user, title, children, actions = null }) {
       <main className={styles.main}>
         <header className={styles.pageHeader}>
           <div>
-            <p className={styles.eyebrow}>Инструмент записи</p>
+            <p className={styles.eyebrow}>{ADMIN_COPY.adminEyebrow}</p>
             <h2 className={styles.pageTitle}>{title}</h2>
           </div>
           {actions ? <div className={styles.pageActions}>{actions}</div> : null}

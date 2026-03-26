@@ -1,8 +1,9 @@
 import Link from "next/link";
 
+import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import styles from "./public-ui.module.css";
 
-function MediaHero({ asset, label = "Primary media" }) {
+function MediaHero({ asset, label = PUBLIC_COPY.mediaLabel }) {
   if (!asset) {
     return null;
   }
@@ -11,8 +12,8 @@ function MediaHero({ asset, label = "Primary media" }) {
     <section className={styles.mediaHero}>
       <p className={styles.eyebrow}>{label}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={asset.previewUrl} alt={asset.alt || asset.title || "Media asset"} />
-      <p className={styles.card}>{asset.caption || asset.title || asset.originalFilename || "Media asset"}</p>
+      <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
+      <p className={styles.card}>{asset.caption || asset.title || asset.originalFilename || PUBLIC_COPY.mediaFallback}</p>
     </section>
   );
 }
@@ -33,8 +34,8 @@ function GallerySection({ title, galleries, resolveGallery }) {
       {items.map((asset) => (
         <figure key={asset.entityId}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={asset.previewUrl} alt={asset.alt || asset.title || "Gallery image"} />
-          <figcaption className={styles.card}>{asset.caption || asset.title || "Media asset"}</figcaption>
+          <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
+          <figcaption className={styles.card}>{asset.caption || asset.title || PUBLIC_COPY.mediaFallback}</figcaption>
         </figure>
       ))}
     </section>
@@ -53,8 +54,8 @@ export function PublicListPage({ eyebrow, title, intro, items, itemHrefPrefix })
         {items.map((item) => (
           <article key={item.entityId} className={styles.card}>
             <h2>{item.title}</h2>
-            <p>{item.summary || item.result || item.location || item.intro || "Published entity"}</p>
-            <Link href={`${itemHrefPrefix}/${item.slug}`}>Open</Link>
+            <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
+            <Link href={`${itemHrefPrefix}/${item.slug}`}>{PUBLIC_COPY.listOpen}</Link>
           </article>
         ))}
       </section>
@@ -68,14 +69,14 @@ export function ServicePage({ service, relatedCases, galleries, resolveMedia, gl
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>Service</p>
+        <p className={styles.eyebrow}>{PUBLIC_COPY.serviceEyebrow}</p>
         <h1>{service.h1}</h1>
         <p>{service.summary}</p>
-        <p className={styles.note}>CTA: {service.ctaVariant || globalSettings?.defaultCtaLabel || "Get in touch"}</p>
+        <p className={styles.note}>{PUBLIC_COPY.ctaPrefix}: {service.ctaVariant || globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}</p>
       </section>
       <MediaHero asset={primaryMedia} />
       <section className={styles.card}>
-        <h2>Service scope</h2>
+        <h2>{PUBLIC_COPY.serviceScopeHeading}</h2>
         <p>{service.serviceScope}</p>
         {service.problemsSolved ? <p>{service.problemsSolved}</p> : null}
         {service.methods ? <p>{service.methods}</p> : null}
@@ -86,12 +87,12 @@ export function ServicePage({ service, relatedCases, galleries, resolveMedia, gl
             <article key={item.entityId} className={styles.card}>
               <h3>{item.title}</h3>
               <p>{item.result}</p>
-              <Link href={`/cases/${item.slug}`}>Open case</Link>
+              <Link href={`/cases/${item.slug}`}>{PUBLIC_COPY.openCase}</Link>
             </article>
           ))}
         </section>
       ) : null}
-      <GallerySection title="Gallery" galleries={service.galleryIds || []} resolveGallery={galleries} />
+      <GallerySection title={PUBLIC_COPY.galleryHeading} galleries={service.galleryIds || []} resolveGallery={galleries} />
     </main>
   );
 }
@@ -102,22 +103,22 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia }) {
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>Case</p>
+        <p className={styles.eyebrow}>{PUBLIC_COPY.caseEyebrow}</p>
         <h1>{item.title}</h1>
         <p>{item.location}</p>
       </section>
       <MediaHero asset={primaryMedia} />
       <section className={styles.grid}>
         <article className={styles.card}>
-          <h3>Task</h3>
+          <h3>{PUBLIC_COPY.taskHeading}</h3>
           <p>{item.task}</p>
         </article>
         <article className={styles.card}>
-          <h3>Work scope</h3>
+          <h3>{PUBLIC_COPY.workScopeHeading}</h3>
           <p>{item.workScope}</p>
         </article>
         <article className={styles.card}>
-          <h3>Result</h3>
+          <h3>{PUBLIC_COPY.resultHeading}</h3>
           <p>{item.result}</p>
         </article>
       </section>
@@ -127,12 +128,12 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia }) {
             <article key={service.entityId} className={styles.card}>
               <h3>{service.title}</h3>
               <p>{service.summary}</p>
-              <Link href={`/services/${service.slug}`}>Open service</Link>
+              <Link href={`/services/${service.slug}`}>{PUBLIC_COPY.openService}</Link>
             </article>
           ))}
         </section>
       ) : null}
-      <GallerySection title="Project gallery" galleries={item.galleryIds || []} resolveGallery={galleries} />
+      <GallerySection title={PUBLIC_COPY.projectGalleryHeading} galleries={item.galleryIds || []} resolveGallery={galleries} />
     </main>
   );
 }
@@ -143,11 +144,11 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>Page</p>
+        <p className={styles.eyebrow}>{PUBLIC_COPY.pageEyebrow}</p>
         <h1>{page.h1}</h1>
         <p>{page.intro}</p>
       </section>
-      <MediaHero asset={primaryMedia} label="Page media" />
+      <MediaHero asset={primaryMedia} label={PUBLIC_COPY.mediaLabel} />
       {page.blocks.map((block) => {
         switch (block.type) {
           case "rich_text":
@@ -164,7 +165,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
                   <article key={service.entityId} className={styles.card}>
                     <h3>{service.title}</h3>
                     <p>{service.summary}</p>
-                    <Link href={`/services/${service.slug}`}>Open service</Link>
+                    <Link href={`/services/${service.slug}`}>{PUBLIC_COPY.openService}</Link>
                   </article>
                 ))}
               </section>
@@ -176,7 +177,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
                   <article key={item.entityId} className={styles.card}>
                     <h3>{item.title}</h3>
                     <p>{item.result}</p>
-                    <Link href={`/cases/${item.slug}`}>Open case</Link>
+                    <Link href={`/cases/${item.slug}`}>{PUBLIC_COPY.openCase}</Link>
                   </article>
                 ))}
               </section>
@@ -185,7 +186,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
             return (
               <GallerySection
                 key={`${block.type}-${block.order}`}
-                title={block.title}
+                title={block.title || PUBLIC_COPY.galleryHeading}
                 galleries={block.galleryIds}
                 resolveGallery={galleries}
               />
@@ -195,8 +196,8 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
               <section key={`${block.type}-${block.order}`} className={styles.card}>
                 <h2>{block.title}</h2>
                 <p>{block.body}</p>
-                <p>{globalSettings?.primaryPhone || "Contact information is not confirmed yet."}</p>
-                <p>{globalSettings?.serviceArea || "Service area will appear after confirmation."}</p>
+                <p>{globalSettings?.primaryPhone || PUBLIC_COPY.contactInfoFallback}</p>
+                <p>{globalSettings?.serviceArea || PUBLIC_COPY.serviceAreaFallback}</p>
               </section>
             );
           case "cta":
@@ -204,7 +205,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
               <section key={`${block.type}-${block.order}`} className={styles.card}>
                 <h2>{block.title}</h2>
                 <p>{block.body}</p>
-                <p>{block.ctaLabel || globalSettings?.defaultCtaLabel || "Get in touch"}</p>
+                <p>{block.ctaLabel || globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}</p>
               </section>
             );
           default:

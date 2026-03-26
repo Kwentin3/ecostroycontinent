@@ -4,8 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { AdminShell } from "../../../../../components/admin/AdminShell";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
-import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types";
+import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
 import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service";
+import { getRevisionStateLabel, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
 
 export default async function EntityListPage({ params, searchParams }) {
   const { entityType } = await params;
@@ -30,17 +31,17 @@ export default async function EntityListPage({ params, searchParams }) {
     <AdminShell
       user={user}
       title={ENTITY_TYPE_LABELS[normalizedType]}
-      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>Новая</Link>}
+      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>Новый</Link>}
     >
       <div className={styles.stack}>
-        {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
-        {query?.error ? <div className={styles.statusPanelBlocking}>{query.error}</div> : null}
+        {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
+        {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         <section className={styles.panel}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th>Сущность</th>
-                <th>Последняя ревизия</th>
+                <th>Последняя версия</th>
                 <th>Статус</th>
                 <th />
               </tr>
@@ -60,9 +61,9 @@ export default async function EntityListPage({ params, searchParams }) {
                   <tr key={card.entity.id}>
                     <td>{card.latestRevision?.payload?.title || card.latestRevision?.payload?.h1 || card.latestRevision?.payload?.publicBrandName || card.entity.id}</td>
                     <td>{card.latestRevision ? `#${card.latestRevision.revisionNumber}` : "-"}</td>
-                    <td>{card.latestRevision?.state || "no revisions"}</td>
+                    <td>{card.latestRevision ? getRevisionStateLabel(card.latestRevision.state) : "Версий пока нет"}</td>
                     <td>
-                      <Link href={`/admin/entities/${normalizedType}/${card.entity.id}`}>Open</Link>
+                      <Link href={`/admin/entities/${normalizedType}/${card.entity.id}`}>Открыть</Link>
                     </td>
                   </tr>
                 ))

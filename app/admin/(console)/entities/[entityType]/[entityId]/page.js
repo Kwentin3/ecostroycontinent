@@ -5,7 +5,7 @@ import { EntityEditorForm } from "../../../../../../components/admin/EntityEdito
 import { deriveEditorValue, loadEditorPageData } from "../../../../../../lib/admin/entity-ui";
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
-import { ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types";
+import { ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
 
 export default async function EntityEditorPage({ params, searchParams }) {
   const { entityType, entityId } = await params;
@@ -19,7 +19,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
   }
 
   return (
-    <AdminShell user={user} title={`${ENTITY_TYPE_LABELS[normalizedType]} редактор`}>
+    <AdminShell user={user} title={`${ENTITY_TYPE_LABELS[normalizedType]} — редактор`}>
       <EntityEditorForm
         entityType={normalizedType}
         entityId={entityId}

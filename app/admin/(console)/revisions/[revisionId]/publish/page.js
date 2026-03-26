@@ -7,6 +7,7 @@ import styles from "../../../../../../components/admin/admin-ui.module.css";
 import { requirePublishUser } from "../../../../../../lib/admin/page-helpers";
 import { findEntityById, findRevisionById } from "../../../../../../lib/content-core/repository";
 import { evaluateReadiness } from "../../../../../../lib/content-ops/readiness";
+import { getEntityTypeLabel, getPreviewStatusLabel, normalizeLegacyCopy } from "../../../../../../lib/ui-copy.js";
 
 export default async function PublishReadinessPage({ params, searchParams }) {
   const { revisionId } = await params;
@@ -22,21 +23,21 @@ export default async function PublishReadinessPage({ params, searchParams }) {
   const query = await searchParams;
 
   return (
-    <AdminShell user={user} title="Готовность к публикации">
+    <AdminShell user={user} title="Проверка перед публикацией">
       <div className={styles.stack}>
-        {query?.error ? <div className={styles.statusPanelBlocking}>{query.error}</div> : null}
-        {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
+        {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
+        {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         <section className={styles.panel}>
-          <h3>{revision.payload.title || revision.payload.h1 || entity.entityType}</h3>
-          <p className={styles.mutedText}>Ревизия {revision.revisionNumber}</p>
-          <p className={styles.mutedText}>Статус preview: {revision.previewStatus}</p>
+          <h3>{revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType)}</h3>
+          <p className={styles.mutedText}>Версия №{revision.revisionNumber}</p>
+          <p className={styles.mutedText}>Статус предпросмотра: {getPreviewStatusLabel(revision.previewStatus)}</p>
           {readiness.hasBlocking ? (
-            <p className={styles.dangerText}>Публикация недоступна, пока не закрыты blocking issues.</p>
+            <p className={styles.dangerText}>Публикация недоступна, пока не закрыты блокирующие замечания.</p>
           ) : (
-            <p>Ревизия готова к explicit publish.</p>
+            <p>Версия готова к явной публикации.</p>
           )}
           <div className={styles.inlineActions}>
-            <ConfirmActionForm action={`/api/admin/revisions/${revision.id}/publish`} confirmMessage="Опубликовать эту ревизию?">
+            <ConfirmActionForm action={`/api/admin/revisions/${revision.id}/publish`} confirmMessage="Опубликовать эту версию?">
               <button type="submit" className={styles.primaryButton} disabled={readiness.hasBlocking}>
                 Опубликовать
               </button>

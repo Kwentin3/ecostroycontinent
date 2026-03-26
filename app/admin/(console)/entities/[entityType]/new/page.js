@@ -3,7 +3,7 @@ import { EntityEditorForm } from "../../../../../../components/admin/EntityEdito
 import { loadEditorPageData } from "../../../../../../lib/admin/entity-ui";
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
-import { ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types";
+import { ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
 
 export default async function NewEntityPage({ params, searchParams }) {
   const { entityType } = await params;
@@ -13,7 +13,7 @@ export default async function NewEntityPage({ params, searchParams }) {
   const query = await searchParams;
 
   return (
-    <AdminShell user={user} title={`Новая ${ENTITY_TYPE_LABELS[normalizedType]}`}>
+    <AdminShell user={user} title={`Новая ${ENTITY_TYPE_LABELS[normalizedType].toLowerCase()}`}>
       <EntityEditorForm
         entityType={normalizedType}
         entityId={null}

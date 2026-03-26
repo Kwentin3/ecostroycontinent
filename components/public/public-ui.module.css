@@ -21,6 +21,7 @@
     linear-gradient(180deg, #f5f0e6 0%, #fbf8f1 100%);
 }
 
+/* Compact split-screen shell. Keep the first viewport finished, not feed-like. */
 .homeTitle {
   margin: 0;
   font-size: clamp(2.8rem, 4.9vw, 4.9rem);
@@ -48,6 +49,7 @@
   padding-block-start: clamp(18px, 3vh, 36px);
 }
 
+/* Minimal auth affordance for the temporary shell. */
 .loginIcon {
   position: absolute;
   top: clamp(18px, 2vw, 28px);
@@ -88,6 +90,7 @@
   transform: translateY(0);
 }
 
+/* Fixed height keeps the composition poster-like on desktop. */
 .homeMosaic {
   display: grid;
   grid-template-columns: 1.3fr 0.7fr;
@@ -97,6 +100,7 @@
   height: min(54vh, 520px);
 }
 
+/* Decorative fallback only. Never leak alt text or placeholder copy into tiles. */
 .mosaicCard {
   min-width: 0;
   min-height: 0;

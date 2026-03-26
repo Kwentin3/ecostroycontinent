@@ -5,6 +5,7 @@ import { userCanManageUsers } from "../../../../../../lib/auth/session";
 import { updateUserActiveState } from "../../../../../../lib/content-core/repository";
 import { recordAuditEvent } from "../../../../../../lib/content-ops/audit";
 import { AUDIT_EVENT_KEYS } from "../../../../../../lib/content-core/content-types";
+import { FEEDBACK_COPY } from "../../../../../../lib/ui-copy.js";
 
 export async function POST(request, { params }) {
   const { user, response } = await requireRouteUser(request);
@@ -26,14 +27,14 @@ export async function POST(request, { params }) {
     await recordAuditEvent({
       actorUserId: user.id,
       eventKey: AUDIT_EVENT_KEYS.USER_STATUS_CHANGED,
-      summary: `User ${updated.username} active state changed.`,
+      summary: `Статус пользователя ${updated.username} изменён.`,
       details: {
         targetUserId: updated.id,
         active: updated.active
       }
     });
 
-    return redirectWithQuery(request, "/admin/users", { message: "User updated" });
+    return redirectWithQuery(request, "/admin/users", { message: FEEDBACK_COPY.userUpdated });
   } catch (error) {
     return redirectWithError(request, "/admin/users", error);
   }

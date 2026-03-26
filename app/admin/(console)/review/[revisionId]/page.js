@@ -6,11 +6,12 @@ import { ReadinessPanel } from "../../../../../components/admin/ReadinessPanel";
 import { CasePage, ServicePage, StandalonePage } from "../../../../../components/public/PublicRenderers";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../../lib/admin/page-helpers";
-import { ENTITY_TYPES } from "../../../../../lib/content-core/content-types";
-import { buildHumanReadableDiff } from "../../../../../lib/content-core/diff";
-import { findEntityById, findRevisionById } from "../../../../../lib/content-core/repository";
-import { evaluateReadiness } from "../../../../../lib/content-ops/readiness";
+import { ENTITY_TYPES } from "../../../../../lib/content-core/content-types.js";
+import { buildHumanReadableDiff } from "../../../../../lib/content-core/diff.js";
+import { findEntityById, findRevisionById } from "../../../../../lib/content-core/repository.js";
+import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
 import { buildPublishedLookups, getPublishedGlobalSettings } from "../../../../../lib/read-side/public-content";
+import { getChangeClassLabel, getEntityTypeLabel, getPreviewStatusLabel, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
 
 function renderPreview(entityType, payload, lookups, globalSettings) {
   if (entityType === ENTITY_TYPES.SERVICE) {
@@ -77,30 +78,30 @@ export default async function ReviewDetailPage({ params, searchParams }) {
   const diffRows = buildHumanReadableDiff(entity.entityType, baseline?.payload ?? null, revision.payload);
   const query = await searchParams;
   const basisLabel = baseline
-    ? `База preview: опубликованная ревизия #${baseline.revisionNumber}`
-    : "База preview: опубликованной основы пока нет.";
+    ? `База предпросмотра: опубликованная версия №${baseline.revisionNumber}`
+    : "База предпросмотра: опубликованной основы пока нет.";
 
   return (
-    <AdminShell user={user} title="Проверка и approval">
+    <AdminShell user={user} title="Проверка и согласование">
       <div className={styles.stack}>
-        {query?.error ? <div className={styles.statusPanelBlocking}>{query.error}</div> : null}
-        {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
+        {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
+        {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         <div className={styles.split}>
           <section className={styles.panel}>
-            <p className={styles.eyebrow}>Режим approval</p>
-            <h3>{revision.payload.title || revision.payload.h1 || entity.entityType}</h3>
-            <p className={styles.mutedText}>Ревизия {revision.revisionNumber} | {revision.changeClass}</p>
-            <p>{revision.changeIntent}</p>
+            <p className={styles.eyebrow}>Режим согласования</p>
+            <h3>{revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType)}</h3>
+            <p className={styles.mutedText}>Версия №{revision.revisionNumber} | {getChangeClassLabel(revision.changeClass)}</p>
+            <p>{normalizeLegacyCopy(revision.changeIntent)}</p>
             <div className={styles.badgeRow}>
-              <span className={styles.badge}>Превью: {revision.previewStatus}</span>
-              {revision.ownerReviewRequired ? <span className={styles.badge}>Требуется owner review</span> : null}
-              {revision.aiInvolvement ? <span className={styles.badge}>AI задействован</span> : null}
+              <span className={styles.badge}>Предпросмотр: {getPreviewStatusLabel(revision.previewStatus)}</span>
+              {revision.ownerReviewRequired ? <span className={styles.badge}>Требуется согласование владельца</span> : null}
+              {revision.aiInvolvement ? <span className={styles.badge}>С участием ИИ</span> : null}
             </div>
             <RevisionDiffPanel
-              title="Читаемый diff"
-              basisLabel={baseline ? `Сравнение с опубликованной ревизией #${baseline.revisionNumber}` : "Сравнение с пустой базой"}
+              title="Понятные изменения"
+              basisLabel={basisLabel}
               rows={diffRows}
-              emptyLabel="Нет top-level изменений."
+              emptyLabel="Изменений верхнего уровня нет."
             />
             {user.role === "business_owner" || user.role === "superadmin" ? (
               <form action={`/api/admin/revisions/${revision.id}/owner-action`} method="post" className={styles.formGrid}>
@@ -111,17 +112,17 @@ export default async function ReviewDetailPage({ params, searchParams }) {
                 <div className={styles.inlineActions}>
                   <button type="submit" name="action" value="approve" className={styles.primaryButton}>Одобрить</button>
                   <button type="submit" name="action" value="reject" className={styles.secondaryButton}>Отклонить</button>
-                  <button type="submit" name="action" value="send_back" className={styles.dangerButton}>Вернуть</button>
+                  <button type="submit" name="action" value="send_back" className={styles.dangerButton}>Вернуть с комментарием</button>
                 </div>
               </form>
             ) : (
-              <p className={styles.mutedText}>Проверьте readiness и preview, затем ждите решения owner, если оно требуется.</p>
+              <p className={styles.mutedText}>Сначала проверьте готовность и предпросмотр, затем дождитесь решения владельца, если оно требуется.</p>
             )}
-            <ReadinessPanel readiness={readiness} title="Readiness для проверки" />
+            <ReadinessPanel readiness={readiness} title="Проверка готовности" />
           </section>
           <section className={styles.panel}>
-            <p className={styles.eyebrow}>Preview кандидата</p>
-            <p className={styles.mutedText}>{basisLabel} Связанные сущности и медиа берутся из опубликованных lookup-ов.</p>
+            <p className={styles.eyebrow}>Предпросмотр версии</p>
+            <p className={styles.mutedText}>{basisLabel} Связанные сущности и медиа берутся из опубликованных данных.</p>
             {renderPreview(entity.entityType, revision.payload, lookups, globalSettings)}
           </section>
         </div>

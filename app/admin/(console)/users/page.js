@@ -2,8 +2,9 @@ import { ConfirmActionForm } from "../../../../components/admin/ConfirmActionFor
 import { AdminShell } from "../../../../components/admin/AdminShell";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { requireUserManager } from "../../../../lib/admin/page-helpers";
-import { getRoleLabel } from "../../../../lib/auth/session";
+import { getRoleLabel } from "../../../../lib/auth/session.js";
 import { listUsers } from "../../../../lib/content-core/repository";
+import { normalizeLegacyCopy } from "../../../../lib/ui-copy.js";
 
 export default async function UsersPage({ searchParams }) {
   const user = await requireUserManager();
@@ -13,8 +14,8 @@ export default async function UsersPage({ searchParams }) {
   return (
     <AdminShell user={user} title="Пользователи">
       <div className={styles.stack}>
-        {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
-        {query?.error ? <div className={styles.statusPanelBlocking}>{query.error}</div> : null}
+        {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
+        {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         <section className={styles.panel}>
           <h3>Создать пользователя</h3>
           <form action="/api/admin/users/create" method="post" className={styles.gridTwo}>

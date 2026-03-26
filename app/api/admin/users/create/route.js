@@ -6,6 +6,7 @@ import { hashPassword } from "../../../../../lib/auth/password";
 import { createUserRecord } from "../../../../../lib/content-core/repository";
 import { recordAuditEvent } from "../../../../../lib/content-ops/audit";
 import { AUDIT_EVENT_KEYS } from "../../../../../lib/content-core/content-types";
+import { FEEDBACK_COPY } from "../../../../../lib/ui-copy.js";
 
 export async function POST(request) {
   const { user, response } = await requireRouteUser(request);
@@ -35,14 +36,14 @@ export async function POST(request) {
     await recordAuditEvent({
       actorUserId: user.id,
       eventKey: AUDIT_EVENT_KEYS.USER_CREATED,
-      summary: `User ${created.username} was created.`,
+      summary: `Пользователь ${created.username} создан.`,
       details: {
         createdUserId: created.id,
         role: created.role
       }
     });
 
-    return redirectWithQuery(request, "/admin/users", { message: "User created" });
+    return redirectWithQuery(request, "/admin/users", { message: FEEDBACK_COPY.userCreated });
   } catch (error) {
     return redirectWithError(request, "/admin/users", error);
   }

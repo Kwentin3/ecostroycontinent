@@ -1,5 +1,6 @@
 import { getString } from "../../../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../../../lib/admin/route-helpers";
+import { FEEDBACK_COPY } from "../../../../../../../lib/ui-copy.js";
 import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../../lib/admin/operation-feedback";
 import { userCanPublish } from "../../../../../../../lib/auth/session";
 import { rollbackPublishedEntity } from "../../../../../../../lib/content-ops/workflow";
@@ -27,7 +28,7 @@ export async function POST(request, { params }) {
     });
 
     return redirectWithQuery(request, `/admin/entities/${entityType}/${entityId}/history`, {
-      message: "Rollback executed"
+      message: FEEDBACK_COPY.rollbackExecuted
     });
   } catch (error) {
     return redirectWithError(request, `/admin/entities/${entityType}/${entityId}/history`, error);

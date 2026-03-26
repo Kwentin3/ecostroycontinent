@@ -6,10 +6,10 @@ import { RevisionDiffPanel } from "../../../../../../../components/admin/Revisio
 import styles from "../../../../../../../components/admin/admin-ui.module.css";
 import { TimelineList } from "../../../../../../../components/admin/TimelineList";
 import { requireEditorUser } from "../../../../../../../lib/admin/page-helpers";
-import { ENTITY_TYPE_LABELS } from "../../../../../../../lib/content-core/content-types";
-import { buildHumanReadableDiff } from "../../../../../../../lib/content-core/diff";
+import { buildHumanReadableDiff } from "../../../../../../../lib/content-core/diff.js";
 import { getEntityEditorState } from "../../../../../../../lib/content-core/service";
 import { getAuditTimeline } from "../../../../../../../lib/content-ops/audit";
+import { getChangeClassLabel, getEntityTypeLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
 
 export default async function EntityHistoryPage({ params, searchParams }) {
   const { entityType, entityId } = await params;
@@ -23,12 +23,12 @@ export default async function EntityHistoryPage({ params, searchParams }) {
   }
 
   return (
-    <AdminShell user={user} title={`${ENTITY_TYPE_LABELS[entityType] || entityType} история`}>
+    <AdminShell user={user} title={`${getEntityTypeLabel(entityType)} — история`}>
       <div className={styles.stack}>
-        {query?.error ? <div className={styles.statusPanelBlocking}>{query.error}</div> : null}
-        {query?.message ? <div className={styles.statusPanelInfo}>{query.message}</div> : null}
+        {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
+        {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         <section className={styles.panel}>
-          <h3>Лента ревизий</h3>
+          <h3>Лента версий</h3>
           <div className={styles.stack}>
             {state.revisions.map((revision, index) => {
               const baseline = index === state.revisions.length - 1 ? state.activePublishedRevision : state.revisions[index + 1] ?? state.activePublishedRevision;
@@ -37,27 +37,27 @@ export default async function EntityHistoryPage({ params, searchParams }) {
               return (
                 <article key={revision.id} className={styles.timelineItem}>
                   <div className={styles.badgeRow}>
-                    <span className={styles.badge}>{revision.state}</span>
-                    {revision.aiInvolvement ? <span className={styles.badge}>AI involved</span> : null}
+                    <span className={styles.badge}>{getRevisionStateLabel(revision.state)}</span>
+                    {revision.aiInvolvement ? <span className={styles.badge}>С участием ИИ</span> : null}
                   </div>
-                  <h4>Revision {revision.revisionNumber}</h4>
-                  <p className={styles.mutedText}>{revision.changeIntent}</p>
-                  <p className={styles.mutedText}>{revision.changeClass}</p>
+                  <h4>Версия №{revision.revisionNumber}</h4>
+                  <p className={styles.mutedText}>{normalizeLegacyCopy(revision.changeIntent)}</p>
+                  <p className={styles.mutedText}>{getChangeClassLabel(revision.changeClass)}</p>
                   <RevisionDiffPanel
-                    title="Human-readable diff"
-                    basisLabel={baseline ? `Compared against ${baseline.state === "published" ? "published baseline" : `revision #${baseline.revisionNumber}`}` : "Initial revision"}
+                    title="Понятные изменения"
+                    basisLabel={baseline ? `Сравнение с ${baseline.state === "published" ? "опубликованной базой" : `версией №${baseline.revisionNumber}`}` : "Первая версия"}
                     rows={diffRows}
-                    emptyLabel="No top-level changes to show."
+                    emptyLabel="Изменений верхнего уровня нет."
                   />
                   {user.role === "superadmin" && revision.state === "published" ? (
                     <div className={styles.inlineActions}>
                       <ConfirmActionForm
                         action={`/api/admin/entities/${entityType}/${entityId}/rollback`}
-                        confirmMessage={`Откатить к ревизии ${revision.revisionNumber}?`}
+                        confirmMessage={`Откатить к версии №${revision.revisionNumber}?`}
                         className={styles.inlineActions}
                       >
                         <input type="hidden" name="targetRevisionId" value={revision.id} />
-                        <button type="submit" className={styles.secondaryButton}>Откатить к этой ревизии</button>
+                        <button type="submit" className={styles.secondaryButton}>Откатить к этой версии</button>
                       </ConfirmActionForm>
                     </div>
                   ) : null}

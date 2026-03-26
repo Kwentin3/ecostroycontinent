@@ -8,9 +8,9 @@ export default async function CasesPage() {
 
   return (
     <PublicListPage
-      eyebrow="Published read-side"
-      title="Cases"
-      intro="Only published case revisions appear on the public surface."
+      eyebrow="Публичный раздел"
+      title="Кейсы"
+      intro="Здесь показываются только опубликованные версии кейсов."
       items={cases}
       itemHrefPrefix="/cases"
     />

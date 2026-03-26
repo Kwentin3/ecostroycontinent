@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
 export function MediaPicker({
@@ -30,18 +31,18 @@ export function MediaPicker({
     <fieldset className={styles.pickerFieldset}>
       <legend className={styles.pickerLegend}>{legend}</legend>
       <label className={styles.searchLabel}>
-        <span>Search</span>
+        <span>{ADMIN_COPY.search}</span>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           className={styles.searchInput}
-          placeholder="Filter by title, alt, or filename"
+          placeholder={ADMIN_COPY.filterByMedia}
         />
       </label>
       <div className={styles.mediaGrid}>
         {filtered.length === 0 ? (
-          <p className={styles.emptyHint}>No matching media assets.</p>
+          <p className={styles.emptyHint}>{ADMIN_COPY.noMatchingMedia}</p>
         ) : (
           filtered.map((asset) => (
             <label key={asset.id} className={styles.mediaCard}>
@@ -54,15 +55,15 @@ export function MediaPicker({
               <span className={styles.mediaThumb}>
                 {asset.previewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={asset.previewUrl} alt={asset.alt || asset.title || asset.originalFilename || "Preview"} />
+                  <img src={asset.previewUrl} alt={asset.alt || asset.title || asset.originalFilename || ADMIN_COPY.noPreview} />
                 ) : (
-                  <span className={styles.mediaPlaceholder}>No preview</span>
+                  <span className={styles.mediaPlaceholder}>{ADMIN_COPY.noPreview}</span>
                 )}
               </span>
               <span className={styles.mediaInfo}>
-                <strong>{asset.title || asset.originalFilename || "Untitled asset"}</strong>
-                <span>Alt: {asset.alt || "none"}</span>
-                <span>Where used: {asset.whereUsedLabel || "not used yet"}</span>
+                <strong>{asset.title || asset.originalFilename || ADMIN_COPY.untitledAsset}</strong>
+                <span>Описание изображения: {asset.alt || ADMIN_COPY.fieldValueNone}</span>
+                <span>{ADMIN_COPY.whereUsed}: {asset.whereUsedLabel || ADMIN_COPY.fieldValueNotUsedYet}</span>
               </span>
             </label>
           ))

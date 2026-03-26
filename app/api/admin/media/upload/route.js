@@ -6,6 +6,7 @@ import { redirectToAdmin, redirectWithQuery } from "../../../../../lib/admin/ope
 import { userCanEditContent } from "../../../../../lib/auth/session";
 import { saveDraft } from "../../../../../lib/content-core/service";
 import { storeMediaFile } from "../../../../../lib/media/storage";
+import { FEEDBACK_COPY } from "../../../../../lib/ui-copy.js";
 
 export async function POST(request) {
   const { user, response } = await requireRouteUser(request);
@@ -27,7 +28,7 @@ export async function POST(request) {
   const sourceNote = getString(formData, "sourceNote");
 
   if (!(file instanceof File) || file.size === 0) {
-    return redirectWithQuery(request, redirectTo, { error: "Choose a file" });
+    return redirectWithQuery(request, redirectTo, { error: FEEDBACK_COPY.chooseFile });
   }
 
   const storageKey = `${crypto.randomUUID()}${path.extname(file.name)}`;
@@ -42,7 +43,7 @@ export async function POST(request) {
     entityType: "media_asset",
     entityId: null,
     userId: user.id,
-    changeIntent: "Uploaded media asset.",
+    changeIntent: "Загружен медиафайл.",
     payload: {
       title,
       alt,
@@ -59,7 +60,7 @@ export async function POST(request) {
   });
 
   return redirectWithQuery(request, redirectTo, {
-    message: "Media uploaded",
+    message: FEEDBACK_COPY.mediaUploaded,
     entityId: saved.entity.id
   });
 }

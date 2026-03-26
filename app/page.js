@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import styles from "../components/public/public-ui.module.css";
 
+// Temporary decorative shell only. Keep these tiles local to the homepage.
+// Do not move them into Content Core or any second media truth.
 const homeTiles = [
   {
     src: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80",
@@ -23,6 +25,7 @@ const homeTiles = [
 export default function HomePage() {
   return (
     <main className={styles.homeShell}>
+      {/* Minimal auth entry: keep it visible, but do not turn it into a heavy CTA. */}
       <Link href="/admin/login" className={styles.loginIcon} aria-label="Войти в админку" title="Войти в админку">
         ↗
       </Link>
@@ -32,6 +35,7 @@ export default function HomePage() {
         <p className={styles.homeStatus}>В разработке</p>
       </section>
 
+      {/* Keep the first viewport poster-like; this shell should not read as a feed. */}
       <section className={styles.homeMosaic} aria-hidden="true">
         {homeTiles.map((tile) => (
           <div

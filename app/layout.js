@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Ekostroykontinent",
-  description: "Phase-1 Next.js app baseline for the Ecostroycontinent project."
+  title: "Экостройконтинент",
+  description: "Русский интерфейс проекта Экостройконтинент."
 };
 
 export default function RootLayout({ children }) {

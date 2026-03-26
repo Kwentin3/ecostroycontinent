@@ -8,9 +8,9 @@ export default async function ServicesPage() {
 
   return (
     <PublicListPage
-      eyebrow="Published read-side"
-      title="Services"
-      intro="Only published service revisions appear on the public surface."
+      eyebrow="Публичный раздел"
+      title="Услуги"
+      intro="Здесь показываются только опубликованные версии услуг."
       items={services}
       itemHrefPrefix="/services"
     />

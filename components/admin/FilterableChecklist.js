@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
 export function FilterableChecklist({
@@ -10,7 +11,7 @@ export function FilterableChecklist({
   options,
   selectedIds = [],
   selectionMode = "multiple",
-  emptyLabel = "No matching items."
+  emptyLabel = ADMIN_COPY.noMatchingItems
 }) {
   const [query, setQuery] = useState("");
 
@@ -31,13 +32,13 @@ export function FilterableChecklist({
     <fieldset className={styles.pickerFieldset}>
       <legend className={styles.pickerLegend}>{legend}</legend>
       <label className={styles.searchLabel}>
-        <span>Search</span>
+        <span>{ADMIN_COPY.search}</span>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           className={styles.searchInput}
-          placeholder="Filter by title"
+          placeholder={ADMIN_COPY.filterByTitle}
         />
       </label>
       <div className={styles.optionList}>

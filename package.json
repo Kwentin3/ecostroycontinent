@@ -10,7 +10,8 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed-data.mjs",
     "test": "node --experimental-specifier-resolution=node --test tests/**/*.test.js",
-    "proof:admin:first-slice": "node scripts/proof-admin-first-slice.mjs"
+    "proof:admin:first-slice": "node scripts/proof-admin-first-slice.mjs",
+    "proof:seo:surface": "node scripts/proof-seo-surface.mjs"
   },
   "dependencies": {
     "next": "16.2.1",

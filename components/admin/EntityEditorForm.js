@@ -4,36 +4,49 @@ import { FilterableChecklist } from "./FilterableChecklist";
 import { MediaPicker } from "./MediaPicker";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
+import { ADMIN_COPY, FIELD_LABELS, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
+
+const OBLIGATION_LABELS = {
+  redirect_required: "Нужен редирект",
+  revalidation_required: "Нужно переобновление",
+  sitemap_update_required: "Нужно обновить карту сайта",
+  canonical_url_check_required: "Нужна проверка канонического адреса"
+};
+
+const OBLIGATION_STATUS_LABELS = {
+  open: "Открыто",
+  completed: "Выполнено"
+};
 
 function HiddenSeoFields({ value }) {
   return (
     <>
       <label className={styles.label}>
-        <span>Meta title</span>
+        <span>{FIELD_LABELS.metaTitle}</span>
         <input name="metaTitle" defaultValue={value.seo?.metaTitle || ""} />
       </label>
       <label className={styles.label}>
-        <span>Meta description</span>
+        <span>{FIELD_LABELS.metaDescription}</span>
         <textarea name="metaDescription" defaultValue={value.seo?.metaDescription || ""} />
       </label>
       <label className={styles.label}>
-        <span>Canonical intent</span>
+        <span>{FIELD_LABELS.canonicalIntent}</span>
         <input name="canonicalIntent" defaultValue={value.seo?.canonicalIntent || ""} />
       </label>
       <label className={styles.label}>
-        <span>Indexation</span>
+        <span>{FIELD_LABELS.indexationFlag}</span>
         <select name="indexationFlag" defaultValue={value.seo?.indexationFlag || "index"}>
-          <option value="index">index</option>
-          <option value="noindex">noindex</option>
+          <option value="index">Индексировать</option>
+          <option value="noindex">Не индексировать</option>
         </select>
       </label>
       <label className={styles.label}>
-        <span>OpenGraph title</span>
+        <span>{FIELD_LABELS.openGraphTitle}</span>
         <input name="openGraphTitle" defaultValue={value.seo?.openGraphTitle || ""} />
       </label>
       <label className={styles.label}>
-        <span>OpenGraph description</span>
+        <span>{FIELD_LABELS.openGraphDescription}</span>
         <textarea name="openGraphDescription" defaultValue={value.seo?.openGraphDescription || ""} />
       </label>
       <input type="hidden" name="openGraphImageAssetId" value={value.seo?.openGraphImageAssetId || ""} />
@@ -44,31 +57,31 @@ function HiddenSeoFields({ value }) {
 function renderMediaUpload(redirectTo) {
   return (
     <section className={`${styles.panel} ${styles.panelMuted}`}>
-      <h3>Быстрая загрузка медиа</h3>
-      <p className={styles.helpText}>Загрузка остаётся inline, а новый asset появляется в picker после redirect.</p>
+      <h3>{ADMIN_COPY.fastMediaUploadTitle}</h3>
+      <p className={styles.helpText}>{ADMIN_COPY.fastMediaUploadHint}</p>
       <form action="/api/admin/media/upload" method="post" encType="multipart/form-data" className={styles.formGrid}>
         <input type="hidden" name="redirectTo" value={redirectTo} />
         <label className={styles.label}>
-          <span>File</span>
+          <span>Файл</span>
           <input type="file" name="file" accept="image/*" required />
         </label>
         <label className={styles.label}>
-          <span>Title</span>
+          <span>Название</span>
           <input name="title" />
         </label>
         <label className={styles.label}>
-          <span>Alt</span>
+          <span>{FIELD_LABELS.alt}</span>
           <input name="alt" />
         </label>
         <label className={styles.label}>
-          <span>Ownership note</span>
+          <span>{FIELD_LABELS.ownershipNote}</span>
           <input name="ownershipNote" />
         </label>
         <label className={styles.label}>
-          <span>Source note</span>
+          <span>{FIELD_LABELS.sourceNote}</span>
           <input name="sourceNote" />
         </label>
-        <button type="submit" className={styles.secondaryButton}>Загрузить и опубликовать asset</button>
+        <button type="submit" className={styles.secondaryButton}>{ADMIN_COPY.uploadMedia}</button>
       </form>
     </section>
   );
@@ -103,61 +116,61 @@ export function EntityEditorForm({
             <input type="hidden" name="entityId" value={entityId || ""} />
             <label className={styles.label}>
               <span>Смысл изменения</span>
-              <input name="changeIntent" defaultValue={currentRevision?.changeIntent || "Draft saved from editor."} required />
+              <input name="changeIntent" defaultValue={normalizeLegacyCopy(currentRevision?.changeIntent) || "Черновик сохранён из редактора."} required />
             </label>
 
             {entityType === "global_settings" ? (
               <div className={styles.gridTwo}>
                 <label className={styles.label}>
-                  <span>Public brand name</span>
+                  <span>{FIELD_LABELS.publicBrandName}</span>
                   <input name="publicBrandName" defaultValue={value.publicBrandName || ""} required />
                 </label>
                 <label className={styles.label}>
-                  <span>Legal name</span>
+                  <span>{FIELD_LABELS.legalName}</span>
                   <input name="legalName" defaultValue={value.legalName || ""} required />
                 </label>
                 <label className={styles.label}>
-                  <span>Primary phone</span>
+                  <span>{FIELD_LABELS.primaryPhone}</span>
                   <input name="primaryPhone" defaultValue={value.primaryPhone || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Public email</span>
+                  <span>{FIELD_LABELS.publicEmail}</span>
                   <input name="publicEmail" defaultValue={value.publicEmail || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Service area</span>
+                  <span>{FIELD_LABELS.serviceArea}</span>
                   <input name="serviceArea" defaultValue={value.serviceArea || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Primary region</span>
+                  <span>{FIELD_LABELS.primaryRegion}</span>
                   <input name="primaryRegion" defaultValue={value.primaryRegion || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Default CTA label</span>
+                  <span>{FIELD_LABELS.defaultCtaLabel}</span>
                   <input name="defaultCtaLabel" defaultValue={value.defaultCtaLabel || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Default CTA description</span>
+                  <span>{FIELD_LABELS.defaultCtaDescription}</span>
                   <textarea name="defaultCtaDescription" defaultValue={value.defaultCtaDescription || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Organization city</span>
+                  <span>{FIELD_LABELS.organizationCity}</span>
                   <input name="organizationCity" defaultValue={value.organization?.city || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Organization country</span>
+                  <span>{FIELD_LABELS.organizationCountry}</span>
                   <input name="organizationCountry" defaultValue={value.organization?.country || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Active messenger</span>
+                  <span>Активный мессенджер</span>
                   <select name="activeMessengers" defaultValue={value.activeMessengers?.[0] || ""}>
-                    <option value="">none</option>
-                    <option value="telegram">telegram</option>
-                    <option value="whatsapp">whatsapp</option>
+                    <option value="">Нет</option>
+                    <option value="telegram">Telegram</option>
+                    <option value="whatsapp">WhatsApp</option>
                   </select>
                 </label>
                 <label className={styles.label}>
-                  <span>Contact truth confirmed</span>
+                  <span>{FIELD_LABELS.contactTruthConfirmed}</span>
                   <input type="checkbox" name="contactTruthConfirmed" defaultChecked={Boolean(value.contactTruthConfirmed)} />
                 </label>
               </div>
@@ -166,30 +179,30 @@ export function EntityEditorForm({
             {entityType === "media_asset" ? (
               <div className={styles.gridTwo}>
                 <label className={styles.label}>
-                  <span>Title</span>
+                  <span>Название</span>
                   <input name="title" defaultValue={value.title || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Alt</span>
+                  <span>{FIELD_LABELS.alt}</span>
                   <input name="alt" defaultValue={value.alt || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Caption</span>
+                  <span>{FIELD_LABELS.caption}</span>
                   <textarea name="caption" defaultValue={value.caption || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Ownership note</span>
+                  <span>{FIELD_LABELS.ownershipNote}</span>
                   <input name="ownershipNote" defaultValue={value.ownershipNote || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Source note</span>
+                  <span>{FIELD_LABELS.sourceNote}</span>
                   <input name="sourceNote" defaultValue={value.sourceNote || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Status</span>
+                  <span>{FIELD_LABELS.status}</span>
                   <select name="status" defaultValue={value.status || "ready"}>
-                    <option value="draft_asset">draft_asset</option>
-                    <option value="ready">ready</option>
+                    <option value="draft_asset">Черновик</option>
+                    <option value="ready">Готово</option>
                   </select>
                 </label>
                 <input type="hidden" name="storageKey" value={value.storageKey || ""} />
@@ -204,22 +217,22 @@ export function EntityEditorForm({
             {entityType === "gallery" ? (
               <>
                 <label className={styles.label}>
-                  <span>Title</span>
+                  <span>Название</span>
                   <input name="title" defaultValue={value.title || ""} required />
                 </label>
                 <label className={styles.label}>
-                  <span>Caption</span>
+                  <span>{FIELD_LABELS.caption}</span>
                   <textarea name="caption" defaultValue={value.caption || ""} />
                 </label>
                 <MediaPicker
-                  legend="Gallery assets"
+                  legend="Файлы галереи"
                   name="assetIds"
                   assets={mediaOptions}
                   selectedIds={value.assetIds || []}
                   selectionMode="multiple"
                 />
                 <MediaPicker
-                  legend="Primary asset"
+                  legend="Основной файл"
                   name="primaryAssetId"
                   assets={mediaOptions}
                   selectedIds={value.primaryAssetId ? [value.primaryAssetId] : []}
@@ -232,41 +245,41 @@ export function EntityEditorForm({
               <>
                 <div className={styles.gridTwo}>
                   <label className={styles.label}>
-                    <span>Slug</span>
+                    <span>{FIELD_LABELS.slug}</span>
                     <input name="slug" defaultValue={value.slug || ""} required />
                   </label>
                   <label className={styles.label}>
-                    <span>Title</span>
+                    <span>Название</span>
                     <input name="title" defaultValue={value.title || ""} required />
                   </label>
                   <label className={styles.label}>
-                    <span>H1</span>
+                    <span>{FIELD_LABELS.h1}</span>
                     <input name="h1" defaultValue={value.h1 || ""} required />
                   </label>
                   <label className={styles.label}>
-                    <span>CTA variant</span>
+                    <span>{FIELD_LABELS.ctaVariant}</span>
                     <input name="ctaVariant" defaultValue={value.ctaVariant || ""} required />
                   </label>
                 </div>
                 <label className={styles.label}>
-                  <span>Summary</span>
+                  <span>{FIELD_LABELS.summary}</span>
                   <textarea name="summary" defaultValue={value.summary || ""} required />
                 </label>
                 <label className={styles.label}>
-                  <span>Service scope</span>
+                  <span>{FIELD_LABELS.serviceScope}</span>
                   <textarea name="serviceScope" defaultValue={value.serviceScope || ""} required />
                 </label>
                 <label className={styles.label}>
-                  <span>Problems solved</span>
+                  <span>{FIELD_LABELS.problemsSolved}</span>
                   <textarea name="problemsSolved" defaultValue={value.problemsSolved || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Methods</span>
+                  <span>{FIELD_LABELS.methods}</span>
                   <textarea name="methods" defaultValue={value.methods || ""} />
                 </label>
-                <FilterableChecklist legend="Related cases" name="relatedCaseIds" options={relationOptions.cases} selectedIds={value.relatedCaseIds || []} />
-                <FilterableChecklist legend="Galleries" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
-                <MediaPicker legend="Primary media" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
+                <FilterableChecklist legend="Связанные кейсы" name="relatedCaseIds" options={relationOptions.cases} selectedIds={value.relatedCaseIds || []} />
+                <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
+                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
               </>
             ) : null}
 
@@ -274,37 +287,37 @@ export function EntityEditorForm({
               <>
                 <div className={styles.gridTwo}>
                   <label className={styles.label}>
-                    <span>Slug</span>
+                    <span>{FIELD_LABELS.slug}</span>
                     <input name="slug" defaultValue={value.slug || ""} required />
                   </label>
                   <label className={styles.label}>
-                    <span>Title</span>
+                    <span>Название</span>
                     <input name="title" defaultValue={value.title || ""} required />
                   </label>
                   <label className={styles.label}>
-                    <span>Location</span>
+                    <span>{FIELD_LABELS.location}</span>
                     <input name="location" defaultValue={value.location || ""} required />
                   </label>
                   <label className={styles.label}>
-                    <span>Project type</span>
+                    <span>{FIELD_LABELS.projectType}</span>
                     <input name="projectType" defaultValue={value.projectType || ""} />
                   </label>
                 </div>
                 <label className={styles.label}>
-                  <span>Task</span>
+                  <span>{FIELD_LABELS.task}</span>
                   <textarea name="task" defaultValue={value.task || ""} required />
                 </label>
                 <label className={styles.label}>
-                  <span>Work scope</span>
+                  <span>{FIELD_LABELS.workScope}</span>
                   <textarea name="workScope" defaultValue={value.workScope || ""} required />
                 </label>
                 <label className={styles.label}>
-                  <span>Result</span>
+                  <span>{FIELD_LABELS.result}</span>
                   <textarea name="result" defaultValue={value.result || ""} required />
                 </label>
-                <FilterableChecklist legend="Related services" name="serviceIds" options={relationOptions.services} selectedIds={value.serviceIds || []} />
-                <FilterableChecklist legend="Galleries" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
-                <MediaPicker legend="Primary media" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
+                <FilterableChecklist legend="Связанные услуги" name="serviceIds" options={relationOptions.services} selectedIds={value.serviceIds || []} />
+                <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
+                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
               </>
             ) : null}
 
@@ -312,69 +325,69 @@ export function EntityEditorForm({
               <>
                 <div className={styles.gridTwo}>
                   <label className={styles.label}>
-                    <span>Page type</span>
+                    <span>Тип страницы</span>
                     <select name="pageType" defaultValue={value.pageType || "about"}>
-                      <option value="about">about</option>
-                      <option value="contacts">contacts</option>
+                      <option value="about">О нас</option>
+                      <option value="contacts">Контакты</option>
                     </select>
                   </label>
                   <label className={styles.label}>
-                    <span>Title</span>
+                    <span>Название</span>
                     <input name="title" defaultValue={value.title || ""} required />
                   </label>
                   <label className={styles.label}>
-                    <span>H1</span>
+                    <span>{FIELD_LABELS.h1}</span>
                     <input name="h1" defaultValue={value.h1 || ""} required />
                   </label>
                 </div>
                 <label className={styles.label}>
-                  <span>Intro</span>
+                  <span>{FIELD_LABELS.intro}</span>
                   <textarea name="intro" defaultValue={value.intro || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Body</span>
+                  <span>{FIELD_LABELS.body}</span>
                   <textarea name="body" defaultValue={value.body || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Contacts note</span>
+                  <span>Примечание по контактам</span>
                   <textarea name="contactNote" defaultValue={value.contactNote || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>CTA title</span>
+                  <span>Заголовок CTA</span>
                   <input name="ctaTitle" defaultValue={value.ctaTitle || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>CTA body</span>
+                  <span>Текст CTA</span>
                   <textarea name="ctaBody" defaultValue={value.ctaBody || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Default block CTA label</span>
+                  <span>{FIELD_LABELS.defaultBlockCtaLabel}</span>
                   <input name="defaultBlockCtaLabel" defaultValue={value.defaultBlockCtaLabel || ""} />
                 </label>
-                <FilterableChecklist legend="Linked services" name="serviceIds" options={relationOptions.services} selectedIds={value.serviceIds || []} />
-                <FilterableChecklist legend="Linked cases" name="caseIds" options={relationOptions.cases} selectedIds={value.caseIds || []} />
-                <FilterableChecklist legend="Linked galleries" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
-                <MediaPicker legend="Primary media" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
+                <FilterableChecklist legend="Связанные услуги" name="serviceIds" options={relationOptions.services} selectedIds={value.serviceIds || []} />
+                <FilterableChecklist legend="Связанные кейсы" name="caseIds" options={relationOptions.cases} selectedIds={value.caseIds || []} />
+                <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
+                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
               </>
             ) : null}
 
             <HiddenSeoFields value={value} />
 
             <div className={styles.inlineActions}>
-              <button type="submit" className={styles.primaryButton}>Сохранить черновик</button>
+              <button type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
               {canSubmit && currentRevision?.state === "draft" ? (
                 <button
                   type="submit"
                   formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
                   className={styles.secondaryButton}
                 >
-                  Отправить на review
+                  {ADMIN_COPY.sendForReview}
                 </button>
               ) : null}
               {canPublish && currentRevision?.state === "review" ? (
-                <Link href={`/admin/revisions/${currentRevision.id}/publish`} className={styles.secondaryButton}>Готовность к публикации</Link>
+                <Link href={`/admin/revisions/${currentRevision.id}/publish`} className={styles.secondaryButton}>Проверить перед публикацией</Link>
               ) : null}
-              {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>История</Link> : null}
+              {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
             </div>
           </form>
         </section>
@@ -385,12 +398,12 @@ export function EntityEditorForm({
             <div className={styles.stack}>
               {obligations.map((obligation) => (
                 <div key={obligation.id} className={styles.timelineItem}>
-                  <strong>{obligation.obligationType}</strong>
-                  <p className={styles.mutedText}>{obligation.status}</p>
+                  <strong>{OBLIGATION_LABELS[obligation.obligationType] || obligation.obligationType}</strong>
+                  <p className={styles.mutedText}>{OBLIGATION_STATUS_LABELS[obligation.status] || obligation.status}</p>
                   {user.role === "superadmin" && obligation.status === "open" ? (
                     <form action={`/api/admin/obligations/${obligation.id}/complete`} method="post">
                       <input type="hidden" name="redirectTo" value={redirectTo} />
-                      <button type="submit" className={styles.secondaryButton}>Пометить выполненным</button>
+                      <button type="submit" className={styles.secondaryButton}>Отметить выполненным</button>
                     </form>
                   ) : null}
                 </div>
@@ -400,20 +413,20 @@ export function EntityEditorForm({
         ) : null}
       </div>
       <div className={`${styles.stack} ${styles.stickyPanel}`}>
-        <ReadinessPanel readiness={readiness} title="Readiness в потоке" />
+        <ReadinessPanel readiness={readiness} />
         {activePublishedRevision ? (
           <section className={styles.panel}>
-            <h3>Опубликованная ревизия</h3>
-            <p className={styles.mutedText}>Revision {activePublishedRevision.revisionNumber}</p>
+            <h3>{ADMIN_COPY.publishedRevision}</h3>
+            <p className={styles.mutedText}>Версия №{activePublishedRevision.revisionNumber}</p>
           </section>
         ) : (
           <section className={styles.panel}>
-            <h3>Опубликованная ревизия</h3>
-            <p className={styles.mutedText}>Сущность ещё не была опубликована.</p>
+            <h3>{ADMIN_COPY.publishedRevision}</h3>
+            <p className={styles.mutedText}>{ADMIN_COPY.noPublishedRevision}</p>
           </section>
         )}
         <section className={styles.panel}>
-          <h3>Audit timeline</h3>
+          <h3>{ADMIN_COPY.auditTimeline}</h3>
           <TimelineList items={auditItems} />
         </section>
       </div>
