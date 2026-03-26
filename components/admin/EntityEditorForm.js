@@ -98,6 +98,7 @@ export function EntityEditorForm({
   const readinessBlocking = readiness ? readiness.results.filter((result) => result.severity === "blocking").length : 0;
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
   const currentStateLabel = currentRevision ? getRevisionStateLabel(currentRevision.state) : "Новый черновик";
+  const mediaPreviewSrc = entityType === "media_asset" && entityId ? `/api/admin/media/${entityId}/preview` : null;
   const surfaceSummary = entityType === "media_asset"
     ? "Сначала загрузите файл, затем уточните метаданные карточки и при необходимости оставьте заметку к версии. Этот экран остаётся источником медиа для остальных карточек."
     : entityType === "gallery"
@@ -194,6 +195,28 @@ export function EntityEditorForm({
 
             {entityType === "media_asset" ? (
               <div className={styles.gridTwo}>
+                <div className={styles.gridWide}>
+                  <section className={styles.mediaPreviewPanel}>
+                    <div className={styles.mediaPreviewCopy}>
+                      <p className={styles.mediaPreviewLabel}>Превью файла</p>
+                      <p className={styles.helpText}>
+                        После загрузки здесь видно само изображение. Если файла ещё нет, превью появится после первой загрузки.
+                      </p>
+                    </div>
+                    {mediaPreviewSrc ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mediaPreviewSrc}
+                        alt={value.alt || value.title || value.originalFilename || ADMIN_COPY.noPreview}
+                        className={styles.mediaPreviewImage}
+                      />
+                    ) : (
+                      <div className={styles.mediaPreviewEmpty}>
+                        <span>{ADMIN_COPY.noPreview}</span>
+                      </div>
+                    )}
+                  </section>
+                </div>
                 <div className={styles.gridWide}>
                   <p className={styles.helpText}>
                     Здесь редактируются метаданные медиа и история версии. Комментарий к изменению помогает потом понять, зачем появилась новая версия.

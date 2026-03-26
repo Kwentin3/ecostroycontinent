@@ -322,6 +322,46 @@
   grid-column: 1 / -1;
 }
 
+.mediaPreviewPanel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.mediaPreviewCopy {
+  display: grid;
+  gap: 4px;
+}
+
+.mediaPreviewLabel {
+  margin: 0;
+  font-weight: 700;
+}
+
+.mediaPreviewImage {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.mediaPreviewEmpty {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--subtle);
+}
+
 .gridTwo > *,
 .formGrid > * {
   min-width: 0;
