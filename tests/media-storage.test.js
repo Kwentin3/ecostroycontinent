@@ -27,7 +27,7 @@ test("local media storage adapter writes and reads bytes from the configured dir
   assert.equal(stored.toString("utf8"), "media-bytes");
 });
 
-test("media delivery URL resolves to the published app route in s3 mode and falls back to the public route in local mode", () => {
+test("media delivery URL resolves to the public delivery host from storage key in s3 mode and falls back to the app route in local mode", () => {
   const publicUrl = getMediaDeliveryUrl(
     {
       entityId: "entity_123",
@@ -50,7 +50,7 @@ test("media delivery URL resolves to the published app route in s3 mode and fall
     }
   );
 
-  assert.equal(publicUrl, "https://cdn.example.test/entity_123");
+  assert.equal(publicUrl, "https://cdn.example.test/media/asset-123.jpg");
   assert.equal(localUrl, "/api/media/entity_123");
 });
 
