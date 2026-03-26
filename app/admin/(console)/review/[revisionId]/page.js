@@ -85,6 +85,7 @@ export default async function ReviewDetailPage({ params, searchParams }) {
     (field) => getPreviewTargetForField(entity.entityType, field)
   );
   const query = await searchParams;
+  const previewMode = typeof query?.preview === "string" ? query.preview : "desktop";
   const title = revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType);
   const basisLabel = baseline
     ? `База предпросмотра: опубликованная версия №${baseline.revisionNumber}`
@@ -106,6 +107,7 @@ export default async function ReviewDetailPage({ params, searchParams }) {
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         <div className={styles.split}>
           <section className={styles.stack}>
+            <ReadinessPanel readiness={readiness} title="Проверка готовности" defaultOpen />
             <SurfacePacket
               eyebrow="Карточка решения"
               title={title}
@@ -138,8 +140,6 @@ export default async function ReviewDetailPage({ params, searchParams }) {
               )}
             </SurfacePacket>
 
-            <ReadinessPanel readiness={readiness} title="Проверка готовности" defaultOpen />
-
             <RevisionDiffPanel
               title="Понятные изменения"
               basisLabel={basisLabel}
@@ -154,7 +154,7 @@ export default async function ReviewDetailPage({ params, searchParams }) {
               title="Что увидит посетитель"
               summary={`${basisLabel}. Связанные сущности и медиа берутся из опубликованных данных.`}
             >
-              <PreviewViewport>
+              <PreviewViewport device={previewMode} hrefBase={`/admin/review/${revisionId}`} searchParams={query}>
                 {renderPreview(entity.entityType, revision.payload, lookups, globalSettings)}
               </PreviewViewport>
             </SurfacePacket>
