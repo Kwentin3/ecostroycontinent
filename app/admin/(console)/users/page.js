@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ConfirmActionForm } from "../../../../components/admin/ConfirmActionForm";
 import { AdminShell } from "../../../../components/admin/AdminShell";
 import { SurfacePacket } from "../../../../components/admin/SurfacePacket";
@@ -29,11 +31,11 @@ export default async function UsersPage({ searchParams }) {
         <SurfacePacket
           eyebrow="Доступы"
           title="Управление пользователями"
-          summary="Здесь видны активные роли, последняя активность и быстрые действия по включению или отключению доступа."
+          summary="Здесь видны активные роли, последняя активность и быстрые действия по редактированию, включению или отключению доступа."
           bullets={[
             `Всего пользователей: ${users.length}`,
             `Активных: ${activeCount}`,
-            "Создание и деактивация выполняются без отдельного экрана."
+            "Редактирование открывается в карточке пользователя."
           ]}
         />
         <div className={styles.split}>
@@ -46,6 +48,7 @@ export default async function UsersPage({ searchParams }) {
                   <th>Роль</th>
                   <th>Активен</th>
                   <th>Последняя активность</th>
+                  <th>Карточка</th>
                   <th />
                 </tr>
               </thead>
@@ -58,6 +61,11 @@ export default async function UsersPage({ searchParams }) {
                     <td>{getRoleLabel(item.role)}</td>
                     <td>{item.active ? "да" : "нет"}</td>
                     <td>{item.latest_activity_at ? new Date(item.latest_activity_at).toLocaleString("ru-RU") : "-"}</td>
+                    <td>
+                      <Link href={`/admin/users/${item.id}`} className={styles.secondaryButton}>
+                        Редактировать
+                      </Link>
+                    </td>
                     <td>
                       <ConfirmActionForm
                         action={`/api/admin/users/${item.id}/toggle`}

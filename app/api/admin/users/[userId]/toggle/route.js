@@ -21,6 +21,11 @@ export async function POST(request, { params }) {
   const { userId } = await params;
   const formData = await request.formData();
   const nextActive = getString(formData, "active") === "true";
+
+  if (user.id === userId && nextActive === false) {
+    return redirectWithError(request, "/admin/users", new Error("Нельзя отключить самого себя."));
+  }
+
   try {
     const updated = await updateUserActiveState(userId, nextActive);
 
