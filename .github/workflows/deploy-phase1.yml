@@ -45,7 +45,7 @@ jobs:
           env_file=/opt/ecostroycontinent/runtime/.env
           temp_file="$(mktemp)"
 
-          awk -v image_ref="$image_ref" '
+          sudo -n awk -v image_ref="$image_ref" '
             BEGIN { updated = 0 }
             /^APP_IMAGE=/ {
               print "APP_IMAGE=" image_ref
@@ -70,12 +70,12 @@ jobs:
 
       - name: Pull and refresh app runtime
         run: |
-          docker compose \
+          sudo -n env DOCKER_CONFIG="$HOME/.docker" docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
             --project-name repo \
             -f compose.yaml \
             pull app
-          docker compose \
+          sudo -n env DOCKER_CONFIG="$HOME/.docker" docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
             --project-name repo \
             -f compose.yaml \
