@@ -71,6 +71,8 @@ jobs:
 
       - name: Pull and refresh app runtime
         run: |
+          image_ref='${{ inputs.image_ref }}'
+          export APP_IMAGE="$image_ref"
           docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
             --project-name repo \
@@ -84,8 +86,12 @@ jobs:
 
       - name: Confirm deployed image pin
         run: |
+          image_ref='${{ inputs.image_ref }}'
+          export APP_IMAGE="$image_ref"
           echo "Resolved APP_IMAGE from runtime env:"
           grep '^APP_IMAGE=' /opt/ecostroycontinent/runtime/.env
+          echo "Shell APP_IMAGE override:"
+          printf '%s\n' "$APP_IMAGE"
           echo "Compose-resolved images:"
           docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
