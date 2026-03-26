@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AdminShell } from "../../../../components/admin/AdminShell";
+import { SurfacePacket } from "../../../../components/admin/SurfacePacket";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
 import { getReviewQueue } from "../../../../lib/content-ops/workflow";
@@ -9,10 +10,23 @@ import { getEntityTypeLabel, getOwnerApprovalStatusLabel, getPreviewStatusLabel 
 export default async function ReviewQueuePage() {
   const user = await requireReviewUser();
   const queue = await getReviewQueue();
+  const ownerItems = queue.filter((item) => item.revision.ownerReviewRequired);
+  const firstItem = queue[0];
 
   return (
-    <AdminShell user={user} title="Очередь проверки">
-      <section className={styles.panel}>
+    <AdminShell user={user} title="Очередь проверки" breadcrumbs={[{ label: "Админка", href: "/admin" }, { label: "Проверка" }]} activeHref="/admin/review">
+      <div className={styles.stack}>
+        <SurfacePacket
+          eyebrow="Очередь"
+          title={queue.length ? `${queue.length} материалов ждут проверки` : "Очередь проверки пуста"}
+          summary="Открывайте карточки по очереди. Если материал требует согласования владельца, это видно прямо в списке."
+          bullets={[
+            `Требуют согласования владельца: ${ownerItems.length}`,
+            `Всего в очереди: ${queue.length}`,
+            queue.length ? "Первым открывайте верхнюю карточку очереди." : "Когда очередь пуста, можно вернуться к рабочим разделам."
+          ]}
+          actions={firstItem ? <Link href={`/admin/review/${firstItem.revision.id}`} className={styles.secondaryButton}>Открыть первую проверку</Link> : <Link href="/admin/entities/service" className={styles.secondaryButton}>Открыть услуги</Link>}
+        />
         {queue.length === 0 ? (
           <div className={styles.emptyState}>
             <p className={styles.mutedText}>Очередь проверки пуста.</p>
@@ -44,7 +58,7 @@ export default async function ReviewQueuePage() {
             </tbody>
           </table>
         )}
-      </section>
+      </div>
     </AdminShell>
   );
 }

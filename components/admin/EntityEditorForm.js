@@ -4,7 +4,9 @@ import { FilterableChecklist } from "./FilterableChecklist";
 import { MediaPicker } from "./MediaPicker";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
-import { ADMIN_COPY, FIELD_LABELS, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { SurfacePacket } from "./SurfacePacket";
+import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
 import styles from "./admin-ui.module.css";
 
 const OBLIGATION_LABELS = {
@@ -105,12 +107,37 @@ export function EntityEditorForm({
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const canPublish = user.role === "superadmin";
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
+  const surfaceTitle = entityType === "global_settings" ? "Глобальные настройки" : getPayloadLabel(value);
+  const readinessBlocking = readiness ? readiness.results.filter((result) => result.severity === "blocking").length : 0;
+  const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
+  const currentStateLabel = currentRevision ? getRevisionStateLabel(currentRevision.state) : "Новый черновик";
+  const surfaceSummary = entityType === "media_asset"
+    ? "Загрузите файл, затем уточните описание и служебные поля. Этот экран остаётся источником медиа для остальных карточек."
+    : entityType === "gallery"
+      ? "Галерея собирает уже загруженные медиафайлы. Новый файл добавляйте в разделе Медиа, а здесь собирайте подборку."
+      : "Основное заполняется слева, готовность и история остаются справа. Новый файл добавляйте через раздел Медиа, а не в каждой карточке отдельно.";
+  const surfaceBullets = [
+    `Состояние: ${currentRevision ? currentStateLabel : "новый черновик"}`,
+    readiness ? `Блокеров: ${readinessBlocking}` : "Проверка готовности ещё не запускалась",
+    readiness ? `Предупреждений: ${readinessWarnings}` : "Предупреждения появятся после сохранения",
+    activePublishedRevision ? `Опубликованная версия №${activePublishedRevision.revisionNumber}` : "Опубликованной версии пока нет"
+  ];
 
   return (
     <div className={styles.split}>
       <div className={styles.stack}>
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
+        <SurfacePacket
+          eyebrow="Рабочая карточка"
+          title={surfaceTitle}
+          summary={surfaceSummary}
+          bullets={surfaceBullets}
+          meta={[currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"]}
+        >
+          {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
+        </SurfacePacket>
+        {entityType === "media_asset" ? renderMediaUpload(redirectTo) : null}
         <section className={styles.panel}>
           <form action={`/api/admin/entities/${entityType}/save`} method="post" className={styles.formGrid}>
             <input type="hidden" name="entityId" value={entityId || ""} />
@@ -391,7 +418,6 @@ export function EntityEditorForm({
             </div>
           </form>
         </section>
-        {entityType !== "global_settings" ? renderMediaUpload(redirectTo) : null}
         {obligations?.length ? (
           <section className={styles.panel}>
             <h3>Открытые обязательства</h3>

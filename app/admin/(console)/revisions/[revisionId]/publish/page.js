@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ConfirmActionForm } from "../../../../../../components/admin/ConfirmActionForm";
 import { AdminShell } from "../../../../../../components/admin/AdminShell";
 import { ReadinessPanel } from "../../../../../../components/admin/ReadinessPanel";
+import { SurfacePacket } from "../../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../../components/admin/admin-ui.module.css";
 import { requirePublishUser } from "../../../../../../lib/admin/page-helpers";
 import { findEntityById, findRevisionById } from "../../../../../../lib/content-core/repository";
@@ -21,21 +22,36 @@ export default async function PublishReadinessPage({ params, searchParams }) {
   const entity = await findEntityById(revision.entityId);
   const readiness = await evaluateReadiness({ entity, revision });
   const query = await searchParams;
+  const title = revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType);
+  const sideEffects = [
+    "Опубликованная версия станет активной для посетителей.",
+    "Карта сайта обновится после публикации.",
+    "По необходимости будет отправлен сигнал для поисковых систем."
+  ];
 
   return (
-    <AdminShell user={user} title="Проверка перед публикацией">
+    <AdminShell
+      user={user}
+      title="Проверка перед публикацией"
+      breadcrumbs={[
+        { label: "Админка", href: "/admin" },
+        { label: "Проверка", href: "/admin/review" },
+        { label: title }
+      ]}
+      activeHref="/admin/review"
+    >
       <div className={styles.stack}>
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
-        <section className={styles.panel}>
-          <h3>{revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType)}</h3>
-          <p className={styles.mutedText}>Версия №{revision.revisionNumber}</p>
-          <p className={styles.mutedText}>Статус предпросмотра: {getPreviewStatusLabel(revision.previewStatus)}</p>
-          {readiness.hasBlocking ? (
-            <p className={styles.dangerText}>Публикация недоступна, пока не закрыты блокирующие замечания.</p>
-          ) : (
-            <p>Версия готова к явной публикации.</p>
-          )}
+        <SurfacePacket
+          eyebrow="Проверка перед выпуском"
+          title={title}
+          summary={`Версия №${revision.revisionNumber} · Статус предпросмотра: ${getPreviewStatusLabel(revision.previewStatus)}`}
+          bullets={[
+            readiness.hasBlocking ? "Публикация пока заблокирована проверкой готовности." : "Версия готова к явной публикации.",
+            ...sideEffects
+          ]}
+        >
           <div className={styles.inlineActions}>
             <ConfirmActionForm action={`/api/admin/revisions/${revision.id}/publish`} confirmMessage="Опубликовать эту версию?">
               <button type="submit" className={styles.primaryButton} disabled={readiness.hasBlocking}>
@@ -43,7 +59,7 @@ export default async function PublishReadinessPage({ params, searchParams }) {
               </button>
             </ConfirmActionForm>
           </div>
-        </section>
+        </SurfacePacket>
         <ReadinessPanel readiness={readiness} title="Проверки публикации" />
       </div>
     </AdminShell>

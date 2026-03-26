@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { ADMIN_COPY } from "../../lib/ui-copy.js";
@@ -40,6 +41,9 @@ export function MediaPicker({
           placeholder={ADMIN_COPY.filterByMedia}
         />
       </label>
+      <p className={styles.helpText}>
+        Новый файл добавляйте в разделе <Link href="/admin/entities/media_asset">Медиа</Link>. Здесь выбираются уже загруженные файлы.
+      </p>
       <div className={styles.mediaGrid}>
         {filtered.length === 0 ? (
           <p className={styles.emptyHint}>{ADMIN_COPY.noMatchingMedia}</p>

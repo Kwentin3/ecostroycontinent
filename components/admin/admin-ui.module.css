@@ -38,6 +38,12 @@
 }
 
 .sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -76,6 +82,7 @@
 }
 
 .navLink {
+  display: block;
   padding: 12px 14px;
   border-radius: var(--radius-sm);
   color: var(--text);
@@ -90,8 +97,51 @@
   outline: none;
 }
 
+.navLinkActive {
+  background: #264c3b;
+  color: #fff;
+  border-color: #264c3b;
+}
+
 .main {
-  padding: var(--space-5);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.depthBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--space-3);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.depthCrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.depthCrumbLink {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.depthCrumbLink:hover,
+.depthCrumbLink:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+.depthCurrent {
+  color: var(--subtle);
+}
+
+.depthSeparator {
+  color: var(--subtle);
 }
 
 .pageHeader {
@@ -99,7 +149,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   align-items: start;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .pageActions,
@@ -120,6 +170,47 @@
 
 .panelMuted {
   background: var(--panel-muted);
+}
+
+.surfacePacket {
+  display: grid;
+  gap: var(--space-3);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+}
+
+.surfacePacketTop {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.surfacePacketHeading {
+  display: grid;
+  gap: 4px;
+  min-width: min(100%, 420px);
+}
+
+.surfacePacketSummary {
+  margin: 0;
+  color: var(--subtle);
+}
+
+.surfacePacketList {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 8px;
+}
+
+.surfacePacketBody {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .stack {
@@ -373,11 +464,15 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
   gap: var(--space-4);
+  align-items: start;
 }
 
 .stickyPanel {
   position: sticky;
-  top: 24px;
+  top: var(--space-4);
+  max-height: calc(100vh - (var(--space-4) * 2));
+  overflow: auto;
+  align-self: start;
 }
 
 .emptyState {
@@ -392,6 +487,10 @@
   }
 
   .sidebar {
+    position: static;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }

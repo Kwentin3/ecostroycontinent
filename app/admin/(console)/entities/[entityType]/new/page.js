@@ -13,7 +13,16 @@ export default async function NewEntityPage({ params, searchParams }) {
   const query = await searchParams;
 
   return (
-    <AdminShell user={user} title={`Новая ${ENTITY_TYPE_LABELS[normalizedType].toLowerCase()}`}>
+    <AdminShell
+      user={user}
+      title={`Новая ${ENTITY_TYPE_LABELS[normalizedType].toLowerCase()}`}
+      breadcrumbs={[
+        { label: "Админка", href: "/admin" },
+        { label: ENTITY_TYPE_LABELS[normalizedType], href: `/admin/entities/${normalizedType}` },
+        { label: "Новый черновик" }
+      ]}
+      activeHref={`/admin/entities/${normalizedType}`}
+    >
       <EntityEditorForm
         entityType={normalizedType}
         entityId={null}

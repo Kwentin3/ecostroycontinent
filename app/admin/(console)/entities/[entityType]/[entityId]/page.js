@@ -6,6 +6,7 @@ import { deriveEditorValue, loadEditorPageData } from "../../../../../../lib/adm
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
 import { ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
+import { getPayloadLabel } from "../../../../../../lib/admin/entity-ui";
 
 export default async function EntityEditorPage({ params, searchParams }) {
   const { entityType, entityId } = await params;
@@ -13,13 +14,23 @@ export default async function EntityEditorPage({ params, searchParams }) {
   const normalizedType = assertEntityType(entityType);
   const query = await searchParams;
   const data = await loadEditorPageData(normalizedType, entityId);
+  const surfaceLabel = getPayloadLabel(data.currentRevision?.payload || data.state.activePublishedRevision?.payload || { title: ENTITY_TYPE_LABELS[normalizedType] });
 
   if (!data.state?.entity) {
     notFound();
   }
 
   return (
-    <AdminShell user={user} title={`${ENTITY_TYPE_LABELS[normalizedType]} — редактор`}>
+    <AdminShell
+      user={user}
+      title={`${surfaceLabel} — редактор`}
+      breadcrumbs={[
+        { label: "Админка", href: "/admin" },
+        { label: ENTITY_TYPE_LABELS[normalizedType], href: `/admin/entities/${normalizedType}` },
+        { label: surfaceLabel }
+      ]}
+      activeHref={`/admin/entities/${normalizedType}`}
+    >
       <EntityEditorForm
         entityType={normalizedType}
         entityId={entityId}

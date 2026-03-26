@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ConfirmActionForm } from "../../../../../../../components/admin/ConfirmActionForm";
 import { AdminShell } from "../../../../../../../components/admin/AdminShell";
 import { RevisionDiffPanel } from "../../../../../../../components/admin/RevisionDiffPanel";
+import { SurfacePacket } from "../../../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../../../components/admin/admin-ui.module.css";
 import { TimelineList } from "../../../../../../../components/admin/TimelineList";
 import { requireEditorUser } from "../../../../../../../lib/admin/page-helpers";
@@ -10,6 +11,7 @@ import { buildHumanReadableDiff } from "../../../../../../../lib/content-core/di
 import { getEntityEditorState } from "../../../../../../../lib/content-core/service";
 import { getAuditTimeline } from "../../../../../../../lib/content-ops/audit";
 import { getChangeClassLabel, getEntityTypeLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
+import { getPayloadLabel } from "../../../../../../../lib/admin/entity-ui";
 
 export default async function EntityHistoryPage({ params, searchParams }) {
   const { entityType, entityId } = await params;
@@ -17,18 +19,38 @@ export default async function EntityHistoryPage({ params, searchParams }) {
   const state = await getEntityEditorState(entityId);
   const auditItems = await getAuditTimeline(entityId);
   const query = await searchParams;
+  const surfaceLabel = getPayloadLabel(state.revisions[0]?.payload || state.activePublishedRevision?.payload || { title: getEntityTypeLabel(entityType) });
 
   if (!state?.entity) {
     notFound();
   }
 
   return (
-    <AdminShell user={user} title={`${getEntityTypeLabel(entityType)} — история`}>
+    <AdminShell
+      user={user}
+      title={`${surfaceLabel} — история`}
+      breadcrumbs={[
+        { label: "Админка", href: "/admin" },
+        { label: getEntityTypeLabel(entityType), href: `/admin/entities/${entityType}` },
+        { label: surfaceLabel, href: `/admin/entities/${entityType}/${entityId}` },
+        { label: "История" }
+      ]}
+      activeHref={`/admin/entities/${entityType}`}
+    >
       <div className={styles.stack}>
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
+        <SurfacePacket
+          eyebrow="История"
+          title="Лента версий"
+          summary="Здесь видно, как материал менялся от черновика к публикации. Откат выполняет суперадмин и только по понятной ревизии."
+          bullets={[
+            `Всего версий: ${state.revisions.length}`,
+            state.activePublishedRevision ? `Опубликованная версия №${state.activePublishedRevision.revisionNumber}` : "Опубликованной версии пока нет",
+            "Комментарий к версии читается как история, а не как технический лог."
+          ]}
+        />
         <section className={styles.panel}>
-          <h3>Лента версий</h3>
           <div className={styles.stack}>
             {state.revisions.map((revision, index) => {
               const baseline = index === state.revisions.length - 1 ? state.activePublishedRevision : state.revisions[index + 1] ?? state.activePublishedRevision;

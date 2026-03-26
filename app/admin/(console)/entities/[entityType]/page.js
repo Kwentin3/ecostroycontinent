@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../components/admin/AdminShell";
+import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
@@ -14,6 +15,9 @@ export default async function EntityListPage({ params, searchParams }) {
   const normalizedType = assertEntityType(entityType);
   const cards = await listEntityCards(normalizedType);
   const query = await searchParams;
+  const draftCount = cards.filter((card) => card.latestRevision?.state === "draft").length;
+  const reviewCount = cards.filter((card) => card.latestRevision?.state === "review").length;
+  const publishedCount = cards.filter((card) => card.latestRevision?.state === "published").length;
 
   if (!ENTITY_TYPE_LABELS[normalizedType]) {
     notFound();
@@ -31,11 +35,27 @@ export default async function EntityListPage({ params, searchParams }) {
     <AdminShell
       user={user}
       title={ENTITY_TYPE_LABELS[normalizedType]}
+      breadcrumbs={[
+        { label: "Админка", href: "/admin" },
+        { label: ENTITY_TYPE_LABELS[normalizedType] }
+      ]}
+      activeHref={`/admin/entities/${normalizedType}`}
       actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>Новый</Link>}
     >
       <div className={styles.stack}>
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
+        <SurfacePacket
+          eyebrow="Список"
+          title={ENTITY_TYPE_LABELS[normalizedType]}
+          summary="Открывайте карточку для редактирования или создайте новую запись через кнопку справа."
+          bullets={[
+            `Всего записей: ${cards.length}`,
+            `Черновиков: ${draftCount}`,
+            `На проверке: ${reviewCount}`,
+            `Опубликовано: ${publishedCount}`
+          ]}
+        />
         <section className={styles.panel}>
           <table className={styles.table}>
             <thead>

@@ -16,7 +16,27 @@ const navItems = [
   { href: "/admin/users", label: "Пользователи" }
 ];
 
-export function AdminShell({ user, title, children, actions = null }) {
+function renderBreadcrumbs(breadcrumbs) {
+  return breadcrumbs.map((crumb, index) => {
+    const isLast = index === breadcrumbs.length - 1;
+    const content = isLast || !crumb.href ? (
+      <span className={styles.depthCurrent}>{crumb.label}</span>
+    ) : (
+      <Link href={crumb.href} className={styles.depthCrumbLink}>
+        {crumb.label}
+      </Link>
+    );
+
+    return (
+      <span key={`${crumb.label}-${index}`} className={styles.depthCrumb}>
+        {index > 0 ? <span className={styles.depthSeparator}>/</span> : null}
+        {content}
+      </span>
+    );
+  });
+}
+
+export function AdminShell({ user, title, children, actions = null, breadcrumbs = [], activeHref = null }) {
   return (
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
@@ -27,9 +47,14 @@ export function AdminShell({ user, title, children, actions = null }) {
             {user.display_name} | {getRoleLabel(user.role)}
           </p>
         </div>
-        <nav className={styles.nav}>
+        <nav className={styles.nav} aria-label="Основная навигация">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className={styles.navLink}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`${styles.navLink} ${activeHref === item.href ? styles.navLinkActive : ""}`}
+              aria-current={activeHref === item.href ? "page" : undefined}
+            >
               {item.label}
             </Link>
           ))}
@@ -39,6 +64,11 @@ export function AdminShell({ user, title, children, actions = null }) {
         </form>
       </aside>
       <main className={styles.main}>
+        {breadcrumbs.length ? (
+          <nav className={styles.depthBar} aria-label="Навигация по уровням">
+            {renderBreadcrumbs(breadcrumbs)}
+          </nav>
+        ) : null}
         <header className={styles.pageHeader}>
           <div>
             <p className={styles.eyebrow}>{ADMIN_COPY.adminEyebrow}</p>

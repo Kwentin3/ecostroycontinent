@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AdminShell } from "../../../../../components/admin/AdminShell";
+import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import { RevisionDiffPanel } from "../../../../../components/admin/RevisionDiffPanel";
 import { ReadinessPanel } from "../../../../../components/admin/ReadinessPanel";
 import { CasePage, ServicePage, StandalonePage } from "../../../../../components/public/PublicRenderers";
@@ -77,53 +78,74 @@ export default async function ReviewDetailPage({ params, searchParams }) {
   const baseline = entity.activePublishedRevisionId ? await findRevisionById(entity.activePublishedRevisionId) : null;
   const diffRows = buildHumanReadableDiff(entity.entityType, baseline?.payload ?? null, revision.payload);
   const query = await searchParams;
+  const title = revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType);
   const basisLabel = baseline
     ? `База предпросмотра: опубликованная версия №${baseline.revisionNumber}`
     : "База предпросмотра: опубликованной основы пока нет.";
 
   return (
-    <AdminShell user={user} title="Проверка и согласование">
+    <AdminShell
+      user={user}
+      title="Проверка и согласование"
+      breadcrumbs={[
+        { label: "Админка", href: "/admin" },
+        { label: "Проверка", href: "/admin/review" },
+        { label: title }
+      ]}
+      activeHref="/admin/review"
+    >
       <div className={styles.stack}>
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         <div className={styles.split}>
-          <section className={styles.panel}>
-            <p className={styles.eyebrow}>Режим согласования</p>
-            <h3>{revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType)}</h3>
-            <p className={styles.mutedText}>Версия №{revision.revisionNumber} | {getChangeClassLabel(revision.changeClass)}</p>
-            <p>{normalizeLegacyCopy(revision.changeIntent)}</p>
-            <div className={styles.badgeRow}>
-              <span className={styles.badge}>Предпросмотр: {getPreviewStatusLabel(revision.previewStatus)}</span>
-              {revision.ownerReviewRequired ? <span className={styles.badge}>Требуется согласование владельца</span> : null}
-              {revision.aiInvolvement ? <span className={styles.badge}>С участием ИИ</span> : null}
-            </div>
+          <section className={styles.stack}>
+            <SurfacePacket
+              eyebrow="Карточка решения"
+              title={title}
+              summary={`Версия №${revision.revisionNumber} · ${getChangeClassLabel(revision.changeClass)}`}
+              meta={[
+                `Предпросмотр: ${getPreviewStatusLabel(revision.previewStatus)}`,
+                revision.ownerReviewRequired ? "Нужно согласование владельца" : "Согласование владельца не требуется",
+                revision.aiInvolvement ? "С участием ИИ" : null
+              ].filter(Boolean)}
+              bullets={[
+                `Что изменилось: ${normalizeLegacyCopy(revision.changeIntent)}`,
+                "Комментарий лучше писать конкретно: какое поле или блок нужно поправить.",
+                "Сначала читайте изменения, затем выбирайте решение."
+              ]}
+            >
+              {user.role === "business_owner" || user.role === "superadmin" ? (
+                <form action={`/api/admin/revisions/${revision.id}/owner-action`} method="post" className={styles.formGrid}>
+                  <label className={styles.label}>
+                    <span>Комментарий</span>
+                    <textarea name="comment" defaultValue={revision.reviewComment || ""} />
+                  </label>
+                  <div className={styles.inlineActions}>
+                    <button type="submit" name="action" value="approve" className={styles.primaryButton}>Одобрить</button>
+                    <button type="submit" name="action" value="reject" className={styles.secondaryButton}>Отклонить</button>
+                    <button type="submit" name="action" value="send_back" className={styles.dangerButton}>Вернуть с комментарием</button>
+                  </div>
+                </form>
+              ) : (
+                <p className={styles.mutedText}>Сначала проверьте готовность и предпросмотр, затем дождитесь решения владельца, если оно требуется.</p>
+              )}
+            </SurfacePacket>
             <RevisionDiffPanel
               title="Понятные изменения"
               basisLabel={basisLabel}
               rows={diffRows}
               emptyLabel="Изменений верхнего уровня нет."
             />
-            {user.role === "business_owner" || user.role === "superadmin" ? (
-              <form action={`/api/admin/revisions/${revision.id}/owner-action`} method="post" className={styles.formGrid}>
-                <label className={styles.label}>
-                  <span>Комментарий</span>
-                  <textarea name="comment" defaultValue={revision.reviewComment || ""} />
-                </label>
-                <div className={styles.inlineActions}>
-                  <button type="submit" name="action" value="approve" className={styles.primaryButton}>Одобрить</button>
-                  <button type="submit" name="action" value="reject" className={styles.secondaryButton}>Отклонить</button>
-                  <button type="submit" name="action" value="send_back" className={styles.dangerButton}>Вернуть с комментарием</button>
-                </div>
-              </form>
-            ) : (
-              <p className={styles.mutedText}>Сначала проверьте готовность и предпросмотр, затем дождитесь решения владельца, если оно требуется.</p>
-            )}
             <ReadinessPanel readiness={readiness} title="Проверка готовности" />
           </section>
-          <section className={styles.panel}>
-            <p className={styles.eyebrow}>Предпросмотр версии</p>
-            <p className={styles.mutedText}>{basisLabel} Связанные сущности и медиа берутся из опубликованных данных.</p>
-            {renderPreview(entity.entityType, revision.payload, lookups, globalSettings)}
+          <section className={styles.stack}>
+            <SurfacePacket
+              eyebrow="Предпросмотр версии"
+              title="Что увидит посетитель"
+              summary={`${basisLabel}. Связанные сущности и медиа берутся из опубликованных данных.`}
+            >
+              {renderPreview(entity.entityType, revision.payload, lookups, globalSettings)}
+            </SurfacePacket>
           </section>
         </div>
       </div>
