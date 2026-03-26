@@ -4,6 +4,7 @@ import { AdminShell } from "../../../../components/admin/AdminShell";
 import { SurfacePacket } from "../../../../components/admin/SurfacePacket";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
+import { getScreenLegend } from "../../../../lib/admin/screen-copy.js";
 import { getReviewQueue } from "../../../../lib/content-ops/workflow";
 import { getEntityTypeLabel, getOwnerApprovalStatusLabel, getPreviewStatusLabel } from "../../../../lib/ui-copy.js";
 
@@ -20,6 +21,7 @@ export default async function ReviewQueuePage() {
           eyebrow="Очередь"
           title={queue.length ? `${queue.length} материалов ждут проверки` : "Очередь проверки пуста"}
           summary="Открывайте карточки по очереди. Если материал требует согласования владельца, это видно прямо в списке."
+          legend={getScreenLegend("reviewQueue")}
           bullets={[
             `Требуют согласования владельца: ${ownerItems.length}`,
             `Всего в очереди: ${queue.length}`,

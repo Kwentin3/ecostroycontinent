@@ -34,6 +34,7 @@ export default async function NewEntityPage({ params, searchParams }) {
         obligations={[]}
         relationOptions={data.relationOptions}
         mediaOptions={data.mediaOptions}
+        caseProjectTypeOptions={data.caseProjectTypeOptions}
         user={user}
         message={query?.message}
         error={query?.error}

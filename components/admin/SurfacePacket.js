@@ -12,7 +12,7 @@ function renderMetaItem(item, index) {
   return item;
 }
 
-export function SurfacePacket({ eyebrow, title, summary, meta = [], bullets = [], actions = null, children = null }) {
+export function SurfacePacket({ eyebrow, title, summary, legend = null, meta = [], bullets = [], actions = null, children = null }) {
   return (
     <section className={styles.surfacePacket}>
       <div className={styles.surfacePacketTop}>
@@ -20,6 +20,7 @@ export function SurfacePacket({ eyebrow, title, summary, meta = [], bullets = []
           {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
           {title ? <h3>{title}</h3> : null}
           {summary ? <p className={styles.surfacePacketSummary}>{summary}</p> : null}
+          {legend ? <p className={styles.surfacePacketLegend}>{legend}</p> : null}
         </div>
         {actions ? <div className={styles.pageActions}>{actions}</div> : null}
       </div>

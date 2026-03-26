@@ -280,6 +280,14 @@
   color: var(--subtle);
 }
 
+.surfacePacketLegend {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  max-width: 72ch;
+}
+
 .surfacePacketList {
   margin: 0;
   padding-left: 1.2rem;

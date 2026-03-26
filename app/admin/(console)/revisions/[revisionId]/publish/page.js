@@ -6,6 +6,7 @@ import { ReadinessPanel } from "../../../../../../components/admin/ReadinessPane
 import { SurfacePacket } from "../../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../../components/admin/admin-ui.module.css";
 import { requirePublishUser } from "../../../../../../lib/admin/page-helpers";
+import { getScreenLegend } from "../../../../../../lib/admin/screen-copy.js";
 import { findEntityById, findRevisionById } from "../../../../../../lib/content-core/repository";
 import { evaluateReadiness } from "../../../../../../lib/content-ops/readiness";
 import { getEntityTypeLabel, getPreviewStatusLabel, normalizeLegacyCopy } from "../../../../../../lib/ui-copy.js";
@@ -48,6 +49,7 @@ export default async function PublishReadinessPage({ params, searchParams }) {
           eyebrow="Проверка перед выпуском"
           title={title}
           summary={`Версия №${revision.revisionNumber} · Статус предпросмотра: ${getPreviewStatusLabel(revision.previewStatus)}`}
+          legend={getScreenLegend("publishReadiness")}
           bullets={[
             readiness.hasBlocking ? "Публикация пока заблокирована проверкой готовности." : "Версия готова к явной публикации.",
             ...sideEffects

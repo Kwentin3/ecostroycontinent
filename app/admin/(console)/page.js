@@ -25,6 +25,7 @@ function buildLandingPacket(user, requiresAction, waitingOnOthers, readyNext) {
       eyebrow: "Решения",
       title: requiresAction.length ? `${requiresAction.length} материалов ждут вашего решения` : "Сегодня ничего не ждёт вашего решения",
       summary: "Открывайте только те карточки, где нужен ваш выбор. Редактирование и публикация остаются у рабочих ролей.",
+      legend: "Это ваш короткий экран решений: здесь видно, что ждёт именно вас, что уже ждут другие роли и куда перейти дальше.",
       bullets: [
         `На вашем согласовании: ${requiresAction.length}`,
         `Ждут других ролей: ${waitingOnOthers.length}`,
@@ -39,6 +40,7 @@ function buildLandingPacket(user, requiresAction, waitingOnOthers, readyNext) {
       eyebrow: "Операционный контроль",
       title: "Публикация, откат и доступы под контролем",
       summary: "Здесь видно, что готово к публикации, что ждёт проверки и где нужен контроль доступа.",
+      legend: "Это оперативная панель: сначала очередь и последствия, затем контроль публикации и пользователей.",
       bullets: [
         `На проверке: ${requiresAction.length}`,
         `Ждут других ролей: ${waitingOnOthers.length}`,
@@ -51,14 +53,15 @@ function buildLandingPacket(user, requiresAction, waitingOnOthers, readyNext) {
     };
   }
 
-  return {
-    eyebrow: "Рабочий день",
-    title: requiresAction.length ? `${requiresAction.length} материалов ждут вашей проверки` : "Сегодня нет срочных задач",
-    summary: "В этой панели видно, что нужно сделать сейчас, что ждёт согласования и что уже готово к следующему шагу.",
-    bullets: [
-      `На проверке: ${requiresAction.length}`,
-      `Ждут других ролей: ${waitingOnOthers.length}`,
-      `Готовы к следующему шагу: ${readyNext.length}`
+    return {
+      eyebrow: "Рабочий день",
+      title: requiresAction.length ? `${requiresAction.length} материалов ждут вашей проверки` : "Сегодня нет срочных задач",
+      summary: "В этой панели видно, что нужно сделать сейчас, что ждёт согласования и что уже готово к следующему шагу.",
+      legend: "Это стартовая панель рабочего дня: сначала смотрите срочные карточки, затем очередь и готовые материалы.",
+      bullets: [
+        `На проверке: ${requiresAction.length}`,
+        `Ждут других ролей: ${waitingOnOthers.length}`,
+        `Готовы к следующему шагу: ${readyNext.length}`
     ],
     actions: <div className={styles.inlineActions}>
       <Link href={openFirstReview} className={styles.secondaryButton}>Открыть проверку</Link>
@@ -88,6 +91,7 @@ export default async function AdminDashboardPage({ searchParams }) {
           eyebrow={landingPacket.eyebrow}
           title={landingPacket.title}
           summary={landingPacket.summary}
+          legend={landingPacket.legend}
           bullets={landingPacket.bullets}
           actions={landingPacket.actions}
         />

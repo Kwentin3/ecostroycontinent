@@ -6,6 +6,7 @@ import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireUserManager } from "../../../../../lib/admin/page-helpers";
+import { getScreenLegend } from "../../../../../lib/admin/screen-copy.js";
 import { getRoleLabel } from "../../../../../lib/auth/session.js";
 import { findUserById, listUsers } from "../../../../../lib/content-core/repository";
 import { normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
@@ -41,6 +42,7 @@ export default async function UserDetailPage({ params, searchParams }) {
           eyebrow="Карточка пользователя"
           title={currentUser.display_name}
           summary="Здесь можно изменить имя, логин, роль, активность и пароль. Удаление доступно отдельно и требует подтверждения."
+          legend={getScreenLegend("usersDetail")}
           bullets={[
             `Роль: ${getRoleLabel(currentUser.role)}`,
             `Активен: ${currentUser.active ? "да" : "нет"}`,

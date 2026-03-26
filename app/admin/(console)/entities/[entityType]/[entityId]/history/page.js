@@ -8,6 +8,7 @@ import { TimelineList } from "../../../../../../../components/admin/TimelineList
 import styles from "../../../../../../../components/admin/admin-ui.module.css";
 import { requireEditorUser } from "../../../../../../../lib/admin/page-helpers";
 import { getPreviewTargetForField, getPayloadLabel } from "../../../../../../../lib/admin/entity-ui";
+import { CHANGE_INTENT_LABEL, getScreenLegend } from "../../../../../../../lib/admin/screen-copy.js";
 import { buildHumanReadableDiff } from "../../../../../../../lib/content-core/diff.js";
 import { getEntityEditorState } from "../../../../../../../lib/content-core/service";
 import { getAuditTimeline } from "../../../../../../../lib/content-ops/audit";
@@ -44,6 +45,7 @@ export default async function EntityHistoryPage({ params, searchParams }) {
           eyebrow="История"
           title="Лента версий"
           summary="Здесь видно, как материал менялся от черновика к публикации. Откат выполняет суперадмин и только по понятной ревизии."
+          legend={getScreenLegend("history")}
           bullets={[
             `Всего версий: ${state.revisions.length}`,
             state.activePublishedRevision ? `Опубликованная версия №${state.activePublishedRevision.revisionNumber}` : "Опубликованной версии пока нет",
@@ -68,7 +70,7 @@ export default async function EntityHistoryPage({ params, searchParams }) {
                     {revision.aiInvolvement ? <span className={styles.badge}>С участием ИИ</span> : null}
                   </div>
                   <h4>Версия №{revision.revisionNumber}</h4>
-                  <p className={styles.mutedText}>{normalizeLegacyCopy(revision.changeIntent)}</p>
+                  <p className={styles.mutedText}>{CHANGE_INTENT_LABEL}: {normalizeLegacyCopy(revision.changeIntent)}</p>
                   <p className={styles.mutedText}>{getChangeClassLabel(revision.changeClass)}</p>
                   <RevisionDiffPanel
                     title="Понятные изменения"

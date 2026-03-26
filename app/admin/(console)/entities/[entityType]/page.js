@@ -5,6 +5,7 @@ import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
+import { getEntityListLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
 import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service";
 import { getRevisionStateLabel, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
@@ -49,6 +50,7 @@ export default async function EntityListPage({ params, searchParams }) {
           eyebrow="Список"
           title={ENTITY_TYPE_LABELS[normalizedType]}
           summary="Открывайте карточку для редактирования или создайте новую запись через кнопку справа."
+          legend={getEntityListLegend(normalizedType)}
           bullets={[
             `Всего записей: ${cards.length}`,
             `Черновиков: ${draftCount}`,

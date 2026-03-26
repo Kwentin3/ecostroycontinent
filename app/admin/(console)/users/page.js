@@ -5,6 +5,7 @@ import { AdminShell } from "../../../../components/admin/AdminShell";
 import { SurfacePacket } from "../../../../components/admin/SurfacePacket";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { requireUserManager } from "../../../../lib/admin/page-helpers";
+import { getScreenLegend } from "../../../../lib/admin/screen-copy.js";
 import { getRoleLabel } from "../../../../lib/auth/session.js";
 import { listUsers } from "../../../../lib/content-core/repository";
 import { normalizeLegacyCopy } from "../../../../lib/ui-copy.js";
@@ -32,6 +33,7 @@ export default async function UsersPage({ searchParams }) {
           eyebrow="Доступы"
           title="Управление пользователями"
           summary="Здесь видны активные роли, последняя активность и быстрые действия по редактированию, включению или отключению доступа."
+          legend={getScreenLegend("usersList")}
           bullets={[
             `Всего пользователей: ${users.length}`,
             `Активных: ${activeCount}`,

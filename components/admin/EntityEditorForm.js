@@ -6,6 +6,7 @@ import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
 import { SurfacePacket } from "./SurfacePacket";
 import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
 import styles from "./admin-ui.module.css";
 
@@ -35,6 +36,7 @@ function HiddenSeoFields({ value }) {
       <label className={styles.label}>
         <span>{FIELD_LABELS.canonicalIntent}</span>
         <input name="canonicalIntent" defaultValue={value.seo?.canonicalIntent || ""} />
+        <p className={styles.helpText}>{FIELD_HINTS.canonicalIntent}</p>
       </label>
       <label className={styles.label}>
         <span>{FIELD_LABELS.indexationFlag}</span>
@@ -61,6 +63,7 @@ function renderMediaUpload(redirectTo) {
     <section className={`${styles.panel} ${styles.panelMuted}`}>
       <h3>{ADMIN_COPY.fastMediaUploadTitle}</h3>
       <p className={styles.helpText}>{ADMIN_COPY.fastMediaUploadHint}</p>
+      <p className={styles.helpText}>{FIELD_HINTS.mediaUpload}</p>
       <form action="/api/admin/media/upload" method="post" encType="multipart/form-data" className={styles.formGrid}>
         <input type="hidden" name="redirectTo" value={redirectTo} />
         <label className={styles.label}>
@@ -100,6 +103,7 @@ export function EntityEditorForm({
   obligations,
   relationOptions,
   mediaOptions,
+  caseProjectTypeOptions = [],
   user,
   message,
   error
@@ -132,6 +136,7 @@ export function EntityEditorForm({
           eyebrow="Рабочая карточка"
           title={surfaceTitle}
           summary={surfaceSummary}
+          legend={getEntityEditorLegend(entityType)}
           bullets={surfaceBullets}
           meta={[currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"]}
         >
@@ -142,8 +147,9 @@ export function EntityEditorForm({
           <form action={`/api/admin/entities/${entityType}/save`} method="post" className={styles.formGrid}>
             <input type="hidden" name="entityId" value={entityId || ""} />
             <label className={styles.label}>
-              <span>Смысл изменения</span>
+              <span>{CHANGE_INTENT_LABEL}</span>
               <input name="changeIntent" defaultValue={normalizeLegacyCopy(currentRevision?.changeIntent) || "Черновик сохранён из редактора."} required />
+              <p className={styles.helpText}>{FIELD_HINTS.changeIntent}</p>
             </label>
 
             {entityType === "global_settings" ? (
@@ -257,6 +263,7 @@ export function EntityEditorForm({
                   assets={mediaOptions}
                   selectedIds={value.assetIds || []}
                   selectionMode="multiple"
+                  hint={FIELD_HINTS.galleryAssets}
                 />
                 <MediaPicker
                   legend="Основной файл"
@@ -264,6 +271,7 @@ export function EntityEditorForm({
                   assets={mediaOptions}
                   selectedIds={value.primaryAssetId ? [value.primaryAssetId] : []}
                   selectionMode="single"
+                  hint={FIELD_HINTS.galleryPrimaryAsset}
                 />
               </>
             ) : null}
@@ -306,7 +314,7 @@ export function EntityEditorForm({
                 </label>
                 <FilterableChecklist legend="Связанные кейсы" name="relatedCaseIds" options={relationOptions.cases} selectedIds={value.relatedCaseIds || []} />
                 <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
-                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
+                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} hint={FIELD_HINTS.primaryMedia} />
               </>
             ) : null}
 
@@ -327,9 +335,17 @@ export function EntityEditorForm({
                   </label>
                   <label className={styles.label}>
                     <span>{FIELD_LABELS.projectType}</span>
-                    <input name="projectType" defaultValue={value.projectType || ""} />
+                    <input name="projectType" list={caseProjectTypeOptions.length ? "caseProjectTypeOptions" : undefined} defaultValue={value.projectType || ""} />
+                    <p className={styles.helpText}>{FIELD_HINTS.projectType}</p>
                   </label>
                 </div>
+                {caseProjectTypeOptions.length ? (
+                  <datalist id="caseProjectTypeOptions">
+                    {caseProjectTypeOptions.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+                ) : null}
                 <label className={styles.label}>
                   <span>{FIELD_LABELS.task}</span>
                   <textarea name="task" defaultValue={value.task || ""} required />
@@ -344,7 +360,7 @@ export function EntityEditorForm({
                 </label>
                 <FilterableChecklist legend="Связанные услуги" name="serviceIds" options={relationOptions.services} selectedIds={value.serviceIds || []} />
                 <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
-                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
+                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} hint={FIELD_HINTS.primaryMedia} />
               </>
             ) : null}
 
@@ -394,7 +410,7 @@ export function EntityEditorForm({
                 <FilterableChecklist legend="Связанные услуги" name="serviceIds" options={relationOptions.services} selectedIds={value.serviceIds || []} />
                 <FilterableChecklist legend="Связанные кейсы" name="caseIds" options={relationOptions.cases} selectedIds={value.caseIds || []} />
                 <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
-                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} />
+                <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} hint={FIELD_HINTS.primaryMedia} />
               </>
             ) : null}
 

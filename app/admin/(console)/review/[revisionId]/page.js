@@ -8,6 +8,7 @@ import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../../lib/admin/page-helpers";
 import { getPreviewTargetForField } from "../../../../../lib/admin/entity-ui";
+import { CHANGE_INTENT_LABEL, getScreenLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES } from "../../../../../lib/content-core/content-types.js";
 import { buildHumanReadableDiff } from "../../../../../lib/content-core/diff.js";
 import { findEntityById, findRevisionById } from "../../../../../lib/content-core/repository.js";
@@ -112,13 +113,14 @@ export default async function ReviewDetailPage({ params, searchParams }) {
               eyebrow="Карточка решения"
               title={title}
               summary={`Версия №${revision.revisionNumber} · ${getChangeClassLabel(revision.changeClass)}`}
+              legend={getScreenLegend("reviewDetail")}
               meta={[
                 `Предпросмотр: ${getPreviewStatusLabel(revision.previewStatus)}`,
                 revision.ownerReviewRequired ? "Нужно согласование владельца" : "Согласование владельца не требуется",
                 revision.aiInvolvement ? "С участием ИИ" : null
               ].filter(Boolean)}
               bullets={[
-                `Что изменилось: ${normalizeLegacyCopy(revision.changeIntent)}`,
+                `${CHANGE_INTENT_LABEL}: ${normalizeLegacyCopy(revision.changeIntent)}`,
                 "Комментарий лучше писать конкретно: какое поле или блок нужно поправить.",
                 "Сначала читайте изменения, затем выбирайте решение."
               ]}
@@ -153,6 +155,7 @@ export default async function ReviewDetailPage({ params, searchParams }) {
               eyebrow="Предпросмотр версии"
               title="Что увидит посетитель"
               summary={`${basisLabel}. Связанные сущности и медиа берутся из опубликованных данных.`}
+              legend="Переключайте устройство в верхней панели предпросмотра, чтобы увидеть версию на телефоне, планшете и компьютере."
             >
               <PreviewViewport device={previewMode} hrefBase={`/admin/review/${revisionId}`} searchParams={query}>
                 {renderPreview(entity.entityType, revision.payload, lookups, globalSettings)}

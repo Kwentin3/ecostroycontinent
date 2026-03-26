@@ -42,6 +42,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
         obligations={data.obligations}
         relationOptions={data.relationOptions}
         mediaOptions={data.mediaOptions}
+        caseProjectTypeOptions={data.caseProjectTypeOptions}
         user={user}
         message={query?.message}
         error={query?.error}
