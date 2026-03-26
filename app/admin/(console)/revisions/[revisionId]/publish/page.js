@@ -57,7 +57,7 @@ export default async function PublishReadinessPage({ params, searchParams }) {
         >
           <div className={styles.inlineActions}>
             <ConfirmActionForm action={`/api/admin/revisions/${revision.id}/publish`} confirmMessage="Опубликовать эту версию?">
-              <button type="submit" className={styles.primaryButton} disabled={readiness.hasBlocking}>
+              <button type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`} disabled={readiness.hasBlocking}>
                 Опубликовать
               </button>
             </ConfirmActionForm>

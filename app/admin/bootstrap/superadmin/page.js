@@ -37,7 +37,7 @@ export default async function SuperadminBootstrapPage({ searchParams }) {
               <span>Я понимаю, что пароль будет показан только один раз.</span>
             </div>
           </label>
-          <button type="submit" className={styles.primaryButton} disabled={!config.bootstrapSuperadminConfigured}>
+          <button type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`} disabled={!config.bootstrapSuperadminConfigured}>
             Создать учётную запись
           </button>
         </form>

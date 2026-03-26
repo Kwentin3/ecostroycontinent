@@ -86,7 +86,7 @@ function renderMediaUpload(redirectTo) {
           <span>{FIELD_LABELS.sourceNote}</span>
           <input name="sourceNote" />
         </label>
-        <button type="submit" className={styles.secondaryButton}>{ADMIN_COPY.uploadMedia}</button>
+        <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>{ADMIN_COPY.uploadMedia}</button>
       </form>
     </section>
   );

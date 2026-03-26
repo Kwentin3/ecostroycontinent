@@ -156,8 +156,15 @@
 .inlineActions {
   display: flex;
   gap: var(--space-2);
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
+  min-width: 0;
+}
+
+.pageActions > *,
+.inlineActions > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .panel {
@@ -346,12 +353,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+  width: fit-content;
   border-radius: 999px;
   padding: 12px 18px;
   font: inherit;
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  text-align: center;
 }
 
 .primaryButton {
@@ -368,6 +383,10 @@
 .dangerButton {
   background: #8b2e2e;
   color: #fff;
+}
+
+.stretchButton {
+  width: 100%;
 }
 
 .statusPanelBlocking,

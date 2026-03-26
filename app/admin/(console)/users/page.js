@@ -107,7 +107,7 @@ export default async function UsersPage({ searchParams }) {
                 <span>Пароль</span>
                 <input name="password" type="password" required />
               </label>
-              <button type="submit" className={styles.primaryButton}>
+              <button type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`}>
                 Создать пользователя
               </button>
             </form>

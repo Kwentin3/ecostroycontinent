@@ -27,7 +27,7 @@ export default async function AdminLoginPage({ searchParams }) {
             <span>Пароль</span>
             <input type="password" name="password" required />
           </label>
-          <button type="submit" className={styles.primaryButton}>Войти</button>
+          <button type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`}>Войти</button>
         </form>
       </section>
     </main>

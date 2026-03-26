@@ -60,7 +60,7 @@ export function AdminShell({ user, title, children, actions = null, breadcrumbs 
           ))}
         </nav>
         <form action="/api/admin/logout" method="post">
-          <button type="submit" className={styles.secondaryButton}>Выйти</button>
+          <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>Выйти</button>
         </form>
       </aside>
       <main className={styles.main}>

@@ -86,7 +86,7 @@ export default async function EntityHistoryPage({ params, searchParams }) {
                         className={styles.inlineActions}
                       >
                         <input type="hidden" name="targetRevisionId" value={revision.id} />
-                        <button type="submit" className={styles.secondaryButton}>Откатить к этой версии</button>
+                      <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>Откатить к этой версии</button>
                       </ConfirmActionForm>
                     </div>
                   ) : null}
