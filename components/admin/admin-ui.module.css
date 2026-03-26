@@ -318,6 +318,11 @@
   gap: var(--space-3);
 }
 
+.gridTwo > *,
+.formGrid > * {
+  min-width: 0;
+}
+
 .formGrid {
   display: grid;
   gap: var(--space-3);
@@ -330,11 +335,20 @@
   font-weight: 600;
 }
 
-.label input,
+.label,
+.searchLabel {
+  min-width: 0;
+}
+
+.label input:not([type="checkbox"]):not([type="radio"]),
 .label textarea,
 .label select,
 .searchInput {
+  display: block;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
