@@ -82,6 +82,19 @@ jobs:
             -f compose.yaml \
             up -d --remove-orphans
 
+      - name: Confirm deployed image pin
+        run: |
+          echo "Resolved APP_IMAGE from runtime env:"
+          grep '^APP_IMAGE=' /opt/ecostroycontinent/runtime/.env
+          echo "Compose-resolved images:"
+          docker compose \
+            --env-file /opt/ecostroycontinent/runtime/.env \
+            --project-name repo \
+            -f compose.yaml \
+            config --images
+          echo "Running app container image:"
+          docker inspect repo-app-1 --format '{{.Image}}'
+
       - name: Health probe through Traefik
         run: |
           curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"
