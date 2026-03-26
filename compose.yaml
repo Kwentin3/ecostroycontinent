@@ -5,6 +5,8 @@ services:
   app:
     image: ${APP_IMAGE}
     restart: unless-stopped
+    env_file:
+      - /opt/ecostroycontinent/runtime/backup-s3.env
     depends_on:
       sql:
         condition: service_healthy
@@ -13,7 +15,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       APP_BASE_URL: ${APP_BASE_URL}
       MEDIA_STORAGE_MODE: ${MEDIA_STORAGE_MODE}
-      MEDIA_STORAGE_DIR: ${MEDIA_STORAGE_DIR}
+      MEDIA_STORAGE_DIR: ${MEDIA_STORAGE_DIR:-var/media}
       MEDIA_S3_BUCKET: ${MEDIA_S3_BUCKET}
       MEDIA_S3_REGION: ${MEDIA_S3_REGION}
       MEDIA_S3_ENDPOINT_URL: ${MEDIA_S3_ENDPOINT_URL}
