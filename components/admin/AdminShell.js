@@ -21,7 +21,7 @@ export function AdminShell({ user, title, children, actions = null }) {
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
         <div>
-          <p className={styles.eyebrow}>Ekostroykontinent</p>
+          <p className={styles.eyebrow}>Экостройконтинент</p>
           <h1 className={styles.sidebarTitle}>Админка</h1>
           <p className={styles.sidebarUser}>
             {user.display_name} | {getRoleLabel(user.role)}
