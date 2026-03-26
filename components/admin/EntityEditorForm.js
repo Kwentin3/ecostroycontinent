@@ -439,7 +439,7 @@ export function EntityEditorForm({
         ) : null}
       </div>
       <div className={`${styles.stack} ${styles.stickyPanel}`}>
-        <ReadinessPanel readiness={readiness} />
+        <ReadinessPanel readiness={readiness} defaultOpen={Boolean(readiness?.hasBlocking)} />
         {activePublishedRevision ? (
           <section className={styles.panel}>
             <h3>{ADMIN_COPY.publishedRevision}</h3>

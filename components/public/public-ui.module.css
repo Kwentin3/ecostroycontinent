@@ -6,6 +6,11 @@
   gap: 24px;
 }
 
+.stack {
+  display: grid;
+  gap: 24px;
+}
+
 .homeShell {
   min-height: 100vh;
   box-sizing: border-box;
@@ -248,6 +253,19 @@
   overflow: hidden;
   background: #ffffff;
   border: 1px solid #ddd4c4;
+}
+
+.hero,
+.mediaHero,
+.card,
+.gallery,
+.previewSection {
+  scroll-margin-top: 28px;
+}
+
+.previewSection:target {
+  box-shadow: 0 0 0 2px rgba(38, 76, 59, 0.25), 0 14px 32px rgba(31, 42, 34, 0.08);
+  background-color: #f2f7f3;
 }
 
 .gallery img {

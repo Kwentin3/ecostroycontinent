@@ -11,6 +11,7 @@ export function FilterableChecklist({
   options,
   selectedIds = [],
   selectionMode = "multiple",
+  hint = null,
   emptyLabel = ADMIN_COPY.noMatchingItems
 }) {
   const [query, setQuery] = useState("");
@@ -31,6 +32,7 @@ export function FilterableChecklist({
   return (
     <fieldset className={styles.pickerFieldset}>
       <legend className={styles.pickerLegend}>{legend}</legend>
+      {hint ? <p className={styles.helpText}>{hint}</p> : null}
       <label className={styles.searchLabel}>
         <span>{ADMIN_COPY.search}</span>
         <input

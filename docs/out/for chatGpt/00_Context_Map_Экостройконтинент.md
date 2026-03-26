@@ -73,4 +73,26 @@
 - `docs/product-ux/Launch_SEO_Core_Экостройконтинент_v0.1.md`
 - `docs/product-ux/Content_Inventory_and_Evidence_Register_Экостройконтинент_v0.1.md`
 - `docs/product-ux/Content_Operations_Admin_Console_MVP_Spec_Экостройконтинент_v0.1.md`
+
+## Current state anchor
+
+- Public homepage shell is already implemented and deployed.
+- The live shell is temporary and decorative:
+  - title + `В разработке` badge
+  - 3 decorative Unsplash tiles
+  - minimal top-right login icon
+- Current shell code lives in:
+  - `app/page.js`
+  - `components/public/public-ui.module.css`
+- The live host mismatch was caused by a pinned VM digest reference in `/opt/ecostroycontinent/runtime/.env`.
+- Current known-good host image reference after the fix:
+  - `ghcr.io/kwentin3/ecostroycontinent-app@sha256:03ce569f42a4dc7ef037bd29604b13131897ba3d6ea246e60b85ad1584a7fe9c`
+- Deploy path:
+  - push to `main`
+  - `build-and-publish.yml`
+  - GHCR
+  - `deploy-phase1.yml`
+  - VM compose refresh
+- If the hosted GUI looks stale again, check the pinned host digest first before touching page code.
+- Do not reintroduce `<img>` tiles or text fallbacks inside decorative tiles.
 - `docs/product-ux/Owner_Confirmation_Pack_Экостройконтинент_v0.1.md`

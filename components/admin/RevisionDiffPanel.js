@@ -17,7 +17,14 @@ export function RevisionDiffPanel({
         <div className={styles.stack}>
           {rows.map((row) => (
             <article key={row.field} className={styles.diffCard}>
-              <p className={styles.eyebrow}>{row.label}</p>
+              <div className={styles.diffCardHeader}>
+                <p className={styles.eyebrow}>{row.label}</p>
+                {row.previewTarget ? (
+                  <a href={`#${row.previewTarget}`} className={styles.previewJumpLink}>
+                    Показать в превью
+                  </a>
+                ) : null}
+              </div>
               <div className={styles.diffGrid}>
                 <div className={styles.diffCell}>
                   <strong>{ADMIN_COPY.diffBefore}</strong>

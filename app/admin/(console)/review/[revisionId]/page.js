@@ -1,18 +1,20 @@
 import { notFound } from "next/navigation";
 
 import { AdminShell } from "../../../../../components/admin/AdminShell";
-import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
-import { RevisionDiffPanel } from "../../../../../components/admin/RevisionDiffPanel";
+import { PreviewViewport } from "../../../../../components/admin/PreviewViewport";
 import { ReadinessPanel } from "../../../../../components/admin/ReadinessPanel";
-import { CasePage, ServicePage, StandalonePage } from "../../../../../components/public/PublicRenderers";
+import { RevisionDiffPanel } from "../../../../../components/admin/RevisionDiffPanel";
+import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../../lib/admin/page-helpers";
+import { getPreviewTargetForField } from "../../../../../lib/admin/entity-ui";
 import { ENTITY_TYPES } from "../../../../../lib/content-core/content-types.js";
 import { buildHumanReadableDiff } from "../../../../../lib/content-core/diff.js";
 import { findEntityById, findRevisionById } from "../../../../../lib/content-core/repository.js";
 import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
 import { buildPublishedLookups, getPublishedGlobalSettings } from "../../../../../lib/read-side/public-content";
 import { getChangeClassLabel, getEntityTypeLabel, getPreviewStatusLabel, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
+import { CasePage, ServicePage, StandalonePage } from "../../../../../components/public/PublicRenderers";
 
 function renderPreview(entityType, payload, lookups, globalSettings) {
   if (entityType === ENTITY_TYPES.SERVICE) {
@@ -76,7 +78,12 @@ export default async function ReviewDetailPage({ params, searchParams }) {
   const lookups = await buildPublishedLookups();
   const globalSettings = await getPublishedGlobalSettings();
   const baseline = entity.activePublishedRevisionId ? await findRevisionById(entity.activePublishedRevisionId) : null;
-  const diffRows = buildHumanReadableDiff(entity.entityType, baseline?.payload ?? null, revision.payload);
+  const diffRows = buildHumanReadableDiff(
+    entity.entityType,
+    baseline?.payload ?? null,
+    revision.payload,
+    (field) => getPreviewTargetForField(entity.entityType, field)
+  );
   const query = await searchParams;
   const title = revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType);
   const basisLabel = baseline
@@ -130,21 +137,26 @@ export default async function ReviewDetailPage({ params, searchParams }) {
                 <p className={styles.mutedText}>Сначала проверьте готовность и предпросмотр, затем дождитесь решения владельца, если оно требуется.</p>
               )}
             </SurfacePacket>
+
+            <ReadinessPanel readiness={readiness} title="Проверка готовности" defaultOpen />
+
             <RevisionDiffPanel
               title="Понятные изменения"
               basisLabel={basisLabel}
               rows={diffRows}
               emptyLabel="Изменений верхнего уровня нет."
             />
-            <ReadinessPanel readiness={readiness} title="Проверка готовности" />
           </section>
-          <section className={styles.stack}>
+
+          <section className={`${styles.stack} ${styles.stickyPanel}`}>
             <SurfacePacket
               eyebrow="Предпросмотр версии"
               title="Что увидит посетитель"
               summary={`${basisLabel}. Связанные сущности и медиа берутся из опубликованных данных.`}
             >
-              {renderPreview(entity.entityType, revision.payload, lookups, globalSettings)}
+              <PreviewViewport>
+                {renderPreview(entity.entityType, revision.payload, lookups, globalSettings)}
+              </PreviewViewport>
             </SurfacePacket>
           </section>
         </div>

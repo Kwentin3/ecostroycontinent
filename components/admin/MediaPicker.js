@@ -11,7 +11,8 @@ export function MediaPicker({
   name,
   assets,
   selectedIds = [],
-  selectionMode = "single"
+  selectionMode = "single",
+  hint = null
 }) {
   const [query, setQuery] = useState("");
 
@@ -31,6 +32,7 @@ export function MediaPicker({
   return (
     <fieldset className={styles.pickerFieldset}>
       <legend className={styles.pickerLegend}>{legend}</legend>
+      {hint ? <p className={styles.helpText}>{hint}</p> : null}
       <label className={styles.searchLabel}>
         <span>{ADMIN_COPY.search}</span>
         <input

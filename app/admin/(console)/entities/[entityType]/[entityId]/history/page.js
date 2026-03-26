@@ -4,14 +4,14 @@ import { ConfirmActionForm } from "../../../../../../../components/admin/Confirm
 import { AdminShell } from "../../../../../../../components/admin/AdminShell";
 import { RevisionDiffPanel } from "../../../../../../../components/admin/RevisionDiffPanel";
 import { SurfacePacket } from "../../../../../../../components/admin/SurfacePacket";
-import styles from "../../../../../../../components/admin/admin-ui.module.css";
 import { TimelineList } from "../../../../../../../components/admin/TimelineList";
+import styles from "../../../../../../../components/admin/admin-ui.module.css";
 import { requireEditorUser } from "../../../../../../../lib/admin/page-helpers";
+import { getPreviewTargetForField, getPayloadLabel } from "../../../../../../../lib/admin/entity-ui";
 import { buildHumanReadableDiff } from "../../../../../../../lib/content-core/diff.js";
 import { getEntityEditorState } from "../../../../../../../lib/content-core/service";
 import { getAuditTimeline } from "../../../../../../../lib/content-ops/audit";
 import { getChangeClassLabel, getEntityTypeLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
-import { getPayloadLabel } from "../../../../../../../lib/admin/entity-ui";
 
 export default async function EntityHistoryPage({ params, searchParams }) {
   const { entityType, entityId } = await params;
@@ -54,7 +54,12 @@ export default async function EntityHistoryPage({ params, searchParams }) {
           <div className={styles.stack}>
             {state.revisions.map((revision, index) => {
               const baseline = index === state.revisions.length - 1 ? state.activePublishedRevision : state.revisions[index + 1] ?? state.activePublishedRevision;
-              const diffRows = buildHumanReadableDiff(state.entity.entityType, baseline?.payload ?? null, revision.payload);
+              const diffRows = buildHumanReadableDiff(
+                state.entity.entityType,
+                baseline?.payload ?? null,
+                revision.payload,
+                (field) => getPreviewTargetForField(state.entity.entityType, field)
+              );
 
               return (
                 <article key={revision.id} className={styles.timelineItem}>
@@ -89,8 +94,7 @@ export default async function EntityHistoryPage({ params, searchParams }) {
           </div>
         </section>
         <section className={styles.panel}>
-          <h3>Лента аудита</h3>
-          <TimelineList items={auditItems} />
+          <TimelineList items={auditItems} defaultOpen />
         </section>
       </div>
     </AdminShell>
