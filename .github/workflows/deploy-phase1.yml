@@ -30,16 +30,6 @@ jobs:
       - name: Verify host env file
         run: test -f /opt/ecostroycontinent/runtime/.env
 
-      - name: Ensure runtime env is readable by runner
-        run: |
-          runner_uid="$(id -u)"
-          runner_gid="$(id -g)"
-          docker run --rm \
-            -e RUNNER_UID="$runner_uid" \
-            -e RUNNER_GID="$runner_gid" \
-            -v /opt/ecostroycontinent/runtime:/runtime \
-            busybox:1.36 sh -c 'chown "$RUNNER_UID:$RUNNER_GID" /runtime/.env && chmod 600 /runtime/.env'
-
       - name: Refresh host image pin from dispatched image ref
         run: |
           image_ref='${{ inputs.image_ref }}'
@@ -52,10 +42,15 @@ jobs:
               ;;
           esac
 
-          env_file=/opt/ecostroycontinent/runtime/.env
-          temp_file="$(mktemp)"
+          docker run --rm \
+            -e IMAGE_REF="$image_ref" \
+            -v /opt/ecostroycontinent/runtime:/runtime \
+            busybox:1.36 sh -s <<'EOF'
+          set -eu
+          env_file=/runtime/.env
+          temp_file="$(mktemp /runtime/.env.tmp.XXXXXX)"
 
-          awk -v image_ref="$image_ref" '
+          awk -v image_ref="$IMAGE_REF" '
             BEGIN { updated = 0 }
             /^APP_IMAGE=/ {
               print "APP_IMAGE=" image_ref
@@ -70,8 +65,9 @@ jobs:
             }
           ' "$env_file" > "$temp_file"
 
-          install -m 600 "$temp_file" "$env_file"
-          rm -f "$temp_file"
+          chmod 600 "$temp_file"
+          mv "$temp_file" "$env_file"
+          EOF
 
       - name: Pull and refresh app runtime
         run: |
