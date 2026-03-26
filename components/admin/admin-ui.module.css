@@ -318,6 +318,10 @@
   gap: var(--space-3);
 }
 
+.gridWide {
+  grid-column: 1 / -1;
+}
+
 .gridTwo > *,
 .formGrid > * {
   min-width: 0;

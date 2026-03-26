@@ -63,28 +63,11 @@ function renderMediaUpload(redirectTo) {
     <section className={`${styles.panel} ${styles.panelMuted}`}>
       <h3>{ADMIN_COPY.fastMediaUploadTitle}</h3>
       <p className={styles.helpText}>{ADMIN_COPY.fastMediaUploadHint}</p>
-      <p className={styles.helpText}>{FIELD_HINTS.mediaUpload}</p>
       <form action="/api/admin/media/upload" method="post" encType="multipart/form-data" className={styles.formGrid}>
         <input type="hidden" name="redirectTo" value={redirectTo} />
         <label className={styles.label}>
           <span>Файл</span>
           <input type="file" name="file" accept="image/*" required />
-        </label>
-        <label className={styles.label}>
-          <span>Название</span>
-          <input name="title" />
-        </label>
-        <label className={styles.label}>
-          <span>{FIELD_LABELS.alt}</span>
-          <input name="alt" />
-        </label>
-        <label className={styles.label}>
-          <span>{FIELD_LABELS.ownershipNote}</span>
-          <input name="ownershipNote" />
-        </label>
-        <label className={styles.label}>
-          <span>{FIELD_LABELS.sourceNote}</span>
-          <input name="sourceNote" />
         </label>
         <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>{ADMIN_COPY.uploadMedia}</button>
       </form>
@@ -116,7 +99,7 @@ export function EntityEditorForm({
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
   const currentStateLabel = currentRevision ? getRevisionStateLabel(currentRevision.state) : "Новый черновик";
   const surfaceSummary = entityType === "media_asset"
-    ? "Загрузите файл, затем уточните описание и служебные поля. Этот экран остаётся источником медиа для остальных карточек."
+    ? "Сначала загрузите файл, затем уточните метаданные карточки и при необходимости оставьте заметку к версии. Этот экран остаётся источником медиа для остальных карточек."
     : entityType === "gallery"
       ? "Галерея собирает уже загруженные медиафайлы. Новый файл добавляйте в разделе Медиа, а здесь собирайте подборку."
       : "Основное заполняется слева, готовность и история остаются справа. Новый файл добавляйте через раздел Медиа, а не в каждой карточке отдельно.";
@@ -148,7 +131,7 @@ export function EntityEditorForm({
             <input type="hidden" name="entityId" value={entityId || ""} />
             <label className={styles.label}>
               <span>{CHANGE_INTENT_LABEL}</span>
-              <input name="changeIntent" defaultValue={normalizeLegacyCopy(currentRevision?.changeIntent) || "Черновик сохранён из редактора."} required />
+              <input name="changeIntent" defaultValue={normalizeLegacyCopy(currentRevision?.changeIntent) || "Черновик сохранён из редактора."} />
               <p className={styles.helpText}>{FIELD_HINTS.changeIntent}</p>
             </label>
 
@@ -211,6 +194,11 @@ export function EntityEditorForm({
 
             {entityType === "media_asset" ? (
               <div className={styles.gridTwo}>
+                <div className={styles.gridWide}>
+                  <p className={styles.helpText}>
+                    Здесь редактируются метаданные медиа и история версии. Комментарий к изменению помогает потом понять, зачем появилась новая версия.
+                  </p>
+                </div>
                 <label className={styles.label}>
                   <span>Название</span>
                   <input name="title" defaultValue={value.title || ""} />

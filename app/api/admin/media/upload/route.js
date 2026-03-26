@@ -8,6 +8,16 @@ import { saveDraft } from "../../../../../lib/content-core/service";
 import { storeMediaFile } from "../../../../../lib/media/storage";
 import { FEEDBACK_COPY } from "../../../../../lib/ui-copy.js";
 
+function buildTitleFromFilename(filename) {
+  const base = (filename || "")
+    .replace(/\.[^.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return base || "Медиафайл";
+}
+
 export async function POST(request) {
   const { user, response } = await requireRouteUser(request);
 
@@ -22,7 +32,7 @@ export async function POST(request) {
   const formData = await request.formData();
   const file = formData.get("file");
   const redirectTo = getString(formData, "redirectTo") || "/admin/entities/media_asset";
-  const title = getString(formData, "title");
+  const title = getString(formData, "title") || buildTitleFromFilename(file instanceof File ? file.name : "");
   const alt = getString(formData, "alt");
   const ownershipNote = getString(formData, "ownershipNote");
   const sourceNote = getString(formData, "sourceNote");
