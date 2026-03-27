@@ -132,3 +132,31 @@ test("cleanup tool collects storage keys only for media assets", () => {
   assert.deepEqual(collectMediaStorageKeys(mediaAggregate), ["proof-v2.png", "proof-v1.png"]);
   assert.deepEqual(collectMediaStorageKeys(serviceAggregate), []);
 });
+
+test("explicit entity id targeting can stay narrow without matching default proof patterns", () => {
+  const matchers = createCleanupMatchers();
+  const explicitIds = new Set(["entity_manual_target"]);
+  const explicitAggregate = createAggregate({
+    entityId: "entity_manual_target",
+    entityType: "media_asset",
+    payload: {
+      title: "Manual smoke asset",
+      storageKey: "manual-smoke.png"
+    },
+    changeIntent: "Manual smoke cleanup"
+  });
+  const proofAggregate = createAggregate({
+    entityId: "entity_proof_asset",
+    entityType: "media_asset",
+    payload: {
+      title: "Proof Asset",
+      storageKey: "proof.png"
+    },
+    changeIntent: "Create proof asset"
+  });
+
+  assert.equal(matchesCleanupCandidate(explicitAggregate, matchers, explicitIds), true);
+  assert.equal(matchesCleanupCandidate(proofAggregate, matchers, explicitIds), true);
+  assert.equal(matchesCleanupCandidate(explicitAggregate, createCleanupMatchers([]), explicitIds), true);
+  assert.deepEqual(findEntityCleanupSignals(explicitAggregate, matchers), []);
+});

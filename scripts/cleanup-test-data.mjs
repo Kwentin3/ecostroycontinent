@@ -2,6 +2,9 @@
 // Future operators/agents should prefer the runtime wrapper
 // `scripts/cleanup-test-data-runtime.sh` on the VM so the script runs
 // against the canonical server env and DB network rather than the IDE host.
+// When removing one specific smoke/demo entity, prefer
+// `--entity-id ... --exact-entity-ids` so default proof matchers do not widen
+// the target set unexpectedly.
 import {
   collectMediaStorageKeys,
   createCleanupMatchers,
@@ -36,6 +39,7 @@ function parseArgs(argv) {
     json: false,
     skipStorage: false,
     allowReferenced: false,
+    exactEntityIdsOnly: false,
     entityTypes: new Set(),
     patterns: [],
     entityIds: new Set()
@@ -66,6 +70,11 @@ function parseArgs(argv) {
 
     if (value === "--allow-referenced") {
       options.allowReferenced = true;
+      continue;
+    }
+
+    if (value === "--exact-entity-ids") {
+      options.exactEntityIdsOnly = true;
       continue;
     }
 
@@ -127,6 +136,7 @@ function printHelp() {
   console.log("  --entity-type TYPE  Limit to one entity type. Repeatable.");
   console.log("  --pattern REGEX     Add an extra cleanup-matching regex. Repeatable.");
   console.log("  --entity-id ID      Force-include a specific entity id. Repeatable.");
+  console.log("  --exact-entity-ids  Limit cleanup strictly to the entity ids passed via --entity-id.");
   console.log("  --allow-referenced  Delete even if non-candidate entities still reference the candidate ids.");
   console.log("  --skip-storage      Skip media binary deletion after DB cleanup.");
   console.log("  --json              Print JSON summary instead of human-readable output.");
@@ -280,6 +290,7 @@ function buildSummary(candidates, signalsByEntity, references, options) {
     confirm: options.confirm,
     skipStorage: options.skipStorage,
     allowReferenced: options.allowReferenced,
+    exactEntityIdsOnly: options.exactEntityIdsOnly,
     patterns: options.patterns,
     entityTypes: [...options.entityTypes],
     entityIds: [...options.entityIds],
@@ -389,6 +400,10 @@ async function main() {
     return;
   }
 
+  if (options.exactEntityIdsOnly && options.entityIds.size === 0) {
+    throw new Error("--exact-entity-ids requires at least one --entity-id.");
+  }
+
   const config = getAppConfig();
   await assertCleanupSchemaContract();
   const matchers = createCleanupMatchers(options.patterns);
@@ -397,6 +412,15 @@ async function main() {
   const signalsByEntity = new Map();
 
   for (const aggregate of aggregates) {
+    if (options.exactEntityIdsOnly) {
+      if (options.entityIds.has(aggregate.entity.id)) {
+        signalsByEntity.set(aggregate.entity.id, []);
+        candidates.push(aggregate);
+      }
+
+      continue;
+    }
+
     const signals = findEntityCleanupSignals(aggregate, matchers);
 
     if (signals.length > 0 || options.entityIds.has(aggregate.entity.id)) {

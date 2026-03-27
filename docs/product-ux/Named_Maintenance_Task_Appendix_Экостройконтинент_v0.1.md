@@ -103,12 +103,21 @@ sh /opt/ecostroycontinent/repo/scripts/cleanup-test-data-runtime.sh --dry-run
 sh /opt/ecostroycontinent/repo/scripts/cleanup-test-data-runtime.sh --confirm
 ```
 
+For one exact smoke/demo entity, use the narrow mode:
+
+```sh
+cd /opt/ecostroycontinent/repo
+sh /opt/ecostroycontinent/repo/scripts/cleanup-test-data-runtime.sh --entity-type media_asset --entity-id entity_... --exact-entity-ids --confirm
+```
+
 Safety posture of this concrete tool:
 
 - internal-only, no admin UI exposure;
 - `dry-run` is the default;
+- packaged runtime wrapper is preferred over ad-hoc host execution;
 - only allowlisted content types are eligible;
 - `global_settings` is never touched;
+- `--exact-entity-ids` exists for truly narrow single-entity cleanup;
 - non-candidate reference conflicts block deletion unless explicitly overridden;
 - media binary deletion is limited to `media_asset` records only;
 - the tool checks its own narrow DB schema contract and fails closed on drift.
