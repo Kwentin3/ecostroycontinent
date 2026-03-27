@@ -6,6 +6,7 @@ import {
   formatCandidateLabel,
   matchesCleanupCandidate
 } from "../lib/internal/test-data-cleanup.js";
+import { validateCleanupSchemaContract } from "../lib/internal/test-data-cleanup-schema-contract.js";
 
 function loadLocalEnvFileIfPresent() {
   if (typeof process.loadEnvFile !== "function") {
@@ -190,6 +191,80 @@ async function loadEntityAggregates(entityTypes) {
   return [...aggregates.values()];
 }
 
+async function assertCleanupSchemaContract() {
+  const { getDbPool } = await import("../lib/db/client.js");
+  const tables = ["content_entities", "content_revisions", "publish_obligations", "audit_events"];
+  const pool = getDbPool();
+  const migrationTableResult = await pool.query("SELECT to_regclass('public.schema_migrations') AS table_name");
+  let migrationIds = [];
+
+  if (migrationTableResult.rows[0]?.table_name) {
+    const migrationsResult = await pool.query("SELECT id FROM schema_migrations");
+    migrationIds = migrationsResult.rows.map((row) => row.id);
+  }
+
+  const [columnsResult, foreignKeysResult] = await Promise.all([
+    pool.query(
+      `SELECT table_name, column_name
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = ANY($1::text[])`,
+      [tables]
+    ),
+    pool.query(
+      `SELECT
+         tc.table_name,
+         kcu.column_name,
+         ccu.table_name AS foreign_table_name,
+         ccu.column_name AS foreign_column_name,
+         rc.delete_rule
+       FROM information_schema.table_constraints tc
+       JOIN information_schema.key_column_usage kcu
+         ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+       JOIN information_schema.constraint_column_usage ccu
+         ON tc.constraint_name = ccu.constraint_name
+        AND tc.table_schema = ccu.table_schema
+       JOIN information_schema.referential_constraints rc
+         ON tc.constraint_name = rc.constraint_name
+        AND tc.table_schema = rc.constraint_schema
+       WHERE tc.constraint_type = 'FOREIGN KEY'
+         AND tc.table_schema = 'public'
+         AND tc.table_name = ANY($1::text[])`,
+      [tables]
+    )
+  ]);
+
+  const columnsByTable = {};
+
+  for (const row of columnsResult.rows) {
+    if (!columnsByTable[row.table_name]) {
+      columnsByTable[row.table_name] = [];
+    }
+
+    columnsByTable[row.table_name].push(row.column_name);
+  }
+
+  const foreignKeys = foreignKeysResult.rows.map((row) => ({
+    table: row.table_name,
+    column: row.column_name,
+    foreignTable: row.foreign_table_name,
+    foreignColumn: row.foreign_column_name,
+    deleteRule: row.delete_rule
+  }));
+  const problems = validateCleanupSchemaContract({
+    columnsByTable,
+    foreignKeys,
+    migrationIds
+  });
+
+  if (problems.length > 0) {
+    throw new Error(
+      `Cleanup schema contract drift detected. Update the tool before running it against this database.\n- ${problems.join("\n- ")}`
+    );
+  }
+}
+
 function buildSummary(candidates, signalsByEntity, references, options) {
   const countsByType = {};
 
@@ -311,6 +386,7 @@ async function main() {
   }
 
   const config = getAppConfig();
+  await assertCleanupSchemaContract();
   const matchers = createCleanupMatchers(options.patterns);
   const aggregates = await loadEntityAggregates(options.entityTypes);
   const candidates = [];
