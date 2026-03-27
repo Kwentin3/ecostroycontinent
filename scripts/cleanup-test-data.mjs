@@ -1,3 +1,7 @@
+// Internal-only maintenance tool for proof/demo content cleanup.
+// Future operators/agents should prefer the runtime wrapper
+// `scripts/cleanup-test-data-runtime.sh` on the VM so the script runs
+// against the canonical server env and DB network rather than the IDE host.
 import {
   collectMediaStorageKeys,
   createCleanupMatchers,

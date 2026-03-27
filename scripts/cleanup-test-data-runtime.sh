@@ -1,6 +1,12 @@
 #!/usr/bin/env sh
 set -eu
 
+# Canonical internal entrypoint for test-data cleanup on the Linux VM.
+# Example:
+#   sh /opt/ecostroycontinent/repo/scripts/cleanup-test-data-runtime.sh --dry-run
+#   sh /opt/ecostroycontinent/repo/scripts/cleanup-test-data-runtime.sh --confirm
+# This wrapper keeps the tool on the server-side Docker network and runtime env.
+
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH= cd -- "${SCRIPT_DIR}/.." && pwd)
 APP_CONTAINER_NAME=${APP_CONTAINER_NAME:-repo-app-1}

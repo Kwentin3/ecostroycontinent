@@ -59,6 +59,7 @@
 | `refresh_published_projection` | refreshes read-side projection after a publish or rollback | idempotent, auditable, non-destructive |
 | `quarantine_orphan_media` | moves orphan or suspect media into quarantine posture | bounded, reversible where practical, auditable |
 | `archive_inactive_media` | archives media that should remain retained but inactive | bounded, reversible where practical, auditable |
+| `cleanup_test_content` | removes proof/demo content entities and their linked media binaries through a narrow internal-only tool | dry-run first, fail-closed on reference conflicts, fail-closed on schema drift |
 | `purge_expired_sessions` | removes expired admin sessions as a hygiene task | bounded, auditable, narrowly scoped |
 | `reconcile_audit_timeline` | performs a consistency check on audit rows and indices | read-only or minimally mutating depending on implementation; must be declared |
 
@@ -86,6 +87,36 @@
 - a one-off repair task becomes a hidden raw shell;
 - task naming hides destructive behavior;
 - maintenance is used to bypass workflow or review.
+
+## Current internal tooling note
+
+For phase-1 runtime the proof/demo cleanup path is already materialized in the repo:
+
+- script: `scripts/cleanup-test-data.mjs`
+- VM/runtime wrapper: `scripts/cleanup-test-data-runtime.sh`
+
+Recommended operator path:
+
+```sh
+cd /opt/ecostroycontinent/repo
+sh /opt/ecostroycontinent/repo/scripts/cleanup-test-data-runtime.sh --dry-run
+sh /opt/ecostroycontinent/repo/scripts/cleanup-test-data-runtime.sh --confirm
+```
+
+Safety posture of this concrete tool:
+
+- internal-only, no admin UI exposure;
+- `dry-run` is the default;
+- only allowlisted content types are eligible;
+- `global_settings` is never touched;
+- non-candidate reference conflicts block deletion unless explicitly overridden;
+- media binary deletion is limited to `media_asset` records only;
+- the tool checks its own narrow DB schema contract and fails closed on drift.
+
+Operational reminder for future chats:
+
+- if the request is “clean test/proof/demo content from the database”, prefer this tool first;
+- do not start with ad-hoc SQL deletes or manual storage cleanup unless the tool reports a contract/blocker that must be resolved.
 
 ## Decisions that must not be reopened by default
 
