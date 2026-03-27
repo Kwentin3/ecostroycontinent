@@ -793,6 +793,10 @@ export function MediaGalleryWorkspace({
     };
   }, [createSourcePreviewUrl]);
 
+  useEffect(() => {
+    setRecentlySavedId("");
+  }, [query, filterKey, collectionFilterId, sortMode]);
+
   const normalizedQuery = deferredQuery.trim().toLowerCase();
   const collectionOptions = [...collections].sort((left, right) => left.title.localeCompare(right.title, "ru"));
   const filtered = [...items]
