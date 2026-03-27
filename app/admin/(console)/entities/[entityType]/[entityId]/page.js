@@ -1,11 +1,11 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../../components/admin/AdminShell";
 import { EntityEditorForm } from "../../../../../../components/admin/EntityEditorForm";
 import { deriveEditorValue, loadEditorPageData } from "../../../../../../lib/admin/entity-ui";
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
-import { ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
+import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
 import { getPayloadLabel } from "../../../../../../lib/admin/entity-ui";
 
 export default async function EntityEditorPage({ params, searchParams }) {
@@ -13,6 +13,22 @@ export default async function EntityEditorPage({ params, searchParams }) {
   const user = await requireEditorUser();
   const normalizedType = assertEntityType(entityType);
   const query = await searchParams;
+
+  if (normalizedType === ENTITY_TYPES.MEDIA_ASSET) {
+    const target = new URLSearchParams();
+    target.set("asset", entityId);
+
+    if (query?.message) {
+      target.set("message", query.message);
+    }
+
+    if (query?.error) {
+      target.set("error", query.error);
+    }
+
+    redirect(`/admin/entities/media_asset?${target.toString()}`);
+  }
+
   const data = await loadEditorPageData(normalizedType, entityId);
   const surfaceLabel = getPayloadLabel(data.currentRevision?.payload || data.state.activePublishedRevision?.payload || { title: ENTITY_TYPE_LABELS[normalizedType] });
 

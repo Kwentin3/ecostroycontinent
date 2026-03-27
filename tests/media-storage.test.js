@@ -30,6 +30,27 @@ test("local media storage adapter writes and reads bytes from the configured dir
   await assert.rejects(() => adapter.readMediaFile(storageKey));
 });
 
+test("local media storage adapter can report whether a storage key exists", async () => {
+  const mediaStorageDir = await fs.mkdtemp(path.join(os.tmpdir(), "ecostroy-media-"));
+  const adapter = createMediaStorageAdapter({
+    mediaStorageMode: "local",
+    mediaStorageDir
+  });
+  const storageKey = `asset-${crypto.randomUUID()}.jpg`;
+
+  assert.equal(await adapter.hasMediaFile(storageKey), false);
+
+  await adapter.storeMediaFile({
+    storageKey,
+    bytes: Buffer.from("media-bytes")
+  });
+
+  assert.equal(await adapter.hasMediaFile(storageKey), true);
+
+  await adapter.deleteMediaFile(storageKey);
+  assert.equal(await adapter.hasMediaFile(storageKey), false);
+});
+
 test("media delivery URL resolves to the public delivery host from storage key in s3 mode and falls back to the app route in local mode", () => {
   const publicUrl = getMediaDeliveryUrl(
     {

@@ -153,6 +153,30 @@ test("global settings normalization preserves boolean truth and reusable default
   assert.equal(settings.organization.country, "RU");
 });
 
+test("media normalization keeps only the supported V1 metadata contract", () => {
+  const media = normalizeEntityInput(ENTITY_TYPES.MEDIA_ASSET, {
+    title: "Фасад",
+    alt: "Фасад дома после работ",
+    caption: "Фасад после утепления",
+    sourceNote: "Съёмка бригады",
+    ownershipNote: "Собственный архив",
+    storageKey: "media/facade.jpg",
+    mimeType: "image/jpeg",
+    originalFilename: "facade.jpg",
+    uploadedBy: "seo",
+    uploadedAt: "2026-03-27T10:00:00.000Z",
+    sizeBytes: 1024,
+    status: "ready",
+    metaTitle: "Этого поля не должно быть в media payload",
+    canonicalIntent: "https://example.test/facade"
+  });
+
+  assert.equal("metaTitle" in media, false);
+  assert.equal("canonicalIntent" in media, false);
+  assert.equal(media.title, "Фасад");
+  assert.equal(media.alt, "Фасад дома после работ");
+});
+
 test("entity type parsing and owner-review rules stay narrow and contract-safe", () => {
   assert.equal(assertEntityType("service"), ENTITY_TYPES.SERVICE);
   assert.throws(() => assertEntityType("article"));

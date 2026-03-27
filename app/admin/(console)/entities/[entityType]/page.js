@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../components/admin/AdminShell";
+import { MediaGalleryWorkspace } from "../../../../../components/admin/MediaGalleryWorkspace";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
+import { summarizeMediaLibrary, listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
 import { getEntityListLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
@@ -14,11 +16,7 @@ export default async function EntityListPage({ params, searchParams }) {
   const { entityType } = await params;
   const user = await requireEditorUser();
   const normalizedType = assertEntityType(entityType);
-  const cards = await listEntityCards(normalizedType);
   const query = await searchParams;
-  const draftCount = cards.filter((card) => card.latestRevision?.state === "draft").length;
-  const reviewCount = cards.filter((card) => card.latestRevision?.state === "review").length;
-  const publishedCount = cards.filter((card) => card.latestRevision?.state === "published").length;
 
   if (!ENTITY_TYPE_LABELS[normalizedType]) {
     notFound();
@@ -31,6 +29,53 @@ export default async function EntityListPage({ params, searchParams }) {
 
     redirect(`/admin/entities/${normalizedType}/new`);
   }
+
+  if (normalizedType === ENTITY_TYPES.MEDIA_ASSET) {
+    const mediaItems = await listMediaLibraryCards();
+    const summary = summarizeMediaLibrary(mediaItems, user);
+    const selectedAssetId = query?.asset || query?.entityId || mediaItems[0]?.id || "";
+    const initialCompose = query?.compose || "";
+
+    return (
+      <AdminShell
+        user={user}
+        title="Медиа"
+        breadcrumbs={[
+          { label: "Админка", href: "/admin" },
+          { label: "Медиа" }
+        ]}
+        activeHref="/admin/entities/media_asset"
+      >
+        <div className={styles.stack}>
+          <SurfacePacket
+            eyebrow="Рабочее место"
+            title="Медиагалерея"
+            summary="Библиотека превью теперь остаётся главным рабочим местом: здесь ищут, выбирают, загружают и доводят изображения до рабочего состояния без прыжка в generic entity form."
+            legend={getEntityListLegend(normalizedType)}
+            bullets={[
+              `Всего карточек: ${summary.total}`,
+              `Без alt: ${summary.missingAltCount}`,
+              `Используется: ${summary.usedCount}`,
+              `Broken сигналов: ${summary.brokenCount}`
+            ]}
+          />
+          <MediaGalleryWorkspace
+            initialItems={mediaItems}
+            initialSelectedId={selectedAssetId}
+            initialCompose={initialCompose}
+            currentUsername={user.username}
+            initialMessage={query?.message ? normalizeLegacyCopy(query.message) : ""}
+            initialError={query?.error ? normalizeLegacyCopy(query.error) : ""}
+          />
+        </div>
+      </AdminShell>
+    );
+  }
+
+  const cards = await listEntityCards(normalizedType);
+  const draftCount = cards.filter((card) => card.latestRevision?.state === "draft").length;
+  const reviewCount = cards.filter((card) => card.latestRevision?.state === "review").length;
+  const publishedCount = cards.filter((card) => card.latestRevision?.state === "published").length;
 
   return (
     <AdminShell

@@ -425,7 +425,7 @@ export function EntityEditorForm({
               </>
             ) : null}
 
-            <HiddenSeoFields value={value} />
+            {entityType !== "media_asset" ? <HiddenSeoFields value={value} /> : null}
 
             <div className={styles.inlineActions}>
               <button type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
