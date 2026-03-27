@@ -43,13 +43,18 @@
   align-self: start;
   min-height: 100vh;
   max-height: 100vh;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-5) var(--space-4);
   border-right: 1px solid var(--border);
   background: linear-gradient(180deg, #efe7d8 0%, #f6f3eb 100%);
+}
+
+.sidebarTop {
+  display: grid;
+  gap: 6px;
 }
 
 .sidebarTitle,
@@ -79,6 +84,9 @@
 .nav {
   display: grid;
   gap: var(--space-2);
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .navLink {
@@ -101,6 +109,102 @@
   background: #264c3b;
   color: #fff;
   border-color: #264c3b;
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.infraStatus {
+  display: grid;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.infraStatusTitle {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.infraStatusList {
+  display: grid;
+  gap: 10px;
+}
+
+.infraStatusRow {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.infraStatusHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.infraStatusLabel {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.infraStatusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+
+.infraTonehealthy {
+  background: #dceee3;
+  color: #264c3b;
+}
+
+.infraTonedegraded {
+  background: #fff2d8;
+  color: #8a5a00;
+}
+
+.infraTonedown {
+  background: #fde5e2;
+  color: #8b2e2e;
+}
+
+.infraToneunknown {
+  background: #ece7dc;
+  color: var(--subtle);
+}
+
+.infraStatusMeta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.62rem;
+  line-height: 1.35;
+  color: var(--subtle);
+}
+
+.infraStatusMeta span {
+  overflow-wrap: anywhere;
 }
 
 .main {

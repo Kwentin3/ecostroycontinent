@@ -1,7 +1,8 @@
 import Link from "next/link";
 
-import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import { getRoleLabel } from "../../lib/auth/session.js";
+import { getInfraHealthSnapshot } from "../../lib/admin/infra-health.js";
+import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
 const navItems = [
@@ -36,11 +37,37 @@ function renderBreadcrumbs(breadcrumbs) {
   });
 }
 
-export function AdminShell({ user, title, children, actions = null, breadcrumbs = [], activeHref = null }) {
+function renderInfraHealth(items) {
+  return (
+    <section className={styles.infraStatus} aria-label="Состояние инфраструктуры">
+      <p className={styles.infraStatusTitle}>Infra</p>
+      <div className={styles.infraStatusList}>
+        {items.map((item) => (
+          <div key={item.key} className={styles.infraStatusRow}>
+            <div className={styles.infraStatusHead}>
+              <span className={styles.infraStatusLabel}>{item.label}</span>
+              <span className={`${styles.infraStatusPill} ${styles[`infraTone${item.tone}`]}`}>{item.status}</span>
+            </div>
+            <div className={styles.infraStatusMeta}>
+              {item.lines.map((line) => (
+                <span key={`${item.key}-${line}`}>{line}</span>
+              ))}
+              {item.note ? <span>{item.note}</span> : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export async function AdminShell({ user, title, children, actions = null, breadcrumbs = [], activeHref = null }) {
+  const infraHealth = await getInfraHealthSnapshot();
+
   return (
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
-        <div>
+        <div className={styles.sidebarTop}>
           <p className={styles.eyebrow}>Экостройконтинент</p>
           <h1 className={styles.sidebarTitle}>Админка</h1>
           <p className={styles.sidebarUser}>
@@ -59,9 +86,12 @@ export function AdminShell({ user, title, children, actions = null, breadcrumbs 
             </Link>
           ))}
         </nav>
-        <form action="/api/admin/logout" method="post">
-          <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>Выйти</button>
-        </form>
+        <div className={styles.sidebarFooter}>
+          {renderInfraHealth(infraHealth.items)}
+          <form action="/api/admin/logout" method="post">
+            <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>Выйти</button>
+          </form>
+        </div>
       </aside>
       <main className={styles.main}>
         {breadcrumbs.length ? (
