@@ -7,7 +7,21 @@ import {
   matchesCleanupCandidate
 } from "../lib/internal/test-data-cleanup.js";
 
-process.loadEnvFile?.();
+function loadLocalEnvFileIfPresent() {
+  if (typeof process.loadEnvFile !== "function") {
+    return;
+  }
+
+  try {
+    process.loadEnvFile();
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      throw error;
+    }
+  }
+}
+
+loadLocalEnvFileIfPresent();
 
 const ALLOWED_ENTITY_TYPES = new Set(["media_asset", "gallery", "service", "case", "page"]);
 
