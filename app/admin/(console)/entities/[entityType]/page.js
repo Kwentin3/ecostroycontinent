@@ -5,7 +5,7 @@ import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { MediaGalleryWorkspace } from "../../../../../components/admin/MediaGalleryWorkspace";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
-import { summarizeMediaLibrary, listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
+import { listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
 import { getEntityListLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
@@ -32,7 +32,6 @@ export default async function EntityListPage({ params, searchParams }) {
 
   if (normalizedType === ENTITY_TYPES.MEDIA_ASSET) {
     const mediaItems = await listMediaLibraryCards();
-    const summary = summarizeMediaLibrary(mediaItems, user);
     const selectedAssetId = query?.asset || query?.entityId || mediaItems[0]?.id || "";
     const initialCompose = query?.compose || "";
 
@@ -47,18 +46,6 @@ export default async function EntityListPage({ params, searchParams }) {
         activeHref="/admin/entities/media_asset"
       >
         <div className={styles.stack}>
-          <SurfacePacket
-            eyebrow="Рабочее место"
-            title="Медиагалерея"
-            summary="Библиотека превью теперь остаётся главным рабочим местом: здесь ищут, выбирают, загружают и доводят изображения до рабочего состояния без прыжка в generic entity form."
-            legend={getEntityListLegend(normalizedType)}
-            bullets={[
-              `Всего карточек: ${summary.total}`,
-              `Без alt: ${summary.missingAltCount}`,
-              `Используется: ${summary.usedCount}`,
-              `Broken сигналов: ${summary.brokenCount}`
-            ]}
-          />
           <MediaGalleryWorkspace
             initialItems={mediaItems}
             initialSelectedId={selectedAssetId}

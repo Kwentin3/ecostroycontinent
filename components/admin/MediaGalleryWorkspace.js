@@ -542,6 +542,12 @@ export function MediaGalleryWorkspace({
     .filter((item) => matchesQuery(item, normalizedQuery))
     .filter((item) => matchesFilter(item, filterKey, currentUsername))
     .sort((left, right) => compareItems(left, right, sortMode));
+  const summaryItems = [
+    { label: "Всего", value: items.length },
+    { label: "Без alt", value: items.filter((item) => item.missingAlt).length },
+    { label: "Используется", value: items.filter((item) => item.usageCount > 0).length },
+    { label: "Broken", value: items.filter((item) => item.brokenBinary).length }
+  ];
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
   const selectedHiddenByFilter = Boolean(
     selectedItem &&
@@ -780,6 +786,14 @@ export function MediaGalleryWorkspace({
             <p className={styles.helpText}>
               Слева и в центре остаётся библиотека превью, справа быстрый inspector, а большое редактирование открывается поверх того же экрана.
             </p>
+            <div className={styles.mediaToolbarStats} aria-label="Сводка медиагалереи">
+              {summaryItems.map((item) => (
+                <span key={item.label} className={styles.mediaToolbarStat}>
+                  <strong>{item.value}</strong>
+                  <span>{item.label}</span>
+                </span>
+              ))}
+            </div>
           </div>
           <div className={styles.mediaToolbarControls}>
             <label className={styles.searchLabel}>
