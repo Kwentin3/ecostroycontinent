@@ -29,6 +29,22 @@ export default async function EntityEditorPage({ params, searchParams }) {
     redirect(`/admin/entities/media_asset?${target.toString()}`);
   }
 
+  if (normalizedType === ENTITY_TYPES.GALLERY) {
+    const target = new URLSearchParams();
+    target.set("compose", "collections");
+    target.set("collection", entityId);
+
+    if (query?.message) {
+      target.set("message", query.message);
+    }
+
+    if (query?.error) {
+      target.set("error", query.error);
+    }
+
+    redirect(`/admin/entities/media_asset?${target.toString()}`);
+  }
+
   const data = await loadEditorPageData(normalizedType, entityId);
   const surfaceLabel = getPayloadLabel(data.currentRevision?.payload || data.state.activePublishedRevision?.payload || { title: ENTITY_TYPE_LABELS[normalizedType] });
 

@@ -28,6 +28,21 @@ export default async function NewEntityPage({ params, searchParams }) {
     redirect(`/admin/entities/media_asset?${target.toString()}`);
   }
 
+  if (normalizedType === ENTITY_TYPES.GALLERY) {
+    const target = new URLSearchParams();
+    target.set("compose", "collection-new");
+
+    if (query?.message) {
+      target.set("message", query.message);
+    }
+
+    if (query?.error) {
+      target.set("error", query.error);
+    }
+
+    redirect(`/admin/entities/media_asset?${target.toString()}`);
+  }
+
   const data = await loadEditorPageData(normalizedType, null);
 
   return (

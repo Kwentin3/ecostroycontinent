@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 
+import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import styles from "./admin-ui.module.css";
 
 const FILTERS = [
@@ -10,6 +11,7 @@ const FILTERS = [
   { key: "recent", label: "Недавние" },
   { key: "mine", label: "Мои" },
   { key: "missing-alt", label: "Без alt" },
+  { key: "orphan", label: "Сироты" },
   { key: "used", label: "Используется" },
   { key: "unused", label: "Не используется" },
   { key: "draft", label: "Черновики" },
@@ -81,6 +83,8 @@ function matchesFilter(item, filterKey, currentUsername) {
       return Boolean(item.uploadedBy) && item.uploadedBy === currentUsername;
     case "missing-alt":
       return item.missingAlt;
+    case "orphan":
+      return item.orphaned;
     case "used":
       return item.usageCount > 0;
     case "unused":
@@ -107,7 +111,8 @@ function matchesQuery(item, normalizedQuery) {
     item.caption,
     item.originalFilename,
     item.sourceNote,
-    item.ownershipNote
+    item.ownershipNote,
+    ...(item.collectionEntries ?? []).map((entry) => entry.title)
   ]
     .filter(Boolean)
     .join(" ")
@@ -162,11 +167,15 @@ function getWarningNote(item) {
     return "Нужно добавить alt, чтобы не оставлять ассет сырым.";
   }
 
+  if (item.orphaned) {
+    return "Карточка пока сирота: её можно оставить отдельным ассетом или быстро включить в одну из коллекций.";
+  }
+
   if (!item.ownershipNote) {
     return "Стоит добавить заметку о правах, чтобы не потерять происхождение файла.";
   }
 
-  return "Карточка выглядит рабочей. При необходимости откройте расширенное редактирование.";
+  return "Карточка выглядит рабочей. При необходимости откройте расширенное редактирование или коллекции.";
 }
 
 function getGridColumns(nodes) {
@@ -194,7 +203,7 @@ function getGridColumns(nodes) {
   return Math.max(1, count);
 }
 
-function updateWorkspaceUrl({ assetId, compose }) {
+function updateWorkspaceUrl({ assetId, compose, collectionId }) {
   if (typeof window === "undefined") {
     return;
   }
@@ -213,16 +222,32 @@ function updateWorkspaceUrl({ assetId, compose }) {
     url.searchParams.delete("compose");
   }
 
+  if (collectionId) {
+    url.searchParams.set("collection", collectionId);
+  } else {
+    url.searchParams.delete("collection");
+  }
+
   window.history.replaceState({}, "", url);
 }
 
-function MediaInspector({ item, onEdit }) {
+function mergeById(currentItems, nextItems) {
+  const map = new Map(currentItems.map((item) => [item.id, item]));
+
+  for (const item of nextItems) {
+    map.set(item.id, item);
+  }
+
+  return Array.from(map.values());
+}
+
+function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollection }) {
   if (!item) {
     return (
       <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
         <h3 className={styles.mediaInspectorTitle}>Карточка не выбрана</h3>
         <p className={styles.helpText}>
-          Выберите превью в галерее, чтобы увидеть крупное изображение, быстрые сигналы и usage.
+          Выберите превью в библиотеке, чтобы увидеть крупное изображение, сигналы, usage и состояние коллекций.
         </p>
       </aside>
     );
@@ -254,6 +279,9 @@ function MediaInspector({ item, onEdit }) {
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
         <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
           {item.missingAlt ? "Без alt" : "Alt есть"}
+        </span>
+        <span className={`${styles.badge} ${item.orphaned ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
+          {item.orphaned ? "Сирота" : item.collectionShortLabel}
         </span>
         <span className={`${styles.badge} ${item.usageCount ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
           {item.whereUsedLabel}
@@ -287,16 +315,58 @@ function MediaInspector({ item, onEdit }) {
       </section>
 
       <section className={styles.mediaInspectorSection}>
+        <h4>Коллекции</h4>
+        {item.collectionEntries.length === 0 ? (
+          <p className={styles.helpText}>
+            Карточка пока никуда не входит. Это честный статус сироты: ассет живёт отдельно, пока вы не привяжете его к подборке.
+          </p>
+        ) : (
+          <div className={styles.mediaUsageList}>
+            {item.collectionEntries.map((entry) => (
+              <button
+                key={entry.key}
+                type="button"
+                className={styles.mediaUsageButton}
+                onClick={() => onOpenCollectionManager({ collectionId: entry.id, seedAssetId: item.id })}
+              >
+                <strong>{entry.title}</strong>
+                <span>{entry.memberCount} файлов</span>
+                <span className={styles.mutedText}>{entry.statusLabel}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className={styles.inlineActions}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => onOpenCollectionManager({ seedAssetId: item.id })}
+          >
+            В коллекцию
+          </button>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => onCreateCollection(item.id)}
+          >
+            Новая коллекция
+          </button>
+        </div>
+      </section>
+
+      <section className={styles.mediaInspectorSection}>
         <h4>Где используется</h4>
         {item.usageEntries.length === 0 ? (
-          <p className={styles.helpText}>Пока нет ссылок на этот ассет. Это безопасный момент для дальнейшей доводки.</p>
+          <p className={styles.helpText}>
+            Пока нет ссылок на этот ассет. Это хороший момент для спокойной доводки metadata и коллекций.
+          </p>
         ) : (
           <div className={styles.mediaUsageList}>
             {item.usageEntries.map((entry) => (
               <Link key={entry.key} href={entry.href} className={styles.mediaUsageItem}>
                 <strong>{entry.entityLabel}</strong>
                 <span>{entry.title}</span>
-                <span className={styles.mutedText}>{entry.relationLabel} · {entry.statusLabel}</span>
+                <span className={styles.mutedText}>{entry.relationLabel} • {entry.statusLabel}</span>
               </Link>
             ))}
           </div>
@@ -308,7 +378,7 @@ function MediaInspector({ item, onEdit }) {
         <p className={styles.helpText}>
           {item.archiveBlocked
             ? "По этой карточке уже есть ссылки, поэтому destructive path здесь не должен быть мгновенным."
-            : "Карточка пока никуда не подключена. Это хороший момент спокойно довести metadata до рабочего состояния."}
+            : "Карточка пока не подключена к боевым сценариям. Это хороший момент спокойно довести metadata до рабочего состояния."}
         </p>
         <div className={styles.inlineActions}>
           <Link href={`/admin/entities/media_asset/${item.id}/history`} className={styles.secondaryButton}>
@@ -488,13 +558,16 @@ function MediaOverlay({
 
 export function MediaGalleryWorkspace({
   initialItems,
+  initialCollections,
   initialSelectedId,
+  initialCollectionId = "",
   initialCompose = "",
   currentUsername,
   initialMessage = "",
   initialError = ""
 }) {
   const [items, setItems] = useState(initialItems);
+  const [collections, setCollections] = useState(initialCollections);
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [filterKey, setFilterKey] = useState("all");
@@ -503,13 +576,19 @@ export function MediaGalleryWorkspace({
   const [message, setMessage] = useState(initialMessage);
   const [error, setError] = useState(initialError);
   const [recentlySavedId, setRecentlySavedId] = useState("");
-  const [overlayMode, setOverlayMode] = useState(initialCompose === "upload" ? "create" : null);
+  const [overlayMode, setOverlayMode] = useState(
+    initialCompose === "upload"
+      ? "asset-create"
+      : initialCompose === "collections" || initialCompose === "collection-new"
+        ? "collections"
+        : null
+  );
   const [overlayBusy, setOverlayBusy] = useState(false);
   const [overlayError, setOverlayError] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [draftFile, setDraftFile] = useState(null);
   const [draftPreviewUrl, setDraftPreviewUrl] = useState("");
-  const [fields, setFields] = useState({
+  const [assetFields, setAssetFields] = useState({
     title: "",
     alt: "",
     caption: "",
@@ -519,10 +598,21 @@ export function MediaGalleryWorkspace({
     originalFilename: "",
     sizeBytes: 0
   });
+  const [collectionContext, setCollectionContext] = useState({
+    selectedCollectionId: initialCollectionId || "",
+    seedAssetId: initialCompose === "collection-new" ? (initialSelectedId || initialItems[0]?.id || "") : "",
+    createNew: initialCompose === "collection-new"
+  });
   const cardRefs = useRef([]);
 
   useEffect(() => {
     if (!selectedId && items[0]?.id) {
+      setSelectedId(items[0].id);
+    }
+  }, [items, selectedId]);
+
+  useEffect(() => {
+    if (selectedId && items.length > 0 && !items.some((item) => item.id === selectedId)) {
       setSelectedId(items[0].id);
     }
   }, [items, selectedId]);
@@ -545,14 +635,12 @@ export function MediaGalleryWorkspace({
   const summaryItems = [
     { label: "Всего", value: items.length },
     { label: "Без alt", value: items.filter((item) => item.missingAlt).length },
+    { label: "Сироты", value: items.filter((item) => item.orphaned).length },
     { label: "Используется", value: items.filter((item) => item.usageCount > 0).length },
     { label: "Broken", value: items.filter((item) => item.brokenBinary).length }
   ];
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
-  const selectedHiddenByFilter = Boolean(
-    selectedItem &&
-    !filtered.some((item) => item.id === selectedItem.id)
-  );
+  const selectedHiddenByFilter = Boolean(selectedItem && !filtered.some((item) => item.id === selectedItem.id));
 
   const displayedItems = (() => {
     if (!recentlySavedId) {
@@ -568,12 +656,12 @@ export function MediaGalleryWorkspace({
     return [{ ...savedItem, forcedVisible: true }, ...filtered];
   })();
 
-  function resetOverlayState() {
+  function resetAssetOverlayState() {
     setOverlayBusy(false);
     setOverlayError("");
     setDraftFile(null);
     setDraftPreviewUrl("");
-    setFields({
+    setAssetFields({
       title: "",
       alt: "",
       caption: "",
@@ -586,16 +674,17 @@ export function MediaGalleryWorkspace({
   }
 
   function openCreateOverlay() {
-    resetOverlayState();
-    setOverlayMode("create");
-    updateWorkspaceUrl({ assetId: selectedId, compose: "upload" });
+    resetAssetOverlayState();
+    setOverlayMode("asset-create");
+    updateWorkspaceUrl({ assetId: selectedId, compose: "upload", collectionId: "" });
   }
 
   function openEditOverlay(item) {
+    setOverlayBusy(false);
     setOverlayError("");
     setDraftFile(null);
     setDraftPreviewUrl(item?.previewUrl || "");
-    setFields({
+    setAssetFields({
       title: item?.title || "",
       alt: item?.alt || "",
       caption: item?.caption || "",
@@ -605,25 +694,55 @@ export function MediaGalleryWorkspace({
       originalFilename: item?.originalFilename || "",
       sizeBytes: item?.sizeBytes || 0
     });
-    setOverlayMode("edit");
-    updateWorkspaceUrl({ assetId: item?.id || selectedId, compose: null });
+    setOverlayMode("asset-edit");
+    updateWorkspaceUrl({ assetId: item?.id || selectedId, compose: null, collectionId: "" });
+  }
+
+  function openCollectionManager({ collectionId = "", seedAssetId = "", createNew = false } = {}) {
+    setOverlayBusy(false);
+    setOverlayError("");
+    setOverlayMode("collections");
+    setCollectionContext({
+      selectedCollectionId: collectionId,
+      seedAssetId,
+      createNew
+    });
+    updateWorkspaceUrl({
+      assetId: seedAssetId || selectedId,
+      compose: createNew ? "collection-new" : "collections",
+      collectionId
+    });
   }
 
   function closeOverlay() {
-    resetOverlayState();
+    if (overlayMode === "asset-create" || overlayMode === "asset-edit") {
+      resetAssetOverlayState();
+    } else {
+      setOverlayBusy(false);
+      setOverlayError("");
+    }
+
     setOverlayMode(null);
-    updateWorkspaceUrl({ assetId: selectedId, compose: null });
+    updateWorkspaceUrl({ assetId: selectedId, compose: null, collectionId: "" });
   }
 
   function selectCard(itemId) {
     setSelectedId(itemId);
     setMessage("");
     setError("");
-    updateWorkspaceUrl({ assetId: itemId, compose: overlayMode === "create" ? "upload" : null });
+    updateWorkspaceUrl({
+      assetId: itemId,
+      compose: overlayMode === "asset-create"
+        ? "upload"
+        : overlayMode === "collections"
+          ? (collectionContext.createNew ? "collection-new" : "collections")
+          : null,
+      collectionId: overlayMode === "collections" ? collectionContext.selectedCollectionId : ""
+    });
   }
 
-  function handleFieldChange(field, value) {
-    setFields((current) => ({
+  function handleAssetFieldChange(field, value) {
+    setAssetFields((current) => ({
       ...current,
       [field]: value
     }));
@@ -637,7 +756,7 @@ export function MediaGalleryWorkspace({
     const nextPreviewUrl = URL.createObjectURL(file);
     setDraftFile(file);
     setDraftPreviewUrl(nextPreviewUrl);
-    setFields((current) => ({
+    setAssetFields((current) => ({
       ...current,
       title: current.title || buildTitleFromFilename(file.name),
       originalFilename: file.name,
@@ -658,12 +777,12 @@ export function MediaGalleryWorkspace({
 
     const formData = new FormData();
     formData.set("file", draftFile);
-    formData.set("title", fields.title);
-    formData.set("alt", fields.alt);
-    formData.set("caption", fields.caption);
-    formData.set("sourceNote", fields.sourceNote);
-    formData.set("ownershipNote", fields.ownershipNote);
-    formData.set("changeIntent", fields.changeIntent);
+    formData.set("title", assetFields.title);
+    formData.set("alt", assetFields.alt);
+    formData.set("caption", assetFields.caption);
+    formData.set("sourceNote", assetFields.sourceNote);
+    formData.set("ownershipNote", assetFields.ownershipNote);
+    formData.set("changeIntent", assetFields.changeIntent);
 
     try {
       const response = await fetch("/api/admin/media/library/create", {
@@ -682,7 +801,7 @@ export function MediaGalleryWorkspace({
       setMessage(payload.message || "Ассет сохранён.");
       setError("");
       closeOverlay();
-      updateWorkspaceUrl({ assetId: payload.item.id, compose: null });
+      updateWorkspaceUrl({ assetId: payload.item.id, compose: null, collectionId: "" });
     } catch (submitError) {
       setOverlayError(submitError.message || "Не удалось сохранить ассет.");
     } finally {
@@ -702,12 +821,12 @@ export function MediaGalleryWorkspace({
     setOverlayError("");
 
     const formData = new FormData();
-    formData.set("title", fields.title);
-    formData.set("alt", fields.alt);
-    formData.set("caption", fields.caption);
-    formData.set("sourceNote", fields.sourceNote);
-    formData.set("ownershipNote", fields.ownershipNote);
-    formData.set("changeIntent", fields.changeIntent);
+    formData.set("title", assetFields.title);
+    formData.set("alt", assetFields.alt);
+    formData.set("caption", assetFields.caption);
+    formData.set("sourceNote", assetFields.sourceNote);
+    formData.set("ownershipNote", assetFields.ownershipNote);
+    formData.set("changeIntent", assetFields.changeIntent);
 
     try {
       const response = await fetch(`/api/admin/media/library/${selectedItem.id}`, {
@@ -726,9 +845,71 @@ export function MediaGalleryWorkspace({
       setMessage(payload.message || "Изменения сохранены.");
       setError("");
       closeOverlay();
-      updateWorkspaceUrl({ assetId: payload.item.id, compose: null });
+      updateWorkspaceUrl({ assetId: payload.item.id, compose: null, collectionId: "" });
     } catch (submitError) {
       setOverlayError(submitError.message || "Не удалось сохранить изменения.");
+    } finally {
+      setOverlayBusy(false);
+    }
+  }
+
+  async function handleCollectionSubmit({ entityId, fields }) {
+    setOverlayBusy(true);
+    setOverlayError("");
+
+    const formData = new FormData();
+    formData.set("title", fields.title);
+    formData.set("caption", fields.caption);
+    formData.set("primaryAssetId", fields.primaryAssetId);
+    formData.set("changeIntent", fields.changeIntent);
+    formData.set("metaTitle", fields.metaTitle);
+    formData.set("metaDescription", fields.metaDescription);
+    formData.set("canonicalIntent", fields.canonicalIntent);
+    formData.set("indexationFlag", fields.indexationFlag);
+    formData.set("openGraphTitle", fields.openGraphTitle);
+    formData.set("openGraphDescription", fields.openGraphDescription);
+    formData.set("openGraphImageAssetId", fields.openGraphImageAssetId);
+
+    for (const assetId of fields.assetIds) {
+      formData.append("assetIds", assetId);
+    }
+
+    try {
+      const response = await fetch(
+        entityId ? `/api/admin/media/collections/${entityId}` : "/api/admin/media/collections/create",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+      const payload = await response.json();
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || "Не удалось сохранить коллекцию.");
+      }
+
+      if (payload.collection) {
+        setCollections((current) => {
+          const withoutCurrent = current.filter((item) => item.id !== payload.collection.id);
+          return [payload.collection, ...withoutCurrent];
+        });
+      }
+
+      if (payload.affectedItems?.length) {
+        setItems((current) => mergeById(current, payload.affectedItems));
+        const focusItem = collectionContext.seedAssetId || payload.affectedItems[0]?.id || "";
+
+        if (focusItem) {
+          setSelectedId(focusItem);
+          setRecentlySavedId(focusItem);
+        }
+      }
+
+      setMessage(payload.message || "Коллекция сохранена.");
+      setError("");
+      closeOverlay();
+    } catch (submitError) {
+      setOverlayError(submitError.message || "Не удалось сохранить коллекцию.");
     } finally {
       setOverlayBusy(false);
     }
@@ -784,7 +965,7 @@ export function MediaGalleryWorkspace({
             <p className={styles.eyebrow}>Рабочее место</p>
             <h3 className={styles.mediaToolbarTitle}>Медиагалерея</h3>
             <p className={styles.helpText}>
-              Слева и в центре остаётся библиотека превью, справа быстрый inspector, а большое редактирование открывается поверх того же экрана.
+              Здесь живёт библиотека ассетов и встроенный слой коллекций: слева и в центре остаются карточки, справа быстрый inspector, а большое редактирование открывается поверх того же экрана.
             </p>
             <div className={styles.mediaToolbarStats} aria-label="Сводка медиагалереи">
               {summaryItems.map((item) => (
@@ -803,7 +984,7 @@ export function MediaGalleryWorkspace({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 className={styles.searchInput}
-                placeholder="Название, alt, подпись, имя файла"
+                placeholder="Название, alt, подпись, имя файла, коллекция"
               />
             </label>
             <label className={styles.label}>
@@ -817,6 +998,9 @@ export function MediaGalleryWorkspace({
             </label>
             <button type="button" className={styles.primaryButton} onClick={openCreateOverlay}>
               Загрузить
+            </button>
+            <button type="button" className={styles.secondaryButton} onClick={() => openCollectionManager()}>
+              Коллекции
             </button>
           </div>
         </div>
@@ -839,12 +1023,15 @@ export function MediaGalleryWorkspace({
             <div className={styles.mediaCanvasMeta}>
               <span>Фильтр: {activeFilterLabel}</span>
               <span>Показано: {displayedItems.length}</span>
+              <span>Коллекций: {collections.length}</span>
             </div>
 
             {items.length === 0 ? (
               <div className={styles.emptyState}>
                 <p>Библиотека пока пустая.</p>
-                <p className={styles.helpText}>Начните с загрузки первого изображения, и оно сразу появится в галерее как рабочая карточка.</p>
+                <p className={styles.helpText}>
+                  Начните с загрузки первого изображения, и оно сразу появится в галерее как рабочая карточка.
+                </p>
                 <div className={styles.inlineActions}>
                   <button type="button" className={styles.primaryButton} onClick={openCreateOverlay}>
                     Загрузить первое изображение
@@ -854,12 +1041,18 @@ export function MediaGalleryWorkspace({
             ) : displayedItems.length === 0 ? (
               <div className={styles.emptyState}>
                 <p>По текущему фильтру ничего не найдено.</p>
-                <p className={styles.helpText}>Сбросьте поиск или переключите быстрый фильтр, чтобы снова увидеть карточки.</p>
+                <p className={styles.helpText}>
+                  Сбросьте поиск или переключите быстрый фильтр, чтобы снова увидеть карточки.
+                </p>
                 <div className={styles.inlineActions}>
-                  <button type="button" className={styles.secondaryButton} onClick={() => {
-                    setQuery("");
-                    setFilterKey("all");
-                  }}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => {
+                      setQuery("");
+                      setFilterKey("all");
+                    }}
+                  >
                     Сбросить фильтры
                   </button>
                 </div>
@@ -892,6 +1085,7 @@ export function MediaGalleryWorkspace({
                       <span className={styles.mediaLibraryBody}>
                         <strong>{item.title}</strong>
                         <span className={styles.mutedText}>{item.originalFilename || "Имя файла не задано"}</span>
+                        <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
                         <span className={styles.mediaBadgeCluster}>
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
                           <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
@@ -916,22 +1110,27 @@ export function MediaGalleryWorkspace({
             ) : null}
           </section>
 
-          <MediaInspector item={selectedItem} onEdit={() => openEditOverlay(selectedItem)} />
+          <MediaInspector
+            item={selectedItem}
+            onEdit={() => openEditOverlay(selectedItem)}
+            onOpenCollectionManager={openCollectionManager}
+            onCreateCollection={(assetId) => openCollectionManager({ seedAssetId: assetId, createNew: true })}
+          />
         </div>
       </section>
 
       <MediaOverlay
-        mode={overlayMode}
-        fields={fields}
+        mode={overlayMode === "asset-create" ? "create" : overlayMode === "asset-edit" ? "edit" : null}
+        fields={assetFields}
         file={draftFile}
         previewUrl={draftPreviewUrl}
         busy={overlayBusy}
         error={overlayError}
         dragActive={dragActive}
         onClose={closeOverlay}
-        onFieldChange={handleFieldChange}
+        onFieldChange={handleAssetFieldChange}
         onFileSelect={handleFileSelect}
-        onSubmit={overlayMode === "create" ? handleCreateSubmit : handleEditSubmit}
+        onSubmit={overlayMode === "asset-create" ? handleCreateSubmit : handleEditSubmit}
         onDragEnter={(event) => {
           event.preventDefault();
           setDragActive(true);
@@ -945,6 +1144,19 @@ export function MediaGalleryWorkspace({
           setDragActive(false);
           handleFileSelect(event.dataTransfer.files?.[0] ?? null);
         }}
+      />
+
+      <MediaCollectionOverlay
+        open={overlayMode === "collections"}
+        busy={overlayBusy}
+        error={overlayError}
+        collections={collections}
+        mediaItems={items}
+        initialCollectionId={collectionContext.selectedCollectionId}
+        seedAssetId={collectionContext.seedAssetId}
+        createNew={collectionContext.createNew}
+        onClose={closeOverlay}
+        onSave={handleCollectionSubmit}
       />
     </div>
   );

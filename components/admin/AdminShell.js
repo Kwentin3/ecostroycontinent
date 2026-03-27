@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { getRoleLabel } from "../../lib/auth/session.js";
 import { getInfraHealthSnapshot } from "../../lib/admin/infra-health.js";
+import { getRoleLabel } from "../../lib/auth/session.js";
 import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
@@ -10,7 +10,6 @@ const navItems = [
   { href: "/admin/review", label: "Проверка" },
   { href: "/admin/entities/global_settings", label: "Настройки" },
   { href: "/admin/entities/media_asset", label: "Медиа" },
-  { href: "/admin/entities/gallery", label: "Галереи" },
   { href: "/admin/entities/service", label: "Услуги" },
   { href: "/admin/entities/case", label: "Кейсы" },
   { href: "/admin/entities/page", label: "Страницы" },

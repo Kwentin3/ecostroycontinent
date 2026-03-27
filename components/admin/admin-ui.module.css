@@ -965,6 +965,26 @@
   outline: none;
 }
 
+.mediaUsageButton {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  color: inherit;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+
+.mediaUsageButton:hover,
+.mediaUsageButton:focus-visible {
+  border-color: #264c3b;
+  outline: none;
+}
+
 .mediaOverlayBackdrop {
   position: fixed;
   inset: 0;
@@ -986,6 +1006,10 @@
   border: 1px solid var(--border);
   background: var(--panel);
   box-shadow: var(--shadow);
+}
+
+.collectionOverlayDialog {
+  width: min(1280px, 100%);
 }
 
 .mediaOverlayHeader {
@@ -1055,6 +1079,62 @@
 .mediaOverlayForm {
   display: grid;
   gap: var(--space-3);
+}
+
+.collectionOverlayLayout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.collectionOverlaySidebar {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.collectionOverlaySidebarHeader {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.collectionList {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 66vh;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.collectionListItem {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.collectionListItem:hover,
+.collectionListItem:focus-visible {
+  border-color: #264c3b;
+  outline: none;
+}
+
+.collectionListItemActive {
+  border-color: #264c3b;
+  box-shadow: 0 0 0 2px rgba(38, 76, 59, 0.12);
+}
+
+.collectionOverlayForm {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .mediaOverlayMeta {
@@ -1284,7 +1364,8 @@
   .split,
   .diffGrid,
   .mediaWorkspace,
-  .mediaOverlayBody {
+  .mediaOverlayBody,
+  .collectionOverlayLayout {
     grid-template-columns: 1fr;
   }
 

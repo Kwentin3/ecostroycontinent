@@ -5,7 +5,7 @@ import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { MediaGalleryWorkspace } from "../../../../../components/admin/MediaGalleryWorkspace";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
-import { listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
+import { listCollectionLibraryCards, listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
 import { getEntityListLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
@@ -22,7 +22,28 @@ export default async function EntityListPage({ params, searchParams }) {
     notFound();
   }
 
+  if (normalizedType === ENTITY_TYPES.GALLERY) {
+    const target = new URLSearchParams();
+    target.set("compose", "collections");
+
+    if (query?.collection) {
+      target.set("collection", query.collection);
+    }
+
+    if (query?.message) {
+      target.set("message", query.message);
+    }
+
+    if (query?.error) {
+      target.set("error", query.error);
+    }
+
+    redirect(`/admin/entities/media_asset?${target.toString()}`);
+  }
+
   if (normalizedType === ENTITY_TYPES.GLOBAL_SETTINGS) {
+    const cards = await listEntityCards(normalizedType);
+
     if (cards[0]?.entity?.id) {
       redirect(`/admin/entities/${normalizedType}/${cards[0].entity.id}`);
     }
@@ -31,9 +52,13 @@ export default async function EntityListPage({ params, searchParams }) {
   }
 
   if (normalizedType === ENTITY_TYPES.MEDIA_ASSET) {
-    const mediaItems = await listMediaLibraryCards();
+    const [mediaItems, collectionItems] = await Promise.all([
+      listMediaLibraryCards(),
+      listCollectionLibraryCards()
+    ]);
     const selectedAssetId = query?.asset || query?.entityId || mediaItems[0]?.id || "";
     const initialCompose = query?.compose || "";
+    const initialCollectionId = query?.collection || "";
 
     return (
       <AdminShell
@@ -48,7 +73,9 @@ export default async function EntityListPage({ params, searchParams }) {
         <div className={styles.stack}>
           <MediaGalleryWorkspace
             initialItems={mediaItems}
+            initialCollections={collectionItems}
             initialSelectedId={selectedAssetId}
+            initialCollectionId={initialCollectionId}
             initialCompose={initialCompose}
             currentUsername={user.username}
             initialMessage={query?.message ? normalizeLegacyCopy(query.message) : ""}
