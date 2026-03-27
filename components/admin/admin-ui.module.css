@@ -742,7 +742,25 @@
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+  align-items: end;
   margin-bottom: var(--space-3);
+}
+
+.mediaFilterSelect {
+  margin-inline-start: auto;
+  min-width: min(100%, 260px);
+}
+
+.mediaFilterSelect span {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mediaFilterSelect select {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  padding-block: 8px;
 }
 
 .filterPill {

@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 
+import {
+  COLLECTION_FILTER_ALL,
+  COLLECTION_FILTER_ORPHAN,
+  matchesCollectionFilter
+} from "../../lib/admin/media-gallery-filters";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -123,6 +128,18 @@ function matchesQuery(item, normalizedQuery) {
     .toLowerCase();
 
   return haystack.includes(normalizedQuery);
+}
+
+function getActiveCollectionFilterLabel(collectionFilterId, collections) {
+  if (!collectionFilterId) {
+    return "Все коллекции";
+  }
+
+  if (collectionFilterId === COLLECTION_FILTER_ORPHAN) {
+    return "Без коллекции";
+  }
+
+  return collections.find((item) => item.id === collectionFilterId)?.title || "Выбранная коллекция";
 }
 
 function compareItems(left, right, sortMode) {
@@ -704,6 +721,7 @@ export function MediaGalleryWorkspace({
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [filterKey, setFilterKey] = useState("all");
+  const [collectionFilterId, setCollectionFilterId] = useState(initialCollectionId || COLLECTION_FILTER_ALL);
   const [sortMode, setSortMode] = useState("newest");
   const [selectedId, setSelectedId] = useState(initialSelectedId || initialItems[0]?.id || "");
   const [message, setMessage] = useState(initialMessage);
@@ -776,9 +794,11 @@ export function MediaGalleryWorkspace({
   }, [createSourcePreviewUrl]);
 
   const normalizedQuery = deferredQuery.trim().toLowerCase();
+  const collectionOptions = [...collections].sort((left, right) => left.title.localeCompare(right.title, "ru"));
   const filtered = [...items]
     .filter((item) => matchesQuery(item, normalizedQuery))
     .filter((item) => matchesFilter(item, filterKey, currentUsername))
+    .filter((item) => matchesCollectionFilter(item, collectionFilterId))
     .sort((left, right) => compareItems(left, right, sortMode));
   const summaryItems = [
     { label: "Всего", value: items.length },
@@ -1188,6 +1208,7 @@ export function MediaGalleryWorkspace({
   }
 
   const activeFilterLabel = FILTERS.find((filter) => filter.key === filterKey)?.label || "Все";
+  const activeCollectionFilterLabel = getActiveCollectionFilterLabel(collectionFilterId, collectionOptions);
 
   return (
     <div className={styles.stack}>
@@ -1251,12 +1272,25 @@ export function MediaGalleryWorkspace({
               {filter.label}
             </button>
           ))}
+          <label className={`${styles.label} ${styles.mediaFilterSelect}`}>
+            <span>Коллекция</span>
+            <select value={collectionFilterId} onChange={(event) => setCollectionFilterId(event.target.value)}>
+              <option value={COLLECTION_FILTER_ALL}>Все коллекции</option>
+              <option value={COLLECTION_FILTER_ORPHAN}>Без коллекции</option>
+              {collectionOptions.map((collection) => (
+                <option key={collection.id} value={collection.id}>
+                  {collection.title}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <div className={styles.mediaWorkspace}>
           <section className={styles.mediaCanvas}>
             <div className={styles.mediaCanvasMeta}>
               <span>Фильтр: {activeFilterLabel}</span>
+              <span>Коллекция: {activeCollectionFilterLabel}</span>
               <span>Показано: {displayedItems.length}</span>
               <span>Коллекций: {collections.length}</span>
             </div>
@@ -1286,6 +1320,7 @@ export function MediaGalleryWorkspace({
                     onClick={() => {
                       setQuery("");
                       setFilterKey("all");
+                      setCollectionFilterId(COLLECTION_FILTER_ALL);
                     }}
                   >
                     Сбросить фильтры
