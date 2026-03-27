@@ -56,7 +56,7 @@ export async function POST(request) {
       entityType: "media_asset",
       entityId: null,
       userId: user.id,
-      changeIntent: getString(formData, "changeIntent") || "Новый media asset собран из галереи.",
+      changeIntent: getString(formData, "changeIntent") || "Новый media asset собран из медиатеки.",
       payload: {
         title,
         alt: getString(formData, "alt"),
@@ -69,7 +69,8 @@ export async function POST(request) {
         uploadedBy: user.username,
         uploadedAt: new Date().toISOString(),
         sizeBytes: file.size,
-        status: "ready"
+        status: "ready",
+        lifecycleState: "active"
       }
     });
 
@@ -78,7 +79,7 @@ export async function POST(request) {
     return NextResponse.json({
       ok: true,
       item,
-      message: "Медиафайл загружен и появился в галерее."
+      message: "Медиафайл загружен и появился в медиатеке."
     });
   } catch (error) {
     try {

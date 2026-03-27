@@ -167,6 +167,7 @@ test("media normalization keeps only the supported V1 metadata contract", () => 
     uploadedAt: "2026-03-27T10:00:00.000Z",
     sizeBytes: 1024,
     status: "ready",
+    lifecycleState: "archived",
     metaTitle: "Этого поля не должно быть в media payload",
     canonicalIntent: "https://example.test/facade"
   });
@@ -175,6 +176,26 @@ test("media normalization keeps only the supported V1 metadata contract", () => 
   assert.equal("canonicalIntent" in media, false);
   assert.equal(media.title, "Фасад");
   assert.equal(media.alt, "Фасад дома после работ");
+  assert.equal(media.lifecycleState, "archived");
+});
+
+test("media normalization defaults lifecycleState to active when it is omitted", () => {
+  const media = normalizeEntityInput(ENTITY_TYPES.MEDIA_ASSET, {
+    title: "Тестовое изображение",
+    alt: "",
+    caption: "",
+    sourceNote: "",
+    ownershipNote: "",
+    storageKey: "media/test.jpg",
+    mimeType: "image/jpeg",
+    originalFilename: "test.jpg",
+    uploadedBy: "seo",
+    uploadedAt: "2026-03-27T10:00:00.000Z",
+    sizeBytes: 512,
+    status: "draft_asset"
+  });
+
+  assert.equal(media.lifecycleState, "active");
 });
 
 test("entity type parsing and owner-review rules stay narrow and contract-safe", () => {

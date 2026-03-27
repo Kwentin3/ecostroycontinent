@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
+import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
 
 const FILTERS = [
@@ -17,6 +18,7 @@ const FILTERS = [
   { key: "draft", label: "Черновики" },
   { key: "review", label: "На проверке" },
   { key: "published", label: "Опубликовано" },
+  { key: "archived", label: "В архиве" },
   { key: "broken", label: "Проблемные" }
 ];
 
@@ -93,6 +95,8 @@ function matchesFilter(item, filterKey, currentUsername) {
     case "review":
     case "published":
       return item.statusKey === filterKey;
+    case "archived":
+      return item.archived;
     case "broken":
       return item.brokenBinary;
     default:
@@ -147,6 +151,10 @@ function getToneForItem(item) {
     return "danger";
   }
 
+  if (item.archived) {
+    return "muted";
+  }
+
   if (item.statusKey === "review") {
     return "warning";
   }
@@ -161,6 +169,10 @@ function getToneForItem(item) {
 function getWarningNote(item) {
   if (item.brokenBinary) {
     return "Бинарник не читается через admin preview.";
+  }
+
+  if (item.archived) {
+    return "Карточка уже в архиве и не должна участвовать в новых привязках, пока вы не вернёте её в активный список.";
   }
 
   if (item.missingAlt) {
@@ -231,6 +243,55 @@ function updateWorkspaceUrl({ assetId, compose, collectionId }) {
   window.history.replaceState({}, "", url);
 }
 
+function getImageEditAvailability({ mode, item, file }) {
+  if (mode === "create") {
+    return {
+      canEdit: Boolean(file),
+      reason: file ? "" : "Сначала выберите изображение для загрузки."
+    };
+  }
+
+  if (!item) {
+    return {
+      canEdit: false,
+      reason: "Сначала выберите карточку для редактирования."
+    };
+  }
+
+  if (item.archived) {
+    return {
+      canEdit: false,
+      reason: "Архивные ассеты сначала нужно вернуть в активный список."
+    };
+  }
+
+  if (item.publishedRevisionNumber) {
+    return {
+      canEdit: false,
+      reason: "У опубликованных ассетов binary overwrite запрещён. Для них нужен отдельный variant flow."
+    };
+  }
+
+  if (item.statusKey !== "draft") {
+    return {
+      canEdit: false,
+      reason: "Изображение можно править только у draft asset."
+    };
+  }
+
+  if (!item.hasPreview && mode === "edit") {
+    return {
+      canEdit: false,
+      reason: "Нет доступного preview, поэтому image editing сейчас недоступен."
+    };
+  }
+
+  return {
+    canEdit: true,
+    reason: ""
+  };
+}
+
 function mergeById(currentItems, nextItems) {
   const map = new Map(currentItems.map((item) => [item.id, item]));
 
@@ -241,7 +302,7 @@ function mergeById(currentItems, nextItems) {
   return Array.from(map.values());
 }
 
-function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollection }) {
+function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollection, onLifecycleAction, lifecycleBusy }) {
   if (!item) {
     return (
       <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
@@ -277,6 +338,7 @@ function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollect
 
       <div className={styles.badgeRow}>
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
+        {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
         <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
           {item.missingAlt ? "Без alt" : "Alt есть"}
         </span>
@@ -312,6 +374,18 @@ function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollect
         <h4>Быстрые сигналы</h4>
         <p className={styles.helpText}>{getWarningNote(item)}</p>
         {item.caption ? <p className={styles.mediaSnippet}>{item.caption}</p> : null}
+      </section>
+
+      <section className={styles.mediaInspectorSection}>
+        <h4>Использование</h4>
+        <dl className={styles.mediaMetaList}>
+          {item.usageSummaryItems.map((summaryItem) => (
+            <div key={summaryItem.key}>
+              <dt>{summaryItem.label}</dt>
+              <dd>{summaryItem.value}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section className={styles.mediaInspectorSection}>
@@ -375,12 +449,16 @@ function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollect
 
       <section className={styles.mediaInspectorSection}>
         <h4>Безопасность</h4>
-        <p className={styles.helpText}>
-          {item.archiveBlocked
-            ? "По этой карточке уже есть ссылки, поэтому destructive path здесь не должен быть мгновенным."
-            : "Карточка пока не подключена к боевым сценариям. Это хороший момент спокойно довести metadata до рабочего состояния."}
-        </p>
+        <p className={styles.helpText}>{item.archiveReason}</p>
         <div className={styles.inlineActions}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => onLifecycleAction(item.archived ? "restore" : "archive")}
+            disabled={lifecycleBusy || (!item.canArchive && !item.canRestore)}
+          >
+            {lifecycleBusy ? "Сохраняем..." : item.archived ? "Вернуть из архива" : "В архив"}
+          </button>
           <Link href={`/admin/entities/media_asset/${item.id}/history`} className={styles.secondaryButton}>
             История
           </Link>
@@ -392,8 +470,10 @@ function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollect
 
 function MediaOverlay({
   mode,
+  item,
   fields,
   file,
+  editedBinary,
   previewUrl,
   busy,
   error,
@@ -401,6 +481,8 @@ function MediaOverlay({
   onClose,
   onFieldChange,
   onFileSelect,
+  onImageCommit,
+  onImageReset,
   onSubmit,
   onDragEnter,
   onDragLeave,
@@ -408,6 +490,8 @@ function MediaOverlay({
 }) {
   const dialogRef = useRef(null);
   const titleRef = useRef(null);
+  const [activeTab, setActiveTab] = useState("metadata");
+  const imageEdit = getImageEditAvailability({ mode, item, file });
 
   useEffect(() => {
     if (!mode) {
@@ -417,6 +501,10 @@ function MediaOverlay({
     const focusTarget = mode === "create" && !file ? dialogRef.current : titleRef.current;
     focusTarget?.focus();
   }, [mode, file]);
+
+  useEffect(() => {
+    setActiveTab("metadata");
+  }, [mode, item?.id]);
 
   if (!mode) {
     return null;
@@ -452,6 +540,27 @@ function MediaOverlay({
 
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
 
+        <div className={styles.mediaOverlayTabs} role="tablist" aria-label="Режимы редактора медиа">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "metadata"}
+            className={`${styles.filterPill} ${activeTab === "metadata" ? styles.filterPillActive : ""}`}
+            onClick={() => setActiveTab("metadata")}
+          >
+            Метаданные
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "image"}
+            className={`${styles.filterPill} ${activeTab === "image" ? styles.filterPillActive : ""}`}
+            onClick={() => setActiveTab("image")}
+          >
+            Изображение
+          </button>
+        </div>
+
         <div className={styles.mediaOverlayBody}>
           <section className={styles.mediaOverlayPreview}>
             {previewUrl ? (
@@ -480,76 +589,100 @@ function MediaOverlay({
             )}
           </section>
 
-          <form className={styles.mediaOverlayForm} onSubmit={onSubmit}>
-            <div className={styles.gridTwo}>
-              <label className={styles.label}>
-                <span>Название</span>
-                <input
-                  ref={titleRef}
-                  name="title"
-                  value={fields.title}
-                  onChange={(event) => onFieldChange("title", event.target.value)}
-                />
-              </label>
-              <label className={styles.label}>
-                <span>Alt</span>
-                <input
-                  name="alt"
-                  value={fields.alt}
-                  onChange={(event) => onFieldChange("alt", event.target.value)}
-                />
-              </label>
-              <label className={`${styles.label} ${styles.gridWide}`}>
-                <span>Подпись</span>
-                <textarea
-                  name="caption"
-                  value={fields.caption}
-                  onChange={(event) => onFieldChange("caption", event.target.value)}
-                />
-              </label>
-              <label className={styles.label}>
-                <span>Источник</span>
-                <input
-                  name="sourceNote"
-                  value={fields.sourceNote}
-                  onChange={(event) => onFieldChange("sourceNote", event.target.value)}
-                />
-              </label>
-              <label className={styles.label}>
-                <span>Права</span>
-                <input
-                  name="ownershipNote"
-                  value={fields.ownershipNote}
-                  onChange={(event) => onFieldChange("ownershipNote", event.target.value)}
-                />
-              </label>
-              <label className={`${styles.label} ${styles.gridWide}`}>
-                <span>Комментарий к изменению</span>
-                <input
-                  name="changeIntent"
-                  value={fields.changeIntent}
-                  onChange={(event) => onFieldChange("changeIntent", event.target.value)}
-                />
-                <p className={styles.helpText}>
-                  Комментарий не обязателен, но он потом помогает быстрее понять смысл версии в истории и проверке.
-                </p>
-              </label>
-            </div>
+          {activeTab === "metadata" ? (
+            <form className={styles.mediaOverlayForm} onSubmit={onSubmit}>
+              <div className={styles.gridTwo}>
+                <label className={styles.label}>
+                  <span>Название</span>
+                  <input
+                    ref={titleRef}
+                    name="title"
+                    value={fields.title}
+                    onChange={(event) => onFieldChange("title", event.target.value)}
+                  />
+                </label>
+                <label className={styles.label}>
+                  <span>Alt</span>
+                  <input
+                    name="alt"
+                    value={fields.alt}
+                    onChange={(event) => onFieldChange("alt", event.target.value)}
+                  />
+                </label>
+                <label className={`${styles.label} ${styles.gridWide}`}>
+                  <span>Подпись</span>
+                  <textarea
+                    name="caption"
+                    value={fields.caption}
+                    onChange={(event) => onFieldChange("caption", event.target.value)}
+                  />
+                </label>
+                <label className={styles.label}>
+                  <span>Источник</span>
+                  <input
+                    name="sourceNote"
+                    value={fields.sourceNote}
+                    onChange={(event) => onFieldChange("sourceNote", event.target.value)}
+                  />
+                </label>
+                <label className={styles.label}>
+                  <span>Права</span>
+                  <input
+                    name="ownershipNote"
+                    value={fields.ownershipNote}
+                    onChange={(event) => onFieldChange("ownershipNote", event.target.value)}
+                  />
+                </label>
+                <label className={`${styles.label} ${styles.gridWide}`}>
+                  <span>Комментарий к изменению</span>
+                  <input
+                    name="changeIntent"
+                    value={fields.changeIntent}
+                    onChange={(event) => onFieldChange("changeIntent", event.target.value)}
+                  />
+                  <p className={styles.helpText}>
+                    Комментарий не обязателен, но он потом помогает быстрее понять смысл версии в истории и проверке.
+                  </p>
+                </label>
+              </div>
 
-            <div className={styles.mediaOverlayMeta}>
-              <span>{fields.originalFilename || "Файл пока не выбран"}</span>
-              {fields.originalFilename ? <span>{formatBytes(fields.sizeBytes)}</span> : null}
-            </div>
+              <div className={styles.mediaOverlayMeta}>
+                <span>{fields.originalFilename || "Файл пока не выбран"}</span>
+                {fields.originalFilename ? <span>{formatBytes(fields.sizeBytes)}</span> : null}
+                {editedBinary ? <span>Изображение изменено локально</span> : null}
+              </div>
 
-            <div className={styles.mediaOverlayActions}>
-              <button type="submit" className={styles.primaryButton} disabled={busy || (mode === "create" && !file)}>
-                {busy ? "Сохраняем..." : mode === "create" ? "Сохранить ассет" : "Сохранить изменения"}
-              </button>
-              <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={busy}>
-                Отмена
-              </button>
+              <div className={styles.mediaOverlayActions}>
+                <button type="submit" className={styles.primaryButton} disabled={busy || (mode === "create" && !file)}>
+                  {busy ? "Сохраняем..." : mode === "create" ? "Сохранить ассет" : "Сохранить изменения"}
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={busy}>
+                  Отмена
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className={styles.mediaOverlayForm}>
+              <MediaImageEditorPanel
+                sourceUrl={previewUrl}
+                filename={fields.originalFilename}
+                mimeType={item?.mimeType || file?.type || "image/png"}
+                disabledReason={imageEdit.reason}
+                busy={busy}
+                hasEdits={Boolean(editedBinary)}
+                onCommit={onImageCommit}
+                onReset={onImageReset}
+              />
+              <div className={styles.mediaOverlayActions}>
+                <button type="button" className={styles.primaryButton} onClick={() => setActiveTab("metadata")}>
+                  Вернуться к метаданным
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={busy}>
+                  Отмена
+                </button>
+              </div>
             </div>
-          </form>
+          )}
         </div>
       </div>
     </div>
@@ -585,9 +718,14 @@ export function MediaGalleryWorkspace({
   );
   const [overlayBusy, setOverlayBusy] = useState(false);
   const [overlayError, setOverlayError] = useState("");
+  const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [draftFile, setDraftFile] = useState(null);
+  const [editedBinaryFile, setEditedBinaryFile] = useState(null);
   const [draftPreviewUrl, setDraftPreviewUrl] = useState("");
+  const [createSourceFile, setCreateSourceFile] = useState(null);
+  const [createSourcePreviewUrl, setCreateSourcePreviewUrl] = useState("");
+  const [editSourcePreviewUrl, setEditSourcePreviewUrl] = useState("");
   const [assetFields, setAssetFields] = useState({
     title: "",
     alt: "",
@@ -627,6 +765,16 @@ export function MediaGalleryWorkspace({
     };
   }, [draftPreviewUrl]);
 
+  useEffect(() => {
+    if (!createSourcePreviewUrl.startsWith("blob:")) {
+      return undefined;
+    }
+
+    return () => {
+      URL.revokeObjectURL(createSourcePreviewUrl);
+    };
+  }, [createSourcePreviewUrl]);
+
   const normalizedQuery = deferredQuery.trim().toLowerCase();
   const filtered = [...items]
     .filter((item) => matchesQuery(item, normalizedQuery))
@@ -637,6 +785,7 @@ export function MediaGalleryWorkspace({
     { label: "Без alt", value: items.filter((item) => item.missingAlt).length },
     { label: "Сироты", value: items.filter((item) => item.orphaned).length },
     { label: "Используется", value: items.filter((item) => item.usageCount > 0).length },
+    { label: "В архиве", value: items.filter((item) => item.archived).length },
     { label: "Broken", value: items.filter((item) => item.brokenBinary).length }
   ];
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
@@ -660,7 +809,11 @@ export function MediaGalleryWorkspace({
     setOverlayBusy(false);
     setOverlayError("");
     setDraftFile(null);
+    setEditedBinaryFile(null);
     setDraftPreviewUrl("");
+    setCreateSourceFile(null);
+    setCreateSourcePreviewUrl("");
+    setEditSourcePreviewUrl("");
     setAssetFields({
       title: "",
       alt: "",
@@ -683,7 +836,9 @@ export function MediaGalleryWorkspace({
     setOverlayBusy(false);
     setOverlayError("");
     setDraftFile(null);
+    setEditedBinaryFile(null);
     setDraftPreviewUrl(item?.previewUrl || "");
+    setEditSourcePreviewUrl(item?.previewUrl || "");
     setAssetFields({
       title: item?.title || "",
       alt: item?.alt || "",
@@ -753,14 +908,57 @@ export function MediaGalleryWorkspace({
       return;
     }
 
+    const sourcePreviewUrl = URL.createObjectURL(file);
     const nextPreviewUrl = URL.createObjectURL(file);
+    setCreateSourceFile(file);
+    setCreateSourcePreviewUrl(sourcePreviewUrl);
     setDraftFile(file);
+    setEditedBinaryFile(null);
     setDraftPreviewUrl(nextPreviewUrl);
     setAssetFields((current) => ({
       ...current,
       title: current.title || buildTitleFromFilename(file.name),
       originalFilename: file.name,
       sizeBytes: file.size
+    }));
+  }
+
+  function handleImageCommit(nextFile, nextPreviewUrl) {
+    if (overlayMode === "asset-create") {
+      setDraftFile(nextFile);
+      setDraftPreviewUrl(nextPreviewUrl);
+    } else {
+      setEditedBinaryFile(nextFile);
+      setDraftPreviewUrl(nextPreviewUrl);
+    }
+
+    setAssetFields((current) => ({
+      ...current,
+      sizeBytes: nextFile.size,
+      mimeType: nextFile.type || current.mimeType
+    }));
+  }
+
+  function handleImageReset() {
+    if (overlayMode === "asset-create") {
+      if (!createSourceFile) {
+        return;
+      }
+
+      setDraftFile(createSourceFile);
+      setDraftPreviewUrl(URL.createObjectURL(createSourceFile));
+      setAssetFields((current) => ({
+        ...current,
+        sizeBytes: createSourceFile.size
+      }));
+      return;
+    }
+
+    setEditedBinaryFile(null);
+    setDraftPreviewUrl(editSourcePreviewUrl || selectedItem?.previewUrl || "");
+    setAssetFields((current) => ({
+      ...current,
+      sizeBytes: selectedItem?.sizeBytes || current.sizeBytes
     }));
   }
 
@@ -827,6 +1025,9 @@ export function MediaGalleryWorkspace({
     formData.set("sourceNote", assetFields.sourceNote);
     formData.set("ownershipNote", assetFields.ownershipNote);
     formData.set("changeIntent", assetFields.changeIntent);
+    if (editedBinaryFile) {
+      formData.set("binary", editedBinaryFile);
+    }
 
     try {
       const response = await fetch(`/api/admin/media/library/${selectedItem.id}`, {
@@ -912,6 +1113,40 @@ export function MediaGalleryWorkspace({
       setOverlayError(submitError.message || "Не удалось сохранить коллекцию.");
     } finally {
       setOverlayBusy(false);
+    }
+  }
+
+  async function handleLifecycleAction(action) {
+    if (!selectedItem) {
+      return;
+    }
+
+    setLifecycleBusy(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.set("action", action);
+
+      const response = await fetch(`/api/admin/media/library/${selectedItem.id}/lifecycle`, {
+        method: "POST",
+        body: formData
+      });
+      const payload = await response.json();
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || "Не удалось обновить lifecycle ассета.");
+      }
+
+      setItems((current) => current.map((item) => (item.id === payload.item.id ? payload.item : item)));
+      setSelectedId(payload.item.id);
+      setRecentlySavedId(payload.item.id);
+      setMessage(payload.message || "Lifecycle ассета обновлён.");
+    } catch (actionError) {
+      setError(actionError.message || "Не удалось обновить lifecycle ассета.");
+    } finally {
+      setLifecycleBusy(false);
     }
   }
 
@@ -1088,6 +1323,7 @@ export function MediaGalleryWorkspace({
                         <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
                         <span className={styles.mediaBadgeCluster}>
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
+                          {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
                           <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
                             {item.missingAlt ? "Без alt" : "Alt"}
                           </span>
@@ -1115,14 +1351,18 @@ export function MediaGalleryWorkspace({
             onEdit={() => openEditOverlay(selectedItem)}
             onOpenCollectionManager={openCollectionManager}
             onCreateCollection={(assetId) => openCollectionManager({ seedAssetId: assetId, createNew: true })}
+            onLifecycleAction={handleLifecycleAction}
+            lifecycleBusy={lifecycleBusy}
           />
         </div>
       </section>
 
       <MediaOverlay
         mode={overlayMode === "asset-create" ? "create" : overlayMode === "asset-edit" ? "edit" : null}
+        item={selectedItem}
         fields={assetFields}
         file={draftFile}
+        editedBinary={editedBinaryFile}
         previewUrl={draftPreviewUrl}
         busy={overlayBusy}
         error={overlayError}
@@ -1130,6 +1370,8 @@ export function MediaGalleryWorkspace({
         onClose={closeOverlay}
         onFieldChange={handleAssetFieldChange}
         onFileSelect={handleFileSelect}
+        onImageCommit={handleImageCommit}
+        onImageReset={handleImageReset}
         onSubmit={overlayMode === "asset-create" ? handleCreateSubmit : handleEditSubmit}
         onDragEnter={(event) => {
           event.preventDefault();
