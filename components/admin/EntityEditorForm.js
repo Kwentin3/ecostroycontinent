@@ -102,7 +102,7 @@ export function EntityEditorForm({
   const surfaceSummary = entityType === "media_asset"
     ? "Сначала загрузите файл, затем уточните метаданные карточки и при необходимости оставьте заметку к версии. Этот экран остаётся источником медиа для остальных карточек."
     : entityType === "gallery"
-      ? "Галерея собирает уже загруженные медиафайлы. Новый файл добавляйте в разделе Медиа, а здесь собирайте подборку."
+      ? "Коллекция собирает уже загруженные медиафайлы. Новый файл добавляйте в разделе Медиа, а здесь собирайте подборку."
       : "Основное заполняется слева, готовность и история остаются справа. Новый файл добавляйте через раздел Медиа, а не в каждой карточке отдельно.";
   const surfaceBullets = [
     `Состояние: ${currentRevision ? currentStateLabel : "новый черновик"}`,
@@ -269,7 +269,7 @@ export function EntityEditorForm({
                   <textarea name="caption" defaultValue={value.caption || ""} />
                 </label>
                 <MediaPicker
-                  legend="Файлы галереи"
+                  legend="Файлы коллекции"
                   name="assetIds"
                   assets={mediaOptions}
                   selectedIds={value.assetIds || []}
@@ -324,7 +324,7 @@ export function EntityEditorForm({
                   <textarea name="methods" defaultValue={value.methods || ""} />
                 </label>
                 <FilterableChecklist legend="Связанные кейсы" name="relatedCaseIds" options={relationOptions.cases} selectedIds={value.relatedCaseIds || []} />
-                <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
+                <FilterableChecklist legend="Коллекции" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
                 <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} hint={FIELD_HINTS.primaryMedia} />
               </>
             ) : null}
@@ -370,7 +370,7 @@ export function EntityEditorForm({
                   <textarea name="result" defaultValue={value.result || ""} required />
                 </label>
                 <FilterableChecklist legend="Связанные услуги" name="serviceIds" options={relationOptions.services} selectedIds={value.serviceIds || []} />
-                <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
+                <FilterableChecklist legend="Коллекции" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
                 <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} hint={FIELD_HINTS.primaryMedia} />
               </>
             ) : null}
@@ -420,7 +420,7 @@ export function EntityEditorForm({
                 </label>
                 <FilterableChecklist legend="Связанные услуги" name="serviceIds" options={relationOptions.services} selectedIds={value.serviceIds || []} />
                 <FilterableChecklist legend="Связанные кейсы" name="caseIds" options={relationOptions.cases} selectedIds={value.caseIds || []} />
-                <FilterableChecklist legend="Галереи" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
+                <FilterableChecklist legend="Коллекции" name="galleryIds" options={relationOptions.galleries} selectedIds={value.galleryIds || []} />
                 <MediaPicker legend="Основное медиа" name="primaryMediaAssetId" assets={mediaOptions} selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []} hint={FIELD_HINTS.primaryMedia} />
               </>
             ) : null}

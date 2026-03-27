@@ -963,11 +963,11 @@ export function MediaGalleryWorkspace({
         <div className={styles.mediaToolbar}>
           <div className={styles.mediaToolbarIntro}>
             <p className={styles.eyebrow}>Рабочее место</p>
-            <h3 className={styles.mediaToolbarTitle}>Медиагалерея</h3>
+            <h3 className={styles.mediaToolbarTitle}>Медиатека</h3>
             <p className={styles.helpText}>
               Здесь живёт библиотека ассетов и встроенный слой коллекций: слева и в центре остаются карточки, справа быстрый inspector, а большое редактирование открывается поверх того же экрана.
             </p>
-            <div className={styles.mediaToolbarStats} aria-label="Сводка медиагалереи">
+            <div className={styles.mediaToolbarStats} aria-label="Сводка медиатеки">
               {summaryItems.map((item) => (
                 <span key={item.label} className={styles.mediaToolbarStat}>
                   <strong>{item.value}</strong>
@@ -1005,7 +1005,7 @@ export function MediaGalleryWorkspace({
           </div>
         </div>
 
-        <div className={styles.mediaFilterRow} role="toolbar" aria-label="Быстрые фильтры медиагалереи">
+        <div className={styles.mediaFilterRow} role="toolbar" aria-label="Быстрые фильтры медиатеки">
           {FILTERS.map((filter) => (
             <button
               key={filter.key}
@@ -1030,7 +1030,7 @@ export function MediaGalleryWorkspace({
               <div className={styles.emptyState}>
                 <p>Библиотека пока пустая.</p>
                 <p className={styles.helpText}>
-                  Начните с загрузки первого изображения, и оно сразу появится в галерее как рабочая карточка.
+                  Начните с загрузки первого изображения, и оно сразу появится в медиатеке как рабочая карточка.
                 </p>
                 <div className={styles.inlineActions}>
                   <button type="button" className={styles.primaryButton} onClick={openCreateOverlay}>
