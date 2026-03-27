@@ -25,6 +25,9 @@ test("local media storage adapter writes and reads bytes from the configured dir
   const stored = await adapter.readMediaFile(storageKey);
 
   assert.equal(stored.toString("utf8"), "media-bytes");
+
+  await adapter.deleteMediaFile(storageKey);
+  await assert.rejects(() => adapter.readMediaFile(storageKey));
 });
 
 test("media delivery URL resolves to the public delivery host from storage key in s3 mode and falls back to the app route in local mode", () => {
