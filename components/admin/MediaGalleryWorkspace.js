@@ -142,6 +142,20 @@ function getActiveCollectionFilterLabel(collectionFilterId, collections) {
   return collections.find((item) => item.id === collectionFilterId)?.title || "Выбранная коллекция";
 }
 
+function summarizeOverlayCollections(collectionIds, collections) {
+  const selected = collections.filter((item) => collectionIds.includes(item.id));
+
+  if (selected.length === 0) {
+    return "Не состоит в коллекциях";
+  }
+
+  if (selected.length === 1) {
+    return selected[0].title;
+  }
+
+  return `${selected[0].title} +${selected.length - 1}`;
+}
+
 function compareItems(left, right, sortMode) {
   switch (sortMode) {
     case "oldest":
@@ -489,6 +503,7 @@ function MediaOverlay({
   mode,
   item,
   fields,
+  collections,
   file,
   editedBinary,
   previewUrl,
@@ -497,6 +512,7 @@ function MediaOverlay({
   dragActive,
   onClose,
   onFieldChange,
+  onToggleCollection,
   onFileSelect,
   onImageCommit,
   onImageReset,
@@ -509,6 +525,7 @@ function MediaOverlay({
   const titleRef = useRef(null);
   const [activeTab, setActiveTab] = useState("metadata");
   const imageEdit = getImageEditAvailability({ mode, item, file });
+  const selectedCollectionsLabel = summarizeOverlayCollections(fields.collectionIds ?? [], collections ?? []);
 
   useEffect(() => {
     if (!mode) {
@@ -661,6 +678,44 @@ function MediaOverlay({
                     Комментарий не обязателен, но он потом помогает быстрее понять смысл версии в истории и проверке.
                   </p>
                 </label>
+                {mode === "edit" ? (
+                  <details className={`${styles.collectionField} ${styles.gridWide}`}>
+                    <summary className={styles.collectionFieldSummary}>
+                      <span className={styles.collectionFieldLabel}>В коллекциях</span>
+                      <span className={styles.collectionFieldValue}>{selectedCollectionsLabel}</span>
+                    </summary>
+                    <div className={styles.collectionFieldPanel}>
+                      {collections.length === 0 ? (
+                        <p className={styles.helpText}>
+                          Коллекций пока нет. Сначала создайте подборку в основном workspace, а потом вернитесь к карточке.
+                        </p>
+                      ) : (
+                        <div className={styles.collectionFieldList} role="list">
+                          {collections.map((collection) => {
+                            const checked = (fields.collectionIds ?? []).includes(collection.id);
+
+                            return (
+                              <label key={collection.id} className={styles.collectionFieldOption}>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => onToggleCollection(collection.id)}
+                                />
+                                <span className={styles.collectionFieldOptionBody}>
+                                  <strong>{collection.title}</strong>
+                                  <span className={styles.mutedText}>{collection.memberCount} файлов</span>
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <p className={styles.helpText}>
+                        Здесь меняется только membership текущего ассета. Состав коллекции и главный кадр по-прежнему живут в редакторе коллекций.
+                      </p>
+                    </div>
+                  </details>
+                ) : null}
               </div>
 
               <div className={styles.mediaOverlayMeta}>
@@ -751,6 +806,7 @@ export function MediaGalleryWorkspace({
     sourceNote: "",
     ownershipNote: "",
     changeIntent: "",
+    collectionIds: [],
     originalFilename: "",
     sizeBytes: 0
   });
@@ -845,6 +901,7 @@ export function MediaGalleryWorkspace({
       sourceNote: "",
       ownershipNote: "",
       changeIntent: "",
+      collectionIds: [],
       originalFilename: "",
       sizeBytes: 0
     });
@@ -870,6 +927,7 @@ export function MediaGalleryWorkspace({
       sourceNote: item?.sourceNote || "",
       ownershipNote: item?.ownershipNote || "",
       changeIntent: "",
+      collectionIds: item?.collectionEntries?.map((entry) => entry.id) || [],
       originalFilename: item?.originalFilename || "",
       sizeBytes: item?.sizeBytes || 0
     });
@@ -925,6 +983,20 @@ export function MediaGalleryWorkspace({
       ...current,
       [field]: value
     }));
+  }
+
+  function handleCollectionToggle(collectionId) {
+    setAssetFields((current) => {
+      const currentIds = current.collectionIds ?? [];
+      const nextIds = currentIds.includes(collectionId)
+        ? currentIds.filter((value) => value !== collectionId)
+        : [...currentIds, collectionId];
+
+      return {
+        ...current,
+        collectionIds: nextIds
+      };
+    });
   }
 
   function handleFileSelect(file) {
@@ -1049,6 +1121,10 @@ export function MediaGalleryWorkspace({
     formData.set("sourceNote", assetFields.sourceNote);
     formData.set("ownershipNote", assetFields.ownershipNote);
     formData.set("changeIntent", assetFields.changeIntent);
+    formData.set("collectionsTouched", "true");
+    for (const collectionId of assetFields.collectionIds ?? []) {
+      formData.append("collectionIds", collectionId);
+    }
     if (editedBinaryFile) {
       formData.set("binary", editedBinaryFile);
     }
@@ -1065,10 +1141,25 @@ export function MediaGalleryWorkspace({
       }
 
       setItems((current) => current.map((item) => (item.id === payload.item.id ? payload.item : item)));
+      if (payload.collections?.length) {
+        setCollections((current) => {
+          const updates = new Map(payload.collections.map((item) => [item.id, item]));
+          const merged = current.map((item) => updates.get(item.id) ?? item);
+          const knownIds = new Set(merged.map((item) => item.id));
+
+          for (const item of payload.collections) {
+            if (!knownIds.has(item.id)) {
+              merged.unshift(item);
+            }
+          }
+
+          return merged;
+        });
+      }
       setSelectedId(payload.item.id);
       setRecentlySavedId(payload.item.id);
       setMessage(payload.message || "Изменения сохранены.");
-      setError("");
+      setError(payload.warning || "");
       closeOverlay();
       updateWorkspaceUrl({ assetId: payload.item.id, compose: null, collectionId: "" });
     } catch (submitError) {
@@ -1400,6 +1491,7 @@ export function MediaGalleryWorkspace({
         mode={overlayMode === "asset-create" ? "create" : overlayMode === "asset-edit" ? "edit" : null}
         item={selectedItem}
         fields={assetFields}
+        collections={collectionOptions}
         file={draftFile}
         editedBinary={editedBinaryFile}
         previewUrl={draftPreviewUrl}
@@ -1408,6 +1500,7 @@ export function MediaGalleryWorkspace({
         dragActive={dragActive}
         onClose={closeOverlay}
         onFieldChange={handleAssetFieldChange}
+        onToggleCollection={handleCollectionToggle}
         onFileSelect={handleFileSelect}
         onImageCommit={handleImageCommit}
         onImageReset={handleImageReset}

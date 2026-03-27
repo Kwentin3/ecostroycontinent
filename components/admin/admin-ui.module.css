@@ -1105,6 +1105,67 @@
   gap: var(--space-3);
 }
 
+.collectionField {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  overflow: hidden;
+}
+
+.collectionFieldSummary {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.collectionFieldSummary::-webkit-details-marker {
+  display: none;
+}
+
+.collectionFieldLabel {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.collectionFieldValue {
+  font-weight: 600;
+}
+
+.collectionFieldPanel {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.collectionFieldList {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 220px;
+  overflow: auto;
+  padding-top: var(--space-2);
+}
+
+.collectionFieldOption {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-muted);
+  font-weight: 400;
+}
+
+.collectionFieldOptionBody {
+  display: grid;
+  gap: 2px;
+}
+
 .collectionOverlayLayout {
   display: grid;
   grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);

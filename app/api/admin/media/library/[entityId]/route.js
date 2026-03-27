@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getString } from "../../../../../../lib/admin/form-data.js";
+import { getString, getStringArray } from "../../../../../../lib/admin/form-data.js";
+import { syncAssetCollectionMembership } from "../../../../../../lib/admin/media-collection-membership.js";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
 import { getMediaLibraryCard } from "../../../../../../lib/admin/media-gallery.js";
 import { userCanEditContent } from "../../../../../../lib/auth/session.js";
@@ -28,6 +29,8 @@ export async function POST(request, { params }) {
 
   const formData = await request.formData();
   const binary = formData.get("binary");
+  const collectionsTouched = getString(formData, "collectionsTouched") === "true";
+  const requestedCollectionIds = collectionsTouched ? getStringArray(formData, "collectionIds") : [];
   const payload = currentRevision.payload ?? {};
   const wantsBinaryOverwrite = binary instanceof File && binary.size > 0;
   const hasPublishedRevision = Boolean(state.activePublishedRevision);
@@ -94,11 +97,30 @@ export async function POST(request, { params }) {
       }
     });
 
-    const item = await getMediaLibraryCard(entityId);
+    let syncWarning = "";
+    let collections = [];
+    let item = await getMediaLibraryCard(entityId);
+
+    if (collectionsTouched) {
+      try {
+        const membership = await syncAssetCollectionMembership({
+          assetId: entityId,
+          nextCollectionIds: requestedCollectionIds,
+          userId: user.id,
+          changeIntent: getString(formData, "changeIntent") || "Коллекции ассета обновлены из редактора медиа."
+        });
+        item = membership.item ?? item;
+        collections = membership.collections ?? [];
+      } catch (membershipError) {
+        syncWarning = membershipError?.message || "Метаданные сохранены, но состав коллекций не обновился.";
+      }
+    }
 
     return NextResponse.json({
       ok: true,
       item,
+      collections,
+      warning: syncWarning,
       message: wantsBinaryOverwrite ? "Изображение и метаданные сохранены." : "Изменения сохранены."
     });
   } catch (error) {
