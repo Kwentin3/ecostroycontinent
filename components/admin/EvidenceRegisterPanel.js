@@ -10,6 +10,40 @@ const TONE_CLASS_BY_STATE = {
   unknown: styles.cockpitToneUnknown
 };
 
+function renderCompactRow(row) {
+  const toneClass = row.severity === "blocking"
+    ? styles.cockpitToneDanger
+    : row.severity === "warning"
+      ? styles.cockpitToneWarning
+      : styles.cockpitToneHealthy;
+
+  return (
+    <article key={row.key} className={styles.evidenceRailItem}>
+      <div className={styles.evidenceRailHeader}>
+        <div className={styles.cockpitCoverageSummary}>
+          <strong>{row.entityLabel}</strong>
+          <span className={styles.mutedText}>
+            {row.entityTypeLabel}
+            {row.entityId ? ` · ${row.entityId}` : ""}
+          </span>
+        </div>
+        <div className={styles.badgeRow}>
+          <span className={`${styles.cockpitStatusPill} ${toneClass}`}>{row.categoryLabel}</span>
+          {row.target.isFallback ? <span className={styles.cockpitFallbackPill}>Резервный переход</span> : null}
+        </div>
+      </div>
+      <p className={styles.evidenceRailReason}>{row.reason}</p>
+      <p className={styles.evidenceRailMeta}>{row.fieldLabel}</p>
+      <div className={styles.evidenceRailFooter}>
+        <span className={`${styles.badge} ${toneClass}`}>{row.severityLabel}</span>
+        <Link href={row.target.href} className={styles.secondaryButton}>
+          {row.target.label}
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 function renderRow(row) {
   const toneClass = row.severity === "blocking"
     ? styles.cockpitToneDanger
@@ -74,6 +108,7 @@ export function EvidenceRegisterPanel({
     scope
   });
   const toneClass = TONE_CLASS_BY_STATE[viewModel.state.tone] || styles.cockpitToneUnknown;
+  const compactRail = scope === "editor";
 
   return (
     <section id={panelId} className={`${styles.panel} ${styles.evidenceRegisterPanel}`} aria-labelledby="evidence-register-title">
@@ -81,29 +116,45 @@ export function EvidenceRegisterPanel({
         <div>
           <p className={styles.cockpitBlockKicker}>Видимость доказательств</p>
           <h3 id="evidence-register-title" className={styles.cockpitBlockTitle}>{title}</h3>
-          <p className={styles.cockpitBlockNote}>Проекция только для просмотра. Редактирования нет. Реестр показывает, где не хватает доказательств и куда идти дальше.</p>
+          <p className={styles.cockpitBlockNote}>
+            {compactRail
+              ? "Только диагностика: где не хватает доказательств и куда перейти дальше."
+              : "Проекция только для просмотра. Редактирования нет. Реестр показывает, где не хватает доказательств и куда идти дальше."}
+          </p>
         </div>
         <span className={`${styles.cockpitStateValue} ${toneClass}`}>{viewModel.state.label}</span>
       </div>
 
-      <div className={styles.cockpitStateGrid}>
-        <article className={styles.cockpitStateCard}>
-          <span className={styles.cockpitStateLabel}>Состояние</span>
-          <span className={`${styles.cockpitStateValue} ${toneClass}`}>{viewModel.state.label}</span>
-          <p className={styles.cockpitStateCopy}>{viewModel.state.note}</p>
-        </article>
+      {compactRail ? (
+        <div className={styles.badgeRow}>
+          <span className={`${styles.cockpitStatusPill} ${toneClass}`}>{viewModel.state.label}</span>
+          <span className={styles.badge}>Строк: {viewModel.counts.total}</span>
+          <span className={styles.badge}>{viewModel.scopeLabel}</span>
+        </div>
+      ) : (
+        <div className={styles.cockpitStateGrid}>
+          <article className={styles.cockpitStateCard}>
+            <span className={styles.cockpitStateLabel}>Состояние</span>
+            <span className={`${styles.cockpitStateValue} ${toneClass}`}>{viewModel.state.label}</span>
+            <p className={styles.cockpitStateCopy}>{viewModel.state.note}</p>
+          </article>
 
-        <article className={styles.cockpitStateCard}>
-          <span className={styles.cockpitStateLabel}>Строки</span>
-          <span className={styles.cockpitStateValue}>{viewModel.counts.total}</span>
-          <p className={styles.cockpitStateCopy}>{viewModel.scopeLabel}</p>
-        </article>
-      </div>
+          <article className={styles.cockpitStateCard}>
+            <span className={styles.cockpitStateLabel}>Строки</span>
+            <span className={styles.cockpitStateValue}>{viewModel.counts.total}</span>
+            <p className={styles.cockpitStateCopy}>{viewModel.scopeLabel}</p>
+          </article>
+        </div>
+      )}
 
       {viewModel.isEmpty ? (
         <div className={styles.emptyState}>
           <p className={styles.mutedText}>{viewModel.state.note}</p>
           <p className={styles.mutedText}>Редактируемые элементы в этой панели отсутствуют.</p>
+        </div>
+      ) : compactRail ? (
+        <div className={styles.evidenceRailList}>
+          {viewModel.rows.map(renderCompactRow)}
         </div>
       ) : (
         <table className={styles.table}>

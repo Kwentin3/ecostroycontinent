@@ -693,6 +693,47 @@
   scroll-margin-top: 24px;
 }
 
+.evidenceRailList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.evidenceRailItem {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.82);
+  min-width: 0;
+}
+
+.evidenceRailHeader,
+.evidenceRailFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  align-items: flex-start;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.evidenceRailReason,
+.evidenceRailMeta {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.evidenceRailReason {
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.evidenceRailMeta {
+  color: var(--subtle);
+  line-height: 1.4;
+}
+
 .editorTruthSectionHeader {
   display: grid;
   gap: 4px;
@@ -1844,6 +1885,68 @@
   scrollbar-gutter: stable;
   font-size: clamp(0.9rem, 0.35vw + 0.78rem, 1rem);
   align-self: start;
+}
+
+.editorRail {
+  width: min(100%, 360px);
+  justify-self: end;
+  gap: var(--space-2);
+}
+
+.editorRail > * {
+  min-width: 0;
+}
+
+.editorRail .panel,
+.editorRail .compactDisclosure {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.editorRail .panel {
+  padding: var(--space-3);
+}
+
+.editorRail .compactDisclosureSummary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.editorRail .compactDisclosureSummaryMain {
+  gap: 6px;
+}
+
+.editorRail .compactDisclosureSummaryStats {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+  padding-left: calc(18px + var(--space-2));
+}
+
+.editorRail .cockpitBlockHeader {
+  gap: var(--space-2);
+}
+
+.editorRail .cockpitBlockHeader > * {
+  min-width: 0;
+}
+
+.editorRail .cockpitStateValue {
+  max-width: 100%;
+  font-size: clamp(1.05rem, 0.24vw + 0.95rem, 1.2rem);
+}
+
+.editorRail .secondaryButton,
+.editorRail .primaryButton {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.editorRail .table {
+  display: block;
+  overflow-x: auto;
 }
 
 .emptyState {

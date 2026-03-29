@@ -123,6 +123,7 @@ export function EntityEditorForm({
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
   const currentStateLabel = currentRevision ? getRevisionStateLabel(currentRevision.state) : "Новый черновик";
   const mediaPreviewSrc = entityType === "media_asset" && entityId ? `/api/admin/media/${entityId}/preview` : null;
+  const showCompactGuide = showActionabilityPanel;
   const surfaceSummary = entityType === "media_asset"
     ? "Сначала загрузите файл, затем уточните метаданные карточки и при необходимости оставьте заметку к версии. Этот экран остаётся источником медиа для остальных карточек."
     : entityType === "gallery"
@@ -134,6 +135,13 @@ export function EntityEditorForm({
     readiness ? `Предупреждений: ${readinessWarnings}` : "Предупреждения появятся после сохранения",
     activePublishedRevision ? `Опубликованная версия №${activePublishedRevision.revisionNumber}` : "Опубликованной версии пока нет"
   ];
+  const compactGuideSummary = entityType === ENTITY_TYPES.GLOBAL_SETTINGS
+    ? "Короткая памятка по глобальным настройкам. Основная работа идёт ниже в форме."
+    : entityType === ENTITY_TYPES.SERVICE
+      ? "Короткая памятка по услуге. Заполнение и связи редактируются ниже."
+      : entityType === ENTITY_TYPES.CASE
+        ? "Короткая памятка по кейсу. Основные поля и связи редактируются ниже."
+        : "Короткая памятка по странице. Основные поля редактируются ниже.";
 
   return (
     <div className={styles.split}>
@@ -148,16 +156,35 @@ export function EntityEditorForm({
             activePublishedRevision={activePublishedRevision}
           />
         ) : null}
-        <SurfacePacket
-          eyebrow="Рабочая карточка"
-          title={surfaceTitle}
-          summary={surfaceSummary}
-          legend={getEntityEditorLegend(entityType)}
-          bullets={surfaceBullets}
-          meta={[currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"]}
-        >
-          {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
-        </SurfacePacket>
+        {showCompactGuide ? (
+          <details className={styles.compactDisclosure}>
+            <summary className={styles.compactDisclosureSummary}>
+              <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+              <span className={styles.compactDisclosureSummaryMain}>
+                <strong>Рабочая карточка</strong>
+                <span className={styles.compactDisclosureSummaryMeta}>{compactGuideSummary}</span>
+              </span>
+              <span className={styles.compactDisclosureSummaryStats}>
+                <span className={styles.badge}>{currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"}</span>
+              </span>
+            </summary>
+            <div className={styles.compactDisclosureBody}>
+              <p className={styles.surfacePacketLegend}>{getEntityEditorLegend(entityType)}</p>
+              {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
+            </div>
+          </details>
+        ) : (
+          <SurfacePacket
+            eyebrow="Рабочая карточка"
+            title={surfaceTitle}
+            summary={surfaceSummary}
+            legend={getEntityEditorLegend(entityType)}
+            bullets={surfaceBullets}
+            meta={[currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"]}
+          >
+            {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
+          </SurfacePacket>
+        )}
         {entityType === "media_asset" ? renderMediaUpload(redirectTo) : null}
         <section className={styles.panel}>
           <form action={`/api/admin/entities/${entityType}/save`} method="post" className={styles.formGrid}>
@@ -508,7 +535,7 @@ export function EntityEditorForm({
           </section>
         ) : null}
       </div>
-      <div className={`${styles.stack} ${styles.stickyPanel}`}>
+      <div className={`${styles.stack} ${styles.stickyPanel} ${styles.editorRail}`}>
         <ReadinessPanel
           readiness={readiness}
           entityType={entityType}
@@ -518,11 +545,6 @@ export function EntityEditorForm({
           fallbackLabel="Общий раздел исправления"
           defaultOpen={Boolean(readiness?.hasBlocking)}
         />
-        <div className={styles.inlineActions}>
-          <Link href="#evidence-register" className={styles.secondaryButton}>
-            Открыть реестр доказательств
-          </Link>
-        </div>
         <EvidenceRegisterPanel
           entityType={entityType}
           entityId={entityId}

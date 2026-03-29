@@ -14,7 +14,7 @@ import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-cor
 import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service";
 import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
 import { findEntityByTypeSingleton, findRevisionById, listPublishObligations } from "../../../../../lib/content-core/repository.js";
-import { normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
+import { ADMIN_COPY, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
 
 export default async function EntityListPage({ params, searchParams }) {
   const { entityType } = await params;
@@ -191,7 +191,7 @@ export default async function EntityListPage({ params, searchParams }) {
         { label: ENTITY_TYPE_LABELS[normalizedType] }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
-      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>РќРѕРІС‹Р№</Link>}
+      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>{ADMIN_COPY.newItem}</Link>}
     >
       <div className={styles.stack}>
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
