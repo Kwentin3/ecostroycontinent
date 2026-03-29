@@ -8,7 +8,7 @@ function TruthGroup({ id, title, note, children }) {
   return (
     <section id={id} className={`${styles.panel} ${styles.panelMuted} ${styles.editorTruthSection} ${styles.anchorTarget}`}>
       <div className={styles.editorTruthSectionHeader}>
-        <p className={styles.cockpitBlockKicker}>SEO / truth</p>
+        <p className={styles.cockpitBlockKicker}>Поисковая оптимизация / данные</p>
         <h3 className={styles.editorTruthSectionTitle}>{title}</h3>
         {note ? <p className={styles.editorTruthSectionNote}>{note}</p> : null}
       </div>
@@ -64,7 +64,7 @@ export function EntityTruthSections({
   if (entityType === "global_settings") {
     return (
       <>
-        <TruthGroup id="global-settings-brand-truth" title="Брендовая truth" note="Это публичное имя и юридическая основа карточки.">
+        <TruthGroup id="global-settings-brand-truth" title="Брендовые данные" note="Это публичное имя и юридическая основа карточки.">
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.publicBrandName}</span>
@@ -77,7 +77,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="global-settings-contact-truth" title="Контактная truth" note="Контакты должны быть подтверждены до публикации.">
+        <TruthGroup id="global-settings-contact-truth" title="Контактные данные" note="Контакты должны быть подтверждены до публикации.">
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.primaryPhone}</span>
@@ -115,7 +115,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="global-settings-default-cta" title="Default CTA" note="Кнопка и пояснение по умолчанию используются как operator fallback.">
+        <TruthGroup id="global-settings-default-cta" title="Кнопка по умолчанию" note="Кнопка и пояснение подставляются в карточки по умолчанию.">
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.defaultCtaLabel}</span>
@@ -141,7 +141,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="global-settings-seo-meta" title="SEO / meta" note="Технические SEO-поля должны быть видимы, а не спрятаны в хвосте формы.">
+        <TruthGroup id="global-settings-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки и поля, которые помогают поиску и предпросмотру.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -151,7 +151,7 @@ export function EntityTruthSections({
   if (entityType === "service") {
     return (
       <>
-        <TruthGroup id="service-seo-truth" title="Адрес и заголовок" note="Это базовая SEO truth для услуги.">
+        <TruthGroup id="service-seo-truth" title="Данные услуги" note="Это базовые данные услуги и её видимый заголовок.">
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.slug}</span>
@@ -187,7 +187,7 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="service-cta" title="CTA" note="Текст кнопки должен совпадать с выбранной подачей услуги.">
+        <TruthGroup id="service-cta" title="Кнопка действия" note="Здесь задаётся основной призыв к действию для услуги.">
           <label className={styles.label}>
             <span>{FIELD_LABELS.ctaVariant}</span>
             <input name="ctaVariant" defaultValue={value.ctaVariant || ""} required />
@@ -213,7 +213,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="service-media" title="Медиа" note="Основной кадр поддерживает preview и карточку услуги.">
+        <TruthGroup id="service-media" title="Медиа" note="Основной кадр поддерживает предпросмотр и карточку услуги.">
           <MediaPicker
             legend="Основное медиа"
             name="primaryMediaAssetId"
@@ -224,7 +224,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="service-seo-meta" title="SEO / meta" note="Технические SEO-поля остаются видимыми и редактируемыми.">
+        <TruthGroup id="service-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки услуги и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -234,7 +234,7 @@ export function EntityTruthSections({
   if (entityType === "case") {
     return (
       <>
-        <TruthGroup id="case-seo-truth" title="Адрес и заголовок" note="Базовая SEO truth для кейса.">
+        <TruthGroup id="case-seo-truth" title="Данные кейса" note="Это базовые данные кейса и его видимый заголовок.">
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.slug}</span>
@@ -297,7 +297,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="case-media" title="Медиа" note="Основной кадр помогает preview и карточке кейса.">
+        <TruthGroup id="case-media" title="Медиа" note="Основной кадр помогает предпросмотру и карточке кейса.">
           <MediaPicker
             legend="Основное медиа"
             name="primaryMediaAssetId"
@@ -308,7 +308,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="case-seo-meta" title="SEO / meta" note="Технические SEO-поля остаются видимыми и редактируемыми.">
+        <TruthGroup id="case-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки кейса и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -334,7 +334,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="page-seo-truth" title="SEO / заголовки" note="Заголовок страницы и H1 должны совпадать с операторским intent.">
+        <TruthGroup id="page-seo-truth" title="Поисковая оптимизация / заголовки" note="Заголовок страницы и H1 должны совпадать с операторским замыслом.">
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>Название</span>
@@ -351,7 +351,7 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="page-content" title="Blocks / content" note="Поле body собирает редакторский поток, который потом превращается в blocks.">
+        <TruthGroup id="page-content" title="Содержание и блоки" note="Здесь собираются основные блоки страницы, заметка по контактам и кнопка действия.">
           <label className={styles.label}>
             <span>{FIELD_LABELS.blocks}</span>
             <textarea name="body" defaultValue={value.body || ""} />
@@ -361,11 +361,11 @@ export function EntityTruthSections({
             <textarea name="contactNote" defaultValue={value.contactNote || ""} />
           </label>
           <label className={styles.label}>
-            <span>Заголовок CTA</span>
+            <span>Заголовок кнопки</span>
             <input name="ctaTitle" defaultValue={value.ctaTitle || ""} />
           </label>
           <label className={styles.label}>
-            <span>Текст CTA</span>
+            <span>Текст кнопки</span>
             <textarea name="ctaBody" defaultValue={value.ctaBody || ""} />
           </label>
           <label className={styles.label}>
@@ -401,7 +401,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="page-media" title="Медиа" note="Основное медиа используется как preview и hero-кадр.">
+        <TruthGroup id="page-media" title="Медиа" note="Основное медиа используется как предпросмотр и главный кадр.">
           <MediaPicker
             legend="Основное медиа"
             name="primaryMediaAssetId"
@@ -412,7 +412,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="page-seo-meta" title="SEO / meta" note="Технические SEO-поля остаются видимыми и редактируемыми.">
+        <TruthGroup id="page-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки страницы и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>

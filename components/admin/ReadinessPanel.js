@@ -9,13 +9,13 @@ const TONE_CLASS_BY_SEVERITY = {
 };
 
 function renderItem(item) {
+  const severityLabel = item.severity === "blocking" ? "Блокирующий" : item.severity === "warning" ? "Предупреждение" : "Инфо";
+
   return (
     <li key={item.key} className={styles.timelineItem}>
       <div className={styles.badgeRow}>
-        <span className={`${styles.badge} ${TONE_CLASS_BY_SEVERITY[item.severity] || styles.cockpitToneUnknown}`}>
-          {item.severity}
-        </span>
-        {item.target.isFallback ? <span className={styles.cockpitFallbackPill}>fallback</span> : null}
+        <span className={`${styles.badge} ${TONE_CLASS_BY_SEVERITY[item.severity] || styles.cockpitToneUnknown}`}>{severityLabel}</span>
+        {item.target.isFallback ? <span className={styles.cockpitFallbackPill}>Резерв</span> : null}
       </div>
       <a href={item.target.href} className={styles.readinessItemLink}>
         {item.message || item.fieldLabel}
@@ -67,7 +67,7 @@ export function ReadinessPanel({
           <div className={styles.statusPanelInfo}>
             <strong>{model.state.label}</strong>
             <p className={styles.mutedText}>{model.state.note}</p>
-            {model.fallbackAnchorId ? <p className={styles.mutedText}>Fallback anchor: {model.fallbackAnchorId}</p> : null}
+            {model.fallbackAnchorId ? <p className={styles.mutedText}>Резервный якорь: {model.fallbackAnchorId}</p> : null}
           </div>
         ) : null}
 
@@ -101,7 +101,7 @@ export function ReadinessPanel({
         {!hasAnyItems && readiness ? (
           <div className={styles.statusPanelInfo}>
             <strong>{model.state.label}</strong>
-            <p className={styles.mutedText}>Проблем не обнаружено. Проверка не скрывает missing данные.</p>
+            <p className={styles.mutedText}>Проблем не обнаружено. Проверка не скрывает отсутствующие данные.</p>
           </div>
         ) : null}
       </div>

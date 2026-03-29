@@ -294,7 +294,7 @@ export function MediaCollectionOverlay({
               title="Выбранные файлы"
               note={
                 selectedAssetSummary.isPartial
-                  ? "Часть выбранных файлов не найдена в списке, но сохранена как fallback."
+                  ? "Часть выбранных файлов не найдена в списке, но сохранена как резервный переход."
                   : "Выбранные файлы можно открыть и убрать без потери контекста."
               }
               items={selectedAssetSummary.items}
@@ -367,7 +367,7 @@ export function MediaCollectionOverlay({
                   value={assetQuery}
                   onChange={(event) => setAssetQuery(event.target.value)}
                   className={styles.searchInput}
-                  placeholder="Название, alt, имя файла"
+                  placeholder="Название, альтернативный текст, имя файла"
                 />
               </label>
               <div className={styles.mediaGrid}>
@@ -381,14 +381,14 @@ export function MediaCollectionOverlay({
                     <span className={styles.mediaThumb}>
                       {asset.previewUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={asset.previewUrl} alt={asset.alt || asset.title || asset.originalFilename || "Превью"} />
+                        <img src={asset.previewUrl} alt={asset.alt || asset.title || asset.originalFilename || "Предпросмотр"} />
                       ) : (
-                        <span className={styles.mediaPlaceholder}>Нет preview</span>
+                        <span className={styles.mediaPlaceholder}>Нет предпросмотра</span>
                       )}
                     </span>
                     <span className={styles.mediaInfo}>
                       <strong>{asset.title || asset.originalFilename || asset.id}</strong>
-                      <span>Alt: {asset.alt || "не заполнен"}</span>
+                    <span>Альтернативный текст: {asset.alt || "не заполнен"}</span>
                       <span>Коллекции: {asset.collectionLabel}</span>
                     </span>
                   </label>
@@ -400,14 +400,14 @@ export function MediaCollectionOverlay({
               <summary className={styles.compactDisclosureSummary}>
                 <div className={styles.compactDisclosureSummaryMain}>
                   <strong>Дополнительно</strong>
-                  <span className={styles.compactDisclosureSummaryMeta}>SEO и delivery metadata коллекции остаются доступны, но не шумят на главном экране.</span>
+                  <span className={styles.compactDisclosureSummaryMeta}>Служебные метаданные коллекции остаются доступны, но не шумят на главном экране.</span>
                 </div>
                 <span className={styles.compactDisclosureMarker} aria-hidden="true" />
               </summary>
               <div className={styles.compactDisclosureBody}>
                 <div className={styles.gridTwo}>
                   <label className={styles.label}>
-                    <span>SEO-заголовок</span>
+                    <span>Заголовок для поиска</span>
                     <input value={fields.metaTitle} onChange={(event) => updateField("metaTitle", event.target.value)} />
                   </label>
                   <label className={styles.label}>
@@ -415,7 +415,7 @@ export function MediaCollectionOverlay({
                     <input value={fields.canonicalIntent} onChange={(event) => updateField("canonicalIntent", event.target.value)} />
                   </label>
                   <label className={`${styles.label} ${styles.gridWide}`}>
-                    <span>SEO-описание</span>
+                    <span>Описание для поиска</span>
                     <textarea value={fields.metaDescription} onChange={(event) => updateField("metaDescription", event.target.value)} />
                   </label>
                   <label className={styles.label}>

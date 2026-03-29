@@ -89,8 +89,8 @@ export function FilterableChecklist({
         title="Текущие связи"
         note={
           selectionModel.isPartial
-            ? "Часть связей не найдена в справочнике, но осталась видимой как fallback."
-            : "Выбранные связи можно открыть и убрать без потери контекста."
+            ? "Часть выбранных связей не найдена в списке, но сохранена как резервный переход."
+            : "Текущие выбранные связи показаны здесь и в виде чипов."
         }
         items={selectionModel.items}
         emptyLabel={selectionEmptyLabel}

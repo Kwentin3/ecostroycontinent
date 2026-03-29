@@ -22,16 +22,16 @@ export function LaunchCoreCoveragePanel({ coverageTiles = [], coverageNote = nul
     <section className={styles.panel} aria-labelledby="launch-core-coverage-title">
       <div className={styles.cockpitBlockHeader}>
         <div>
-          <p className={styles.cockpitBlockKicker}>Coverage</p>
-          <h4 id="launch-core-coverage-title" className={styles.cockpitBlockTitle}>Launch-core coverage</h4>
+          <p className={styles.cockpitBlockKicker}>Покрытие</p>
+          <h4 id="launch-core-coverage-title" className={styles.cockpitBlockTitle}>Покрытие ядра запуска</h4>
         </div>
-        <p className={styles.cockpitBlockNote}>Одна строка на каждый first-slice entity type. Empty coverage никогда не выглядит healthy.</p>
+        <p className={styles.cockpitBlockNote}>Одна строка на каждый тип сущности из первой очереди. Пустое покрытие никогда не выглядит готовым.</p>
       </div>
 
       {coverageTiles.length === 0 ? (
         <div className={styles.emptyState}>
           <p className={styles.mutedText}>Покрытие пока не собрано.</p>
-          <p className={styles.mutedText}>Ни одна first-slice строка не пришла в cockpit projection.</p>
+          <p className={styles.mutedText}>Ни одна строка первой очереди не пришла в cockpit projection.</p>
         </div>
       ) : (
         <table className={styles.table}>
@@ -50,7 +50,7 @@ export function LaunchCoreCoveragePanel({ coverageTiles = [], coverageNote = nul
                   <div className={styles.cockpitCoverageSummary}>
                     <strong>{tile.label}</strong>
                     <span className={styles.mutedText}>{tile.routeHint}</span>
-                    {tile.fallbackRoute ? <span className={styles.cockpitFallbackPill}>Fallback route</span> : null}
+                    {tile.fallbackRoute ? <span className={styles.cockpitFallbackPill}>Резервный переход</span> : null}
                   </div>
                 </td>
                 <td>

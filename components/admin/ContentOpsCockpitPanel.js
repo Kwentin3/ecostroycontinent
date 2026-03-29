@@ -38,16 +38,16 @@ export function ContentOpsCockpitPanel({ cockpit = null }) {
   return (
     <section className={styles.cockpitShell} aria-labelledby="content-ops-cockpit-title">
       <header className={styles.cockpitHeader}>
-        <p className={styles.cockpitBlockKicker}>Рабочее место SEO/content operator</p>
+        <p className={styles.cockpitBlockKicker}>Рабочее место SEO-оператора</p>
         <div className={styles.cockpitHeaderBody}>
-          <h3 id="content-ops-cockpit-title" className={styles.cockpitHeaderTitle}>Content ops cockpit</h3>
+          <h3 id="content-ops-cockpit-title" className={styles.cockpitHeaderTitle}>Панель контент-операций</h3>
           <p className={styles.cockpitHeaderLead}>
-            Сначала what to do, затем state, затем coverage. Интерфейс показывает, что есть, чего не хватает, почему не хватает и куда нажать.
+            Сначала что делать, затем состояние, затем покрытие. Интерфейс показывает, что есть, чего не хватает, почему не хватает и куда нажать.
           </p>
         </div>
         <div className={styles.inlineActions}>
           <Link href="#evidence-register" className={styles.secondaryButton}>
-            Open evidence register
+            Открыть реестр доказательств
           </Link>
         </div>
       </header>
@@ -61,10 +61,10 @@ export function ContentOpsCockpitPanel({ cockpit = null }) {
       <section className={`${styles.panel} ${statePanelClass}`} aria-labelledby="cockpit-state-title">
         <div className={styles.cockpitBlockHeader}>
           <div>
-            <p className={styles.cockpitBlockKicker}>State</p>
+            <p className={styles.cockpitBlockKicker}>Состояние</p>
             <h4 id="cockpit-state-title" className={styles.cockpitBlockTitle}>Состояние</h4>
           </div>
-          <p className={styles.cockpitBlockNote}>Ready / blocked / missing / needs proof. No healthy rendering for empty coverage.</p>
+          <p className={styles.cockpitBlockNote}>Готово / заблокировано / не хватает / нужны доказательства. Пустое покрытие не выглядит готовым.</p>
         </div>
 
         <div className={styles.cockpitStateGrid}>

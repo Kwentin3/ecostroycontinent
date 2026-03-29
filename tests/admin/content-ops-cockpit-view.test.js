@@ -102,11 +102,11 @@ test("cockpit view model keeps the next action operator-first and routes explici
   assert.equal(viewModel.nextActions[1].status, "needs_proof");
   assert.equal(viewModel.nextActions[2].entityType, ENTITY_TYPES.PAGE);
   assert.equal(viewModel.nextActions[2].status, "partial");
-  assert.match(viewModel.stateNote, /не считайте покрытие healthy/);
+  assert.match(viewModel.stateNote, /не считайте покрытие готовым/);
   assert.equal(galleryTile.status, "missing");
   assert.equal(galleryTile.routeTarget.href, "/admin/entities/gallery/new");
   assert.equal(galleryTile.routeTarget.isFallback, true);
-  assert.equal(galleryTile.routeHint.includes("Fallback route"), true);
+  assert.equal(galleryTile.routeHint.includes("Резервный переход"), true);
 });
 
 test("cockpit route targets stay explicit for singleton and workspace fallbacks", () => {
@@ -165,5 +165,5 @@ test("empty cockpit view model still surfaces a concrete next step", () => {
   assert.equal(viewModel.primaryAction.routeTarget.href, "/admin/entities/global_settings");
   assert.equal(viewModel.coverageTiles[0].isCoverageEmpty, true);
   assert.equal(viewModel.coverageTiles[0].routeTarget.isFallback, true);
-  assert.match(viewModel.coverageNote, /healthy/);
+  assert.match(viewModel.coverageNote, /не считается готовым/);
 });

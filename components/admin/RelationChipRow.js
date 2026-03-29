@@ -50,7 +50,7 @@ export function RelationChipRow({
               >
                 <span className={styles.relationChipLinkTop}>
                   <strong className={styles.relationChipLabel}>{item.label}</strong>
-                  {item.isFallback ? <span className={styles.cockpitFallbackPill}>fallback</span> : null}
+                  {item.isFallback ? <span className={styles.cockpitFallbackPill}>Резерв</span> : null}
                 </span>
                 {item.subtitle ? <span className={styles.relationChipSubtitle}>{item.subtitle}</span> : null}
                 {item.meta ? <span className={styles.relationChipMeta}>{item.meta}</span> : null}

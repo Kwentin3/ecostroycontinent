@@ -76,7 +76,7 @@ test("evidence projection makes missing readiness projection explicit", () => {
 
   assert.equal(projection.state, "missing");
   assert.equal(projection.items.length, 1);
-  assert.equal(projection.items[0].reason, "Readiness projection is unavailable.");
+  assert.equal(projection.items[0].reason, "Проекция готовности недоступна.");
   assert.equal(projection.items[0].anchor.isFallback, true);
   assert.equal(projection.items[0].category, "unknown");
 });

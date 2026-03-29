@@ -101,13 +101,13 @@ export default async function EntityListPage({ params, searchParams }) {
     return (
       <AdminShell
         user={user}
-        title="РњРµРґРёР°"
+        title="Медиа"
         breadcrumbs={[
-          { label: "РђРґРјРёРЅРєР°", href: "/admin" },
-          { label: "РњРµРґРёР°" }
+          { label: "Админка", href: "/admin" },
+          { label: "Медиа" }
         ]}
         activeHref="/admin/entities/media_asset"
-        actions={workspaceReturnTo ? <Link href={workspaceReturnTo} className={styles.secondaryButton}>Р’РµСЂРЅСѓС‚СЊСЃСЏ Рє РёСЃС‚РѕС‡РЅРёРєСѓ</Link> : null}
+        actions={workspaceReturnTo ? <Link href={workspaceReturnTo} className={styles.secondaryButton}>Вернуться к источнику</Link> : null}
       >
         <div className={styles.stack}>
           <MediaGalleryWorkspace
@@ -187,7 +187,7 @@ export default async function EntityListPage({ params, searchParams }) {
       user={user}
       title={ENTITY_TYPE_LABELS[normalizedType]}
       breadcrumbs={[
-        { label: "РђРґРјРёРЅРєР°", href: "/admin" },
+        { label: "Админка", href: "/admin" },
         { label: ENTITY_TYPE_LABELS[normalizedType] }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
@@ -197,7 +197,7 @@ export default async function EntityListPage({ params, searchParams }) {
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         <SurfacePacket
-          eyebrow="РЎРїРёСЃРѕРє"
+          eyebrow="Список"
           title={ENTITY_TYPE_LABELS[normalizedType]}
           summary={viewModel.summaryNote}
           legend={getEntityListLegend(normalizedType)}
@@ -207,9 +207,9 @@ export default async function EntityListPage({ params, searchParams }) {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>РЎСѓС‰РЅРѕСЃС‚СЊ</th>
-                <th>РџРѕСЃР»РµРґРЅСЏСЏ РІРµСЂСЃРёСЏ</th>
-                <th>РЎРёРіРЅР°Р»</th>
+                <th>Сущность</th>
+                <th>Последняя версия</th>
+                <th>Сигнал</th>
                 <th />
               </tr>
             </thead>
@@ -218,8 +218,8 @@ export default async function EntityListPage({ params, searchParams }) {
                 <tr>
                   <td colSpan={4}>
                     <div className={styles.emptyState}>
-                      <p className={styles.mutedText}>РЎСѓС‰РЅРѕСЃС‚РµР№ СЌС‚РѕРіРѕ С‚РёРїР° РїРѕРєР° РЅРµС‚.</p>
-                      <Link href={`/admin/entities/${normalizedType}/new`}>РЎРѕР·РґР°С‚СЊ РїРµСЂРІСѓСЋ</Link>
+                      <p className={styles.mutedText}>Сущностей этого типа пока нет.</p>
+                      <Link href={`/admin/entities/${normalizedType}/new`}>Создать первую</Link>
                     </div>
                   </td>
                 </tr>

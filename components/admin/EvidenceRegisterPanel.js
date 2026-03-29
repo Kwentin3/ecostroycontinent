@@ -26,7 +26,7 @@ function renderRow(row) {
             {row.entityTypeLabel}
             {row.entityId ? ` · ${row.entityId}` : ""}
           </span>
-          {row.target.isFallback ? <span className={styles.cockpitFallbackPill}>fallback</span> : null}
+          {row.target.isFallback ? <span className={styles.cockpitFallbackPill}>Резервный переход</span> : null}
         </div>
       </td>
       <td>
@@ -62,7 +62,7 @@ export function EvidenceRegisterPanel({
   obligations = [],
   scope = null,
   panelId = "evidence-register",
-  title = "Evidence register"
+  title = "Реестр доказательств"
 }) {
   const viewModel = buildEvidenceRegisterViewModel({
     cockpit,
@@ -79,24 +79,22 @@ export function EvidenceRegisterPanel({
     <section id={panelId} className={`${styles.panel} ${styles.evidenceRegisterPanel}`} aria-labelledby="evidence-register-title">
       <div className={styles.cockpitBlockHeader}>
         <div>
-          <p className={styles.cockpitBlockKicker}>Proof visibility</p>
+          <p className={styles.cockpitBlockKicker}>Видимость доказательств</p>
           <h3 id="evidence-register-title" className={styles.cockpitBlockTitle}>{title}</h3>
-          <p className={styles.cockpitBlockNote}>
-            Projection only. No edit controls. The register shows where proof is missing and where to go next.
-          </p>
+          <p className={styles.cockpitBlockNote}>Проекция только для просмотра. Редактирования нет. Реестр показывает, где не хватает доказательств и куда идти дальше.</p>
         </div>
         <span className={`${styles.cockpitStateValue} ${toneClass}`}>{viewModel.state.label}</span>
       </div>
 
       <div className={styles.cockpitStateGrid}>
         <article className={styles.cockpitStateCard}>
-          <span className={styles.cockpitStateLabel}>State</span>
+          <span className={styles.cockpitStateLabel}>Состояние</span>
           <span className={`${styles.cockpitStateValue} ${toneClass}`}>{viewModel.state.label}</span>
           <p className={styles.cockpitStateCopy}>{viewModel.state.note}</p>
         </article>
 
         <article className={styles.cockpitStateCard}>
-          <span className={styles.cockpitStateLabel}>Rows</span>
+          <span className={styles.cockpitStateLabel}>Строки</span>
           <span className={styles.cockpitStateValue}>{viewModel.counts.total}</span>
           <p className={styles.cockpitStateCopy}>{viewModel.scopeLabel}</p>
         </article>
@@ -105,16 +103,16 @@ export function EvidenceRegisterPanel({
       {viewModel.isEmpty ? (
         <div className={styles.emptyState}>
           <p className={styles.mutedText}>{viewModel.state.note}</p>
-          <p className={styles.mutedText}>No editable controls are present in this surface.</p>
+          <p className={styles.mutedText}>Редактируемые элементы в этой панели отсутствуют.</p>
         </div>
       ) : (
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Entity</th>
-              <th>Reason</th>
-              <th>Category</th>
-              <th>Action</th>
+              <th>Сущность</th>
+              <th>Причина</th>
+              <th>Категория</th>
+              <th>Действие</th>
             </tr>
           </thead>
           <tbody>

@@ -17,7 +17,7 @@ const FILTERS = [
   { key: "all", label: "Все" },
   { key: "recent", label: "Недавние" },
   { key: "mine", label: "Мои" },
-  { key: "missing-alt", label: "Без alt" },
+  { key: "missing-alt", label: "Нет альтернативного текста" },
   { key: "orphan", label: "Сироты" },
   { key: "used", label: "Используется" },
   { key: "unused", label: "Не используется" },
@@ -200,7 +200,7 @@ function getToneForItem(item) {
 
 function getWarningNote(item) {
   if (item.brokenBinary) {
-    return "Бинарник не читается через admin preview.";
+    return "Бинарник не читается через предпросмотр администратора.";
   }
 
   if (item.archived) {
@@ -314,7 +314,7 @@ function getImageEditAvailability({ mode, item, file }) {
   if (!item.hasPreview && mode === "edit") {
     return {
       canEdit: false,
-      reason: "Нет доступного preview, поэтому image editing сейчас недоступен."
+      reason: "Нет доступного предпросмотра, поэтому редактирование изображения сейчас недоступно."
     };
   }
 
@@ -370,9 +370,9 @@ function MediaInspector({
       <div className={styles.mediaInspectorPreview}>
         {item.hasPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Превью"} />
+          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
         ) : (
-          <div className={styles.mediaInspectorPlaceholder}>Нет preview</div>
+          <div className={styles.mediaInspectorPlaceholder}>Нет предпросмотра</div>
         )}
       </div>
 
@@ -380,7 +380,7 @@ function MediaInspector({
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
         {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
         <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
-          {item.missingAlt ? "Без alt" : "Alt есть"}
+          {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст есть"}
         </span>
         <span className={`${styles.badge} ${item.orphaned ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
           {item.orphaned ? "Сирота" : item.collectionShortLabel}
@@ -608,7 +608,7 @@ function MediaOverlay({
           <section className={styles.mediaOverlayPreview}>
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewUrl} alt={fields.alt || fields.title || fields.originalFilename || "Превью"} />
+              <img src={previewUrl} alt={fields.alt || fields.title || fields.originalFilename || "Предпросмотр"} />
             ) : (
               <div
                 className={`${styles.mediaOverlayDropzone} ${dragActive ? styles.mediaOverlayDropzoneActive : ""}`}
@@ -645,7 +645,7 @@ function MediaOverlay({
                   />
                 </label>
                 <label className={styles.label}>
-                  <span>Alt</span>
+                  <span>Альтернативный текст</span>
                   <input
                     name="alt"
                     value={fields.alt}
@@ -872,11 +872,11 @@ export function MediaGalleryWorkspace({
     .sort((left, right) => compareItems(left, right, sortMode));
   const summaryItems = [
     { label: "Всего", value: items.length },
-    { label: "Без alt", value: items.filter((item) => item.missingAlt).length },
+    { label: "Нет альтернативного текста", value: items.filter((item) => item.missingAlt).length },
     { label: "Сироты", value: items.filter((item) => item.orphaned).length },
     { label: "Используется", value: items.filter((item) => item.usageCount > 0).length },
     { label: "В архиве", value: items.filter((item) => item.archived).length },
-    { label: "Broken", value: items.filter((item) => item.brokenBinary).length }
+    { label: "Сломанные", value: items.filter((item) => item.brokenBinary).length }
   ];
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
   const currentWorkspaceHref = typeof window === "undefined"
@@ -1348,7 +1348,7 @@ export function MediaGalleryWorkspace({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 className={styles.searchInput}
-                placeholder="Название, alt, подпись, имя файла, коллекция"
+                placeholder="Название, альтернативный текст, подпись, имя файла, коллекция"
               />
             </label>
             <label className={styles.label}>
@@ -1455,9 +1455,9 @@ export function MediaGalleryWorkspace({
                       <span className={styles.mediaLibraryThumb}>
                         {item.hasPreview ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Превью"} />
+                          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
                         ) : (
-                          <span className={styles.mediaPlaceholder}>Нет preview</span>
+                          <span className={styles.mediaPlaceholder}>Нет предпросмотра</span>
                         )}
                       </span>
                       <span className={styles.mediaLibraryBody}>
@@ -1468,7 +1468,7 @@ export function MediaGalleryWorkspace({
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
                           {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
                           <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
-                            {item.missingAlt ? "Без alt" : "Alt"}
+                          {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст"}
                           </span>
                           <span className={`${styles.badge} ${item.usageCount ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
                             {item.usageCount ? `Связи ${item.usageCount}` : "Не используется"}

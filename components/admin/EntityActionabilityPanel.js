@@ -10,13 +10,13 @@ const TONE_CLASS_BY_STATE = {
 };
 
 function renderProblemItem(item) {
+  const severityLabel = item.severity === "blocking" ? "Блокирующий" : item.severity === "warning" ? "Предупреждение" : "Инфо";
+
   return (
     <li key={item.key} className={styles.cockpitActionItem}>
       <div className={styles.cockpitActionItemTop}>
-        <span className={`${styles.badge} ${TONE_CLASS_BY_STATE[item.target.isFallback ? "warning" : item.severity === "blocking" ? "danger" : "warning"]}`}>
-          {item.severity}
-        </span>
-        {item.target.isFallback ? <span className={styles.cockpitFallbackPill}>fallback</span> : null}
+        <span className={`${styles.badge} ${TONE_CLASS_BY_STATE[item.target.isFallback ? "warning" : item.severity === "blocking" ? "danger" : "warning"]}`}>{severityLabel}</span>
+        {item.target.isFallback ? <span className={styles.cockpitFallbackPill}>Резерв</span> : null}
       </div>
       <a href={item.target.href} className={styles.readinessItemLink}>
         {item.message || item.fieldLabel}
@@ -72,7 +72,7 @@ export function EntityActionabilityPanel({
           <span className={styles.cockpitStateValue}>{model.problemItems.length}</span>
           <p className={styles.cockpitStateCopy}>
             {model.problemItems.length > 0
-              ? `Показываем первые ${model.visibleProblemItems.length} items, которые можно исправить сразу.`
+              ? `Показываем первые ${model.visibleProblemItems.length} проблемные строки, которые можно исправить сразу.`
               : model.state.key === "missing"
                 ? "Проблемы ещё не считаны."
                 : "Проблемы не обнаружены."}
@@ -83,7 +83,7 @@ export function EntityActionabilityPanel({
             </ul>
           ) : null}
           {model.hiddenProblemCount > 0 ? (
-            <p className={styles.cockpitStateNote}>Ещё {model.hiddenProblemCount} items доступны в панели готовности справа.</p>
+            <p className={styles.cockpitStateNote}>Ещё {model.hiddenProblemCount} проблемных строк доступны в панели готовности справа.</p>
           ) : null}
         </article>
 
@@ -94,7 +94,7 @@ export function EntityActionabilityPanel({
           </a>
           <p className={styles.cockpitStateCopy}>{model.primaryAction.note}</p>
           <div className={styles.badgeRow}>
-            {model.primaryAction.isFallback ? <span className={styles.cockpitFallbackPill}>fallback</span> : null}
+            {model.primaryAction.isFallback ? <span className={styles.cockpitFallbackPill}>Резерв</span> : null}
             <span className={styles.badge}>{model.primaryAction.targetLabel}</span>
           </div>
         </article>

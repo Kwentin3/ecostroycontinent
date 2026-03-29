@@ -69,13 +69,13 @@ test("cockpit evidence register flattens proof gaps into actionable rows", () =>
 
   assert.equal(model.scope, "cockpit");
   assert.equal(model.state.key, "blocked");
-  assert.equal(model.state.note, "Blocking proof spots are visible below.");
+  assert.equal(model.state.note, "Ниже видны блокирующие точки с доказательствами.");
   assert.equal(model.rows.length > 0, true);
   assert.equal(exactRow.target.href, "/admin/entities/service/service-1#service-seo-truth");
   assert.equal(exactRow.target.isFallback, false);
   assert.equal(fallbackRow.target.href, "/admin/entities/service/service-1#service-fallback");
   assert.equal(fallbackRow.target.isFallback, true);
-  assert.equal(fallbackRow.target.label, "Open fallback section");
+  assert.equal(fallbackRow.target.label, "Открыть резервный раздел");
   assert.equal(fallbackRow.category, "missing proof");
 });
 
@@ -109,7 +109,7 @@ test("ready cockpit evidence register renders an explicit no-gaps state", () => 
 
   assert.equal(model.state.key, "ready");
   assert.equal(model.rows.length, 0);
-  assert.equal(model.state.note, "No evidence gaps detected.");
+  assert.equal(model.state.note, "Пробелов в доказательствах не видно.");
 });
 
 test("editor evidence register keeps missing projection explicit and labelled", () => {
@@ -121,11 +121,10 @@ test("editor evidence register keeps missing projection explicit and labelled", 
 
   assert.equal(model.scope, "editor");
   assert.equal(model.state.key, "missing");
-  assert.equal(model.state.note, "Evidence not fully available yet.");
+  assert.equal(model.state.note, "Доказательства ещё не собраны полностью.");
   assert.equal(model.rows.length, 1);
-  assert.equal(model.rows[0].reason, "Readiness projection is unavailable.");
+  assert.equal(model.rows[0].reason, "Проекция готовности недоступна.");
   assert.equal(model.rows[0].category, "unknown");
   assert.equal(model.rows[0].target.href, "#page-fallback");
   assert.equal(model.rows[0].target.isFallback, true);
 });
-

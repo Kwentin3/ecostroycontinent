@@ -129,7 +129,7 @@ test("list row projections surface blocked, proof gap, partial and missing state
 
   assert.equal(partialRow.signalState, "partial");
   assert.equal(partialRow.signalLabel, "Частично");
-  assert.match(partialRow.signalReason, /Готовность/);
+  assert.equal(partialRow.signalReason, "Проверка готовности ещё не считана.");
 
   assert.equal(missingRow.signalState, "missing");
   assert.equal(missingRow.versionLabel, "Версий пока нет");
@@ -240,6 +240,5 @@ test("list surface view model prioritizes blockers and keeps row summaries compa
     "Готово: 1",
     "Нет версии: 0"
   ]);
-  assert.match(viewModel.summaryNote, /blocked и proof gap rows/);
+  assert.match(viewModel.summaryNote, /блокирующие строки и строки с доказательствами/);
 });
-

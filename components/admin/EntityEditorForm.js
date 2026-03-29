@@ -27,7 +27,7 @@ const OBLIGATION_STATUS_LABELS = {
   completed: "Выполнено"
 };
 
-function TruthGroup({ id, kicker = "SEO / truth", title, note, children }) {
+function TruthGroup({ id, kicker = "Поисковая оптимизация / данные", title, note, children }) {
   return (
     <section id={id} className={`${styles.panel} ${styles.panelMuted} ${styles.editorTruthSection} ${styles.anchorTarget}`}>
       <div className={styles.editorTruthSectionHeader}>
@@ -240,7 +240,7 @@ export function EntityEditorForm({
                 <div className={styles.gridWide}>
                   <section className={styles.mediaPreviewPanel}>
                     <div className={styles.mediaPreviewCopy}>
-                      <p className={styles.mediaPreviewLabel}>Превью файла</p>
+                      <p className={styles.mediaPreviewLabel}>Предпросмотр файла</p>
                       <p className={styles.helpText}>
                         После загрузки здесь видно само изображение. Если файла ещё нет, превью появится после первой загрузки.
                       </p>
@@ -449,11 +449,11 @@ export function EntityEditorForm({
                   <textarea name="contactNote" defaultValue={value.contactNote || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Заголовок CTA</span>
+                  <span>Заголовок кнопки</span>
                   <input name="ctaTitle" defaultValue={value.ctaTitle || ""} />
                 </label>
                 <label className={styles.label}>
-                  <span>Текст CTA</span>
+                  <span>Текст кнопки</span>
                   <textarea name="ctaBody" defaultValue={value.ctaBody || ""} />
                 </label>
                 <label className={styles.label}>
@@ -520,7 +520,7 @@ export function EntityEditorForm({
         />
         <div className={styles.inlineActions}>
           <Link href="#evidence-register" className={styles.secondaryButton}>
-            Open evidence register
+            Открыть реестр доказательств
           </Link>
         </div>
         <EvidenceRegisterPanel

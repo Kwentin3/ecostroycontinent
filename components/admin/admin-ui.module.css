@@ -621,17 +621,21 @@
   margin: 0;
   color: var(--subtle);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .cockpitStateNote {
   margin: 0;
   color: var(--subtle);
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .cockpitCoverageSummary {
   display: grid;
   gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .cockpitFallbackPill {
@@ -702,6 +706,7 @@
   margin: 0;
   color: var(--subtle);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .anchorTarget {
@@ -714,6 +719,7 @@
   text-decoration: none;
   font-weight: 700;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .readinessItemLink:hover,
@@ -925,6 +931,7 @@
   margin: 0;
   color: var(--subtle);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .relationSummaryEmpty {
@@ -994,6 +1001,7 @@
   color: var(--subtle);
   font-size: 0.84rem;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .relationChipAction {
@@ -1178,7 +1186,7 @@
 
 .mediaWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
   gap: var(--space-4);
   align-items: start;
 }
@@ -1286,6 +1294,12 @@
   top: var(--space-4);
   display: grid;
   gap: var(--space-3);
+  min-width: 0;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  font-size: clamp(0.9rem, 0.3vw + 0.78rem, 0.98rem);
 }
 
 .mediaInspectorHeader {
@@ -1293,10 +1307,12 @@
   justify-content: space-between;
   gap: var(--space-3);
   align-items: flex-start;
+  min-width: 0;
 }
 
 .mediaInspectorTitle {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .mediaInspectorPreview {
@@ -1338,6 +1354,7 @@
 .mediaMetaList dd {
   margin: 0;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .mediaInspectorSection {
@@ -1372,6 +1389,8 @@
   text-decoration: none;
   color: inherit;
   background: #fff;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .mediaUsageItem:hover,
@@ -1392,6 +1411,8 @@
   background: #fff;
   cursor: pointer;
   font: inherit;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .mediaUsageButton:hover,
@@ -1807,7 +1828,7 @@
 
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
   gap: var(--space-4);
   align-items: start;
 }
@@ -1816,7 +1837,12 @@
   position: sticky;
   top: var(--space-4);
   max-height: calc(100vh - (var(--space-4) * 2));
-  overflow: auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  font-size: clamp(0.9rem, 0.35vw + 0.78rem, 1rem);
   align-self: start;
 }
 

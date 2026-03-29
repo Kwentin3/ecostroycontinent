@@ -14,7 +14,7 @@ export default async function AdminLoginPage({ searchParams }) {
         <p className={styles.eyebrow}>Только рабочая зона</p>
         <h1>Вход в админку</h1>
         <p className={styles.mutedText}>
-          Доступ открыт для ролей суперадмина, SEO-менеджера и владельца бизнеса.
+          Доступ открыт для ролей суперадмина, SEO-специалиста и владельца бизнеса.
         </p>
         {params?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(params.error)}</div> : null}
         {params?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(params.message)}</div> : null}
