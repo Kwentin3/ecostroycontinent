@@ -1,0 +1,231 @@
+{
+  "outputs": {
+    "dashboard": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\dashboard-1440.png",
+    "pageList": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\page-list-1440.png",
+    "serviceList": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\service-list-1440.png",
+    "globalSettings1440": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\global-settings-1440.png",
+    "globalSettings1280": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\global-settings-1280.png",
+    "globalSettings1024": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\global-settings-1024.png",
+    "serviceNew1440": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\service-new-1440.png",
+    "caseNew1440": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\case-new-1440.png",
+    "pageNew1440": "docs\\reports\\2026-03-29\\assets\\post-deploy-review\\page-new-1440.png"
+  },
+  "data": {
+    "pageList1440": {
+      "url": "https://ecostroycontinent.ru/admin/entities/page",
+      "viewport": {
+        "width": 1440,
+        "height": 1200
+      },
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "stickyRect": null,
+      "surfaceRect": {
+        "x": 312,
+        "y": 156.1875,
+        "width": 1096,
+        "height": 391.4375,
+        "top": 156.1875,
+        "right": 1408,
+        "bottom": 547.625,
+        "left": 312
+      },
+      "evidenceTableRect": null,
+      "evidenceTableScrollWidth": null,
+      "stickyScrollWidth": null,
+      "newLinkText": "РќРѕРІС‹Р№"
+    },
+    "serviceList1440": {
+      "url": "https://ecostroycontinent.ru/admin/entities/service",
+      "viewport": {
+        "width": 1440,
+        "height": 1200
+      },
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "stickyRect": null,
+      "surfaceRect": {
+        "x": 312,
+        "y": 156.1875,
+        "width": 1096,
+        "height": 391.4375,
+        "top": 156.1875,
+        "right": 1408,
+        "bottom": 547.625,
+        "left": 312
+      },
+      "evidenceTableRect": null,
+      "evidenceTableScrollWidth": null,
+      "stickyScrollWidth": null,
+      "newLinkText": "РќРѕРІС‹Р№"
+    },
+    "globalSettings1440": {
+      "url": "https://ecostroycontinent.ru/admin/entities/global_settings/entity_239e7235-c1de-42aa-85de-e974d848be05",
+      "viewport": {
+        "width": 1440,
+        "height": 1200
+      },
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "stickyRect": {
+        "x": 1028,
+        "y": 156.1875,
+        "width": 380,
+        "height": 1152,
+        "top": 156.1875,
+        "right": 1408,
+        "bottom": 1308.1875,
+        "left": 1028
+      },
+      "surfaceRect": {
+        "x": 312,
+        "y": 674.40625,
+        "width": 692,
+        "height": 459.4375,
+        "top": 674.40625,
+        "right": 1004,
+        "bottom": 1133.84375,
+        "left": 312
+      },
+      "evidenceTableRect": {
+        "x": 1053,
+        "y": 721.34375,
+        "width": 398.5625,
+        "height": 447,
+        "top": 721.34375,
+        "right": 1451.5625,
+        "bottom": 1168.34375,
+        "left": 1053
+      },
+      "evidenceTableScrollWidth": 399,
+      "stickyScrollWidth": 449,
+      "newLinkText": null
+    },
+    "globalSettings1280": {
+      "url": "https://ecostroycontinent.ru/admin/entities/global_settings/entity_239e7235-c1de-42aa-85de-e974d848be05",
+      "viewport": {
+        "width": 1280,
+        "height": 1200
+      },
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "stickyRect": {
+        "x": 868,
+        "y": 156.1875,
+        "width": 380,
+        "height": 1152,
+        "top": 156.1875,
+        "right": 1248,
+        "bottom": 1308.1875,
+        "left": 868
+      },
+      "surfaceRect": {
+        "x": 312,
+        "y": 964.78125,
+        "width": 532,
+        "height": 480.4375,
+        "top": 964.78125,
+        "right": 844,
+        "bottom": 1445.21875,
+        "left": 312
+      },
+      "evidenceTableRect": {
+        "x": 893,
+        "y": 721.34375,
+        "width": 398.5625,
+        "height": 447,
+        "top": 721.34375,
+        "right": 1291.5625,
+        "bottom": 1168.34375,
+        "left": 893
+      },
+      "evidenceTableScrollWidth": 399,
+      "stickyScrollWidth": 449,
+      "newLinkText": null
+    },
+    "globalSettings1024": {
+      "url": "https://ecostroycontinent.ru/admin/entities/global_settings/entity_239e7235-c1de-42aa-85de-e974d848be05",
+      "viewport": {
+        "width": 1024,
+        "height": 1400
+      },
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "stickyRect": {
+        "x": 32,
+        "y": 4969.640625,
+        "width": 960,
+        "height": 1021.65625,
+        "top": 4969.640625,
+        "right": 992,
+        "bottom": 5991.296875,
+        "left": 32
+      },
+      "surfaceRect": {
+        "x": 32,
+        "y": 1465.078125,
+        "width": 960,
+        "height": 459.4375,
+        "top": 1465.078125,
+        "right": 992,
+        "bottom": 1924.515625,
+        "left": 32
+      },
+      "evidenceTableRect": {
+        "x": 57,
+        "y": 5383.421875,
+        "width": 893,
+        "height": 186,
+        "top": 5383.421875,
+        "right": 950,
+        "bottom": 5569.421875,
+        "left": 57
+      },
+      "evidenceTableScrollWidth": 893,
+      "stickyScrollWidth": 943,
+      "newLinkText": null
+    },
+    "serviceNew1440": {
+      "url": "https://ecostroycontinent.ru/admin/entities/service/new",
+      "viewport": {
+        "width": 1440,
+        "height": 1400
+      },
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "stickyRect": {
+        "x": 1028,
+        "y": 156.1875,
+        "width": 380,
+        "height": 1297.78125,
+        "top": 156.1875,
+        "right": 1408,
+        "bottom": 1453.96875,
+        "left": 1028
+      },
+      "surfaceRect": {
+        "x": 312,
+        "y": 617.984375,
+        "width": 692,
+        "height": 397.4375,
+        "top": 617.984375,
+        "right": 1004,
+        "bottom": 1015.421875,
+        "left": 312
+      },
+      "evidenceTableRect": {
+        "x": 1053,
+        "y": 747.09375,
+        "width": 411.84375,
+        "height": 285,
+        "top": 747.09375,
+        "right": 1464.84375,
+        "bottom": 1032.09375,
+        "left": 1053
+      },
+      "evidenceTableScrollWidth": 412,
+      "stickyScrollWidth": 462,
+      "newLinkText": null
+    }
+  }
+}
