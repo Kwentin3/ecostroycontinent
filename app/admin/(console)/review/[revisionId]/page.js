@@ -108,7 +108,16 @@ export default async function ReviewDetailPage({ params, searchParams }) {
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         <div className={styles.split}>
           <section className={styles.stack}>
-            <ReadinessPanel readiness={readiness} title="Проверка готовности" defaultOpen />
+            <ReadinessPanel
+              readiness={readiness}
+              entityType={entity.entityType}
+              navigationContext="preview"
+              panelId="review-readiness"
+              fallbackAnchorId="review-readiness"
+              fallbackLabel="Блок готовности"
+              title="Проверка готовности"
+              defaultOpen
+            />
             <SurfacePacket
               eyebrow="Карточка решения"
               title={title}

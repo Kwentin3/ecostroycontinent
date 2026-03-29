@@ -1,12 +1,15 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../../components/admin/AdminShell";
 import { EntityEditorForm } from "../../../../../../components/admin/EntityEditorForm";
 import { deriveEditorValue, loadEditorPageData } from "../../../../../../lib/admin/entity-ui";
+import { normalizeAdminReturnTo } from "../../../../../../lib/admin/relation-navigation.js";
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
 import { getPayloadLabel } from "../../../../../../lib/admin/entity-ui";
+import styles from "../../../../../../components/admin/admin-ui.module.css";
 
 export default async function EntityEditorPage({ params, searchParams }) {
   const { entityType, entityId } = await params;
@@ -26,6 +29,12 @@ export default async function EntityEditorPage({ params, searchParams }) {
       target.set("error", query.error);
     }
 
+    const returnTo = normalizeAdminReturnTo(query?.returnTo);
+
+    if (returnTo) {
+      target.set("returnTo", returnTo);
+    }
+
     redirect(`/admin/entities/media_asset?${target.toString()}`);
   }
 
@@ -42,11 +51,18 @@ export default async function EntityEditorPage({ params, searchParams }) {
       target.set("error", query.error);
     }
 
+    const returnTo = normalizeAdminReturnTo(query?.returnTo);
+
+    if (returnTo) {
+      target.set("returnTo", returnTo);
+    }
+
     redirect(`/admin/entities/media_asset?${target.toString()}`);
   }
 
   const data = await loadEditorPageData(normalizedType, entityId);
   const surfaceLabel = getPayloadLabel(data.currentRevision?.payload || data.state.activePublishedRevision?.payload || { title: ENTITY_TYPE_LABELS[normalizedType] });
+  const returnTo = normalizeAdminReturnTo(query?.returnTo);
 
   if (!data.state?.entity) {
     notFound();
@@ -62,6 +78,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
         { label: surfaceLabel }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
+      actions={returnTo ? <Link href={returnTo} className={styles.secondaryButton}>Вернуться к источнику</Link> : null}
     >
       <EntityEditorForm
         entityType={normalizedType}

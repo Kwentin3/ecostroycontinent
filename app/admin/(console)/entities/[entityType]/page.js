@@ -1,16 +1,20 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { MediaGalleryWorkspace } from "../../../../../components/admin/MediaGalleryWorkspace";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
+import { buildListRowProjection, buildListSurfaceViewModel } from "../../../../../lib/admin/list-visibility.js";
 import { listCollectionLibraryCards, listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
+import { normalizeAdminReturnTo } from "../../../../../lib/admin/relation-navigation.js";
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
 import { getEntityListLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
 import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service";
-import { getRevisionStateLabel, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
+import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
+import { findEntityByTypeSingleton, findRevisionById, listPublishObligations } from "../../../../../lib/content-core/repository.js";
+import { normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
 
 export default async function EntityListPage({ params, searchParams }) {
   const { entityType } = await params;
@@ -38,6 +42,12 @@ export default async function EntityListPage({ params, searchParams }) {
       target.set("error", query.error);
     }
 
+    const returnTo = normalizeAdminReturnTo(query?.returnTo);
+
+    if (returnTo) {
+      target.set("returnTo", returnTo);
+    }
+
     redirect(`/admin/entities/media_asset?${target.toString()}`);
   }
 
@@ -59,16 +69,45 @@ export default async function EntityListPage({ params, searchParams }) {
     const selectedAssetId = query?.asset || query?.entityId || mediaItems[0]?.id || "";
     const initialCompose = query?.compose || "";
     const initialCollectionId = query?.collection || "";
+    const workspaceReturnTo = normalizeAdminReturnTo(query?.returnTo);
+    const workspaceQuery = new URLSearchParams();
+
+    if (selectedAssetId) {
+      workspaceQuery.set("asset", selectedAssetId);
+    }
+
+    if (initialCompose) {
+      workspaceQuery.set("compose", initialCompose);
+    }
+
+    if (initialCollectionId) {
+      workspaceQuery.set("collection", initialCollectionId);
+    }
+
+    if (query?.message) {
+      workspaceQuery.set("message", query.message);
+    }
+
+    if (query?.error) {
+      workspaceQuery.set("error", query.error);
+    }
+
+    if (workspaceReturnTo) {
+      workspaceQuery.set("returnTo", workspaceReturnTo);
+    }
+
+    const workspaceContextHref = `/admin/entities/media_asset${workspaceQuery.toString() ? `?${workspaceQuery.toString()}` : ""}`;
 
     return (
       <AdminShell
         user={user}
-        title="Медиа"
+        title="РњРµРґРёР°"
         breadcrumbs={[
-          { label: "Админка", href: "/admin" },
-          { label: "Медиа" }
+          { label: "РђРґРјРёРЅРєР°", href: "/admin" },
+          { label: "РњРµРґРёР°" }
         ]}
         activeHref="/admin/entities/media_asset"
+        actions={workspaceReturnTo ? <Link href={workspaceReturnTo} className={styles.secondaryButton}>Р’РµСЂРЅСѓС‚СЊСЃСЏ Рє РёСЃС‚РѕС‡РЅРёРєСѓ</Link> : null}
       >
         <div className={styles.stack}>
           <MediaGalleryWorkspace
@@ -80,71 +119,147 @@ export default async function EntityListPage({ params, searchParams }) {
             currentUsername={user.username}
             initialMessage={query?.message ? normalizeLegacyCopy(query.message) : ""}
             initialError={query?.error ? normalizeLegacyCopy(query.error) : ""}
+            workspaceContextHref={workspaceContextHref}
           />
         </div>
       </AdminShell>
     );
   }
 
+  const globalSettingsEntity = await findEntityByTypeSingleton(ENTITY_TYPES.GLOBAL_SETTINGS);
+  const globalSettingsRevision = globalSettingsEntity?.activePublishedRevisionId
+    ? await findRevisionById(globalSettingsEntity.activePublishedRevisionId)
+    : null;
   const cards = await listEntityCards(normalizedType);
-  const draftCount = cards.filter((card) => card.latestRevision?.state === "draft").length;
-  const reviewCount = cards.filter((card) => card.latestRevision?.state === "review").length;
-  const publishedCount = cards.filter((card) => card.latestRevision?.state === "published").length;
+  const listHrefParams = new URLSearchParams();
+
+  if (query?.message) {
+    listHrefParams.set("message", query.message);
+  }
+
+  if (query?.error) {
+    listHrefParams.set("error", query.error);
+  }
+
+  const listHref = `/admin/entities/${normalizedType}${listHrefParams.toString() ? `?${listHrefParams.toString()}` : ""}`;
+  const rowModels = await Promise.all(
+    cards.map(async (card) => {
+      if (!card.latestRevision) {
+        return buildListRowProjection({
+          card,
+          entityType: normalizedType,
+          listHref
+        });
+      }
+
+      let readiness = null;
+      let obligations = [];
+
+      try {
+        readiness = await evaluateReadiness({
+          entity: card.entity,
+          revision: card.latestRevision,
+          globalSettingsRevision
+        });
+      } catch {
+        readiness = null;
+      }
+
+      try {
+        obligations = await listPublishObligations(card.entity.id);
+      } catch {
+        obligations = [];
+      }
+
+      return buildListRowProjection({
+        card,
+        entityType: normalizedType,
+        readiness,
+        obligations,
+        listHref
+      });
+    })
+  );
+  const viewModel = buildListSurfaceViewModel(rowModels.filter(Boolean));
 
   return (
     <AdminShell
       user={user}
       title={ENTITY_TYPE_LABELS[normalizedType]}
       breadcrumbs={[
-        { label: "Админка", href: "/admin" },
+        { label: "РђРґРјРёРЅРєР°", href: "/admin" },
         { label: ENTITY_TYPE_LABELS[normalizedType] }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
-      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>Новый</Link>}
+      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>РќРѕРІС‹Р№</Link>}
     >
       <div className={styles.stack}>
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         <SurfacePacket
-          eyebrow="Список"
+          eyebrow="РЎРїРёСЃРѕРє"
           title={ENTITY_TYPE_LABELS[normalizedType]}
-          summary="Открывайте карточку для редактирования или создайте новую запись через кнопку справа."
+          summary={viewModel.summaryNote}
           legend={getEntityListLegend(normalizedType)}
-          bullets={[
-            `Всего записей: ${cards.length}`,
-            `Черновиков: ${draftCount}`,
-            `На проверке: ${reviewCount}`,
-            `Опубликовано: ${publishedCount}`
-          ]}
+          bullets={viewModel.bullets}
         />
         <section className={styles.panel}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Сущность</th>
-                <th>Последняя версия</th>
-                <th>Статус</th>
+                <th>РЎСѓС‰РЅРѕСЃС‚СЊ</th>
+                <th>РџРѕСЃР»РµРґРЅСЏСЏ РІРµСЂСЃРёСЏ</th>
+                <th>РЎРёРіРЅР°Р»</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {cards.length === 0 ? (
+              {viewModel.rows.length === 0 ? (
                 <tr>
                   <td colSpan={4}>
                     <div className={styles.emptyState}>
-                      <p className={styles.mutedText}>Сущностей этого типа пока нет.</p>
-                      <Link href={`/admin/entities/${normalizedType}/new`}>Создать первую</Link>
+                      <p className={styles.mutedText}>РЎСѓС‰РЅРѕСЃС‚РµР№ СЌС‚РѕРіРѕ С‚РёРїР° РїРѕРєР° РЅРµС‚.</p>
+                      <Link href={`/admin/entities/${normalizedType}/new`}>РЎРѕР·РґР°С‚СЊ РїРµСЂРІСѓСЋ</Link>
                     </div>
                   </td>
                 </tr>
               ) : (
-                cards.map((card) => (
-                  <tr key={card.entity.id}>
-                    <td>{card.latestRevision?.payload?.title || card.latestRevision?.payload?.h1 || card.latestRevision?.payload?.publicBrandName || card.entity.id}</td>
-                    <td>{card.latestRevision ? `#${card.latestRevision.revisionNumber}` : "-"}</td>
-                    <td>{card.latestRevision ? getRevisionStateLabel(card.latestRevision.state) : "Версий пока нет"}</td>
+                viewModel.rows.map((row) => (
+                  <tr key={row.key}>
                     <td>
-                      <Link href={`/admin/entities/${normalizedType}/${card.entity.id}`}>Открыть</Link>
+                      <div className={styles.cockpitCoverageSummary}>
+                        <strong>{row.entityLabel}</strong>
+                        <span className={styles.mutedText}>{row.entityTypeLabel}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.cockpitCoverageSummary}>
+                        <strong>{row.versionLabel}</strong>
+                        <span className={styles.mutedText}>{row.versionStateLabel}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.cockpitCoverageSummary}>
+                        <span
+                          className={`${styles.cockpitStatusPill} ${
+                            row.signalTone === "danger"
+                              ? styles.cockpitToneDanger
+                              : row.signalTone === "warning"
+                                ? styles.cockpitToneWarning
+                                : row.signalTone === "healthy"
+                                  ? styles.cockpitToneHealthy
+                                  : styles.cockpitToneUnknown
+                          }`}
+                        >
+                          {row.signalLabel}
+                        </span>
+                        <span className={styles.mutedText}>{row.signalReason}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <Link href={row.actionHref} className={styles.secondaryButton}>
+                        {row.actionLabel}
+                      </Link>
                     </td>
                   </tr>
                 ))
@@ -156,3 +271,4 @@ export default async function EntityListPage({ params, searchParams }) {
     </AdminShell>
   );
 }
+

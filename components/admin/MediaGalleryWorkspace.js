@@ -8,6 +8,7 @@ import {
   COLLECTION_FILTER_ORPHAN,
   matchesCollectionFilter
 } from "../../lib/admin/media-gallery-filters";
+import { appendAdminReturnTo } from "../../lib/admin/relation-navigation.js";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -333,7 +334,15 @@ function mergeById(currentItems, nextItems) {
   return Array.from(map.values());
 }
 
-function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollection, onLifecycleAction, lifecycleBusy }) {
+function MediaInspector({
+  item,
+  onEdit,
+  onOpenCollectionManager,
+  onCreateCollection,
+  onLifecycleAction,
+  lifecycleBusy,
+  returnTo = ""
+}) {
   if (!item) {
     return (
       <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
@@ -468,7 +477,7 @@ function MediaInspector({ item, onEdit, onOpenCollectionManager, onCreateCollect
         ) : (
           <div className={styles.mediaUsageList}>
             {item.usageEntries.map((entry) => (
-              <Link key={entry.key} href={entry.href} className={styles.mediaUsageItem}>
+              <Link key={entry.key} href={appendAdminReturnTo(entry.href, returnTo)} className={styles.mediaUsageItem}>
                 <strong>{entry.entityLabel}</strong>
                 <span>{entry.title}</span>
                 <span className={styles.mutedText}>{entry.relationLabel} • {entry.statusLabel}</span>
@@ -769,7 +778,8 @@ export function MediaGalleryWorkspace({
   initialCompose = "",
   currentUsername,
   initialMessage = "",
-  initialError = ""
+  initialError = "",
+  workspaceContextHref = ""
 }) {
   const [items, setItems] = useState(initialItems);
   const [collections, setCollections] = useState(initialCollections);
@@ -869,6 +879,9 @@ export function MediaGalleryWorkspace({
     { label: "Broken", value: items.filter((item) => item.brokenBinary).length }
   ];
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
+  const currentWorkspaceHref = typeof window === "undefined"
+    ? workspaceContextHref
+    : `${window.location.pathname}${window.location.search}`;
   const selectedHiddenByFilter = Boolean(selectedItem && !filtered.some((item) => item.id === selectedItem.id));
 
   const displayedItems = (() => {
@@ -1483,6 +1496,7 @@ export function MediaGalleryWorkspace({
             onCreateCollection={(assetId) => openCollectionManager({ seedAssetId: assetId, createNew: true })}
             onLifecycleAction={handleLifecycleAction}
             lifecycleBusy={lifecycleBusy}
+            returnTo={currentWorkspaceHref}
           />
         </div>
       </section>
@@ -1529,6 +1543,7 @@ export function MediaGalleryWorkspace({
         initialCollectionId={collectionContext.selectedCollectionId}
         seedAssetId={collectionContext.seedAssetId}
         createNew={collectionContext.createNew}
+        returnTo={currentWorkspaceHref}
         onClose={closeOverlay}
         onSave={handleCollectionSubmit}
       />

@@ -44,7 +44,16 @@ export default async function PublishReadinessPage({ params, searchParams }) {
       <div className={styles.stack}>
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
-        <ReadinessPanel readiness={readiness} title="Проверка перед выпуском" defaultOpen />
+        <ReadinessPanel
+          readiness={readiness}
+          entityType={entity.entityType}
+          navigationContext="preview"
+          panelId="publish-readiness"
+          fallbackAnchorId="publish-readiness"
+          fallbackLabel="Блок готовности"
+          title="Проверка перед выпуском"
+          defaultOpen
+        />
         <SurfacePacket
           eyebrow="Проверка перед выпуском"
           title={title}

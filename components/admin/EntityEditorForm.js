@@ -1,10 +1,15 @@
 import Link from "next/link";
 
+import { EntityActionabilityPanel } from "./EntityActionabilityPanel";
+import { EntityTruthSections } from "./EntityTruthSections";
 import { FilterableChecklist } from "./FilterableChecklist";
+import { EvidenceRegisterPanel } from "./EvidenceRegisterPanel";
 import { MediaPicker } from "./MediaPicker";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
 import { SurfacePacket } from "./SurfacePacket";
+import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
+import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
 import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
@@ -22,7 +27,20 @@ const OBLIGATION_STATUS_LABELS = {
   completed: "Выполнено"
 };
 
-function HiddenSeoFields({ value }) {
+function TruthGroup({ id, kicker = "SEO / truth", title, note, children }) {
+  return (
+    <section id={id} className={`${styles.panel} ${styles.panelMuted} ${styles.editorTruthSection} ${styles.anchorTarget}`}>
+      <div className={styles.editorTruthSectionHeader}>
+        {kicker ? <p className={styles.cockpitBlockKicker}>{kicker}</p> : null}
+        {title ? <h3 className={styles.editorTruthSectionTitle}>{title}</h3> : null}
+        {note ? <p className={styles.editorTruthSectionNote}>{note}</p> : null}
+      </div>
+      <div className={styles.formGrid}>{children}</div>
+    </section>
+  );
+}
+
+function SeoMetaFields({ value }) {
   return (
     <>
       <label className={styles.label}>
@@ -94,6 +112,12 @@ export function EntityEditorForm({
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const canPublish = user.role === "superadmin";
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
+  const showActionabilityPanel = [
+    ENTITY_TYPES.GLOBAL_SETTINGS,
+    ENTITY_TYPES.SERVICE,
+    ENTITY_TYPES.CASE,
+    ENTITY_TYPES.PAGE
+  ].includes(entityType);
   const surfaceTitle = entityType === "global_settings" ? "Глобальные настройки" : getPayloadLabel(value);
   const readinessBlocking = readiness ? readiness.results.filter((result) => result.severity === "blocking").length : 0;
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
@@ -116,6 +140,14 @@ export function EntityEditorForm({
       <div className={styles.stack}>
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
+        {showActionabilityPanel ? (
+          <EntityActionabilityPanel
+            entityType={entityType}
+            readiness={readiness}
+            currentRevision={currentRevision}
+            activePublishedRevision={activePublishedRevision}
+          />
+        ) : null}
         <SurfacePacket
           eyebrow="Рабочая карточка"
           title={surfaceTitle}
@@ -136,7 +168,17 @@ export function EntityEditorForm({
               <p className={styles.helpText}>{FIELD_HINTS.changeIntent}</p>
             </label>
 
-            {entityType === "global_settings" ? (
+            <EntityTruthSections
+              entityType={entityType}
+              value={value}
+              relationOptions={relationOptions}
+              mediaOptions={mediaOptions}
+              caseProjectTypeOptions={caseProjectTypeOptions}
+              sourceHref={redirectTo}
+            />
+
+            {false && (<>
+              {entityType === "global_settings" ? (
               <div className={styles.gridTwo}>
                 <label className={styles.label}>
                   <span>{FIELD_LABELS.publicBrandName}</span>
@@ -426,6 +468,7 @@ export function EntityEditorForm({
             ) : null}
 
             {entityType !== "media_asset" ? <HiddenSeoFields value={value} /> : null}
+            </>)}
 
             <div className={styles.inlineActions}>
               <button type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
@@ -466,7 +509,28 @@ export function EntityEditorForm({
         ) : null}
       </div>
       <div className={`${styles.stack} ${styles.stickyPanel}`}>
-        <ReadinessPanel readiness={readiness} defaultOpen={Boolean(readiness?.hasBlocking)} />
+        <ReadinessPanel
+          readiness={readiness}
+          entityType={entityType}
+          navigationContext="editor"
+          panelId={`${entityType}-readiness`}
+          fallbackAnchorId={getEditorFallbackAnchor(entityType)}
+          fallbackLabel="Общий раздел исправления"
+          defaultOpen={Boolean(readiness?.hasBlocking)}
+        />
+        <div className={styles.inlineActions}>
+          <Link href="#evidence-register" className={styles.secondaryButton}>
+            Open evidence register
+          </Link>
+        </div>
+        <EvidenceRegisterPanel
+          entityType={entityType}
+          entityId={entityId}
+          entityLabel={surfaceTitle}
+          readiness={readiness}
+          obligations={obligations}
+          scope="editor"
+        />
         {activePublishedRevision ? (
           <section className={styles.panel}>
             <h3>{ADMIN_COPY.publishedRevision}</h3>

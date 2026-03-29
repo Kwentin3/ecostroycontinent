@@ -456,6 +456,272 @@
   gap: var(--space-3);
 }
 
+.cockpitShell {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid rgba(38, 76, 59, 0.16);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 245, 238, 0.96) 100%);
+  box-shadow: var(--shadow);
+}
+
+.cockpitHeader {
+  display: grid;
+  gap: 8px;
+}
+
+.cockpitHeaderBody {
+  display: grid;
+  gap: 6px;
+}
+
+.cockpitHeaderTitle {
+  margin: 0;
+}
+
+.cockpitHeaderLead {
+  margin: 0;
+  color: var(--subtle);
+  max-width: 76ch;
+  line-height: 1.5;
+}
+
+.cockpitBlockHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.cockpitBlockKicker {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--subtle);
+}
+
+.cockpitBlockTitle {
+  margin: 0;
+}
+
+.cockpitBlockNote {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  max-width: 64ch;
+}
+
+.cockpitActionPanel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cockpitActionPrimary {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.cockpitActionPrimaryMeta {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.cockpitActionPrimaryTitle {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.cockpitActionPrimaryBody {
+  margin: 0;
+  color: var(--subtle);
+  line-height: 1.5;
+}
+
+.cockpitActionList {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cockpitActionItem {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.cockpitActionItemTop {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.cockpitActionItemBody {
+  margin: 0;
+  font-weight: 600;
+}
+
+.cockpitStateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2);
+}
+
+.cockpitStateCard {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.cockpitStateLabel {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+}
+
+.cockpitStateValue,
+.cockpitStatusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.cockpitStateValue {
+  min-width: 56px;
+  font-size: 1.4rem;
+}
+
+.cockpitStateCopy {
+  margin: 0;
+  color: var(--subtle);
+  line-height: 1.45;
+}
+
+.cockpitStateNote {
+  margin: 0;
+  color: var(--subtle);
+  line-height: 1.5;
+}
+
+.cockpitCoverageSummary {
+  display: grid;
+  gap: 6px;
+}
+
+.cockpitFallbackPill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: #ece7dc;
+  color: var(--subtle);
+}
+
+.cockpitToneHealthy {
+  background: #dceee3;
+  color: #264c3b;
+}
+
+.cockpitToneWarning {
+  background: #fff2d8;
+  color: #8a5a00;
+}
+
+.cockpitToneDanger {
+  background: #fde5e2;
+  color: #8b2e2e;
+}
+
+.cockpitToneUnknown {
+  background: #ece7dc;
+  color: var(--subtle);
+}
+
+.editorActionabilityPanel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.editorActionabilityPanel .cockpitStateGrid {
+  align-items: stretch;
+}
+
+.editorTruthSection {
+  display: grid;
+  gap: var(--space-3);
+  scroll-margin-top: 24px;
+}
+
+.evidenceRegisterPanel {
+  display: grid;
+  gap: var(--space-3);
+  scroll-margin-top: 24px;
+}
+
+.editorTruthSectionHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.editorTruthSectionTitle {
+  margin: 0;
+}
+
+.editorTruthSectionNote {
+  margin: 0;
+  color: var(--subtle);
+  line-height: 1.45;
+}
+
+.anchorTarget {
+  scroll-margin-top: 24px;
+}
+
+.readinessItemLink {
+  display: block;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.readinessItemLink:hover,
+.readinessItemLink:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
 .gridTwo {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -629,6 +895,131 @@
   flex-wrap: wrap;
 }
 
+.relationSummary {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.relationSummaryHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.relationSummaryCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.relationSummaryTitle {
+  font-size: 0.95rem;
+}
+
+.relationSummaryNote {
+  margin: 0;
+  color: var(--subtle);
+  line-height: 1.45;
+}
+
+.relationSummaryEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.relationChipList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.relationChip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: stretch;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.relationChipFallback {
+  border-style: dashed;
+  background: #fff8eb;
+}
+
+.relationChipLink {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: calc(var(--radius-sm) - 4px);
+  color: inherit;
+  text-decoration: none;
+}
+
+.relationChipLink:hover,
+.relationChipLink:focus-visible {
+  background: rgba(38, 76, 59, 0.06);
+  outline: none;
+}
+
+.relationChipLinkTop {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.relationChipLabel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.relationChipSubtitle,
+.relationChipMeta,
+.relationChipAction {
+  color: var(--subtle);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.relationChipAction {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.relationChipRemove {
+  align-self: center;
+  justify-self: end;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--subtle);
+  padding: 6px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.relationChipRemove:hover,
+.relationChipRemove:focus-visible {
+  border-color: #b28c70;
+  color: var(--text);
+  outline: none;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -671,6 +1062,12 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: #fff;
+}
+
+.optionCardSelected {
+  border-color: #264c3b;
+  background: rgba(38, 76, 59, 0.06);
+  box-shadow: 0 0 0 2px rgba(38, 76, 59, 0.08);
 }
 
 .optionBody {
@@ -1299,6 +1696,12 @@
   background: #fff;
 }
 
+.mediaCardSelected {
+  border-color: #264c3b;
+  background: rgba(38, 76, 59, 0.06);
+  box-shadow: 0 0 0 2px rgba(38, 76, 59, 0.08);
+}
+
 .mediaThumb {
   display: grid;
   place-items: center;
@@ -1341,6 +1744,9 @@
 .timeline {
   display: grid;
   gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .timelineItem {

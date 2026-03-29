@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { RelationChipRow } from "./RelationChipRow";
+import { buildRelationSelectionModel } from "../../lib/admin/relation-navigation.js";
 import styles from "./admin-ui.module.css";
 
 const NEW_COLLECTION_ID = "__new_collection__";
@@ -67,6 +69,7 @@ export function MediaCollectionOverlay({
   initialCollectionId = "",
   seedAssetId = "",
   createNew = false,
+  returnTo = "",
   onClose,
   onSave
 }) {
@@ -132,6 +135,23 @@ export function MediaCollectionOverlay({
     id: item.id,
     label: item.title || item.originalFilename || item.id
   }));
+  const assetSearchRef = useRef(null);
+  const selectedAssetSummary = useMemo(
+    () => buildRelationSelectionModel({
+      entityType: "media_asset",
+      options: mediaItems.map((item) => ({
+        id: item.id,
+        label: item.title || item.originalFilename || item.id,
+        subtitle: "Медиафайл",
+        meta: [item.originalFilename, item.collectionLabel || item.whereUsedLabel].filter(Boolean).join(" • ")
+      })),
+      selectedIds: fields.assetIds,
+      returnTo,
+      emptyLabel: "Нет выбранных файлов",
+      fallbackLabel: "Неизвестный медиафайл"
+    }),
+    [fields.assetIds, mediaItems, returnTo]
+  );
 
   if (!open) {
     return null;
@@ -270,6 +290,27 @@ export function MediaCollectionOverlay({
               </div>
             ) : null}
 
+            <RelationChipRow
+              title="Выбранные файлы"
+              note={
+                selectedAssetSummary.isPartial
+                  ? "Часть выбранных файлов не найдена в списке, но сохранена как fallback."
+                  : "Выбранные файлы можно открыть и убрать без потери контекста."
+              }
+              items={selectedAssetSummary.items}
+              emptyLabel="Нет выбранных файлов"
+              onAdd={() => assetSearchRef.current?.focus()}
+              onRemove={toggleAsset}
+            />
+
+            {selectedAssetSummary.missingSelectedIds.length > 0 ? (
+              <>
+                {selectedAssetSummary.missingSelectedIds.map((id) => (
+                  <input key={`missing-collection-asset-${id}`} type="hidden" name="assetIds" value={id} />
+                ))}
+              </>
+            ) : null}
+
             <div className={styles.gridTwo}>
               <label className={styles.label}>
                 <span>Название коллекции</span>
@@ -321,6 +362,7 @@ export function MediaCollectionOverlay({
               <label className={styles.searchLabel}>
                 <span>Поиск по медиа</span>
                 <input
+                  ref={assetSearchRef}
                   type="search"
                   value={assetQuery}
                   onChange={(event) => setAssetQuery(event.target.value)}
