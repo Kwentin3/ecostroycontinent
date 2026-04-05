@@ -2,10 +2,11 @@ import Link from "next/link";
 
 import { getInfraHealthSnapshot } from "../../lib/admin/infra-health.js";
 import { getRoleLabel } from "../../lib/auth/session.js";
+import { userIsSuperadmin } from "../../lib/auth/roles.js";
 import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
-const navItems = [
+const baseNavItems = [
   { href: "/admin", label: "Главная" },
   { href: "/admin/review", label: "Проверка" },
   { href: "/admin/entities/global_settings", label: "Настройки" },
@@ -15,6 +16,14 @@ const navItems = [
   { href: "/admin/entities/page", label: "Страницы" },
   { href: "/admin/users", label: "Пользователи" }
 ];
+
+function getNavItems(user) {
+  if (userIsSuperadmin(user)) {
+    return [...baseNavItems, { href: "/admin/diagnostics/llm", label: "LLM диагностика" }];
+  }
+
+  return baseNavItems;
+}
 
 function renderBreadcrumbs(breadcrumbs) {
   return breadcrumbs.map((crumb, index) => {
@@ -62,6 +71,7 @@ function renderInfraHealth(items) {
 
 export async function AdminShell({ user, title, children, actions = null, breadcrumbs = [], activeHref = null }) {
   const infraHealth = await getInfraHealthSnapshot();
+  const navItems = getNavItems(user);
 
   return (
     <div className={styles.appShell}>
