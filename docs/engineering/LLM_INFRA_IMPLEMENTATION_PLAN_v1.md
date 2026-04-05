@@ -24,7 +24,7 @@ This plan supersedes `LLM_INTEGRATION_IMPLEMENTATION_PLAN_v1.md` for the baselin
 - Admin console can host internal diagnostics.
 - Future landing-factory usage depends on structured artifacts and the error/result boundary already documented in the LLM infra pack.
 - The first diagnostics rollout must be restricted to `superadmin`.
-- `gemini` with `gemini-2.5-flash` is the initial provider/model posture, not a platform commitment.
+- `gemini` with `gemini-3-flash-preview` is the initial provider/model posture, not a platform commitment.
 
 ## Implementation Workstreams
 

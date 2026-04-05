@@ -25,6 +25,8 @@ The caller must declare:
 
 Provider-native structured output is preferred when available.
 
+For Gemini 3 preview models, the adapter may set a minimal-thinking posture to keep the structured-output path deterministic for this baseline.
+
 ## Normalization boundary
 
 Provider-native structured output is not the final truth boundary.

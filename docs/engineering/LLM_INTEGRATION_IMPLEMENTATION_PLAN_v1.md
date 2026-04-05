@@ -12,7 +12,7 @@ The outcome should be a narrow internal LLM baseline, not a broad AI platform.
 
 - There is not yet a connected runtime LLM baseline.
 - Authenticated SOCKS5 is required for outbound LLM traffic.
-- A practical initial provider/model posture may be `gemini` with `gemini-2.5-flash` behind that transport boundary.
+- A practical initial provider/model posture may be `gemini` with `gemini-3-flash-preview` behind that transport boundary.
 - AI remains assistive only and does not own truth or publish.
 - The landing factory will consume structured artifacts, not raw text.
 - The current project does not need multi-agent orchestration or memory to complete the first rollout.

@@ -58,6 +58,7 @@ Resolution should follow these principles:
 - the active model is selected by config and capability fit
 - structured-output-capable models are preferred for artifact paths
 - if the requested artifact requires structured output and the selected model cannot support it, the request fails before any business artifact is returned
+- Gemini 3 preview models may use a model-specific minimal-thinking posture inside the adapter so the structured-output contract remains deterministic
 
 This is a selection posture, not a provider catalog.
 
@@ -66,7 +67,7 @@ This is a selection posture, not a provider catalog.
 A typical initial runtime posture may use:
 
 - `LLM_PROVIDER=gemini`
-- `LLM_MODEL=gemini-2.5-flash`
+- `LLM_MODEL=gemini-3-flash-preview`
 - `LLM_GEMINI_API_KEY=...`
 - `LLM_GEMINI_BASE_URL=...` when a deployment needs a provider endpoint override
 

@@ -7,12 +7,13 @@ import { createLlmError, LLM_ERROR_KINDS } from "../lib/llm/errors.js";
 import { requestStructuredArtifact } from "../lib/llm/facade.js";
 import { runLlmConnectivityDiagnostic, runSocks5TransportDiagnostic } from "../lib/llm/diagnostics.js";
 import { llmDiagnosticProbeJsonSchema, llmDiagnosticProbeSchema } from "../lib/llm/structured-output.js";
+import { createGeminiProviderAdapter } from "../lib/llm/providers/gemini.js";
 import { userIsSuperadmin } from "../lib/auth/roles.js";
 
 function makeConfiguredLlmConfig() {
   return buildLlmConfigSnapshot({
     llmProvider: "gemini",
-    llmModel: "gemini-2.5-flash",
+    llmModel: "gemini-3-flash-preview",
     llmGeminiApiKey: "test-gemini-api-key",
     llmGeminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
     llmSocks5Enabled: "true",
@@ -29,7 +30,7 @@ test("buildLlmConfigSnapshot classifies not configured, partial, and configured 
 
   const partial = buildLlmConfigSnapshot({
     llmProvider: "gemini",
-    llmModel: "gemini-2.5-flash",
+    llmModel: "gemini-3-flash-preview",
     llmGeminiApiKey: "test-gemini-api-key",
     llmGeminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta"
   });
@@ -157,7 +158,7 @@ test("requestStructuredArtifact fails closed when LLM config is incomplete", asy
     {
       llmConfig: buildLlmConfigSnapshot({
         llmProvider: "gemini",
-        llmModel: "gemini-2.5-flash",
+        llmModel: "gemini-3-flash-preview",
         llmGeminiApiKey: "test-gemini-api-key",
         llmGeminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta"
       }),
@@ -309,4 +310,52 @@ test("diagnostic wrappers preserve kind and human-readable summary", async () =>
   assert.equal(socksResult.diagnosticKind, "socks5_transport_test");
   assert.equal(llmResult.summary, "LLM baseline is reachable and returned a validated structured artifact.");
   assert.equal(socksResult.summary, "LLM baseline is reachable and returned a validated structured artifact.");
+});
+
+test("createGeminiProviderAdapter enables minimal thinking for gemini 3 preview models", async () => {
+  const config = makeConfiguredLlmConfig();
+  const requestBodies = [];
+
+  const adapter = createGeminiProviderAdapter({
+    configSnapshot: config,
+    transport: {
+      transportMode: "socks5",
+      async postJson(request) {
+        requestBodies.push(JSON.parse(request.body));
+        return {
+          requestId: request.requestId,
+          status: 200,
+          headers: {},
+          text: JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        probe: "llm_diagnostic_probe",
+                        ok: true,
+                        echo: "pong"
+                      })
+                    }
+                  ]
+                }
+              }
+            ]
+          })
+        };
+      }
+    }
+  });
+
+  const result = await adapter.requestStructuredArtifact({
+    prompt: "Return the probe payload.",
+    responseJsonSchema: llmDiagnosticProbeJsonSchema,
+    requestId: "req_preview",
+    traceId: "trace_preview"
+  });
+
+  assert.equal(result.providerId, "gemini");
+  assert.equal(result.modelId, "gemini-3-flash-preview");
+  assert.equal(requestBodies[0].generationConfig.thinkingConfig.thinkingLevel, "minimal");
 });

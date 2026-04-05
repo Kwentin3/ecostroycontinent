@@ -336,7 +336,7 @@ Reserved future surface:
 - Provider abstraction.
 - Model registry.
 - Runtime selection by config.
-- Typical initial config example: `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-2.5-flash`.
+- Typical initial config example: `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-3-flash-preview`.
 - No provider-specific hardcode in business logic.
 - System instructions and skills as main control surface.
 - Весь внешний LLM-трафик проходит через authenticated SOCKS5-прокси; параметры host/IP, port, username и password живут в `.env`, а не в коде.
