@@ -110,6 +110,7 @@ App image fact:
 
 - Host runtime image reference is pinned by digest in `/opt/ecostroycontinent/runtime/.env`
 - GHCR image name: `ghcr.io/kwentin3/ecostroycontinent-app`
+- Canonical app runtime env file: `/opt/ecostroycontinent/runtime/.env`
 
 ## 7. Runtime Validation Facts
 
@@ -131,7 +132,7 @@ App image fact:
 - Cron file: `/etc/cron.d/ecostroycontinent-baseline`
 - Logrotate file: `/etc/logrotate.d/ecostroycontinent`
 - Host log directory: `/var/log/ecostroycontinent`
-- Root-only backup S3 env file: `/opt/ecostroycontinent/runtime/backup-s3.env`
+- Root-only backup S3 env file: `/opt/ecostroycontinent/runtime/backup-s3.env` (ops-only; not injected into the app container)
 
 ## 9. Storage / CDN / DNS Facts
 

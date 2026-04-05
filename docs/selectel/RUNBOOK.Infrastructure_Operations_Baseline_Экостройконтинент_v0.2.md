@@ -21,8 +21,8 @@ ssh -i "$env:USERPROFILE\.ssh\sait_selectel_rsa" root@178.72.179.66
 Host paths:
 
 - repo checkout: `/opt/ecostroycontinent/repo`
-- runtime env: `/opt/ecostroycontinent/runtime/.env`
-- backup S3 env: `/opt/ecostroycontinent/runtime/backup-s3.env`
+- app runtime env: `/opt/ecostroycontinent/runtime/.env`
+- backup S3 env: `/opt/ecostroycontinent/runtime/backup-s3.env` (ops-only; not injected into the app container)
 - Traefik config: `/opt/ecostroycontinent/traefik/traefik.yml`
 - Traefik dynamic config: `/opt/ecostroycontinent/traefik/dynamic/routes.yml`
 - Traefik certs: `/opt/ecostroycontinent/traefik/certs`
@@ -106,6 +106,8 @@ cd /opt/ecostroycontinent/repo
 docker compose --env-file /opt/ecostroycontinent/runtime/.env --project-name repo -f compose.yaml pull app
 docker compose --env-file /opt/ecostroycontinent/runtime/.env --project-name repo -f compose.yaml up -d --remove-orphans
 ```
+
+App runtime env is sourced only from `/opt/ecostroycontinent/runtime/.env`; backup env stays separate.
 
 ## 7. Check Deploy Path
 

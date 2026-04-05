@@ -3,10 +3,10 @@ services:
   # This compose file describes the server runtime surface, not a second
   # SQL truth to be recreated on the Windows operator workstation.
   app:
+    # App runtime env is injected from /opt/ecostroycontinent/runtime/.env via
+    # docker compose --env-file on the server. Do not inject backup env here.
     image: ${APP_IMAGE}
     restart: unless-stopped
-    env_file:
-      - /opt/ecostroycontinent/runtime/backup-s3.env
     depends_on:
       sql:
         condition: service_healthy
@@ -24,7 +24,7 @@ services:
       LLM_SOCKS5_USERNAME: ${LLM_SOCKS5_USERNAME}
       LLM_SOCKS5_PASSWORD: ${LLM_SOCKS5_PASSWORD}
       MEDIA_STORAGE_MODE: ${MEDIA_STORAGE_MODE}
-      MEDIA_STORAGE_DIR: ${MEDIA_STORAGE_DIR:-var/media}
+      MEDIA_STORAGE_DIR: ${MEDIA_STORAGE_DIR}
       MEDIA_S3_BUCKET: ${MEDIA_S3_BUCKET}
       MEDIA_S3_REGION: ${MEDIA_S3_REGION}
       MEDIA_S3_ENDPOINT_URL: ${MEDIA_S3_ENDPOINT_URL}

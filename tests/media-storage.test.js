@@ -117,3 +117,47 @@ test("s3 media config does not require MEDIA_STORAGE_DIR to be set", async () =>
   assert.equal(config.mediaPublicBaseUrl, "https://cdn.example.test");
   assert.match(config.mediaStorageDir, /var[\\/]+media$/);
 });
+
+test("s3 media config does not fall back to AWS_* env vars", async () => {
+  let error;
+
+  try {
+    await execFileAsync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "--eval",
+        [
+          'import { getAppConfig } from "./lib/config.js";',
+          "getAppConfig();"
+        ].join(" ")
+      ],
+      {
+        cwd: repoRoot,
+        env: {
+          ...process.env,
+          NODE_ENV: "test",
+          MEDIA_STORAGE_MODE: "s3",
+          MEDIA_STORAGE_DIR: "",
+          MEDIA_S3_BUCKET: "",
+          MEDIA_S3_REGION: "ru-3",
+          MEDIA_S3_ENDPOINT_URL: "",
+          MEDIA_S3_ACCESS_KEY_ID: "",
+          MEDIA_S3_SECRET_ACCESS_KEY: "",
+          MEDIA_PUBLIC_BASE_URL: "https://cdn.example.test",
+          AWS_ACCESS_KEY_ID: "aws-access",
+          AWS_SECRET_ACCESS_KEY: "aws-secret",
+          AWS_DEFAULT_REGION: "ru-3",
+          AWS_ENDPOINT_URL: "https://s3.ru-3.storage.selcloud.ru"
+        }
+      }
+    );
+  } catch (thrown) {
+    error = thrown;
+  }
+
+  assert.ok(error, "expected getAppConfig() to fail when MEDIA_S3_* runtime values are missing");
+  assert.match(error.stderr, /MEDIA_STORAGE_MODE=s3 requires:/);
+  assert.match(error.stderr, /MEDIA_S3_(BUCKET|ENDPOINT_URL|ACCESS_KEY_ID|SECRET_ACCESS_KEY)/);
+  assert.doesNotMatch(error.stderr, /AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY|DEFAULT_REGION|ENDPOINT_URL)/);
+});
