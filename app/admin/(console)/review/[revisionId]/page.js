@@ -4,6 +4,7 @@ import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { PreviewViewport } from "../../../../../components/admin/PreviewViewport";
 import { ReadinessPanel } from "../../../../../components/admin/ReadinessPanel";
 import { RevisionDiffPanel } from "../../../../../components/admin/RevisionDiffPanel";
+import { ServiceLandingFactoryPanel } from "../../../../../components/admin/ServiceLandingFactoryPanel";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../../lib/admin/page-helpers";
@@ -12,6 +13,7 @@ import { CHANGE_INTENT_LABEL, getScreenLegend } from "../../../../../lib/admin/s
 import { ENTITY_TYPES } from "../../../../../lib/content-core/content-types.js";
 import { buildHumanReadableDiff } from "../../../../../lib/content-core/diff.js";
 import { findEntityById, findRevisionById } from "../../../../../lib/content-core/repository.js";
+import { getAuditTimeline } from "../../../../../lib/content-ops/audit.js";
 import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
 import { buildPublishedLookups, getPublishedGlobalSettings } from "../../../../../lib/read-side/public-content";
 import { getChangeClassLabel, getEntityTypeLabel, getPreviewStatusLabel, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
@@ -75,6 +77,7 @@ export default async function ReviewDetailPage({ params, searchParams }) {
   }
 
   const entity = await findEntityById(revision.entityId);
+  const auditItems = await getAuditTimeline(entity.id);
   const readiness = await evaluateReadiness({ entity, revision });
   const lookups = await buildPublishedLookups();
   const globalSettings = await getPublishedGlobalSettings();
@@ -117,6 +120,12 @@ export default async function ReviewDetailPage({ params, searchParams }) {
               fallbackLabel="Блок готовности"
               title="Проверка готовности"
               defaultOpen
+            />
+            <ServiceLandingFactoryPanel
+              entityType={entity.entityType}
+              revision={revision}
+              readiness={readiness}
+              auditItems={auditItems}
             />
             <SurfacePacket
               eyebrow="Карточка решения"

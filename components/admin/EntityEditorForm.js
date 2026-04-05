@@ -5,6 +5,7 @@ import { EntityTruthSections } from "./EntityTruthSections";
 import { FilterableChecklist } from "./FilterableChecklist";
 import { EvidenceRegisterPanel } from "./EvidenceRegisterPanel";
 import { MediaPicker } from "./MediaPicker";
+import { ServiceLandingFactoryPanel } from "./ServiceLandingFactoryPanel";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
 import { SurfacePacket } from "./SurfacePacket";
@@ -499,6 +500,15 @@ export function EntityEditorForm({
 
             <div className={styles.inlineActions}>
               <button type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
+              {entityType === ENTITY_TYPES.SERVICE && canSubmit ? (
+                <button
+                  type="submit"
+                  formAction="/api/admin/entities/service/landing-factory/generate"
+                  className={styles.secondaryButton}
+                >
+                  Сгенерировать candidate/spec
+                </button>
+              ) : null}
               {canSubmit && currentRevision?.state === "draft" ? (
                 <button
                   type="submit"
@@ -552,6 +562,12 @@ export function EntityEditorForm({
           readiness={readiness}
           obligations={obligations}
           scope="editor"
+        />
+        <ServiceLandingFactoryPanel
+          entityType={entityType}
+          revision={currentRevision}
+          readiness={readiness}
+          auditItems={auditItems}
         />
         {activePublishedRevision ? (
           <section className={styles.panel}>
