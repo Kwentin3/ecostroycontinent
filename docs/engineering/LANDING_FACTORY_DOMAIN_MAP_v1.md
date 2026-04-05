@@ -34,7 +34,9 @@ Product posture and canon stay in `docs/product-ux/`.
 3. `SERVICE_RENDER_CONTRACT_v1.md`
 4. `SERVICE_VERIFICATION_CONTRACT_v1.md`
 5. `SERVICE_PUBLISH_ARTIFACT_CONTRACT_v1.md`
-6. `SERVICE_LANDING_FACTORY_IMPLEMENTATION_PLAN_v1.md`
+6. `SERVICE_LANDING_FACTORY_IMPLEMENTATION_PLAN_v2.md`
+
+`SERVICE_LANDING_FACTORY_IMPLEMENTATION_PLAN_v1.md` remains as a historical baseline; v2 is the current implementation-sequencing plan.
 
 ## Dependency order
 
@@ -60,7 +62,7 @@ Product posture and canon stay in `docs/product-ux/`.
 | `SERVICE_RENDER_CONTRACT_v1.md` | Deterministic preview and public render rules for the service rollout. | Design system policy, frontend architecture beyond this route family. |
 | `SERVICE_VERIFICATION_CONTRACT_v1.md` | Validation classes, severities, machine-verifiable report shape, approval and publish gating semantics. | Business strategy, code implementation, broader CMS validation policy. |
 | `SERVICE_PUBLISH_ARTIFACT_CONTRACT_v1.md` | What is frozen at publish boundary, active published pointer semantics, rollback implications. | Immutable snapshot store redesign, broad workflow redesign. |
-| `SERVICE_LANDING_FACTORY_IMPLEMENTATION_PLAN_v1.md` | Workstreams, sequence, dependencies, checkpoints, deferred items. | Sprint fiction, roadmap theater, new product direction. |
+| `SERVICE_LANDING_FACTORY_IMPLEMENTATION_PLAN_v2.md` | Workstreams, sequence, dependencies, checkpoints, deferred items. | Sprint fiction, roadmap theater, new product direction. |
 
 ## Explicitly outside this domain
 
@@ -83,4 +85,3 @@ Product posture and canon stay in `docs/product-ux/`.
 - FAQ/article/review entity packs
 - full SEO discovery runtime
 - any non-service landing experimentation surface
-

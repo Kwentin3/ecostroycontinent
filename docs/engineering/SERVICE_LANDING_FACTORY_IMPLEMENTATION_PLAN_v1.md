@@ -1,5 +1,7 @@
 # SERVICE_LANDING_FACTORY_IMPLEMENTATION_PLAN_v1
 
+This document is superseded by `SERVICE_LANDING_FACTORY_IMPLEMENTATION_PLAN_v2.md` for implementation sequencing. It is kept as the historical infra-first baseline.
+
 ## Objective
 
 Implement the first rollout of the service-first landing factory for `/services/[slug]` with deterministic preview, machine verification, and explicit publish handoff.
@@ -106,4 +108,3 @@ The goal is a narrow, implementation-ready path from candidate to publish withou
 - Public AI generation surfaces
 - A new CMS architecture
 - A new publish architecture
-
