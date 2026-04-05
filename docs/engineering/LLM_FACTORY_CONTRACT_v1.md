@@ -66,7 +66,7 @@ This is a selection posture, not a provider catalog.
 A typical initial runtime posture may use:
 
 - `LLM_PROVIDER=gemini`
-- `LLM_MODEL=gemini-3-flash`
+- `LLM_MODEL=gemini-2.5-flash`
 - `LLM_GEMINI_API_KEY=...`
 - `LLM_GEMINI_BASE_URL=...` when a deployment needs a provider endpoint override
 

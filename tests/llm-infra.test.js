@@ -12,7 +12,7 @@ import { userIsSuperadmin } from "../lib/auth/roles.js";
 function makeConfiguredLlmConfig() {
   return buildLlmConfigSnapshot({
     llmProvider: "gemini",
-    llmModel: "gemini-3-flash",
+    llmModel: "gemini-2.5-flash",
     llmGeminiApiKey: "test-gemini-api-key",
     llmGeminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
     llmSocks5Enabled: "true",
@@ -29,7 +29,7 @@ test("buildLlmConfigSnapshot classifies not configured, partial, and configured 
 
   const partial = buildLlmConfigSnapshot({
     llmProvider: "gemini",
-    llmModel: "gemini-3-flash",
+    llmModel: "gemini-2.5-flash",
     llmGeminiApiKey: "test-gemini-api-key",
     llmGeminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta"
   });
@@ -157,7 +157,7 @@ test("requestStructuredArtifact fails closed when LLM config is incomplete", asy
     {
       llmConfig: buildLlmConfigSnapshot({
         llmProvider: "gemini",
-        llmModel: "gemini-3-flash",
+        llmModel: "gemini-2.5-flash",
         llmGeminiApiKey: "test-gemini-api-key",
         llmGeminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta"
       }),

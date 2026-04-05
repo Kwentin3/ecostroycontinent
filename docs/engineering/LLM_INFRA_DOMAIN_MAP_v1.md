@@ -58,7 +58,7 @@ Product posture stays in `docs/product-ux/`.
 - Structured service landing candidate generation instead of raw text prompts.
 - Local schema validation of generated artifacts before review or publish.
 - Deterministic transport posture through a single LLM facade and SOCKS5 routing.
-- Config-driven initial posture via `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-3-flash`, and authenticated SOCKS5 host/port/user/pass settings in `.env`.
+- Config-driven initial posture via `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-2.5-flash`, and authenticated SOCKS5 host/port/user/pass settings in `.env`.
 - Stable error handling so landing-factory code can reason about retryable vs non-retryable outcomes.
 - A clean boundary between business logic and provider/network details.
 
