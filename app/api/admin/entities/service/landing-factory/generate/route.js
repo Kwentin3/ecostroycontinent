@@ -111,7 +111,7 @@ export async function POST(request) {
       changeIntent,
       payload: candidateResult.spec.payload,
       aiInvolvement: true,
-      aiSourceBasis: `landing_factory:${candidateResult.candidateId}`,
+      aiSourceBasis: "from_current_entity_only",
       auditDetails: buildLandingFactoryAuditDetails(candidateResult)
     });
 
