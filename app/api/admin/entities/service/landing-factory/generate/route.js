@@ -52,14 +52,31 @@ function buildLandingFactoryAuditDetails(candidateResult) {
   };
 }
 
-export async function POST(request) {
-  const { user, response } = await requireRouteUser(request);
+const DEFAULT_ROUTE_DEPS = Object.freeze({
+  requireRouteUser,
+  userCanEditContent,
+  getEntityAggregate,
+  findEntityById,
+  saveDraft,
+  evaluateReadiness,
+  submitRevisionForReview,
+  buildServiceLandingSourceContextSummary,
+  buildServiceLandingVerificationReport,
+  requestServiceLandingCandidate
+});
+
+export async function POST(request, overrides = {}) {
+  const routeDeps = {
+    ...DEFAULT_ROUTE_DEPS,
+    ...overrides
+  };
+  const { user, response } = await routeDeps.requireRouteUser(request);
 
   if (response) {
     return response;
   }
 
-  if (!userCanEditContent(user)) {
+  if (!routeDeps.userCanEditContent(user)) {
     return redirectToAdmin("/admin/no-access");
   }
 
@@ -70,8 +87,8 @@ export async function POST(request) {
   const fallbackPath = entityId ? `/admin/entities/service/${entityId}` : "/admin/entities/service/new";
 
   try {
-    const aggregate = entityId ? await getEntityAggregate(entityId) : null;
-    const currentEntity = aggregate?.entity ?? (entityId ? await findEntityById(entityId) : null);
+    const aggregate = entityId ? await routeDeps.getEntityAggregate(entityId) : null;
+    const currentEntity = aggregate?.entity ?? (entityId ? await routeDeps.findEntityById(entityId) : null);
 
     if (entityId && !currentEntity) {
       return redirectWithError(request, fallbackPath, new Error("Service entity not found."));
@@ -83,16 +100,19 @@ export async function POST(request) {
 
     const baseRevision = aggregate?.activePublishedRevision ?? null;
     const currentDraft = aggregate?.revisions?.find((revision) => revision.state === "draft") ?? null;
-    const sourceContextSummary = buildServiceLandingSourceContextSummary({
+    const baseRevisionId = baseRevision?.id ?? "";
+    const sourceContextSummary = routeDeps.buildServiceLandingSourceContextSummary({
       entityId: currentEntity?.id || entityId || "",
       baseRevision,
       currentRevision: currentDraft,
       changeIntent,
       proofBasis: buildProofBasis(sourcePayload)
     });
-    const candidateResult = await requestServiceLandingCandidate({
+    const candidateResult = await routeDeps.requestServiceLandingCandidate({
       entityId: currentEntity?.id || entityId || "",
       baseRevision,
+      // Preserve the published base revision id so the candidate/spec remains auditable.
+      baseRevisionId,
       currentRevision: currentDraft,
       changeIntent,
       proofBasis: buildProofBasis(sourcePayload),
@@ -104,7 +124,7 @@ export async function POST(request) {
       return redirectWithError(request, fallbackPath, new Error(candidateResult.error?.message || "Service landing candidate generation failed."));
     }
 
-    const saved = await saveDraft({
+    const saved = await routeDeps.saveDraft({
       entityType: ENTITY_TYPES.SERVICE,
       entityId: currentEntity?.id || entityId || null,
       userId: user.id,
@@ -115,11 +135,11 @@ export async function POST(request) {
       auditDetails: buildLandingFactoryAuditDetails(candidateResult)
     });
 
-    const readiness = await evaluateReadiness({
+    const readiness = await routeDeps.evaluateReadiness({
       entity: saved.entity,
       revision: saved.revision
     });
-    const verificationReport = buildServiceLandingVerificationReport({
+    const verificationReport = routeDeps.buildServiceLandingVerificationReport({
       candidateSpec: candidateResult.spec,
       readiness,
       revision: saved.revision,
@@ -134,7 +154,7 @@ export async function POST(request) {
       );
     }
 
-    const submitted = await submitRevisionForReview({
+    const submitted = await routeDeps.submitRevisionForReview({
       revisionId: saved.revision.id,
       actorUserId: user.id
     });
