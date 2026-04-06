@@ -306,6 +306,54 @@ test("service landing generate route carries the published base revision id into
   assert.equal(captured.submitInput.revisionId, "revision_123");
 });
 
+test("service landing generate route stops before review and memory mutation when verification blocks the candidate", async () => {
+  const captured = {};
+  const request = buildGenerateRequest(makeServiceFormFields());
+  const deps = buildRouteDeps({
+    entityType: ENTITY_TYPES.SERVICE,
+    captured
+  });
+
+  deps.buildServiceLandingVerificationReport = () => ({
+    specVersion: "v1",
+    candidateId: "service_candidate_test",
+    baseRevisionId: "rev_base",
+    routeFamily: SERVICE_LANDING_ROUTE_FAMILY,
+    checkedAt: new Date().toISOString(),
+    sourceContextSummary: "entity=service_1 | baseRevision=rev_base",
+    overallStatus: "blocked",
+    summary: "Verification blocked the candidate.",
+    classResults: [],
+    blockingIssues: [
+      {
+        severity: "blocking",
+        classId: "structural/schema",
+        code: "forced_block",
+        message: "Verification blocked the candidate.",
+        field: null
+      }
+    ],
+    warnings: [],
+    hasBlocking: true,
+    hasWarnings: false,
+    sections: [],
+    renderCompatible: false,
+    publishReady: false,
+    approvalEligible: false,
+    llm: null
+  });
+
+  const response = await POST(request, deps);
+  const location = new URL(response.headers.get("location"), "http://localhost");
+
+  assert.equal(response.status, 303);
+  assert.equal(location.pathname, "/admin/entities/service/service_1");
+  assert.equal(location.searchParams.get("error"), "Verification blocked the candidate.");
+  assert.equal(captured.submitInput, undefined);
+  assert.equal(captured.memoryDeltaInput, undefined);
+  assert.equal(captured.saveDraftInput.auditDetails.landingFactory.derivedArtifactSlice.baseRevisionId, "rev_base");
+});
+
 test("service landing generate route blocks non-service entities before generation", async () => {
   const captured = {
     candidateCalled: false

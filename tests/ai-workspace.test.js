@@ -97,39 +97,69 @@ function makeSessionRow(overrides = {}) {
 }
 
 test("assemblePromptPacket keeps one base packet shape with action-specific slices", () => {
+  const requestScope = {
+    workspace: "service_landing",
+    action: "generate_candidate",
+    routeFamily: "service"
+  };
+  const memoryContext = {
+    sessionIdentity: {
+      sessionId: "session_1"
+    }
+  };
+  const canonicalContext = {
+    entityId: "service_1",
+    baseRevisionId: "rev_base"
+  };
+  const artifactContract = {
+    artifactClass: "service_landing_candidate_payload",
+    schemaId: "service_landing_candidate_payload.v1",
+    schemaVersion: "v1"
+  };
+  const actionSlices = [
+    {
+      id: "service_landing_generation",
+      title: "Service landing generation",
+      content: ["Use only service truth."],
+      prompt: "should not leak",
+      requestScope: { workspace: "wrong" },
+      artifactContract: { schemaId: "wrong" }
+    }
+  ];
+  const requestScopeSnapshot = structuredClone(requestScope);
+  const memoryContextSnapshot = structuredClone(memoryContext);
+  const canonicalContextSnapshot = structuredClone(canonicalContext);
+  const artifactContractSnapshot = structuredClone(artifactContract);
+  const actionSlicesSnapshot = structuredClone(actionSlices);
+
   const packet = assemblePromptPacket({
-    requestScope: {
-      workspace: "service_landing",
-      action: "generate_candidate",
-      routeFamily: "service"
-    },
-    memoryContext: {
-      sessionIdentity: {
-        sessionId: "session_1"
-      }
-    },
-    canonicalContext: {
-      entityId: "service_1",
-      baseRevisionId: "rev_base"
-    },
-    artifactContract: {
-      artifactClass: "service_landing_candidate_payload",
-      schemaId: "service_landing_candidate_payload.v1",
-      schemaVersion: "v1"
-    },
-    actionSlices: [
-      {
-        id: "service_landing_generation",
-        title: "Service landing generation",
-        content: ["Use only service truth."]
-      }
-    ]
+    requestScope,
+    memoryContext,
+    canonicalContext,
+    artifactContract,
+    actionSlices
   });
 
+  assert.deepEqual(requestScope, requestScopeSnapshot);
+  assert.deepEqual(memoryContext, memoryContextSnapshot);
+  assert.deepEqual(canonicalContext, canonicalContextSnapshot);
+  assert.deepEqual(artifactContract, artifactContractSnapshot);
+  assert.deepEqual(actionSlices, actionSlicesSnapshot);
+  assert.deepEqual(Object.keys(packet).sort(), [
+    "actionSlices",
+    "artifactContract",
+    "canonicalContext",
+    "memoryContext",
+    "prompt",
+    "requestScope"
+  ]);
   assert.equal(packet.requestScope.workspace, "service_landing");
   assert.equal(packet.requestScope.action, "generate_candidate");
-  assert.equal(packet.actionSlices.length, 1);
-  assert.equal(packet.actionSlices[0].id, "service_landing_generation");
+  assert.deepEqual(packet.actionSlices[0], {
+    id: "service_landing_generation",
+    title: "Service landing generation",
+    content: ["Use only service truth."]
+  });
   assert.match(packet.prompt, /# Request scope/);
   assert.match(packet.prompt, /# Memory context/);
   assert.match(packet.prompt, /# Canonical context/);
@@ -138,12 +168,23 @@ test("assemblePromptPacket keeps one base packet shape with action-specific slic
 
 test("readMemoryCardSlice normalizes stored session state and overlays the current workspace context", async () => {
   const queries = [];
+  const storedCard = makeSessionRow().workspace_memory_card;
   const query = async (sql, params = []) => {
     queries.push({ sql, params });
 
     if (/SELECT s\.id/.test(sql)) {
       return {
-        rows: [makeSessionRow()]
+        rows: [
+          makeSessionRow({
+            workspace_memory_card: {
+              ...storedCard,
+              chatHistory: ["provider raw chat must not leak"],
+              providerPayload: {
+                traceId: "provider_trace_1"
+              }
+            }
+          })
+        ]
       };
     }
 
@@ -177,6 +218,34 @@ test("readMemoryCardSlice normalizes stored session state and overlays the curre
   );
 
   assert.equal(queries.length, 1);
+  assert.deepEqual(Object.keys(slice).sort(), [
+    "archivePointer",
+    "artifactState",
+    "editorialDecisions",
+    "editorialIntent",
+    "proofSelection",
+    "recentTurn",
+    "schemaVersion",
+    "sessionIdentity",
+    "traceState"
+  ]);
+  assert.deepEqual(Object.keys(slice.artifactState).sort(), [
+    "candidatePointer",
+    "derivedArtifactSlice",
+    "previewMode",
+    "reviewStatus",
+    "specVersion",
+    "verificationSummary"
+  ]);
+  assert.deepEqual(Object.keys(slice.artifactState.derivedArtifactSlice).sort(), [
+    "baseRevisionId",
+    "candidateId",
+    "reviewStatus",
+    "revisionId",
+    "routeFamily",
+    "specVersion",
+    "verificationSummary"
+  ]);
   assert.equal(slice.sessionIdentity.sessionId, "session_1");
   assert.equal(slice.sessionIdentity.baseRevisionId, "rev_base");
   assert.equal(slice.sessionIdentity.routeLocked, true);
@@ -192,16 +261,22 @@ test("readMemoryCardSlice normalizes stored session state and overlays the curre
 
 test("applyAcceptedMemoryDelta persists an accepted workspace delta into the session row", async () => {
   const statements = [];
+  let storedCard = makeSessionRow().workspace_memory_card;
   const query = async (sql, params = []) => {
     statements.push({ sql, params });
 
     if (/SELECT s\.id/.test(sql)) {
       return {
-        rows: [makeSessionRow()]
+        rows: [
+          makeSessionRow({
+            workspace_memory_card: storedCard
+          })
+        ]
       };
     }
 
     if (/UPDATE app_sessions/.test(sql)) {
+      storedCard = JSON.parse(params[1]);
       return {
         rows: []
       };
@@ -246,12 +321,37 @@ test("applyAcceptedMemoryDelta persists an accepted workspace delta into the ses
     }
   );
 
+  const reread = await readMemoryCardSlice(
+    {
+      entityType: "service",
+      entityId: "service_1",
+      baseRevisionId: "rev_base",
+      routeLocked: true,
+      entityLocked: true
+    },
+    {
+      sessionId: "session_1",
+      query,
+      actor: {
+        id: "user_1",
+        username: "seo_manager",
+        displayName: "SEO Manager",
+        role: "seo_manager"
+      }
+    }
+  );
+
   const updateStatement = statements.find((entry) => /UPDATE app_sessions/.test(entry.sql));
   const persistedPayload = JSON.parse(updateStatement.params[1]);
 
   assert.equal(next.sessionIdentity.baseRevisionId, "rev_base");
   assert.equal(next.artifactState.reviewStatus, "review_requested");
   assert.equal(next.traceState.requestId, "request_2");
+  assert.equal(reread.sessionIdentity.baseRevisionId, "rev_base");
+  assert.equal(reread.artifactState.reviewStatus, "review_requested");
+  assert.equal(reread.artifactState.derivedArtifactSlice?.reviewStatus, "review_requested");
+  assert.equal(reread.traceState.requestId, "request_2");
+  assert.equal(statements.filter((entry) => /UPDATE app_sessions/.test(entry.sql)).length, 1);
   assert.equal(persistedPayload.sessionIdentity.timestamps.memoryCardUpdatedAt.length > 0, true);
   assert.equal(persistedPayload.artifactState.reviewStatus, "review_requested");
   assert.equal(persistedPayload.traceState.lastLlmTraceId, "trace_2");

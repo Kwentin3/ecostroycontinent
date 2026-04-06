@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { ENTITY_TYPES } from "../lib/content-core/content-types.js";
 import { normalizeEntityInput } from "../lib/content-core/pure.js";
+import { buildLlmConfigSnapshot } from "../lib/llm/config.js";
 import {
   buildServiceLandingCandidateRequest,
   buildServiceLandingCandidateSpec,
@@ -11,6 +12,7 @@ import {
   buildServiceLandingVerificationReport,
   getLatestServiceLandingFactoryRecord,
   projectServiceLandingSections,
+  requestServiceLandingCandidate,
   SERVICE_LANDING_ROUTE_FAMILY,
   SERVICE_LANDING_SPEC_VERSION
 } from "../lib/landing-factory/service.js";
@@ -36,6 +38,20 @@ function makeServicePayload(overrides = {}) {
     openGraphDescription: "Drainage systems for sites.",
     openGraphImageAssetId: "media_1",
     ...overrides
+  });
+}
+
+function makeConfiguredLlmConfig() {
+  return buildLlmConfigSnapshot({
+    llmProvider: "gemini",
+    llmModel: "gemini-3-flash-preview",
+    llmGeminiApiKey: "test-gemini-api-key",
+    llmGeminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
+    llmSocks5Enabled: "true",
+    llmSocks5Host: "127.0.0.1",
+    llmSocks5Port: "1080",
+    llmSocks5Username: "proxy-user",
+    llmSocks5Password: "proxy-pass"
   });
 }
 
@@ -81,12 +97,105 @@ test("buildServiceLandingCandidateRequest produces a structured-output prompt bo
   assert.equal(request.promptPacket.requestScope.workspace, "service_landing");
   assert.equal(request.promptPacket.requestScope.action, "generate_candidate");
   assert.equal(request.promptPacket.actionSlices.length, 1);
+  assert.deepEqual(Object.keys(request.promptPacket).sort(), [
+    "actionSlices",
+    "artifactContract",
+    "canonicalContext",
+    "memoryContext",
+    "prompt",
+    "requestScope"
+  ]);
+  assert.deepEqual(Object.keys(request.promptPacket.actionSlices[0]).sort(), [
+    "content",
+    "id",
+    "title"
+  ]);
   assert.match(request.promptPacket.prompt, /Request scope/);
   assert.match(request.promptPacket.prompt, /Memory context/);
   assert.match(request.promptPacket.prompt, /Action slice: service_landing_generation/);
   assert.equal(request.responseJsonSchema.properties.slug.type, "string");
   assert.match(request.prompt, /service-first landing candidate/i);
   assert.match(request.prompt, /"serviceScope": "We design and install drainage systems\."/);
+});
+
+test("requestServiceLandingCandidate preserves the base revision through the structured-output boundary", async () => {
+  const payload = makeServicePayload();
+  const sourceContextSummary = buildServiceLandingSourceContextSummary({
+    entityId: "entity_1",
+    baseRevision: { id: "rev_1" },
+    currentRevision: { id: "draft_1" },
+    changeIntent: "Generate candidate/spec",
+    proofBasis: ["case_1"]
+  });
+  const requests = [];
+
+  const result = await requestServiceLandingCandidate(
+    {
+      entityId: "entity_1",
+      baseRevision: { id: "rev_1" },
+      baseRevisionId: "rev_1",
+      currentRevision: { id: "draft_1" },
+      changeIntent: "Generate candidate/spec",
+      proofBasis: ["case_1"],
+      sourcePayload: payload,
+      sourceContextSummary
+    },
+    {
+      llmConfig: makeConfiguredLlmConfig(),
+      traceIdFactory: () => "trace_candidate_1",
+      providerAdapter: {
+        requestStructuredArtifact: async (request) => {
+          requests.push(request);
+
+          return {
+            providerId: "gemini",
+            modelId: "gemini-3-flash-preview",
+            providerRequestId: "provider_req_1",
+            text: JSON.stringify(payload),
+            transportUsed: "socks5"
+          };
+        }
+      }
+    }
+  );
+
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].requestId, "trace_candidate_1");
+  assert.equal(requests[0].traceId, "trace_candidate_1");
+  assert.equal(requests[0].responseJsonSchema.type, "object");
+  assert.equal(requests[0].responseJsonSchema.required.includes("seo"), true);
+  assert.deepEqual(Object.keys(result.promptPacket).sort(), [
+    "actionSlices",
+    "artifactContract",
+    "canonicalContext",
+    "memoryContext",
+    "prompt",
+    "requestScope"
+  ]);
+  assert.deepEqual(Object.keys(result.promptPacket.actionSlices[0]).sort(), [
+    "content",
+    "id",
+    "title"
+  ]);
+  assert.equal(result.promptPacket.actionSlices[0].prompt, undefined);
+  assert.equal(result.promptPacket.actionSlices[0].requestScope, undefined);
+  assert.equal(result.promptPacket.actionSlices[0].artifactContract, undefined);
+  assert.equal(result.status, "ok");
+  assert.equal(result.traceId, "trace_candidate_1");
+  assert.equal(result.requestId, "provider_req_1");
+  assert.equal(result.providerId, "gemini");
+  assert.equal(result.transportState, "success");
+  assert.equal(result.providerState, "success");
+  assert.equal(result.structuredOutputState, "success");
+  assert.equal(result.validationState, "success");
+  assert.equal(result.sourceContextSummary, sourceContextSummary);
+  assert.equal(result.spec.baseRevisionId, "rev_1");
+  assert.equal(result.spec.routeFamily, SERVICE_LANDING_ROUTE_FAMILY);
+  assert.equal(result.spec.sections.length, 5);
+  assert.equal(result.spec.payload.slug, payload.slug);
+  assert.match(result.promptPacket.prompt, /Action slice: service_landing_generation/);
+  assert.match(requests[0].prompt, /Source service payload:/);
+  assert.match(requests[0].prompt, /service-first landing candidate/);
 });
 
 test("buildServiceLandingCandidateSpec wraps the normalized payload in the service-only envelope", () => {
