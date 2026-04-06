@@ -92,6 +92,72 @@ function buildRouteDeps({
       ]
     }),
     findEntityById: async () => null,
+    readMemoryCardSlice: async (input) => {
+      captured.readMemoryInput = input;
+
+      return {
+        sessionIdentity: {
+          sessionId: "session_1",
+          entityType: ENTITY_TYPES.SERVICE,
+          entityId: "service_1",
+          actor: {
+            id: "user_1",
+            username: "seo_manager",
+            displayName: "SEO Manager",
+            role: "seo_manager"
+          },
+          timestamps: {
+            sessionCreatedAt: "2026-04-06T12:00:00.000Z",
+            memoryCardUpdatedAt: "2026-04-06T12:05:00.000Z",
+            expiresAt: "2026-04-07T12:00:00.000Z"
+          },
+          baseRevisionId: input.baseRevisionId ?? "",
+          routeLocked: input.routeLocked ?? true,
+          entityLocked: input.entityLocked ?? true
+        },
+        editorialIntent: {
+          changeIntent: input.changeIntent ?? "",
+          editorialGoal: input.editorialGoal ?? "",
+          variantDirection: ""
+        },
+        proofSelection: {
+          selectedMedia: input.selectedMedia ?? [],
+          selectedCaseIds: input.selectedCaseIds ?? [],
+          selectedGalleryIds: input.selectedGalleryIds ?? []
+        },
+        artifactState: {
+          candidatePointer: null,
+          specVersion: "v1",
+          previewMode: input.previewMode ?? "desktop",
+          verificationSummary: "",
+          reviewStatus: "draft",
+          derivedArtifactSlice: null
+        },
+        editorialDecisions: {
+          acceptedDecisions: [],
+          rejectedDirections: [],
+          activeBlockers: [],
+          warnings: []
+        },
+        traceState: {
+          lastLlmTraceId: "",
+          requestId: "",
+          generationTimestamp: ""
+        },
+        archivePointer: {
+          pointer: "",
+          previousRunId: "",
+          previousCandidateId: "",
+          previousRevisionId: ""
+        },
+        recentTurn: {
+          lastChange: input.changeIntent ?? "",
+          lastRejection: "",
+          lastBlocker: "",
+          generationOutcome: "draft"
+        }
+      };
+    },
     requestServiceLandingCandidate: async (input) => {
       captured.requestInput = input;
 
@@ -105,6 +171,18 @@ function buildRouteDeps({
       return {
         status: "ok",
         candidateId: spec.candidateId,
+        promptPacket: {
+          requestScope: {
+            workspace: "service_landing",
+            action: "generate_candidate"
+          },
+          actionSlices: [
+            {
+              id: "service_landing_generation"
+            }
+          ],
+          prompt: "Request scope"
+        },
         spec,
         payload: spec.payload,
         sections: spec.sections,
@@ -153,6 +231,38 @@ function buildRouteDeps({
           id: input.revisionId
         }
       };
+    },
+    applyAcceptedMemoryDelta: async (input) => {
+      captured.memoryDeltaInput = input;
+
+      return {
+        sessionIdentity: {
+          sessionId: "session_1",
+          entityType: ENTITY_TYPES.SERVICE,
+          entityId: "service_1",
+          actor: {
+            id: "user_1",
+            username: "seo_manager",
+            displayName: "SEO Manager",
+            role: "seo_manager"
+          },
+          timestamps: {
+            sessionCreatedAt: "2026-04-06T12:00:00.000Z",
+            memoryCardUpdatedAt: "2026-04-06T12:10:00.000Z",
+            expiresAt: "2026-04-07T12:00:00.000Z"
+          },
+          baseRevisionId: input.baseRevisionId ?? "",
+          routeLocked: input.routeLocked ?? true,
+          entityLocked: input.entityLocked ?? true
+        },
+        editorialIntent: input.delta.editorialIntent,
+        proofSelection: input.delta.proofSelection,
+        artifactState: input.delta.artifactState,
+        editorialDecisions: input.delta.editorialDecisions,
+        traceState: input.delta.traceState,
+        archivePointer: input.delta.archivePointer,
+        recentTurn: input.delta.recentTurn
+      };
     }
   };
 }
@@ -170,8 +280,14 @@ test("service landing generate route carries the published base revision id into
 
   assert.equal(response.status, 303);
   assert.equal(location.pathname, "/admin/review/revision_123");
+  assert.equal(captured.readMemoryInput.baseRevisionId, "rev_base");
+  assert.equal(captured.readMemoryInput.entityType, ENTITY_TYPES.SERVICE);
   assert.equal(captured.requestInput.baseRevision.id, "rev_base");
   assert.equal(captured.requestInput.baseRevisionId, "rev_base");
+  assert.equal(captured.requestInput.memorySlice.sessionIdentity.baseRevisionId, "rev_base");
+  assert.deepEqual(captured.requestInput.memorySlice.proofSelection.selectedCaseIds, ["case_1"]);
+  assert.deepEqual(captured.requestInput.memorySlice.proofSelection.selectedGalleryIds, ["gallery_1"]);
+  assert.deepEqual(captured.requestInput.memorySlice.proofSelection.selectedMedia, ["media_1"]);
   assert.match(captured.requestInput.sourceContextSummary, /baseRevision=rev_base/);
   assert.equal(captured.requestInput.currentRevision.id, "draft_1");
   assert.equal(captured.requestInput.sourcePayload.slug, "service-drainage");
@@ -180,6 +296,9 @@ test("service landing generate route carries the published base revision id into
   assert.equal(captured.saveDraftInput.entityType, ENTITY_TYPES.SERVICE);
   assert.equal(captured.saveDraftInput.auditDetails.landingFactory.candidateSpec.baseRevisionId, "rev_base");
   assert.equal(captured.saveDraftInput.auditDetails.landingFactory.candidateSpec.routeFamily, SERVICE_LANDING_ROUTE_FAMILY);
+  assert.equal(captured.memoryDeltaInput.entityType, ENTITY_TYPES.SERVICE);
+  assert.equal(captured.memoryDeltaInput.delta.artifactState.candidatePointer.candidateId, "service_candidate_test");
+  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.revisionId, "revision_123");
   assert.equal(captured.submitInput.revisionId, "revision_123");
 });
 

@@ -92,6 +92,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
         relationOptions={data.relationOptions}
         mediaOptions={data.mediaOptions}
         caseProjectTypeOptions={data.caseProjectTypeOptions}
+        workspaceMemoryCard={data.workspaceMemoryCard}
         user={user}
         message={query?.message}
         error={query?.error}

@@ -8,8 +8,10 @@ import { findEntityById, getEntityAggregate } from "../../../../../../../lib/con
 import { saveDraft } from "../../../../../../../lib/content-core/service.js";
 import { evaluateReadiness } from "../../../../../../../lib/content-ops/readiness.js";
 import { submitRevisionForReview } from "../../../../../../../lib/content-ops/workflow.js";
+import { applyAcceptedMemoryDelta, readMemoryCardSlice } from "../../../../../../../lib/ai-workspace/memory-card.js";
 import {
   buildServiceLandingSourceContextSummary,
+  buildServiceLandingWorkspaceMemoryDelta,
   buildServiceLandingVerificationReport,
   requestServiceLandingCandidate
 } from "../../../../../../../lib/landing-factory/service.js";
@@ -61,7 +63,10 @@ const DEFAULT_ROUTE_DEPS = Object.freeze({
   evaluateReadiness,
   submitRevisionForReview,
   buildServiceLandingSourceContextSummary,
+  buildServiceLandingWorkspaceMemoryDelta,
   buildServiceLandingVerificationReport,
+  readMemoryCardSlice,
+  applyAcceptedMemoryDelta,
   requestServiceLandingCandidate
 });
 
@@ -101,6 +106,20 @@ export async function POST(request, overrides = {}) {
     const baseRevision = aggregate?.activePublishedRevision ?? null;
     const currentDraft = aggregate?.revisions?.find((revision) => revision.state === "draft") ?? null;
     const baseRevisionId = baseRevision?.id ?? "";
+    const memorySlice = await routeDeps.readMemoryCardSlice({
+      entityType: ENTITY_TYPES.SERVICE,
+      entityId: currentEntity?.id || entityId || "",
+      baseRevisionId,
+      routeLocked: true,
+      entityLocked: Boolean(currentEntity?.id || entityId),
+      changeIntent,
+      editorialGoal: "Generate and review a service-first landing candidate.",
+      selectedCaseIds: buildProofBasis(sourcePayload).filter((value) => value.startsWith("case_")),
+      selectedGalleryIds: buildProofBasis(sourcePayload).filter((value) => value.startsWith("gallery_")),
+      selectedMedia: sourcePayload.primaryMediaAssetId ? [sourcePayload.primaryMediaAssetId] : [],
+      previewMode: "desktop",
+      actor: user
+    });
     const sourceContextSummary = routeDeps.buildServiceLandingSourceContextSummary({
       entityId: currentEntity?.id || entityId || "",
       baseRevision,
@@ -117,7 +136,8 @@ export async function POST(request, overrides = {}) {
       changeIntent,
       proofBasis: buildProofBasis(sourcePayload),
       sourcePayload,
-      sourceContextSummary
+      sourceContextSummary,
+      memorySlice
     });
 
     if (candidateResult.status !== "ok") {
@@ -157,6 +177,80 @@ export async function POST(request, overrides = {}) {
     const submitted = await routeDeps.submitRevisionForReview({
       revisionId: saved.revision.id,
       actorUserId: user.id
+    });
+
+    const verificationDerivedArtifactSlice = {
+      candidateId: candidateResult.candidateId,
+      baseRevisionId,
+      revisionId: submitted.revision.id,
+      routeFamily: candidateResult.spec?.routeFamily ?? candidateResult.routeFamily,
+      specVersion: candidateResult.spec?.specVersion ?? candidateResult.specVersion,
+      verificationSummary: verificationReport.summary,
+      reviewStatus: submitted.revision.state
+    };
+    await routeDeps.applyAcceptedMemoryDelta({
+      entityType: ENTITY_TYPES.SERVICE,
+      entityId: submitted.revision.entityId || saved.entity.id,
+      baseRevisionId,
+      routeLocked: true,
+      entityLocked: true,
+      actor: user,
+      delta: routeDeps.buildServiceLandingWorkspaceMemoryDelta({
+        sessionIdentity: {
+          entityType: ENTITY_TYPES.SERVICE,
+          entityId: submitted.revision.entityId || saved.entity.id,
+          baseRevisionId,
+          routeLocked: true,
+          entityLocked: true,
+          actor: user
+        },
+        editorialIntent: {
+          changeIntent,
+          editorialGoal: "Generate and review a service-first landing candidate.",
+          variantDirection: sourcePayload.ctaVariant || ""
+        },
+        proofSelection: {
+          selectedMedia: sourcePayload.primaryMediaAssetId ? [sourcePayload.primaryMediaAssetId] : [],
+          selectedCaseIds: buildProofBasis(sourcePayload).filter((value) => value.startsWith("case_")),
+          selectedGalleryIds: buildProofBasis(sourcePayload).filter((value) => value.startsWith("gallery_"))
+        },
+        artifactState: {
+          candidatePointer: {
+            candidateId: candidateResult.candidateId,
+            revisionId: submitted.revision.id,
+            routeFamily: candidateResult.spec?.routeFamily ?? candidateResult.routeFamily,
+            specVersion: candidateResult.spec?.specVersion ?? candidateResult.specVersion
+          },
+          specVersion: candidateResult.spec?.specVersion ?? candidateResult.specVersion,
+          previewMode: "desktop",
+          verificationSummary: verificationReport.summary,
+          reviewStatus: submitted.revision.state,
+          derivedArtifactSlice: verificationDerivedArtifactSlice
+        },
+        editorialDecisions: {
+          acceptedDecisions: [],
+          rejectedDirections: [],
+          activeBlockers: verificationReport.blockingIssues.map((issue) => issue.message),
+          warnings: verificationReport.warnings.map((issue) => issue.message)
+        },
+        traceState: {
+          lastLlmTraceId: candidateResult.traceId,
+          requestId: candidateResult.requestId,
+          generationTimestamp: new Date().toISOString()
+        },
+        archivePointer: {
+          pointer: `request:${candidateResult.requestId}`,
+          previousRunId: memorySlice?.traceState?.requestId || "",
+          previousCandidateId: memorySlice?.artifactState?.candidatePointer?.candidateId || "",
+          previousRevisionId: memorySlice?.artifactState?.candidatePointer?.revisionId || ""
+        },
+        recentTurn: {
+          lastChange: changeIntent,
+          lastRejection: "",
+          lastBlocker: verificationReport.blockingIssues[0]?.message || "",
+          generationOutcome: candidateResult.status
+        }
+      })
     });
 
     return redirectWithQuery(request, `/admin/review/${submitted.revision.id}`, {

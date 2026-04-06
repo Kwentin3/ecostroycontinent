@@ -77,6 +77,12 @@ test("buildServiceLandingCandidateRequest produces a structured-output prompt bo
   assert.equal(request.sourceContextSummary, sourceContextSummary);
   assert.equal(request.normalizedPayload.slug, payload.slug);
   assert.equal(request.normalizedPayload.seo.metaTitle, payload.seo.metaTitle);
+  assert.equal(request.promptPacket.requestScope.workspace, "service_landing");
+  assert.equal(request.promptPacket.requestScope.action, "generate_candidate");
+  assert.equal(request.promptPacket.actionSlices.length, 1);
+  assert.match(request.promptPacket.prompt, /Request scope/);
+  assert.match(request.promptPacket.prompt, /Memory context/);
+  assert.match(request.promptPacket.prompt, /Action slice: service_landing_generation/);
   assert.equal(request.responseJsonSchema.properties.slug.type, "string");
   assert.match(request.prompt, /service-first landing candidate/i);
   assert.match(request.prompt, /"serviceScope": "We design and install drainage systems\."/);

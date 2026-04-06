@@ -6,6 +6,7 @@ import { FilterableChecklist } from "./FilterableChecklist";
 import { EvidenceRegisterPanel } from "./EvidenceRegisterPanel";
 import { MediaPicker } from "./MediaPicker";
 import { ServiceLandingFactoryPanel } from "./ServiceLandingFactoryPanel";
+import { ServiceLandingWorkspacePanel } from "./ServiceLandingWorkspacePanel";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
 import { SurfacePacket } from "./SurfacePacket";
@@ -106,6 +107,7 @@ export function EntityEditorForm({
   relationOptions,
   mediaOptions,
   caseProjectTypeOptions = [],
+  workspaceMemoryCard = null,
   user,
   message,
   error
@@ -554,6 +556,10 @@ export function EntityEditorForm({
           fallbackAnchorId={getEditorFallbackAnchor(entityType)}
           fallbackLabel="Общий раздел исправления"
           defaultOpen={Boolean(readiness?.hasBlocking)}
+        />
+        <ServiceLandingWorkspacePanel
+          entityType={entityType}
+          memoryCard={workspaceMemoryCard}
         />
         <EvidenceRegisterPanel
           entityType={entityType}
