@@ -11,6 +11,7 @@ import { submitRevisionForReview } from "../../../../../../../lib/content-ops/wo
 import { applyAcceptedMemoryDelta, readMemoryCardSlice } from "../../../../../../../lib/ai-workspace/memory-card.js";
 import {
   buildServiceLandingSourceContextSummary,
+  buildServiceLandingDerivedArtifactSlice,
   buildServiceLandingWorkspaceMemoryDelta,
   buildServiceLandingVerificationReport,
   requestServiceLandingCandidate
@@ -26,14 +27,11 @@ function buildProofBasis(payload) {
   ].filter(Boolean);
 }
 
-function buildLandingFactoryAuditDetails(candidateResult) {
+function buildLandingFactoryAuditDetails(candidateResult, derivedArtifactSlice) {
   return {
     landingFactory: {
-      candidateId: candidateResult.candidateId,
-      specVersion: candidateResult.spec?.specVersion ?? candidateResult.specVersion,
-      routeFamily: candidateResult.spec?.routeFamily ?? candidateResult.routeFamily,
-      sourceContextSummary: candidateResult.sourceContextSummary,
-      candidateSpec: candidateResult.spec ?? null,
+      // Keep one run slice: audit details, preview, and Memory Card should derive from the same artifact object.
+      derivedArtifactSlice,
       llm: candidateResult.status === "ok" || candidateResult.status === "error"
         ? {
             traceId: candidateResult.traceId,
@@ -143,6 +141,10 @@ export async function POST(request, overrides = {}) {
     if (candidateResult.status !== "ok") {
       return redirectWithError(request, fallbackPath, new Error(candidateResult.error?.message || "Service landing candidate generation failed."));
     }
+    const draftDerivedArtifactSlice = buildServiceLandingDerivedArtifactSlice({
+      candidateSpec: candidateResult.spec,
+      previewMode: "desktop"
+    });
 
     const saved = await routeDeps.saveDraft({
       entityType: ENTITY_TYPES.SERVICE,
@@ -152,7 +154,7 @@ export async function POST(request, overrides = {}) {
       payload: candidateResult.spec.payload,
       aiInvolvement: true,
       aiSourceBasis: "from_current_entity_only",
-      auditDetails: buildLandingFactoryAuditDetails(candidateResult)
+      auditDetails: buildLandingFactoryAuditDetails(candidateResult, draftDerivedArtifactSlice)
     });
 
     const readiness = await routeDeps.evaluateReadiness({
@@ -178,16 +180,14 @@ export async function POST(request, overrides = {}) {
       revisionId: saved.revision.id,
       actorUserId: user.id
     });
-
-    const verificationDerivedArtifactSlice = {
-      candidateId: candidateResult.candidateId,
-      baseRevisionId,
-      revisionId: submitted.revision.id,
-      routeFamily: candidateResult.spec?.routeFamily ?? candidateResult.routeFamily,
-      specVersion: candidateResult.spec?.specVersion ?? candidateResult.specVersion,
+    const derivedArtifactSlice = buildServiceLandingDerivedArtifactSlice({
+      candidateSpec: draftDerivedArtifactSlice,
+      previewMode: "desktop",
       verificationSummary: verificationReport.summary,
       reviewStatus: submitted.revision.state
-    };
+    });
+
+    // Only the accepted delta reaches session memory after the revision has been saved and submitted.
     await routeDeps.applyAcceptedMemoryDelta({
       entityType: ENTITY_TYPES.SERVICE,
       entityId: submitted.revision.entityId || saved.entity.id,
@@ -221,11 +221,11 @@ export async function POST(request, overrides = {}) {
             routeFamily: candidateResult.spec?.routeFamily ?? candidateResult.routeFamily,
             specVersion: candidateResult.spec?.specVersion ?? candidateResult.specVersion
           },
-          specVersion: candidateResult.spec?.specVersion ?? candidateResult.specVersion,
-          previewMode: "desktop",
+          specVersion: derivedArtifactSlice.specVersion,
+          previewMode: derivedArtifactSlice.previewMode,
           verificationSummary: verificationReport.summary,
           reviewStatus: submitted.revision.state,
-          derivedArtifactSlice: verificationDerivedArtifactSlice
+          derivedArtifactSlice
         },
         editorialDecisions: {
           acceptedDecisions: [],

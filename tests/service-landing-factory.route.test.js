@@ -228,7 +228,8 @@ function buildRouteDeps({
 
       return {
         revision: {
-          id: input.revisionId
+          id: input.revisionId,
+          state: "review"
         }
       };
     },
@@ -294,11 +295,14 @@ test("service landing generate route carries the published base revision id into
   assert.equal(captured.requestInput.sourcePayload.serviceScope, "We design and install drainage systems.");
   assert.equal(captured.requestInput.sourcePayload.seo.metaTitle, "Drainage systems");
   assert.equal(captured.saveDraftInput.entityType, ENTITY_TYPES.SERVICE);
-  assert.equal(captured.saveDraftInput.auditDetails.landingFactory.candidateSpec.baseRevisionId, "rev_base");
-  assert.equal(captured.saveDraftInput.auditDetails.landingFactory.candidateSpec.routeFamily, SERVICE_LANDING_ROUTE_FAMILY);
+  assert.equal(captured.saveDraftInput.auditDetails.landingFactory.derivedArtifactSlice.baseRevisionId, "rev_base");
+  assert.equal(captured.saveDraftInput.auditDetails.landingFactory.derivedArtifactSlice.routeFamily, SERVICE_LANDING_ROUTE_FAMILY);
+  assert.equal(captured.saveDraftInput.auditDetails.landingFactory.candidateSpec, undefined);
   assert.equal(captured.memoryDeltaInput.entityType, ENTITY_TYPES.SERVICE);
   assert.equal(captured.memoryDeltaInput.delta.artifactState.candidatePointer.candidateId, "service_candidate_test");
-  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.revisionId, "revision_123");
+  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.baseRevisionId, "rev_base");
+  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.reviewStatus, "review");
+  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.verificationSummary, "Service candidate passed verification.");
   assert.equal(captured.submitInput.revisionId, "revision_123");
 });
 

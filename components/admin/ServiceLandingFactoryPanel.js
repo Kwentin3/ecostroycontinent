@@ -31,14 +31,15 @@ export function ServiceLandingFactoryPanel({ entityType, revision, readiness, au
 
   const landingFactoryRecord = getLatestServiceLandingFactoryRecord(auditItems);
   const landingFactory = landingFactoryRecord?.details?.landingFactory ?? null;
-  const candidateSpec = landingFactory?.candidateSpec ?? null;
+  // Prefer the canonical run slice; the legacy candidateSpec fallback keeps older audit records readable.
+  const derivedArtifactSlice = landingFactory?.derivedArtifactSlice ?? landingFactory?.candidateSpec ?? null;
 
-  if (!candidateSpec) {
+  if (!derivedArtifactSlice) {
     return null;
   }
 
   const report = buildServiceLandingVerificationReport({
-    candidateSpec,
+    candidateSpec: derivedArtifactSlice,
     readiness,
     revision,
     llmResult: landingFactory.llm ?? null
@@ -63,25 +64,25 @@ export function ServiceLandingFactoryPanel({ entityType, revision, readiness, au
         <div className={styles.gridTwo}>
           <div className={styles.timelineItem}>
             <strong>Candidate</strong>
-            <p className={styles.mutedText}>{candidateSpec.candidateId}</p>
+            <p className={styles.mutedText}>{derivedArtifactSlice.candidateId}</p>
           </div>
           <div className={styles.timelineItem}>
             <strong>Base revision</strong>
-            <p className={styles.mutedText}>{candidateSpec.baseRevisionId || "—"}</p>
+            <p className={styles.mutedText}>{derivedArtifactSlice.baseRevisionId || "—"}</p>
           </div>
           <div className={styles.timelineItem}>
             <strong>Route family</strong>
-            <p className={styles.mutedText}>{candidateSpec.routeFamily}</p>
+            <p className={styles.mutedText}>{derivedArtifactSlice.routeFamily}</p>
           </div>
           <div className={styles.timelineItem}>
             <strong>Spec version</strong>
-            <p className={styles.mutedText}>{candidateSpec.specVersion}</p>
+            <p className={styles.mutedText}>{derivedArtifactSlice.specVersion}</p>
           </div>
         </div>
 
         <div className={styles.timelineItem}>
           <strong>Source context</strong>
-          <p className={styles.mutedText}>{normalizeLegacyCopy(report.sourceContextSummary || candidateSpec.sourceContextSummary || "—")}</p>
+          <p className={styles.mutedText}>{normalizeLegacyCopy(report.sourceContextSummary || derivedArtifactSlice.sourceContextSummary || "—")}</p>
         </div>
 
         {report.llm ? (

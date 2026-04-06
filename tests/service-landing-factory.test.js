@@ -6,6 +6,7 @@ import { normalizeEntityInput } from "../lib/content-core/pure.js";
 import {
   buildServiceLandingCandidateRequest,
   buildServiceLandingCandidateSpec,
+  buildServiceLandingDerivedArtifactSlice,
   buildServiceLandingSourceContextSummary,
   buildServiceLandingVerificationReport,
   getLatestServiceLandingFactoryRecord,
@@ -107,6 +108,32 @@ test("buildServiceLandingCandidateSpec wraps the normalized payload in the servi
     ["service_hero", "primary_media", "service_scope", "related_cases", "gallery"]
   );
   assert.equal(spec.payload.slug, payload.slug);
+});
+
+test("buildServiceLandingDerivedArtifactSlice extends the run artifact without inventing a parallel shape", () => {
+  const payload = makeServicePayload();
+  const spec = buildServiceLandingCandidateSpec({
+    candidateId: "service_candidate_123",
+    baseRevisionId: "rev_1",
+    variantKey: "pilot",
+    sourceContextSummary: "entity=entity_1 | proof=case_1",
+    payload
+  });
+  const derived = buildServiceLandingDerivedArtifactSlice({
+    candidateSpec: spec,
+    previewMode: "desktop",
+    verificationSummary: "Service candidate passed verification.",
+    reviewStatus: "review"
+  });
+
+  assert.equal(derived.candidateId, spec.candidateId);
+  assert.equal(derived.baseRevisionId, spec.baseRevisionId);
+  assert.equal(derived.routeFamily, spec.routeFamily);
+  assert.equal(derived.specVersion, spec.specVersion);
+  assert.equal(derived.previewMode, "desktop");
+  assert.equal(derived.verificationSummary, "Service candidate passed verification.");
+  assert.equal(derived.reviewStatus, "review");
+  assert.deepEqual(derived.sections, spec.sections);
 });
 
 test("buildServiceLandingVerificationReport distinguishes pass, warning, and blocked states", () => {
