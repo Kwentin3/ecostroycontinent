@@ -1,4 +1,4 @@
-# LANDING_FACTORY_DOMAIN_MAP_v1
+﻿# LANDING_FACTORY_DOMAIN_MAP_v1
 
 ## Purpose
 
@@ -51,6 +51,7 @@ Product posture and canon stay in `docs/product-ux/`.
 | Type | Documents | Role |
 |---|---|---|
 | Product inputs | `docs/product-ux/PRD_Landing_Factory_Экостройконтинент_v0.2-draft.md`, `docs/product-ux/PRD_Экостройконтинент_v0.3.1.md`, `docs/product-ux/Content_Contract_Экостройконтинент_v0.2.md`, `docs/product-ux/Content_Operations_Admin_Console_MVP_Spec_Экостройконтинент_v0.1.md`, `docs/product-ux/Launch_SEO_Core_Экостройконтинент_v0.1.md`, `docs/reports/LANDING.CONTRACT.ANAMNESIS.V1.md` | Set the accepted posture, service-only boundary, and runtime honesty. |
+| Adjacent memory inputs | `docs/engineering/MEMORY_CARD_DOMAIN_MAP_v1.md`, `docs/engineering/MEMORY_CARD_PROMPT_CONTEXT_CONTRACT_v1.md` | Define session-scoped working state that the landing factory consumes for prompt assembly and review continuity, but does not own; memory-affecting outputs stay governed by Memory Card plus the structured-output contract. |
 | Engineering outputs | The 6 docs in this cluster | Define the implementation-ready contract surface for the first rollout. |
 
 ## Doc map
@@ -74,6 +75,7 @@ Product posture and canon stay in `docs/product-ux/`.
 - page-builder semantics
 - homepage unification
 - general AI platform design
+- session-scoped memory ownership
 - broad CMS redesign
 - broad SEO runtime redesign
 - immutable publish snapshot store redesign
@@ -85,3 +87,5 @@ Product posture and canon stay in `docs/product-ux/`.
 - FAQ/article/review entity packs
 - full SEO discovery runtime
 - any non-service landing experimentation surface
+
+

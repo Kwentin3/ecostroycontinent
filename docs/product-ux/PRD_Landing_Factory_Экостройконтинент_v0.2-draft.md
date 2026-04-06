@@ -1,4 +1,4 @@
-# PRD: Contract-Driven LLM Landing Factory для «Экостройконтинент»
+﻿# PRD: Contract-Driven LLM Landing Factory для «Экостройконтинент»
 
 This draft is intentionally narrow. It defines a service-first landing experimentation workflow, not a general website generator and not a page builder replacement.
 
@@ -36,6 +36,8 @@ The problem to solve is not "how to let AI build any page." The problem is how t
 | Runtime must remain deterministic | The published result must render from a contract, not from arbitrary generated code. |
 
 This PRD does not reopen phase-1 strategic canon. It sits on top of it and respects the current content-core, revision, review, and publish model.
+
+Memory Card is an officially recognized session-scoped working-state layer for the AI-assisted landing workspace. It can carry prompt-assembly context, proof selection, and decision breadcrumbs, but it is not canonical truth, not publish state, and not a second source of truth. The engineering semantics live in `docs/engineering/MEMORY_CARD_DOMAIN_MAP_v1.md` and `docs/engineering/MEMORY_CARD_PROMPT_CONTEXT_CONTRACT_v1.md`.
 
 ## 5. Rollout boundary
 
@@ -282,3 +284,4 @@ These are the narrow follow-up documents needed to turn the PRD into executable 
 - Added validation classes so the later verification contract can be derived from the PRD instead of invented from scratch.
 - Introduced a clear preconditions and deferred-gaps view for known runtime mismatches.
 - Left unchanged: AI remains assistive only, publish remains explicit, public web remains read-side only, deterministic rendering remains mandatory, and the epic does not become a page builder or autonomous website generator.
+

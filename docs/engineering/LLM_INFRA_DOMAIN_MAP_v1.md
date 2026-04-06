@@ -1,4 +1,4 @@
-# LLM_INFRA_DOMAIN_MAP_v1
+﻿# LLM_INFRA_DOMAIN_MAP_v1
 
 ## Purpose
 
@@ -50,6 +50,7 @@ Product posture stays in `docs/product-ux/`.
 | Type | Documents | Role |
 |---|---|---|
 | Product inputs | `docs/product-ux/PRD_Экостройконтинент_v0.3.1.md`, `docs/product-ux/PRD_Landing_Factory_Экостройконтинент_v0.2-draft.md`, `docs/reports/LANDING.CONTRACT.ANAMNESIS.V1.md` | Establish the minimal LLM factory posture, SOCKS5 requirement, AI assistive-only boundary, and runtime honesty. |
+| Adjacent session-state input | `docs/engineering/MEMORY_CARD_DOMAIN_MAP_v1.md`, `docs/engineering/MEMORY_CARD_PROMPT_CONTEXT_CONTRACT_v1.md` | Define session-scoped working state that prompt assembly can consume before calling the factory; LLM infra may emit structured outputs that propose memory-affecting deltas, but it does not own session memory or provider chat state. |
 | Engineering inputs | The service-first landing-factory contract pack | Define the structured artifacts the landing factory will request from the LLM infra. |
 | Engineering outputs | The 5 docs in this cluster | Define the infrastructure canon that the landing factory implementation must use. |
 
@@ -82,4 +83,7 @@ Product posture stays in `docs/product-ux/`.
 - Advanced streaming semantics unless needed by a specific future contract
 - Tool-calling frameworks not required for structured artifact generation
 - Memory or retrieval layers
+- Session-scoped Memory Card ownership
 - Wider AI assistant surfaces beyond the landing factory use case
+
+

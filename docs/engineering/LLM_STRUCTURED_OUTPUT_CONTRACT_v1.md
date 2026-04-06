@@ -1,4 +1,4 @@
-# LLM_STRUCTURED_OUTPUT_CONTRACT_v1
+﻿# LLM_STRUCTURED_OUTPUT_CONTRACT_v1
 
 ## Purpose
 
@@ -54,6 +54,15 @@ These classes are the current minimum.
 
 Additional classes require a contract update.
 
+## Memory Card bridge
+
+- A structured artifact may propose changes that affect Memory Card state.
+- Such output is always a proposed delta, not a direct memory write.
+- Provider compliance does not authorize mutation of Memory Card.
+- A proposed delta becomes active only after local validation plus system or human acceptance.
+- No dedicated memory-specific artifact class is introduced in v1; memory-affecting proposals reuse the existing structured-output path.
+- The Memory Card prompt context contract defines how accepted deltas surface in future prompt assembly.
+
 ## Plain text rule
 
 Plain text is allowed only when the caller explicitly asks for a human-facing explanation or other non-artifact output.
@@ -96,3 +105,4 @@ Validation failures are contract failures.
 - broad prompt serialization spec
 - agent memory design
 - public AI content delivery
+
