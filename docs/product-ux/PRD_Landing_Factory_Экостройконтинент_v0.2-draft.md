@@ -191,6 +191,44 @@ AI may assist during creation, validation explanation, and revision, but it neve
 - The public site can only consume approved published artifacts through the canonical read-side projection.
 - If a route or block is not supported by the current runtime contract, it does not become public by default.
 
+### 12.1 Current working UX hypothesis for the SEO operator
+
+The main user of the landing workspace is the SEO Manager acting as a landing composer.
+
+The expected operator flow is:
+
+1. Choose a landing or page owner from the workspace entry.
+2. Inspect the available content materials.
+3. Assemble a coherent page from reusable proof elements.
+4. Add short connective copy where the page needs meaning, transitions, or framing.
+5. Preview the page as a human would read it.
+6. Check blockers or readiness issues.
+7. Hand the result to review when it is ready.
+
+The workspace should support that flow without turning into a broad page builder, a design tool, or a technical console.
+
+A likely practical screen shape is:
+
+- a compact library of reusable materials;
+- a central landing composition canvas;
+- an assistant / review rail for help, feedback, and readiness.
+
+The exact visual arrangement can evolve, but the operator should always be able to quickly see what to choose, what to place, what to read, and what to hand off.
+
+### 12.2 Reusable content vs page-scoped connective copy
+
+The factory should treat photos, service cards, and case cards as reusable content inputs.
+
+Short connective text that helps the page read as one story belongs to the specific landing composition draft or page version. It is part of that page's composition, not a standalone reusable content library by default.
+
+This means the workspace can use:
+
+- reusable proof elements, such as photos, services, and cases;
+- page-scoped introduction, transition, and closing copy;
+- simple visual placement and resizing that keeps elements readable and proportionate.
+
+The product goal is not to make the operator manage content mechanics. The goal is to make the operator feel like they are building a clear landing page from meaningful pieces.
+
 ## 13. Canonical artifacts
 
 | Artifact | Role | Relation to existing revision model | Truth status |
