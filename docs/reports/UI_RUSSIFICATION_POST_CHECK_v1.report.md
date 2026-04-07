@@ -18,6 +18,8 @@
 ## Does the Landing Workspace Feel Consistent?
 - Yes. The primary admin flow now reads like one Russian operator surface instead of a mix of English labels and developer terminology.
 - The remaining English is mostly internal implementation detail, not user-facing copy.
+- Live HTTP smoke after push confirmed the admin login page is reachable and Russian (`Вход в админку`).
+- The landing workspace route remained auth-gated in unauthenticated smoke, which is expected for this runtime.
 
 ## Smallest Next Cleanup Step
 - Do one live authenticated admin smoke on the deployed runtime to confirm the updated Russian copy in browser, especially on landing workspace, review, and media surfaces.

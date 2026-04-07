@@ -63,6 +63,8 @@
 - `npm test`
 - `npm run build`
 - `git diff --check`
+- `Invoke-WebRequest https://ecostroycontinent.ru/admin/login` -> `200`, title `Вход в админку`
+- `Invoke-WebRequest https://ecostroycontinent.ru/admin/workspace/landing` -> `200`, title `Вход в админку` because the route is auth-gated in unauthenticated runtime smoke
 
 ## Git Commit(s)
 - Code commit: `d095718` `Russify admin operator UI`
@@ -75,4 +77,5 @@
 - Internal prompt text in LLM-facing request packets still contains some English technical scaffolding by design.
 - Code identifiers, route names, and technical keys still use legacy English names where they are not user-facing.
 - `LLM`, `SEO`, `API`, `JSON`, and `URL` remain acceptable technical carry-over terms.
-- Runtime browser smoke was not re-opened in this turn because the Playwright backend was closed; validation here is code/test/build verified.
+- Browser smoke was not re-opened in this turn because the Playwright backend was closed, but live HTTP smoke confirmed the admin login route is reachable after push.
+- The landing workspace itself still requires authentication, so it was only checked indirectly through the login gate in this pass.
