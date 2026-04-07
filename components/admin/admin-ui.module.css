@@ -1874,6 +1874,19 @@
   align-items: start;
 }
 
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) minmax(300px, 380px);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.workspaceColumn {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
 .stickyPanel {
   position: sticky;
   top: var(--space-4);
@@ -2036,6 +2049,7 @@
 
   .gridTwo,
   .split,
+  .workspaceGrid,
   .diffGrid,
   .mediaWorkspace,
   .mediaOverlayBody,

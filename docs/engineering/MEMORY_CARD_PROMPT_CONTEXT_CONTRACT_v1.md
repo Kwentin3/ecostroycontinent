@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This contract defines how Memory Card participates in prompt assembly for the AI-assisted service landing workspace. It keeps prompt context compact, session-scoped, and derived from canonical inputs plus the active working state.
+This contract defines how Memory Card participates in prompt assembly for the AI-assisted landing composition workspace. It keeps prompt context compact, session-scoped, and derived from canonical inputs plus the active working state.
 
 ## Assembly Principle
 
@@ -19,7 +19,7 @@ This contract defines how Memory Card participates in prompt assembly for the AI
 
 ## Always-in Fields
 
-These fields should be present in prompt assembly for the service landing workspace unless the workspace is empty or unavailable:
+These fields should be present in prompt assembly for the landing composition workspace unless the workspace is empty or unavailable:
 
 | Field | Why it is always in |
 |---|---|

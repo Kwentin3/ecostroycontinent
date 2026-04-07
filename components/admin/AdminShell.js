@@ -2,13 +2,14 @@ import Link from "next/link";
 
 import { getInfraHealthSnapshot } from "../../lib/admin/infra-health.js";
 import { getRoleLabel } from "../../lib/auth/session.js";
-import { userIsSuperadmin } from "../../lib/auth/roles.js";
+import { userCanReview, userIsSuperadmin } from "../../lib/auth/roles.js";
 import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
 const baseNavItems = [
   { href: "/admin", label: "Главная" },
   { href: "/admin/review", label: "Проверка" },
+  { href: "/admin/workspace/landing", label: "Лендинги" },
   { href: "/admin/entities/global_settings", label: "Настройки" },
   { href: "/admin/entities/media_asset", label: "Медиа" },
   { href: "/admin/entities/service", label: "Услуги" },
@@ -17,12 +18,18 @@ const baseNavItems = [
   { href: "/admin/users", label: "Пользователи" }
 ];
 
-function getNavItems(user) {
-  if (userIsSuperadmin(user)) {
-    return [...baseNavItems, { href: "/admin/diagnostics/llm", label: "LLM диагностика" }];
+export function getNavItems(user) {
+  const navItems = [...baseNavItems];
+
+  if (!userCanReview(user)) {
+    return navItems.filter((item) => item.href !== "/admin/workspace/landing");
   }
 
-  return baseNavItems;
+  if (userIsSuperadmin(user)) {
+    navItems.push({ href: "/admin/diagnostics/llm", label: "LLM диагностика" });
+  }
+
+  return navItems;
 }
 
 function renderBreadcrumbs(breadcrumbs) {

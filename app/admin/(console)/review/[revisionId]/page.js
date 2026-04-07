@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { PreviewViewport } from "../../../../../components/admin/PreviewViewport";
 import { ReadinessPanel } from "../../../../../components/admin/ReadinessPanel";
+import { LandingWorkspaceVerificationPanel } from "../../../../../components/admin/LandingWorkspaceVerificationPanel";
 import { RevisionDiffPanel } from "../../../../../components/admin/RevisionDiffPanel";
 import { ServiceLandingFactoryPanel } from "../../../../../components/admin/ServiceLandingFactoryPanel";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
@@ -121,6 +122,12 @@ export default async function ReviewDetailPage({ params, searchParams }) {
               title="Проверка готовности"
               defaultOpen
             />
+            <LandingWorkspaceVerificationPanel
+              auditItems={auditItems}
+              readiness={readiness}
+              revision={revision}
+            />
+            {/* Legacy service-prefixed panel stays only for older service revisions; the landing-neutral panel above is the primary verification slice. */}
             <ServiceLandingFactoryPanel
               entityType={entity.entityType}
               revision={revision}

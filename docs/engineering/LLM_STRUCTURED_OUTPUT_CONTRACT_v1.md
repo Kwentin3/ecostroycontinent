@@ -45,10 +45,15 @@ If the provider output cannot be normalized into the declared schema, the reques
 
 | Artifact class | Purpose | Typical use |
 |---|---|---|
-| `service_landing_candidate_spec` | Structured candidate/spec for the service-first landing factory | Candidate creation and revision proposals |
+| `landing_composition_candidate_spec` | Structured candidate/spec for the landing-first composition workspace | Landing draft creation and revision proposals |
+| `service_landing_candidate_spec` | Structured candidate/spec for the adjacent service-mode workflow | Historical / route-specific service-page candidates |
 | `structured_revision_proposal` | Proposed structured changes against an existing artifact | Reviewable updates before approval |
 | `structured_explanation` | Structured rationale or explanation tied to a contract artifact | Human review support and decision support |
 | `llm_diagnostic_probe` | Minimal infra diagnostic artifact for connectivity and SOCKS5 checks | Admin LLM test and transport test |
+
+`landing_composition_candidate_spec` is the primary artifact class for the current workspace target.
+
+`service_landing_candidate_spec` remains supported as an adjacent service-mode artifact for route-owning service-page truth, but it is no longer the primary workspace artifact.
 
 These classes are the current minimum.
 

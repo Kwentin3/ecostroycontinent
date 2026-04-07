@@ -2,7 +2,7 @@
 
 ## 1. Objective
 
-This plan defines the cleanest layered architecture for the AI-assisted service landing workspace so the current service-only rollout can stay isolated, prompt assembly can stay deterministic, Memory Card can stay session-scoped, and canonical content/revision/publish truth can stay the only source of truth.
+This plan defines the cleanest layered architecture for the AI-assisted landing composition workspace so the current rollout can stay isolated, prompt assembly can stay deterministic, Memory Card can stay session-scoped, and canonical content/revision/publish truth can stay the only source of truth.
 
 The goal is not to invent a new platform. The goal is to make the existing seams explicit enough that future implementation can move without truth leakage, memory leakage, preview drift, or provider leakage.
 
@@ -10,11 +10,12 @@ The goal is not to invent a new platform. The goal is to make the existing seams
 
 The current codebase already has the right raw seams, but several responsibilities still live close together:
 
-- `app/api/admin/entities/service/landing-factory/generate/route.js` currently orchestrates service-only candidate generation, draft save, readiness, verification, and review submission in one request path.
-- `lib/landing-factory/service.js` already contains the service candidate/spec request, the section registry, source-context summary logic, candidate/spec construction, and verification report generation.
+- `app/api/admin/entities/service/landing-factory/generate/route.js` currently orchestrates the existing service-mode backend path; the landing-first workspace should reuse those seams without keeping the service route as the primary target.
+- `lib/landing-factory/service.js` already contains the existing candidate/spec request, the section registry, source-context summary logic, candidate/spec construction, and verification report generation.
 - `lib/llm/facade.js` already provides the canonical non-UI LLM entrypoint with structured output, normalization, validation, and a stable inward result envelope.
 - `docs/engineering/MEMORY_CARD_DOMAIN_MAP_v1.md` and `docs/engineering/MEMORY_CARD_PROMPT_CONTEXT_CONTRACT_v1.md` already define session-scoped memory semantics and prompt assembly rules.
 - `docs/engineering/SERVICE_VERIFICATION_CONTRACT_v1.md` and `docs/engineering/SERVICE_PUBLISH_ARTIFACT_CONTRACT_v1.md` already keep verification and publish truth separate from draft or review state.
+- `docs/engineering/LANDING_COMPOSITION_*` now define the primary landing target surface; the older service-mode pack remains adjacent historical substrate for route-owning service-page truth.
 
 My read of the current baseline is simple: the primitives exist, but the future implementation should stop treating them as one broad orchestration blob.
 
@@ -37,8 +38,8 @@ Verification, review, and publish handoff are protected workflow boundaries insi
 | Block | Owns | Does not own | Reads from | Writes to | Key anti-coupling rule |
 |---|---|---|---|---|---|
 | UI / Workspace | Admin screens, forms, preview panes, review presentation, user action capture. | Prompt assembly, provider selection, session-memory mutation, canonical truth. | Application-provided view models, verification state, preview state. | UI-local state and user intent submissions. | UI must never assemble prompt context or infer truth on its own. |
-| Workspace Application Layer | Service-only orchestration, candidate/spec request composition, source-context summary, verification gating, review handoff, accepted-delta request handling. | Canonical truth, provider transport, public read-side, direct prompt packet invention, Memory Card semantics. | Canonical service truth, Memory Card reads, prompt packet inputs, readiness inputs. | Candidate/spec artifact, audit details, workflow commands, delta proposals. | This layer orchestrates the service flow, but it does not own truth, memory, or transport. |
-| Memory Card | Session-scoped working state, accepted deltas, trace pointers, archive pointer, working decisions. | Canonical content truth, publish truth, raw chat history, provider internals. | Canonical service truth, accepted deltas, system/human acceptance events. | Memory Card state store. | Only accepted deltas may mutate Memory Card; proposed deltas are not writes. |
+| Workspace Application Layer | Landing-first orchestration, candidate/spec request composition, source-context summary, verification gating, review handoff, accepted-delta request handling. | Canonical truth, provider transport, public read-side, direct prompt packet invention, Memory Card semantics. | Canonical content / page truth, Memory Card reads, prompt packet inputs, readiness inputs. | Candidate/spec artifact, audit details, workflow commands, delta proposals. | This layer orchestrates the landing flow, but it does not own truth, memory, or transport. |
+| Memory Card | Session-scoped working state, accepted deltas, trace pointers, archive pointer, working decisions. | Canonical content truth, publish truth, raw chat history, provider internals. | Canonical content / page truth, accepted deltas, system/human acceptance events. | Memory Card state store. | Only accepted deltas may mutate Memory Card; proposed deltas are not writes. |
 | Prompt Packet Assembly + LLM Boundary | Prompt-safe context bundle, base prompt packet, structured output, normalization, local validation, inward result envelope. | UI state, Memory Card persistence, canonical truth, provider I/O, workflow decisions. | Canonical inputs, Memory Card, current request intent, current verification summary. | Derived prompt packet and normalized artifact or failure envelope. | One workspace action family should have one base prompt packet shape, and action-specific slices may only extend it. |
 | Canonical Workflow / Truth | Entities, revisions, active published pointer, publish records, approval records, final verification state, public read projections. | Prompt assembly, Memory Card, provider behavior, workspace presentation, speculative working state. | Draft/save requests, approval and publish commands, read-side requests, verification outcomes. | Canonical DB state and public projections. | Nothing becomes durable truth until it is persisted here. |
 
@@ -48,6 +49,7 @@ Verification, review, and publish handoff are protected workflow boundaries insi
 - The Prompt Packet Assembly + LLM Boundary must produce one base prompt packet shape for all workspace actions that call LLM.
 - Action-specific slices may extend the base packet, but they must not replace it or create parallel packet families.
 - The prompt packet assembler is a pure context builder; the LLM boundary is a separate normalization and validation boundary.
+- In code, `assemblePromptPacket(...)` and `requestStructuredArtifact(...)` must stay in separate modules and must not collapse into one workspace helper.
 - `assemblePromptPacket(...)` must stay pure and must not call the provider, mutate Memory Card, or write canonical truth.
 - `requestStructuredArtifact(...)` is the only boundary call that crosses into LLM infra.
 - The Memory Card is the only session-state layer that may apply accepted deltas.
@@ -75,15 +77,15 @@ My thought on the most important rule: if any layer besides the prompt packet as
 
 ## 5. Request Lifecycle
 
-The service-only request flow should stay narrow and explicit:
+The landing-first request flow should stay narrow and explicit:
 
-1. A user action in the admin workspace captures service intent, proof selection, or review input.
-2. The UI submits the action to the service-only application entrypoint.
-3. The application layer reads canonical service truth and the current Memory Card state.
+1. A user action in the admin workspace captures landing intent, proof selection, or review input.
+2. The UI submits the action to the workspace application entrypoint.
+3. The application layer reads canonical content / page truth and the current Memory Card state.
 4. The Prompt Packet Assembly + LLM Boundary builds a derived prompt packet from canonical inputs plus Memory Card.
 5. The Workspace Application Layer calls the Prompt Packet Assembly + LLM Boundary with the structured-output request.
 6. The Prompt Packet Assembly + LLM Boundary returns a normalized artifact or a canonical failure envelope after local validation.
-7. The Workspace Application Layer turns the result into a candidate/spec snapshot and, if applicable, a proposed memory delta.
+7. The Workspace Application Layer turns the result into a landing candidate/spec snapshot and, if applicable, a proposed memory delta.
 8. The system or human workflow accepts or rejects the delta; only accepted deltas reach the Memory Card write API.
 9. The workspace application and canonical workflow boundaries produce the machine-verifiable report and determine whether the candidate can move to review or publish.
 10. The UI renders preview, verification status, blockers, and explicit review/publish actions from the same derived artifact slice.
@@ -113,6 +115,7 @@ This is the narrow handoff shape the implementation should use between layers.
 
 The Prompt Packet Assembly + LLM Boundary should read only this session-scoped slice from Memory Card:
 
+- `pageId`
 - `session_id`
 - `entity_type`
 - `entity_id`
@@ -138,6 +141,8 @@ The Prompt Packet Assembly + LLM Boundary should read only this session-scoped s
 - `request_id`
 - `archive_pointer`
 
+Note: for the landing-first MVP, `pageId` is the primary workspace anchor even though the Memory Card read slice still carries generic `entity_type` / `entity_id` fields for reuse.
+
 It must not read the full chat history, raw provider payloads, or unrelated session state.
 
 #### 2. Prompt packet
@@ -145,6 +150,7 @@ It must not read the full chat history, raw provider payloads, or unrelated sess
 The Prompt Packet Assembly + LLM Boundary should turn canonical truth plus the Memory Card read slice into one prompt packet shape:
 
 - `request_scope`
+  - `pageId`
   - `session_id`
   - `entity_id`
   - `route_family`
@@ -220,9 +226,9 @@ The practical layer boundary should stay close to these API shapes:
 | API | Direction | Minimal payload | Purpose |
 |---|---|---|---|
 | `readMemoryCardSlice(...)` | Memory Card -> Prompt Packet Assembly + LLM Boundary | Session identity, working intent, proof selection, revision pointers, verification summary, recent-turn slice, trace pointers, archive pointer | Give the assembler the current session state without exposing full history. |
-| `assemblePromptPacket(...)` | Canonical truth + Memory Card -> Prompt Packet Assembly + LLM Boundary | Canonical service truth slice plus Memory Card read slice | Produce one prompt packet shape for every workspace action that calls LLM. |
+| `assemblePromptPacket(...)` | Canonical content / page truth + Memory Card -> Prompt Packet Assembly + LLM Boundary | Canonical content / page truth slice plus Memory Card read slice | Produce one prompt packet shape for every workspace action that calls LLM. |
 | `requestStructuredArtifact(...)` | Workspace Application -> LLM Boundary | `artifactClass`, `schemaId`, `schemaVersion`, `prompt`, `responseJsonSchema`, `schemaValidator` | Ask for a structured artifact and get a normalized inward result envelope back. |
-| `materializeCandidateBundle(...)` | LLM Boundary result -> Workspace Application | Result envelope plus session context | Turn the validated artifact into the service candidate bundle. |
+| `materializeCandidateBundle(...)` | LLM Boundary result -> Workspace Application | Result envelope plus session context | Turn the validated artifact into the landing candidate bundle. |
 | `applyAcceptedMemoryDelta(...)` | Workspace Application -> Memory Card | Accepted delta, acceptance metadata, trace ids | Update session memory only after the system or human gate accepts the change. |
 | `saveDraftFromCandidate(...)` | Workspace Application -> Canonical Workflow / Truth | Candidate payload plus audit details | Persist the candidate into the canonical revision workflow. |
 | `buildVerificationReport(...)` | Workspace Application + Canonical Workflow boundary | Candidate bundle, readiness state, revision, LLM result | Produce the machine-verifiable report that gates review/publish. |
@@ -241,7 +247,7 @@ Do not keep separate active copies of candidate/spec in UI state, audit details,
 
 | State | Mutability | Canonical? | Allowed writers | Notes |
 |---|---|---|---|---|
-| Canonical service entity / revision / publish truth | Explicit, transactional, workflow-controlled | Yes | Canonical Content / Revision / Publish Truth Layer only | Source of truth for all durable service state. |
+| Canonical content / page / revision / publish truth | Explicit, transactional, workflow-controlled | Yes | Canonical Content / Revision / Publish Truth Layer only | Source of truth for all durable landing state. |
 | Memory Card active session state | Mutable during an active session | No | Memory Card after accepted delta or system/human update | Session-local working state only. |
 | Prompt context bundle | Derived-only per request | No | Prompt Packet Assembly + LLM Boundary only | Rebuilt, not persisted as truth. |
 | Candidate/spec snapshot | Versioned, reviewable, archival | No | Workspace Application Layer after validation | Derived artifact slice plus pointers/projections only; not a second working copy. |
@@ -295,9 +301,9 @@ These are the missed seams I would keep in view before anyone starts implementat
 This is not the full build plan. It is the smallest safe sequence that would keep the architecture honest:
 
 0. Choose one minimal Memory Card persistence mechanism for the first happy path.
-1. Define one pure prompt packet assembler for the service workspace.
+1. Define one pure prompt packet assembler for the landing workspace.
 2. Define one narrow Memory Card read/write API for accepted deltas only.
-3. Route the service generate path through that assembler and the Prompt Packet Assembly + LLM Boundary.
+3. Route the landing generate path through that assembler and the Prompt Packet Assembly + LLM Boundary.
 4. Materialize candidate/spec, preview, and verification from the same derived slice.
 5. Feed review and publish handoff from the verification result, not from raw LLM output.
 6. Do not add a Memory Card persistence subsystem until the read/write API and one happy path are stable.
@@ -307,7 +313,7 @@ This is not the full build plan. It is the smallest safe sequence that would kee
 
 This plan does not attempt to:
 
-- expand beyond `/services/[slug]`
+- expand beyond the approved landing workspace and adjacent service-route reuse
 - design a long-term memory platform
 - design vector retrieval or org-wide memory graphs
 - add public AI chat or public AI memory
@@ -325,4 +331,4 @@ The cleanest practical architecture is:
 
 The most important isolation rule is that Memory Card is session-scoped working state only, and the only path into it is through accepted deltas that pass the workflow gate.
 
-If we keep that rule intact, the rest of the system can stay service-only, reviewable, and safe to evolve.
+If we keep that rule intact, the rest of the system can stay landing-first, reviewable, and safe to evolve.

@@ -1,6 +1,6 @@
 ﻿# PRD: Contract-Driven LLM Landing Factory для «Экостройконтинент»
 
-This draft is intentionally narrow. It defines a service-first landing experimentation workflow, not a general website generator and not a page builder replacement.
+This draft is intentionally narrow. It defines a landing-first composition workspace, not a general website generator and not a page builder replacement.
 
 ## 1. Title and status
 
@@ -12,7 +12,7 @@ This draft is intentionally narrow. It defines a service-first landing experimen
 
 ## 2. Purpose / problem statement
 
-The project needs a safe way to generate service landing candidates with LLM assistance inside hard boundaries. The current system already has content revisions, explicit review and publish stages, media storage, SEO fields, and admin roles. What is missing is a first-class contract-driven workflow that turns a brief into a structured candidate, validates it, previews it, lets humans comment and revise it, and only then allows an explicit publish step.
+The project needs a safe way to generate landing composition candidates with LLM assistance inside hard boundaries. The current system already has content revisions, explicit review and publish stages, media storage, SEO fields, and admin roles. What is missing is a first-class contract-driven workflow that turns a brief plus existing structured entities and assets into a landing draft, validates it, previews it, lets humans comment and revise it, and only then allows an explicit publish step.
 
 The problem to solve is not "how to let AI build any page." The problem is how to let AI help produce useful landing experiments without breaking content truth, runtime determinism, or publish discipline.
 
@@ -20,8 +20,8 @@ The problem to solve is not "how to let AI build any page." The problem is how t
 
 - The canonical project model already treats `Content Core` as source of truth, `Admin Console` as write-side, and `Public Web` as read-side.
 - Draft, review, publish, rollback, media upload, and SEO metadata already exist in the current system, which makes a narrow factory layer feasible.
-- The project now needs a controlled experimentation surface that is faster than fully manual authoring but safer than arbitrary generation.
-- A service-first landing factory is the smallest useful AI-enabled surface that can fit the current canon without turning the product into a generic builder.
+- The project now needs a controlled composition surface that is faster than fully manual authoring but safer than arbitrary generation.
+- A landing-first composition workspace is the smallest useful AI-enabled surface that can fit the current canon without turning the product into a generic builder.
 - Current runtime gaps make this especially important: the scope must stay bounded because not every desired block or route is already renderable or discoverable.
 
 ## 4. Strategic fit with current project canon
@@ -43,11 +43,12 @@ Memory Card is an officially recognized session-scoped working-state layer for t
 
 ### First rollout
 
-- First rollout is `service-only`.
-- In scope for first rollout: service detail candidates under `/services/[slug]`.
+- First rollout is `landing-first`.
+- In scope for first rollout: landing composition candidates inside the dedicated admin workspace.
 - Out of first rollout: `/cases/[slug]`, `/about`, `/contacts`, `/`, any article, FAQ, or review route, and any new route family.
-- The `/services` index remains a read-side catalog, not a generated landing target.
-- Rationale: service entities already have the strongest current combination of route ownership, SEO fields, CTA, proof, media refs, and publish readiness.
+- Service pages under `/services/[slug]` remain route-owning SEO surfaces and adjacent reuse inputs, not the primary AI workspace target in this draft.
+- The `/services` index remains a read-side catalog and can continue to serve service-route truth.
+- Rationale: the project now needs the landing composition surface first, while service pages remain an important secondary truth surface.
 
 ### Preconditions and deferred gaps
 
@@ -63,14 +64,14 @@ Memory Card is an officially recognized session-scoped working-state layer for t
 
 ### In scope
 
-- Create a service candidate from a brief or existing content context.
+- Create a landing candidate from a brief or existing content context.
 - Produce a machine-readable landing spec for that candidate.
 - Validate the candidate against a strict contract.
 - Generate a deterministic preview for human review.
 - Support comments, comparison, and revision loops inside admin.
 - Allow an approved version to enter the existing editorial publish workflow.
 - Preserve auditability from draft to publish.
-- Keep ordinary content and layout experiments inside the approved service contract free from server redeploys.
+- Keep ordinary content and layout experiments inside the approved landing composition contract free from server redeploys.
 
 ### Out of scope
 
@@ -81,7 +82,7 @@ Memory Card is an officially recognized session-scoped working-state layer for t
 - A new design system editor.
 - A new website generation platform.
 - Solving current SEO discovery infrastructure gaps inside this epic.
-- Expanding route ownership beyond the service route family in this draft.
+- Expanding route ownership beyond the approved landing workspace and adjacent service-route reuse in this draft.
 
 ## 7. Non-goals
 
@@ -105,11 +106,13 @@ Memory Card is an officially recognized session-scoped working-state layer for t
 
 ## 9. Core concept
 
-In this project, "contract-driven landing factory" means a service-first production line for landing candidates where every step is structured and reviewable.
+In this project, "contract-driven landing factory" means a landing-first composition line for landing candidates where every step is structured and reviewable.
 
-`brief -> landing spec -> candidate -> validation report -> preview artifact -> comment / revision -> approval record -> publish`
+`brief -> landing draft -> validation report -> preview artifact -> comment / revision -> approval record -> publish`
 
-In v0.2, `Landing Spec` is the formalized contract interpretation of an existing structured revision payload. It is first-class for the factory UI and verification flow, but it is not a second source of truth. The underlying content revision remains the canonical state holder, and the spec names the exact candidate being generated, reviewed, approved, and published.
+In v0.2, `Landing Draft` is the workspace-facing composition artifact over existing `Page` truth and reusable structured inputs. `Landing Spec` is the formalized contract interpretation of that draft. The draft and spec are first-class for the factory UI and verification flow, but neither is a second source of truth. The underlying content and page truth remain canonical, and the draft/spec pair names the exact candidate being generated, reviewed, approved, and published.
+
+Every publishable landing draft resolves into exactly one `Page` owner at publish time. There is no separate landing-owned published truth in this PRD.
 
 The factory is an operational layer above the content core. It does not replace canonical content truth, and it does not let AI invent arbitrary page structure. The output must stay machine-verifiable, human-reviewable, and deterministic at render time.
 
@@ -145,7 +148,7 @@ These validation classes are product-level expectations for the factory, not a f
 ## 11. Primary workflow
 
 1. Create candidate.
-   - Start from a brief, target, and business goal for the service route family.
+   - Start from a brief, target, and business goal for the landing workspace and its approved source inputs.
 2. Generate or compose landing spec.
    - Express the candidate as structured data, not as freeform page code.
 3. Validate.
@@ -167,8 +170,8 @@ AI may assist during creation, validation explanation, and revision, but it neve
 
 ### Admin-side surfaces only
 
-- Service landing workspace for candidate creation and iteration.
-- Spec-oriented editor or form surface for structured service landing data.
+- Landing composition workspace for candidate creation and iteration.
+- Spec-oriented editor or form surface for structured landing composition data.
 - Validation panel that explains pass, fail, and blocking reasons.
 - Variant compare and review history.
 - Comment thread for SEO Manager, Business Owner, and Superadmin.
@@ -176,7 +179,7 @@ AI may assist during creation, validation explanation, and revision, but it neve
 
 ### Preview / review surfaces
 
-- Deterministic admin preview of the service candidate.
+- Deterministic admin preview of the landing candidate.
 - Side-by-side comparison between versions or variants.
 - Machine-readable validation output plus human-readable summary.
 - Review state that is separate from publish state.
@@ -192,17 +195,17 @@ AI may assist during creation, validation explanation, and revision, but it neve
 
 | Artifact | Role | Relation to existing revision model | Truth status |
 |---|---|---|---|
-| Draft candidate | Working output from AI or human-assisted composition. | Lives as mutable draft state before formal review. | Not truth. |
-| Landing spec | Formal contract view of the candidate. | Interprets the structured revision payload; does not replace it. | Reviewable contract, not separate source of truth. |
+| Landing draft | Working output from AI or human-assisted composition. | Lives as mutable draft state before formal review. | Not truth. |
+| Landing spec | Formal contract view of the landing draft. | Interprets the structured inputs; does not replace canonical page truth. | Reviewable contract, not separate source of truth. |
 | Validation report | Machine-generated result of contract checks and blockers. | Derived from the candidate/spec pair. | Derived artifact. |
-| Preview artifact | Deterministic rendered view for human review. | Derived from the candidate/spec pair. | Derived artifact. |
-| Approval record | Human sign-off that the candidate may enter publish. | Captures the approved candidate/spec boundary before public release. | Pre-public decision record. |
+| Preview artifact | Deterministic rendered view for human review. | Derived from the draft/spec pair. | Derived artifact. |
+| Approval record | Human sign-off that the draft may enter publish. | Captures the approved draft/spec boundary before public release. | Pre-public decision record. |
 | Published artifact | Frozen version that entered publish workflow and became public. | Backed by the active published revision pointer. | Canonical published snapshot. |
 
 ## 14. Rules and constraints
 
 - Deterministic rendering is mandatory.
-  - The same approved artifact, rendered by the same contract version, must produce the same public result.
+  - The same approved landing artifact, rendered by the same contract version, must produce the same public result.
 - No arbitrary code generation.
   - AI cannot emit custom HTML, JSX, or executable frontend code as the primary product path.
 - No silent content truth mutation.
@@ -214,7 +217,7 @@ AI may assist during creation, validation explanation, and revision, but it neve
 - No unsafe fallback rendering.
   - Unsupported blocks or broken refs should fail validation or remain draft, not silently degrade into uncontrolled output.
 - No-redeploy experiments are narrow.
-  - Allowed without redeploy: changing content values, reordering already registered blocks or variants, swapping already supported refs, and editing SEO or proof fields inside the service contract.
+  - Allowed without redeploy: changing content values, reordering already registered blocks or variants, swapping already supported refs, and editing SEO or proof fields inside the landing composition contract.
   - Not allowed without engineering work: adding a new block type, changing renderer behavior, introducing a new route family, changing validation logic, or altering schema / storage shape.
 - Validation classes are part of the product contract.
   - Structural, reference, render compatibility, editorial readiness, and claim / risk checks are all required product-level gates.
@@ -227,31 +230,31 @@ AI may assist during creation, validation explanation, and revision, but it neve
 
 The epic is successful when all of the following are true:
 
-- A service candidate can be created as a structured artifact without direct code edits.
-- The candidate can be validated against a clear contract and produce actionable failures.
-- A deterministic preview can be generated from the candidate.
+- A landing draft can be created as a structured artifact without direct code edits.
+- The draft can be validated against a clear contract and produce actionable failures.
+- A deterministic preview can be generated from the draft.
 - SEO Manager and Business Owner can comment and request revision inside admin.
 - An approval record can be created without exposing public state.
 - An approved artifact can move into the existing publish workflow.
 - Publish remains explicit and human-controlled.
-- Public web consumes only the published service snapshot.
+- Public web consumes only the published snapshot.
 - AI-generated content cannot reach public state without human review.
-- Ordinary content and layout experiments inside the approved service contract do not require a server redeploy.
+- Ordinary content and layout experiments inside the approved landing composition contract do not require a server redeploy.
 - The product does not drift into a general page-builder or autonomous website generator.
-- No route family beyond service detail pages is accidentally implied by the first rollout.
+- No route family beyond the approved landing workspace and adjacent service-route reuse is accidentally implied by the first rollout.
 
 ## 16. Risks / open questions
 
 | Category | Risk / open question | Why it matters |
 |---|---|---|
 | Architectural | Current runtime already shows contract/render drift in some block areas. | The factory must not promise blocks the renderer cannot deterministically render. |
-| Runtime | The root homepage is still outside the unified content-core read path. | The first rollout must stay service-only and not imply homepage coverage. |
+| Runtime | The root homepage is still outside the unified content-core read path. | The first rollout must stay landing-first and not imply homepage coverage. |
 | SEO | Discovery infrastructure is incomplete in runtime. | Do not overstate launch SEO automation before the supporting routes exist. |
 | Product | The epic could drift into page-builder territory if block freedom is widened too much. | That would break the current canon and dilute the workflow. |
 | Operational | Approval, revision, and publish boundaries must remain visible and separate. | The factory must not blur review with release. |
 | Security / quality | AI suggestions can carry weak claims or unsupported references. | Human review and validation remain mandatory. |
-| Scope | Later route-family expansion will require new contracts. | Service-first rollout must not be mistaken for universal support. |
-| Open question | Which route families are next after service detail pages? | This must be decided in a separate follow-up package, not in v0.2. |
+| Scope | Later route-family expansion will require new contracts. | Landing-first rollout must not be mistaken for universal support. |
+| Open question | Which composition or adjacent route surfaces are next after landing drafts? | This must be decided in a separate follow-up package, not in v0.2. |
 
 Current canon already blocks the wider ambition of an arbitrary AI site generator, a full no-code builder, and an autonomous publisher. This PRD accepts those constraints instead of trying to route around them.
 
@@ -259,26 +262,28 @@ Current canon already blocks the wider ambition of an arbitrary AI site generato
 
 After this PRD is reviewed and accepted, the minimum next engineering doc pack should define:
 
-- Service landing spec contract.
-  - Why needed: defines the machine-readable shape of a service candidate, including required fields, allowed references, SEO inputs, and versioning.
-- Service block registry contract.
-  - Why needed: defines the allowed block types, variants, and rejection behavior for the service-only rollout.
-- Service render contract.
-  - Why needed: defines how an approved service spec is turned into a deterministic public or preview render.
-- Service verification contract.
+- Landing composition spec contract.
+  - Why needed: defines the machine-readable shape of a landing draft, including required fields, allowed references, landing inputs, and versioning.
+- Landing composition block registry contract.
+  - Why needed: defines the allowed block types, variants, and rejection behavior for the landing-first workspace.
+- Landing composition render contract.
+  - Why needed: defines how an approved landing draft is turned into a deterministic public or preview render.
+- Landing composition verification contract.
   - Why needed: defines the machine checks, severity levels, and publish blockers that guard the workflow.
-- Service publish artifact contract.
+- Landing composition publish artifact contract.
   - Why needed: defines the frozen snapshot that enters publish, how it relates to revision history, and what the public read-side consumes.
 - Implementation plan.
   - Why needed: sequences the engineering work and separates current runtime gap closure from the product scope.
+
+The service-mode contract pack remains adjacent and historical for route-owning service-page truth, but it is no longer the primary follow-up pack for this PRD.
 
 These are the narrow follow-up documents needed to turn the PRD into executable engineering scope without reopening the whole product direction.
 
 ## Appendix B - Refinement Notes vs v0.1
 
-- Tightened the first rollout to service-only and limited it to `/services/[slug]`.
+- Tightened the first rollout to landing-first and kept service pages as adjacent SEO surfaces rather than the primary workspace target.
 - Explicitly excluded `/`, `/cases/[slug]`, `/about`, `/contacts`, and article / FAQ / review routes from the first rollout.
-- Reframed `Landing Spec` as a formal contract view of the existing revision payload, not a second source of truth.
+- Reframed `Landing Draft` and `Landing Spec` as formal contract views over existing content and page truth, not second source of truth.
 - Separated candidate, review, approval, publish, and public states so approval is no longer blurred with publication.
 - Defined no-redeploy experiments precisely and separated them from engineering changes.
 - Added validation classes so the later verification contract can be derived from the PRD instead of invented from scratch.

@@ -49,14 +49,14 @@ Product posture stays in `docs/product-ux/`.
 
 | Type | Documents | Role |
 |---|---|---|
-| Product inputs | `docs/product-ux/PRD_Экостройконтинент_v0.3.1.md`, `docs/product-ux/PRD_Landing_Factory_Экостройконтинент_v0.2-draft.md`, `docs/reports/LANDING.CONTRACT.ANAMNESIS.V1.md` | Establish the minimal LLM factory posture, SOCKS5 requirement, AI assistive-only boundary, and runtime honesty. |
+| Product inputs | `docs/product-ux/PRD_Экостройконтинент_v0.3.1.md`, `docs/product-ux/PRD_Landing_Factory_Экостройконтинент_v0.2-draft.md`, `docs/reports/LANDING.CONTRACT.ANAMNESIS.V1.md` | Establish the landing-first composition workspace posture, SOCKS5 requirement, AI assistive-only boundary, and runtime honesty. |
 | Adjacent session-state input | `docs/engineering/MEMORY_CARD_DOMAIN_MAP_v1.md`, `docs/engineering/MEMORY_CARD_PROMPT_CONTEXT_CONTRACT_v1.md` | Define session-scoped working state that prompt assembly can consume before calling the factory; LLM infra may emit structured outputs that propose memory-affecting deltas, but it does not own session memory or provider chat state. |
-| Engineering inputs | The service-first landing-factory contract pack | Define the structured artifacts the landing factory will request from the LLM infra. |
+| Engineering inputs | The landing-first composition contract pack, with the service-mode pack retained as adjacent / historical | Define the structured artifacts the landing workspace will request from the LLM infra. |
 | Engineering outputs | The 5 docs in this cluster | Define the infrastructure canon that the landing factory implementation must use. |
 
 ## What this domain unblocks for the landing-factory rollout
 
-- Structured service landing candidate generation instead of raw text prompts.
+- Structured landing composition candidate generation instead of raw text prompts.
 - Local schema validation of generated artifacts before review or publish.
 - Deterministic transport posture through a single LLM facade and SOCKS5 routing.
 - Config-driven initial posture via `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-3-flash-preview`, and authenticated SOCKS5 host/port/user/pass settings in `.env`.

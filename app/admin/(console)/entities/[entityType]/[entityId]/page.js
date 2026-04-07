@@ -3,12 +3,11 @@ import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../../components/admin/AdminShell";
 import { EntityEditorForm } from "../../../../../../components/admin/EntityEditorForm";
-import { deriveEditorValue, loadEditorPageData } from "../../../../../../lib/admin/entity-ui";
+import { deriveEditorValue, loadEditorPageData, getPayloadLabel } from "../../../../../../lib/admin/entity-ui";
 import { normalizeAdminReturnTo } from "../../../../../../lib/admin/relation-navigation.js";
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
-import { getPayloadLabel } from "../../../../../../lib/admin/entity-ui";
 import styles from "../../../../../../components/admin/admin-ui.module.css";
 
 export default async function EntityEditorPage({ params, searchParams }) {
@@ -78,7 +77,16 @@ export default async function EntityEditorPage({ params, searchParams }) {
         { label: surfaceLabel }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
-      actions={returnTo ? <Link href={returnTo} className={styles.secondaryButton}>Вернуться к источнику</Link> : null}
+      actions={
+        <>
+          {normalizedType === ENTITY_TYPES.PAGE && entityId ? (
+            <Link href={`/admin/workspace/landing/${entityId}`} className={styles.secondaryButton}>
+              Открыть landing workspace
+            </Link>
+          ) : null}
+          {returnTo ? <Link href={returnTo} className={styles.secondaryButton}>Вернуться к источнику</Link> : null}
+        </>
+      }
     >
       <EntityEditorForm
         entityType={normalizedType}

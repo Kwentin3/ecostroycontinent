@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Memory Card is the session-scoped mutable working-state layer for the AI-assisted service landing workspace in `Экостройконтинент`. It keeps one active run coherent across generation, review, and revision without competing with canonical truth.
+Memory Card is the session-scoped mutable working-state layer for the AI-assisted landing composition workspace in `Экостройконтинент`. It keeps one active run coherent across generation, review, and revision without competing with canonical truth.
 
 ## What It Is
 
@@ -37,7 +37,9 @@ Memory Card is a compact internal state layer that stores the current run's work
 ### Assumes
 
 - Content Core remains canonical.
-- Landing factory stays service-only.
+- The landing workspace is composition-first.
+- For the landing-first MVP, `pageId` is the primary workspace anchor even though the Memory Card keeps generic `entity_type` / `entity_id` fields for reuse.
+- Service pages under `/services/[slug]` remain route-owning SEO surfaces and adjacent reuse inputs, but they are not the primary AI workspace target.
 - Publish remains human-controlled.
 - LLM infra can request structured artifacts and return a stable result envelope.
 - Admin remains the write-side workspace and public web remains read-side only.
@@ -151,7 +153,7 @@ Rule: the archive pointer may reference history, but the active Memory Card does
 
 ## Cross-Domain Relations
 
-- Landing factory domain: consumes Memory Card for service-first generation, review, and verification continuity, but does not own session memory semantics.
+- Landing factory domain: consumes Memory Card for landing-first composition, review, and verification continuity, but does not own session memory semantics.
 - LLM infra domain: consumes prompt context assembled from Memory Card, but does not own session memory semantics.
 - Canonical content / revision / publish truth: remains authoritative; Memory Card mirrors only selected, session-scoped working state and pointers.
 
