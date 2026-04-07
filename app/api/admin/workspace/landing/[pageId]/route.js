@@ -17,6 +17,7 @@ import {
   buildLandingWorkspaceSourceContextSummary,
   buildLandingWorkspaceVerificationReport,
   buildLandingWorkspaceWorkspaceMemoryDelta,
+  projectLandingWorkspaceCandidatePayload,
   requestLandingWorkspaceCandidate,
   LANDING_WORKSPACE_ROUTE_FAMILY
 } from "../../../../../../lib/landing-workspace/landing.js";
@@ -176,16 +177,17 @@ export async function POST(request, { params }, overrides = {}) {
       return redirectWithError(request, fallbackPath, new Error("Page truth is missing."));
     }
 
-    const proofBasis = routeDeps.buildLandingWorkspaceProofBasis(workingRevision.payload);
+    const sourceCandidatePayload = projectLandingWorkspaceCandidatePayload(workingRevision.payload);
+    const proofBasis = routeDeps.buildLandingWorkspaceProofBasis(sourceCandidatePayload);
     const memorySlice = await routeDeps.readLandingWorkspaceSession(pageId, {
       baseRevisionId: baseRevision?.id ?? "",
       changeIntent,
       editorialGoal,
       variantDirection,
       proofBasis,
-      selectedMedia: workingRevision.payload.primaryMediaAssetId ? [workingRevision.payload.primaryMediaAssetId] : [],
-      selectedCaseIds: workingRevision.payload.caseIds ?? [],
-      selectedGalleryIds: workingRevision.payload.galleryIds ?? [],
+      selectedMedia: sourceCandidatePayload.primaryMediaAssetId ? [sourceCandidatePayload.primaryMediaAssetId] : [],
+      selectedCaseIds: sourceCandidatePayload.caseIds ?? [],
+      selectedGalleryIds: sourceCandidatePayload.galleryIds ?? [],
       previewMode,
       actor: user
     }, {
@@ -204,7 +206,7 @@ export async function POST(request, { params }, overrides = {}) {
       });
       const reviewSourceContext = routeDeps.buildLandingWorkspaceSourceContextSummary({
         pageId,
-        pageType: currentRevision.payload.pageType,
+        pageType: sourceCandidatePayload.pageType,
         baseRevision,
         currentRevision,
         changeIntent,
@@ -268,7 +270,7 @@ export async function POST(request, { params }, overrides = {}) {
 
     const sourceContextSummary = routeDeps.buildLandingWorkspaceSourceContextSummary({
       pageId,
-      pageType: workingRevision.payload.pageType,
+      pageType: sourceCandidatePayload.pageType,
       baseRevision,
       currentRevision: workingRevision,
       changeIntent,
@@ -284,7 +286,7 @@ export async function POST(request, { params }, overrides = {}) {
       changeIntent,
       variantKey: variantDirection,
       sourceContextSummary,
-      sourcePayload: workingRevision.payload,
+      sourcePayload: sourceCandidatePayload,
       proofBasis,
       memorySlice
     }, routeDeps);

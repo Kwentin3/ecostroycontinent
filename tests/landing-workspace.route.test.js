@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { POST } from "../app/api/admin/workspace/landing/[pageId]/route.js";
 import { ENTITY_TYPES } from "../lib/content-core/content-types.js";
+import { normalizeEntityInput } from "../lib/content-core/pure.js";
 import { buildLandingWorkspaceCandidateSpec } from "../lib/landing-workspace/landing.js";
 
 function makePagePayload(overrides = {}) {
@@ -32,6 +33,15 @@ function makePagePayload(overrides = {}) {
     },
     ...overrides
   };
+}
+
+function makeCanonicalPagePayload(overrides = {}) {
+  const flatPayload = makePagePayload(overrides);
+
+  return normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    ...flatPayload,
+    ...flatPayload.seo
+  });
 }
 
 function buildFormData(fields = {}) {
@@ -69,7 +79,7 @@ function buildRouteDeps({ captured, currentDraft = true } = {}) {
     id: "rev_base",
     revisionNumber: 1,
     state: "published",
-    payload: makePagePayload()
+    payload: makeCanonicalPagePayload()
   };
   const draftRevision = currentDraft
     ? {
@@ -77,7 +87,7 @@ function buildRouteDeps({ captured, currentDraft = true } = {}) {
         revisionNumber: 2,
         state: "draft",
         changeIntent: "Existing intent",
-        payload: makePagePayload({
+        payload: makeCanonicalPagePayload({
           title: "About draft",
           h1: "About draft"
         })
@@ -267,10 +277,14 @@ test("landing workspace generate route saves the page draft and anchors the sess
   assert.equal(location.pathname, "/admin/workspace/landing/page_1");
   assert.equal(location.searchParams.get("message"), "Черновик сохранён.");
   assert.equal(captured.readLandingWorkspaceSession.pageId, "page_1");
+  assert.deepEqual(captured.readLandingWorkspaceSession.input.selectedMedia, ["media_1"]);
+  assert.deepEqual(captured.readLandingWorkspaceSession.input.selectedCaseIds, ["case_1"]);
+  assert.deepEqual(captured.readLandingWorkspaceSession.input.selectedGalleryIds, ["gallery_1"]);
   assert.equal(captured.requestInput.pageId, "page_1");
   assert.equal(captured.requestInput.landingDraftId, "draft_1");
   assert.equal(captured.requestInput.baseRevisionId, "rev_base");
   assert.equal(captured.requestInput.sourcePayload.title, "About draft");
+  assert.deepEqual(captured.requestInput.proofBasis, ["service_1", "case_1", "gallery_1", "media_1"]);
   assert.equal(captured.saveDraftInput.entityType, ENTITY_TYPES.PAGE);
   assert.equal(captured.saveDraftInput.entityId, "page_1");
   assert.equal(captured.saveDraftInput.auditDetails.landingWorkspace.derivedArtifactSlice.pageId, "page_1");

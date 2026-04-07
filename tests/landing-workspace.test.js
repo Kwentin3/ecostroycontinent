@@ -1,12 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { ENTITY_TYPES } from "../lib/content-core/content-types.js";
+import { normalizeEntityInput } from "../lib/content-core/pure.js";
 import {
   buildLandingWorkspaceCandidateRequest,
   buildLandingWorkspaceCandidateSpec,
   buildLandingWorkspaceDerivedArtifactSlice,
   buildLandingWorkspaceProofBasis,
   buildLandingWorkspaceVerificationReport,
+  projectLandingWorkspaceCandidatePayload,
   projectLandingWorkspaceSections
 } from "../lib/landing-workspace/landing.js";
 import { readLandingWorkspaceSession } from "../lib/landing-workspace/session.js";
@@ -38,6 +41,15 @@ function makePagePayload(overrides = {}) {
     },
     ...overrides
   };
+}
+
+function makeCanonicalPagePayload(overrides = {}) {
+  const flatPayload = makePagePayload(overrides);
+
+  return normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    ...flatPayload,
+    ...flatPayload.seo
+  });
 }
 
 function makeMemorySlice(pageId = "other_page") {
@@ -124,38 +136,36 @@ function makeMemorySlice(pageId = "other_page") {
 }
 
 test("landing workspace prompt request stays pure and page anchored", () => {
-  const sourcePayload = makePagePayload();
-  const requestScope = {
-    workspace: "landing_workspace",
-    action: "generate_candidate",
-    routeFamily: "landing"
-  };
+  const sourcePayload = makeCanonicalPagePayload();
+  const proofBasis = buildLandingWorkspaceProofBasis(sourcePayload);
   const request = buildLandingWorkspaceCandidateRequest({
     pageId: "page_1",
     baseRevision: { id: "rev_base" },
     currentRevision: { id: "rev_2" },
     changeIntent: "Refine the hero.",
-    proofBasis: buildLandingWorkspaceProofBasis(sourcePayload),
+    proofBasis,
     sourcePayload
   });
 
   assert.equal(request.artifactClass, "landing_workspace_candidate_payload");
   assert.equal(request.schemaVersion, "v1");
-  assert.equal(request.promptPacket.requestScope.workspace, requestScope.workspace);
-  assert.equal(request.promptPacket.requestScope.routeFamily, requestScope.routeFamily);
+  assert.equal(request.promptPacket.requestScope.workspace, "landing_workspace");
+  assert.equal(request.promptPacket.requestScope.routeFamily, "landing");
   assert.match(request.promptPacket.prompt, /page=page_1/);
   assert.match(request.promptPacket.prompt, /Do not invent a new Page owner/);
-  assert.deepEqual(request.normalizedPayload, sourcePayload);
+  assert.match(request.promptPacket.prompt, /proof=service_1, case_1, gallery_1, media_1/);
+  assert.deepEqual(request.normalizedPayload, makePagePayload());
 });
 
 test("landing workspace derived slice and verification report share the same section projection", () => {
+  const sourcePayload = makeCanonicalPagePayload();
   const spec = buildLandingWorkspaceCandidateSpec({
     candidateId: "landing_candidate_1",
     pageId: "page_1",
     landingDraftId: "rev_2",
     baseRevisionId: "rev_base",
     sourceContextSummary: "page=page_1",
-    payload: makePagePayload()
+    payload: sourcePayload
   });
   const derived = buildLandingWorkspaceDerivedArtifactSlice({
     candidateSpec: spec,
@@ -181,6 +191,9 @@ test("landing workspace derived slice and verification report share the same sec
   assert.equal(derived.pageId, "page_1");
   assert.equal(derived.landingDraftId, "rev_2");
   assert.equal(derived.previewMode, "tablet");
+  assert.deepEqual(projectLandingWorkspaceCandidatePayload(derived.payload), spec.payload);
+  assert.ok(Array.isArray(derived.payload.blocks));
+  assert.equal(derived.payload.blocks[0].type, "hero");
   assert.deepEqual(report.sections.map((section) => section.id), derived.sections.map((section) => section.id));
   assert.equal(report.sections[0].id, "landing_hero");
   assert.equal(report.renderCompatible, true);

@@ -56,6 +56,34 @@ test("normalizeEntityInput keeps service and case references inside page blocks 
   assert.equal("caseIds" in page, false);
 });
 
+test("normalizeEntityInput reads page seo from either top-level fields or nested seo payload", () => {
+  const page = normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    pageType: PAGE_TYPES.ABOUT,
+    title: "About",
+    h1: "About company",
+    intro: "Company intro",
+    body: "Body text",
+    serviceIds: ["service-1"],
+    caseIds: ["case-1"],
+    galleryIds: ["gallery-1"],
+    primaryMediaAssetId: "media-1",
+    seo: {
+      metaTitle: "About",
+      metaDescription: "About us",
+      canonicalIntent: "/about",
+      indexationFlag: "index",
+      openGraphTitle: "About",
+      openGraphDescription: "About us",
+      openGraphImageAssetId: "media-1"
+    }
+  });
+
+  assert.equal(page.seo.metaTitle, "About");
+  assert.equal(page.seo.metaDescription, "About us");
+  assert.equal(page.seo.canonicalIntent, "/about");
+  assert.equal(page.seo.openGraphImageAssetId, "media-1");
+});
+
 test("change classification and owner review rules follow first-slice canon", () => {
   const newServicePayload = {
     slug: "drainage",
