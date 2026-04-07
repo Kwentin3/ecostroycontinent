@@ -2,19 +2,19 @@
 
 ## Summary
 
-Implemented the landing-first AI workspace as the primary AI-assisted admin surface for `Экостройконтинент`, anchored to canonical `Page` truth through `pageId`.
+Implemented and then reality-checked the landing-first AI workspace as the primary AI-assisted admin surface for `Экостройконтинент`, anchored to canonical `Page` truth through `pageId`.
 
-The workspace now has:
-- a sidebar entry in `AdminShell` for review-capable roles;
-- a chooser route at `/admin/workspace/landing`;
-- a page-scoped workspace route at `/admin/workspace/landing/[pageId]`;
-- a source-editor CTA when a `Page` owner exists;
-- one active workspace session per `pageId` in the MVP flow;
-- shared derived-artifact usage for preview, verification, and review visibility;
-- reuse of the current Memory Card runtime, prompt packet assembler, structured-output LLM boundary, and review/publish workflow.
+The live fix in this continuation addressed the production `500` by restoring the canonical Page preview bridge:
+- canonical `Page` truth now projects into the landing-workspace candidate payload before prompt assembly and session anchoring;
+- the derived artifact slice now rebuilds a canonical `Page` preview payload for the renderer;
+- page SEO now survives the landing workspace save path through nested-to-top-level SEO compatibility in `normalizeSeo(...)`.
 
-Implementation commit:
+Current code commit:
+- `2c1bf93` - `Fix landing workspace canonical preview wiring`
+
+Earlier implementation commits already on `main`:
 - `6390126` - `Implement landing-first workspace`
+- `c01b605` - `Add landing workspace execution reports`
 
 Push status:
 - pushed to `origin/main`
@@ -33,7 +33,10 @@ Push status:
   - verification and review handoff.
 - Candidate generation and review handoff reuse the existing prompt assembly / LLM / review pipeline.
 - The derived artifact slice is shared across preview, verification, audit details, and review visibility.
-- Transitional landing-neutral wrappers were introduced so the legacy service-prefixed substrate does not define the new semantics.
+- Canonical `Page` truth is now projected into the landing workspace candidate payload before preview and prompt handling.
+- Canonical preview payload is rebuilt for the workspace renderer so `StandalonePage` receives the block-based shape it expects.
+- Nested SEO payloads are accepted by `normalizeSeo(...)` so landing workspace saves do not drop page metadata.
+- Transitional landing-neutral wrappers remain in place so the legacy service-prefixed substrate does not define the new semantics.
 
 ## Changed Files
 
@@ -49,6 +52,7 @@ Push status:
   - `lib/landing-workspace/landing.js`
   - `lib/landing-workspace/session.js`
   - `lib/ai-workspace/memory-card.js`
+  - `lib/content-core/pure.js`
 - UI components:
   - `components/admin/AdminShell.js`
   - `components/admin/admin-ui.module.css`
@@ -56,9 +60,10 @@ Push status:
   - `components/admin/LandingWorkspaceVerificationPanel.js`
 - Tests:
   - `tests/admin-shell.test.js`
+  - `tests/content-core.service.test.js`
   - `tests/landing-workspace.test.js`
   - `tests/landing-workspace.route.test.js`
-- Docs aligned to the new landing-first contract pack:
+- Docs aligned to the landing-first contract pack:
   - `docs/product-ux/PRD_Landing_Factory_Экостройконтинент_v0.2-draft.md`
   - `docs/engineering/AI_WORKSPACE_LAYERED_ARCHITECTURE_PLAN_v1.md`
   - `docs/engineering/AI_WORKSPACE_SCREEN_IMPLEMENTATION_PLAN_v1.md`
@@ -67,18 +72,18 @@ Push status:
   - `docs/engineering/LANDING_FIRST_WORKSPACE_EXECUTION_PLAN_v1.md`
   - `docs/engineering/LLM_*`
   - `docs/engineering/MEMORY_CARD_*`
-- Report artifacts retained from the implementation pass:
-  - `docs/reports/AI_WORKSPACE_SCREEN_IMPLEMENTATION_PLAN_V1.report.md`
-  - `docs/reports/LANDING_FIRST_DOMAIN_REBASE_V1.report.md`
-  - `docs/reports/LANDING_FIRST_WORKSPACE_EXECUTION_PLAN_V1.report.md`
+- Report artifacts:
+  - `docs/reports/LANDING_FIRST_WORKSPACE_EXECUTION_v1.report.md`
+  - `docs/reports/LANDING_FIRST_WORKSPACE_REALITY_AUDIT_v1.report.md`
 
 ## How PageId Anchoring Was Enforced
 
-- `pageId` is the explicit route anchor for the workspace screen and API route.
+- `pageId` remains the explicit route anchor for the workspace screen and API route.
 - The chooser only resumes or navigates; it does not create Page truth.
 - `app/admin/(console)/workspace/landing/[pageId]/page.js` refuses non-`Page` entities and missing source truth with `notFound()`.
 - `lib/landing-workspace/session.js` re-normalizes the returned session slice to the requested `pageId`, even when the stored session row is already anchored.
 - `app/api/admin/workspace/landing/[pageId]/route.js` writes accepted memory deltas back with `ENTITY_TYPES.PAGE` and the concrete `pageId`.
+- The loader now derives candidate context from canonical `Page` payload first, then rebuilds the renderer-facing preview from that same page anchor.
 
 ## How Session Behavior Was Implemented
 
@@ -91,7 +96,7 @@ Push status:
 
 ## How Transitional Naming Was Handled
 
-- Landing-neutral wrapper modules were introduced so the new path does not read as service-first:
+- Landing-neutral wrapper modules remain the transitional substrate:
   - `lib/admin/nav.js`
   - `lib/admin/landing-workspace.js`
   - `lib/landing-workspace/landing.js`
@@ -101,27 +106,30 @@ Push status:
 
 ## Tests and Checks Run
 
+- `node --test tests/content-core.service.test.js tests/landing-workspace.test.js tests/landing-workspace.route.test.js`
 - `npm test`
 - `npm run build`
-- Local browser smoke:
-  - the admin login page rendered locally at `http://127.0.0.1:3000/admin/login`
-  - `POST /api/admin/login` returned `500` in this local Windows runtime
-  - this was treated as a non-authoritative local limitation because the canonical Docker + SQL runtime lives on the server
+- Live server smoke after deploy:
+  - authenticated admin login returned `303` to `/admin`
+  - `/admin/workspace/landing` returned `200`
+  - `/admin/workspace/landing/[pageId]` returned `200`
+  - `/admin/entities/page/[pageId]` returned `200` and exposed the workspace CTA
 
 ## Rollout Status
 
-- Not deployed from this workstation.
-- The repo already contains the server rollout path:
-  - `build-and-publish` builds and publishes the image to GHCR on `push` to `main`
-  - `deploy-phase1` is a manual dispatch workflow on the self-hosted server runner that pins `/opt/ecostroycontinent/runtime/.env` to a specific GHCR digest and then runs `docker compose up -d`
-- Precise rollout prep:
-  1. Merge this commit to `main`.
-  2. Let `build-and-publish` publish the new image digest to GHCR.
-  3. Dispatch `deploy-phase1` with the pinned `ghcr.io/kwentin3/ecostroycontinent-app@sha256:...` image ref.
-  4. Verify `https://ecostroycontinent.ru/api/health` and then smoke the authenticated admin UI on the server-backed runtime.
+- Deployed successfully to the server-backed runtime.
+- Build/publish workflow:
+  - run `24069573684`
+  - image digest `sha256:39d3f44e387a6a79abeb8d8101aa281a83019f68324751b191d8968d65b826e4`
+- Deploy workflow:
+  - run `24069644455`
+  - result `success`
+- Server-backed live smoke verified:
+  - chooser route reachable;
+  - workspace route reachable;
+  - source editor CTA reachable from a concrete `Page` owner.
 
 ## Remaining Known Risks
 
-- Live authenticated browser proof on the server-backed runtime was not completed in this workstation session.
-- The local Windows machine is not a faithful runtime mirror because it does not carry the server-side Docker + SQL stack.
-- The review page intentionally retains the legacy service-prefixed verification panel for older service revisions, so future cleanup should keep that compatibility boundary explicit.
+- Multi-tab / concurrent-session contention was not manually load-tested in the browser, although the one-session-per-page behavior is covered by tests.
+- GitHub Actions still emits the Node.js 20 deprecation annotation for a few workflow actions; this is infra hygiene, not a product blocker.

@@ -8,30 +8,40 @@
 - The sidebar nav gating is covered by tests and exposes the landing workspace only to the intended review-capable roles.
 - The workspace is page-anchored and does not create Page truth.
 - The Memory Card remains session-scoped working state.
-- Preview, verification, and review visibility read the same derived-artifact slice shape.
+- Preview, verification, audit details, and review visibility read the same derived-artifact slice contract.
 - The prompt packet assembler remains separate from the LLM boundary.
 - The structured-output LLM baseline is reused, not rebuilt.
 - The existing review/publish workflow is reused, not redesigned.
+- The landing workspace save path now preserves page SEO metadata through nested-seo compatibility in `normalizeSeo(...)`.
 - The full test suite passes.
 - The production build passes.
-- The implementation commit was pushed:
-  - `6390126` - `Implement landing-first workspace`
+- The server-backed deploy completed successfully:
+  - build/publish run `24069573684`
+  - deploy run `24069644455`
+  - deployed image digest `sha256:39d3f44e387a6a79abeb8d8101aa281a83019f68324751b191d8968d65b826e4`
+- The live admin UI was verified on the server-backed runtime:
+  - login `303` -> `/admin`
+  - chooser route `200`
+  - concrete workspace route `200`
+  - source editor CTA on a `Page` owner `200`
+- The implementation fix commit was pushed:
+  - `2c1bf93` - `Fix landing workspace canonical preview wiring`
 
 ## What Is Partial
 
-- Live authenticated browser proof against the server-backed admin UI was not completed from this Windows workstation.
-- A local browser smoke was performed against `http://127.0.0.1:3000/admin/login`, but `POST /api/admin/login` returned `500` in this local runtime.
-- That local failure is not treated as a product regression because the infra docs place the canonical runtime on the server with Docker + PostgreSQL + a self-hosted runner.
+- Multi-tab / concurrent-session contention was not manually browser-tested, even though the one-session-per-page behavior is covered by tests.
+- The workflows still emit a Node.js 20 deprecation annotation for a few actions; this is infra hygiene rather than a product issue.
 
 ## Is the Workspace Visible and Reachable in the Real Admin UI?
 
-- Partially verified.
-- The route is now visible in the app build and the nav gating is in place.
-- I did not complete authenticated server-side browser proof in this session, so I cannot honestly claim a fully verified live admin UI walkthrough from this workstation.
+- Yes.
+- The chooser is reachable on the server-backed runtime.
+- The workspace route is reachable for a concrete `pageId`.
+- The source editor exposes the landing workspace CTA for that `pageId`.
 
 ## Does the Screen Match the Planned MVP Shape?
 
-- Yes at the code level.
+- Yes.
 - The implemented screen is the bounded MVP shell:
   - top-level admin chrome;
   - left column for page truth, Memory Card, and turn log;
@@ -61,10 +71,10 @@
 - No second publish workflow was introduced.
 - No public AI chat was introduced.
 - No broad admin redesign was introduced.
+- No page-builder semantics were introduced.
 - The only intentional legacy holdover is the service-prefixed review panel, which remains explicitly scoped to older service revisions.
 
 ## Next Smallest Safe Step
 
-1. Push the report commit.
-2. On the server-backed runtime, smoke the authenticated admin UI after the GH Actions build/publish and deploy-phase1 workflows complete.
-3. Verify the landing workspace chooser, a concrete `pageId` workspace, and a real candidate/review handoff on the VM-backed app and SQL stack.
+1. Watch the first real landing draft generation and review handoff on the server-backed runtime with actual editorial content.
+2. Keep the legacy service-prefixed compatibility panel fenced off so future cleanup stays explicit and safe.
