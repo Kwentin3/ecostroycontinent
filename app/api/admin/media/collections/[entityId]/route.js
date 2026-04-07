@@ -63,7 +63,7 @@ export async function POST(request, { params }) {
       entityType: "gallery",
       entityId,
       userId: user.id,
-      changeIntent: getString(formData, "changeIntent") || "Коллекция обновлена из media workspace.",
+      changeIntent: getString(formData, "changeIntent") || "Коллекция обновлена в медиатеке.",
       payload
     });
 

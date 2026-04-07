@@ -508,7 +508,7 @@ export function EntityEditorForm({
                   formAction="/api/admin/entities/service/landing-factory/generate"
                   className={styles.secondaryButton}
                 >
-                  Сгенерировать candidate/spec
+                  Сгенерировать черновик
                 </button>
               ) : null}
               {canSubmit && currentRevision?.state === "draft" ? (

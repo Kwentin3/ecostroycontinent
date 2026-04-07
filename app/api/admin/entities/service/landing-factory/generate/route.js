@@ -111,7 +111,7 @@ export async function POST(request, overrides = {}) {
       routeLocked: true,
       entityLocked: Boolean(currentEntity?.id || entityId),
       changeIntent,
-      editorialGoal: "Generate and review a service-first landing candidate.",
+      editorialGoal: "Сгенерировать и проверить черновик лендинга услуги.",
       selectedCaseIds: buildProofBasis(sourcePayload).filter((value) => value.startsWith("case_")),
       selectedGalleryIds: buildProofBasis(sourcePayload).filter((value) => value.startsWith("gallery_")),
       selectedMedia: sourcePayload.primaryMediaAssetId ? [sourcePayload.primaryMediaAssetId] : [],
@@ -139,7 +139,7 @@ export async function POST(request, overrides = {}) {
     });
 
     if (candidateResult.status !== "ok") {
-      return redirectWithError(request, fallbackPath, new Error(candidateResult.error?.message || "Service landing candidate generation failed."));
+      return redirectWithError(request, fallbackPath, new Error(candidateResult.error?.message || "Не удалось сгенерировать черновик лендинга услуги."));
     }
     const draftDerivedArtifactSlice = buildServiceLandingDerivedArtifactSlice({
       candidateSpec: candidateResult.spec,
@@ -172,7 +172,7 @@ export async function POST(request, overrides = {}) {
       return redirectWithError(
         request,
         `/admin/entities/service/${saved.entity.id}`,
-        new Error(verificationReport.blockingIssues[0]?.message || "Service landing candidate is blocked by verification.")
+        new Error(verificationReport.blockingIssues[0]?.message || "Черновик лендинга услуги заблокирован проверкой.")
       );
     }
 
@@ -206,7 +206,7 @@ export async function POST(request, overrides = {}) {
         },
         editorialIntent: {
           changeIntent,
-          editorialGoal: "Generate and review a service-first landing candidate.",
+          editorialGoal: "Сгенерировать и проверить черновик лендинга услуги.",
           variantDirection: sourcePayload.ctaVariant || ""
         },
         proofSelection: {

@@ -24,8 +24,8 @@ function buildPreviewHref(hrefBase, searchParams, device) {
 }
 
 export function PreviewViewport({
-  title = "Превью",
-  hint = "Нажмите «Показать в превью» в строке изменения, чтобы перейти к связанному блоку.",
+  title = "Предпросмотр",
+  hint = "Переключайте устройство сверху, чтобы увидеть ту же страницу в другом размере.",
   device = "desktop",
   hrefBase,
   searchParams,

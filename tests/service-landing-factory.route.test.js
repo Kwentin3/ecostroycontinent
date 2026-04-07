@@ -302,7 +302,7 @@ test("service landing generate route carries the published base revision id into
   assert.equal(captured.memoryDeltaInput.delta.artifactState.candidatePointer.candidateId, "service_candidate_test");
   assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.baseRevisionId, "rev_base");
   assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.reviewStatus, "review");
-  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.verificationSummary, "Service candidate passed verification.");
+  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.verificationSummary, "Кандидат услуги прошёл проверку.");
   assert.equal(captured.submitInput.revisionId, "revision_123");
 });
 
@@ -322,14 +322,14 @@ test("service landing generate route stops before review and memory mutation whe
     checkedAt: new Date().toISOString(),
     sourceContextSummary: "entity=service_1 | baseRevision=rev_base",
     overallStatus: "blocked",
-    summary: "Verification blocked the candidate.",
+    summary: "Проверка заблокировала черновик.",
     classResults: [],
     blockingIssues: [
       {
         severity: "blocking",
         classId: "structural/schema",
         code: "forced_block",
-        message: "Verification blocked the candidate.",
+        message: "Проверка заблокировала черновик.",
         field: null
       }
     ],
@@ -348,7 +348,7 @@ test("service landing generate route stops before review and memory mutation whe
 
   assert.equal(response.status, 303);
   assert.equal(location.pathname, "/admin/entities/service/service_1");
-  assert.equal(location.searchParams.get("error"), "Verification blocked the candidate.");
+  assert.equal(location.searchParams.get("error"), "Проверка заблокировала черновик.");
   assert.equal(captured.submitInput, undefined);
   assert.equal(captured.memoryDeltaInput, undefined);
   assert.equal(captured.saveDraftInput.auditDetails.landingFactory.derivedArtifactSlice.baseRevisionId, "rev_base");

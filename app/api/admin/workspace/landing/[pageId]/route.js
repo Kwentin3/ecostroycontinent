@@ -155,8 +155,8 @@ export async function POST(request, { params }, overrides = {}) {
   const fallbackPath = buildFallbackPath(pageId);
   const formData = await request.formData();
   const actionKind = getString(formData, "actionKind") || "generate_candidate";
-  const changeIntent = getString(formData, "changeIntent") || "Refine the landing page from canonical Page truth.";
-  const editorialGoal = getString(formData, "editorialGoal") || "Refine the landing page from canonical Page truth.";
+  const changeIntent = getString(formData, "changeIntent") || "Уточнить лендинг на основе страницы-источника.";
+  const editorialGoal = getString(formData, "editorialGoal") || "Уточнить лендинг на основе страницы-источника.";
   const variantDirection = getString(formData, "variantDirection");
   const previewMode = getString(formData, "previewMode") || "desktop";
 
@@ -165,7 +165,7 @@ export async function POST(request, { params }, overrides = {}) {
     const entity = aggregate?.entity ?? (pageId ? await routeDeps.findEntityById(pageId) : null);
 
     if (!entity || entity.entityType !== ENTITY_TYPES.PAGE) {
-      return redirectWithError(request, "/admin/workspace/landing", new Error("Landing workspace is page-only."));
+      return redirectWithError(request, "/admin/workspace/landing", new Error("Рабочая зона лендинга доступна только для страниц."));
     }
 
     const baseRevision = aggregate?.activePublishedRevision ?? null;
@@ -174,7 +174,7 @@ export async function POST(request, { params }, overrides = {}) {
     const workingRevision = currentRevision ?? sourceRevision ?? baseRevision;
 
     if (!workingRevision) {
-      return redirectWithError(request, fallbackPath, new Error("Page truth is missing."));
+      return redirectWithError(request, fallbackPath, new Error("Не найдена исходная версия страницы."));
     }
 
     const sourceCandidatePayload = projectLandingWorkspaceCandidatePayload(workingRevision.payload);
@@ -196,7 +196,7 @@ export async function POST(request, { params }, overrides = {}) {
 
     if (actionKind === "send_to_review") {
       if (!currentRevision) {
-        return redirectWithError(request, fallbackPath, new Error("A draft revision is required before review handoff."));
+        return redirectWithError(request, fallbackPath, new Error("Перед передачей на проверку нужен черновик."));
       }
 
       const submitted = await routeDeps.submitRevisionForReview({
@@ -292,7 +292,7 @@ export async function POST(request, { params }, overrides = {}) {
     }, routeDeps);
 
     if (candidateResult.status !== "ok") {
-      return redirectWithError(request, fallbackPath, new Error(candidateResult.error?.message || "Landing candidate generation failed."));
+      return redirectWithError(request, fallbackPath, new Error("Не удалось сгенерировать черновик лендинга."));
     }
 
     const draftDerivedArtifactSlice = routeDeps.buildLandingWorkspaceDerivedArtifactSlice({
@@ -328,7 +328,7 @@ export async function POST(request, { params }, overrides = {}) {
       verificationSummary: verificationReport.summary,
       reviewStatus: saved.revision.state
     });
-    const blockerMessage = verificationReport.blockingIssues[0]?.message || "Landing candidate is blocked by verification.";
+    const blockerMessage = verificationReport.blockingIssues[0]?.message || "Черновик лендинга заблокирован проверкой.";
 
     // Accepted deltas are the only workspace writes back into the session memory card.
     await routeDeps.applyAcceptedMemoryDelta({

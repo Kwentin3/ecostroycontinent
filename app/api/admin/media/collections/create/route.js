@@ -45,7 +45,7 @@ export async function POST(request) {
       entityType: "gallery",
       entityId: null,
       userId: user.id,
-      changeIntent: getString(formData, "changeIntent") || "Коллекция собрана из media workspace.",
+      changeIntent: getString(formData, "changeIntent") || "Коллекция собрана в медиатеке.",
       payload
     });
 
@@ -58,7 +58,7 @@ export async function POST(request) {
       ok: true,
       collection,
       affectedItems,
-      message: "Коллекция сохранена внутри media workspace."
+      message: "Коллекция сохранена в медиатеке."
     });
   } catch (error) {
     return NextResponse.json({

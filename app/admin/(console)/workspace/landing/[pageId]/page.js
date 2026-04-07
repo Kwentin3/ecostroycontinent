@@ -12,7 +12,7 @@ import { requireReviewUser } from "../../../../../../lib/admin/page-helpers";
 import { userCanEditContent } from "../../../../../../lib/auth/session.js";
 import { ENTITY_TYPES } from "../../../../../../lib/content-core/content-types.js";
 import { getPayloadLabel } from "../../../../../../lib/admin/entity-ui.js";
-import { normalizeLegacyCopy } from "../../../../../../lib/ui-copy.js";
+import { getRevisionStateLabel, getRoleLabel, normalizeLegacyCopy } from "../../../../../../lib/ui-copy.js";
 import { getCurrentSessionId } from "../../../../../../lib/auth/session.js";
 import styles from "../../../../../../components/admin/admin-ui.module.css";
 
@@ -31,31 +31,35 @@ export default async function LandingWorkspacePage({ params, searchParams }) {
   const pageLabel = getPayloadLabel(data.sourceRevision.payload) || pageId;
   const workspaceHref = buildLandingWorkspaceHref(pageId);
   const sourceEditorHref = `/admin/entities/page/${pageId}`;
-  const currentChangeIntent = data.workspaceMemoryCard?.editorialIntent?.changeIntent
-    || data.currentRevision?.changeIntent
-    || "Refine the landing page from canonical Page truth.";
-  const currentEditorialGoal = data.workspaceMemoryCard?.editorialIntent?.editorialGoal
-    || "Refine the landing page from canonical Page truth.";
+  const currentChangeIntent = normalizeLegacyCopy(
+    data.workspaceMemoryCard?.editorialIntent?.changeIntent
+      || data.currentRevision?.changeIntent
+      || "Уточнить лендинг на основе страницы-источника."
+  );
+  const currentEditorialGoal = normalizeLegacyCopy(
+    data.workspaceMemoryCard?.editorialIntent?.editorialGoal
+      || "Уточнить лендинг на основе страницы-источника."
+  );
   const currentVariantDirection = data.workspaceMemoryCard?.editorialIntent?.variantDirection || "";
   const currentSessionId = await getCurrentSessionId();
 
   return (
     <AdminShell
       user={user}
-      title={`Landing workspace · ${pageLabel}`}
+      title={`Рабочая зона лендинга · ${pageLabel}`}
       breadcrumbs={[
         { label: "Админка", href: "/admin" },
-        { label: "Лендинги", href: "/admin/workspace/landing" },
+        { label: "AI-верстка", href: "/admin/workspace/landing" },
         { label: pageLabel }
       ]}
       activeHref="/admin/workspace/landing"
       actions={
         <>
           <Link href={sourceEditorHref} className={styles.secondaryButton}>
-            Открыть источник
+            Открыть редактор страницы
           </Link>
           <Link href="/admin/workspace/landing" className={styles.secondaryButton}>
-            К выбору
+            К выбору лендинга
           </Link>
         </>
       }
@@ -63,23 +67,23 @@ export default async function LandingWorkspacePage({ params, searchParams }) {
       <div className={styles.workspaceGrid}>
         <section className={styles.workspaceColumn}>
           <SurfacePacket
-            eyebrow="Page truth"
+            eyebrow="Страница-источник"
             title={pageLabel}
-            summary={`Canonical page owner: ${pageId}`}
-            legend="The source editor remains the only truth-editing surface. This workspace only anchors to that Page truth."
+            summary={`Страница-источник: ${pageId}`}
+            legend="Редактор страницы остаётся единственным местом правки исходника. Рабочая зона только привязана к этой странице."
             meta={[
-              data.currentRevision ? `Draft revision: #${data.currentRevision.revisionNumber}` : "Draft revision: none",
-              data.activePublishedRevision ? `Published base: #${data.activePublishedRevision.revisionNumber}` : "Published base: none",
-              data.sourceRevision ? `Latest revision state: ${data.sourceRevision.state}` : "Latest revision state: unavailable"
+              data.currentRevision ? `Черновик: №${data.currentRevision.revisionNumber}` : "Черновик: нет",
+              data.activePublishedRevision ? `Опубликованная основа: №${data.activePublishedRevision.revisionNumber}` : "Опубликованная основа: нет",
+              data.sourceRevision ? `Статус последней версии: ${getRevisionStateLabel(data.sourceRevision.state)}` : "Статус последней версии: недоступен"
             ]}
           >
             <div className={styles.inlineActions}>
               <Link href={sourceEditorHref} className={styles.secondaryButton}>
-                Open source editor
+                Открыть редактор страницы
               </Link>
               {currentSessionId ? (
                 <Link href={workspaceHref} className={styles.secondaryButton}>
-                  Refresh workspace anchor
+                  Обновить привязку
                 </Link>
               ) : null}
             </div>
@@ -88,28 +92,28 @@ export default async function LandingWorkspacePage({ params, searchParams }) {
           <LandingWorkspaceMemoryPanel memoryCard={data.workspaceMemoryCard} />
 
           <SurfacePacket
-            eyebrow="Turn log"
-            title="Recent turn"
-            summary="The turn log stays short and bounded so the workspace does not drift into chat-product semantics."
-            legend="Track the last accepted change, blocker, and generation outcome here."
+            eyebrow="Последние действия"
+            title="Последний шаг"
+            summary="Журнал остаётся коротким и ограниченным, чтобы рабочая зона не превращалась в чат."
+            legend="Здесь видны последнее принятое изменение, последний блокер и результат генерации."
             bullets={[
-              `Last change: ${normalizeLegacyCopy(data.workspaceMemoryCard?.recentTurn?.lastChange || "—")}`,
-              `Last blocker: ${normalizeLegacyCopy(data.workspaceMemoryCard?.recentTurn?.lastBlocker || "—")}`,
-              `Outcome: ${normalizeLegacyCopy(data.workspaceMemoryCard?.recentTurn?.generationOutcome || "—")}`
+              `Последнее изменение: ${normalizeLegacyCopy(data.workspaceMemoryCard?.recentTurn?.lastChange || "—")}`,
+              `Последний блокер: ${normalizeLegacyCopy(data.workspaceMemoryCard?.recentTurn?.lastBlocker || "—")}`,
+              `Результат: ${normalizeLegacyCopy(data.workspaceMemoryCard?.recentTurn?.generationOutcome || "—")}`
             ]}
           />
         </section>
 
         <section className={styles.workspaceColumn}>
           <SurfacePacket
-            eyebrow="Preview"
-            title="Derived page preview"
-            summary="Preview and verification read the same derived artifact slice."
-            legend="Change the device preview without changing the underlying candidate slice."
+            eyebrow="Предпросмотр"
+            title="Текущая проекция"
+            summary="Предпросмотр и проверка читают одну и ту же текущую проекцию."
+            legend="Переключайте устройство только для проверки вида. Сама проекция не меняется."
           >
             <PreviewViewport
-              title="Preview"
-              hint="Device toggles only the viewport. The derived slice stays the same."
+              title="Предпросмотр"
+              hint="Переключайте устройство сверху, чтобы увидеть ту же страницу в другом размере."
               device={previewMode}
               hrefBase={workspaceHref}
               searchParams={query}
@@ -126,10 +130,10 @@ export default async function LandingWorkspacePage({ params, searchParams }) {
           </SurfacePacket>
 
           <SurfacePacket
-            eyebrow="Intent composer"
-            title="Bounded landing instruction"
-            summary="Keep the instruction short and specific. The source editor remains the canonical editing surface."
-            legend="This composer only steers the next candidate generation. It does not edit Page truth directly."
+            eyebrow="Постановка задачи"
+            title="Что хотим изменить"
+            summary="Коротко и конкретно опишите следующую правку. Этот блок не редактирует страницу-источник напрямую."
+            legend="Этот блок только задаёт следующую генерацию черновика."
           >
             {canEdit ? (
               <form action={`/api/admin/workspace/landing/${pageId}`} method="post" className={styles.formGrid}>
@@ -137,29 +141,29 @@ export default async function LandingWorkspacePage({ params, searchParams }) {
                 <input type="hidden" name="editorialGoal" value={currentEditorialGoal} />
                 <input type="hidden" name="variantDirection" value={currentVariantDirection} />
                 <label className={styles.label}>
-                  <span>Change intent</span>
+                  <span>Что хотим изменить</span>
                   <textarea
                     name="changeIntent"
                     defaultValue={currentChangeIntent}
-                    placeholder="What should the landing page change next?"
+                    placeholder="Что нужно изменить в лендинге?"
                     required
                   />
                 </label>
                 <div className={styles.inlineActions}>
                   <button type="submit" name="actionKind" value="generate_candidate" className={styles.primaryButton}>
-                    {data.currentRevision ? "Обновить черновик" : "Сгенерировать черновик"}
+                    {data.currentRevision ? "Сгенерировать заново" : "Сгенерировать черновик"}
                   </button>
                   {data.currentRevision ? (
                     <button type="submit" name="actionKind" value="send_to_review" className={styles.secondaryButton}>
-                      Отправить на проверку
+                      Передать на проверку
                     </button>
                   ) : null}
                 </div>
               </form>
             ) : (
               <p className={styles.mutedText}>
-                Эту поверхность могут редактировать только seo_manager и superadmin. business_owner видит
-                отчет, превью и обзор проверки.
+                Эту поверхность могут редактировать только {getRoleLabel("seo_manager")} и {getRoleLabel("superadmin")}. {getRoleLabel("business_owner")} видит
+                отчет, предпросмотр и обзор проверки.
               </p>
             )}
           </SurfacePacket>
@@ -175,25 +179,25 @@ export default async function LandingWorkspacePage({ params, searchParams }) {
           />
 
           <SurfacePacket
-            eyebrow="Review handoff"
-            title="Next step"
-            summary="The workspace can hand off to the existing review flow without creating a second publish path."
-            legend="Use the existing review page for approvals and the source editor for truth edits."
+            eyebrow="Передача на проверку"
+            title="Следующий шаг"
+            summary="Рабочая зона может передать результат в существующий поток проверки без второго пути публикации."
+            legend="Используйте страницу проверки для согласования и редактор страницы для правок исходника."
             meta={[
-              data.currentRevision ? `Draft revision #${data.currentRevision.revisionNumber}` : "No draft revision yet",
-              data.sourceRevision?.state === "review" ? "Already in review" : "Not yet in review"
+              data.currentRevision ? `Черновик №${data.currentRevision.revisionNumber}` : "Черновик ещё не создан",
+              data.sourceRevision?.state === "review" ? "Уже на проверке" : "Ещё не на проверке"
             ]}
           >
             {data.sourceRevision?.state === "review" ? (
               <Link href={`/admin/review/${data.sourceRevision.id}`} className={styles.primaryButton}>
-                Open review
+                Открыть проверку
               </Link>
             ) : data.currentRevision ? (
               <Link href={`/admin/review/${data.currentRevision.id}`} className={styles.secondaryButton}>
-                Open draft review
+                Открыть проверку черновика
               </Link>
             ) : (
-              <p className={styles.mutedText}>Create a draft first, then hand it off to review.</p>
+              <p className={styles.mutedText}>Сначала создайте черновик, затем передайте его на проверку.</p>
             )}
           </SurfacePacket>
         </section>

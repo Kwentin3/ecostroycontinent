@@ -7,7 +7,7 @@ import { requireReviewUser } from "../../../../../lib/admin/page-helpers";
 import { readWorkspaceSessionRecord } from "../../../../../lib/ai-workspace/memory-card.js";
 import { getCurrentSessionId } from "../../../../../lib/auth/session.js";
 import { getPayloadLabel } from "../../../../../lib/admin/entity-ui.js";
-import { normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
+import { getRevisionStateLabel, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 
 export default async function LandingWorkspaceChooserPage({ searchParams }) {
@@ -21,10 +21,10 @@ export default async function LandingWorkspaceChooserPage({ searchParams }) {
   return (
     <AdminShell
       user={user}
-      title="Landing workspace"
+      title="Рабочая зона лендинга"
       breadcrumbs={[
         { label: "Админка", href: "/admin" },
-        { label: "Лендинги" }
+        { label: "AI-верстка" }
       ]}
       activeHref="/admin/workspace/landing"
     >
@@ -33,21 +33,21 @@ export default async function LandingWorkspaceChooserPage({ searchParams }) {
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
 
         <SurfacePacket
-          eyebrow="Workspace chooser"
-          title="Landing workspace chooser"
-          summary="Choose the Page owner first. The workspace never creates Page truth, it only anchors to it."
-          legend="Use this surface to resume an existing page session or enter a page-owned landing workspace."
+          eyebrow="Выбор лендинга"
+          title="Рабочая зона лендинга"
+          summary="Сначала выберите страницу-источник. Рабочая зона не создаёт страницу, а только привязывается к ней."
+          legend="Здесь можно продолжить существующую сессию или открыть рабочую зону для выбранной страницы."
           meta={[
-            currentPageCard ? `Current page: ${getPayloadLabel(currentPageCard.latestRevision?.payload)}` : "Current page: none",
-            data.currentSessionPageId ? `Page id: ${data.currentSessionPageId}` : "Page id: unanchored"
+            currentPageCard ? `Текущая страница: ${getPayloadLabel(currentPageCard.latestRevision?.payload)}` : "Текущая страница: нет",
+            data.currentSessionPageId ? `Страница-источник: ${data.currentSessionPageId}` : "Страница-источник: не выбрана"
           ]}
         >
           {data.currentSessionPageId ? (
             <Link href={buildLandingWorkspaceHref(data.currentSessionPageId)} className={styles.primaryButton}>
-              Resume current workspace
+              Продолжить работу
             </Link>
           ) : (
-            <p className={styles.mutedText}>No active page anchor yet. Open any page below to create the first workspace session for that page.</p>
+            <p className={styles.mutedText}>Привязки к странице пока нет. Откройте любую страницу ниже, чтобы создать первую сессию.</p>
           )}
         </SurfacePacket>
 
@@ -55,8 +55,8 @@ export default async function LandingWorkspaceChooserPage({ searchParams }) {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Page</th>
-                <th>Latest revision</th>
+                <th>Страница</th>
+                <th>Последняя версия</th>
                 <th />
               </tr>
             </thead>
@@ -84,12 +84,12 @@ export default async function LandingWorkspaceChooserPage({ searchParams }) {
                       <td>
                         <div className={styles.cockpitCoverageSummary}>
                           <strong>{card.latestRevision ? `Версия №${card.latestRevision.revisionNumber}` : "Версий пока нет"}</strong>
-                          <span className={styles.mutedText}>{card.latestRevision ? card.latestRevision.state : "draft"}</span>
+                          <span className={styles.mutedText}>{card.latestRevision ? getRevisionStateLabel(card.latestRevision.state) : "Версий пока нет"}</span>
                         </div>
                       </td>
                       <td>
                         <Link href={href} className={styles.secondaryButton}>
-                          Открыть workspace
+                          Открыть AI-верстку
                         </Link>
                       </td>
                     </tr>

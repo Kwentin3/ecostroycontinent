@@ -21,7 +21,7 @@ export function RevisionDiffPanel({
                 <p className={styles.eyebrow}>{row.label}</p>
                 {row.previewTarget ? (
                   <a href={`#${row.previewTarget}`} className={styles.previewJumpLink}>
-                    Показать в превью
+                    Перейти к предпросмотру
                   </a>
                 ) : null}
               </div>

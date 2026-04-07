@@ -300,14 +300,14 @@ function getImageEditAvailability({ mode, item, file }) {
   if (item.publishedRevisionNumber) {
     return {
       canEdit: false,
-      reason: "У опубликованных ассетов binary overwrite запрещён. Для них нужен отдельный variant flow."
+      reason: "Для опубликованных медиа прямое перезаписывание запрещено. Для них нужен отдельный сценарий правок."
     };
   }
 
   if (item.statusKey !== "draft") {
     return {
       canEdit: false,
-      reason: "Изображение можно править только у draft asset."
+      reason: "Изображение можно править только в черновике."
     };
   }
 
@@ -348,7 +348,7 @@ function MediaInspector({
       <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
         <h3 className={styles.mediaInspectorTitle}>Карточка не выбрана</h3>
         <p className={styles.helpText}>
-          Выберите превью в библиотеке, чтобы увидеть крупное изображение, сигналы, usage и состояние коллекций.
+          Выберите карточку в медиатеке, чтобы увидеть крупное изображение, сигналы, использование и состояние коллекций.
         </p>
       </aside>
     );
@@ -472,7 +472,7 @@ function MediaInspector({
         <h4>Где используется</h4>
         {item.usageEntries.length === 0 ? (
           <p className={styles.helpText}>
-            Пока нет ссылок на этот ассет. Это хороший момент для спокойной доводки metadata и коллекций.
+            Пока нет ссылок на этот ассет. Это хороший момент для спокойной доводки метаданных и коллекций.
           </p>
         ) : (
           <div className={styles.mediaUsageList}>
@@ -695,8 +695,8 @@ function MediaOverlay({
                     </summary>
                     <div className={styles.collectionFieldPanel}>
                       {collections.length === 0 ? (
-                        <p className={styles.helpText}>
-                          Коллекций пока нет. Сначала создайте подборку в основном workspace, а потом вернитесь к карточке.
+                      <p className={styles.helpText}>
+                          Коллекций пока нет. Сначала создайте подборку в основной медиатеке, а потом вернитесь к карточке.
                         </p>
                       ) : (
                         <div className={styles.collectionFieldList} role="list">
@@ -1329,7 +1329,7 @@ export function MediaGalleryWorkspace({
             <p className={styles.eyebrow}>Рабочее место</p>
             <h3 className={styles.mediaToolbarTitle}>Медиатека</h3>
             <p className={styles.helpText}>
-              Здесь живёт библиотека ассетов и встроенный слой коллекций: слева и в центре остаются карточки, справа быстрый inspector, а большое редактирование открывается поверх того же экрана.
+              Здесь живёт библиотека медиа и встроенный слой коллекций: слева и в центре остаются карточки, справа быстрый инспектор, а большое редактирование открывается поверх того же экрана.
             </p>
             <div className={styles.mediaToolbarStats} aria-label="Сводка медиатеки">
               {summaryItems.map((item) => (
@@ -1484,7 +1484,7 @@ export function MediaGalleryWorkspace({
 
             {selectedHiddenByFilter ? (
               <div className={styles.statusPanelWarning}>
-                Выбранная карточка сейчас скрыта фильтром, но inspector сохранён, чтобы вы не потеряли контекст.
+                Выбранная карточка сейчас скрыта фильтром, но инспектор сохранён, чтобы вы не потеряли контекст.
               </div>
             ) : null}
           </section>

@@ -231,7 +231,7 @@ test("buildServiceLandingDerivedArtifactSlice extends the run artifact without i
   const derived = buildServiceLandingDerivedArtifactSlice({
     candidateSpec: spec,
     previewMode: "desktop",
-    verificationSummary: "Service candidate passed verification.",
+    verificationSummary: "Кандидат услуги прошёл проверку.",
     reviewStatus: "review"
   });
 
@@ -240,7 +240,7 @@ test("buildServiceLandingDerivedArtifactSlice extends the run artifact without i
   assert.equal(derived.routeFamily, spec.routeFamily);
   assert.equal(derived.specVersion, spec.specVersion);
   assert.equal(derived.previewMode, "desktop");
-  assert.equal(derived.verificationSummary, "Service candidate passed verification.");
+  assert.equal(derived.verificationSummary, "Кандидат услуги прошёл проверку.");
   assert.equal(derived.reviewStatus, "review");
   assert.deepEqual(derived.sections, spec.sections);
 });

@@ -6,20 +6,20 @@ import styles from "./admin-ui.module.css";
 
 const DIAGNOSTICS = {
   llm_test: {
-    title: "LLM Test",
-    description: "Проверяет, что провайдер, structured output и local validation отрабатывают end-to-end через внутренний фасад.",
-    buttonLabel: "Запустить LLM Test"
+    title: "LLM-проверка",
+    description: "Проверяет, что провайдер, структурированный вывод и локальная проверка отрабатывают end-to-end через внутренний фасад.",
+    buttonLabel: "Запустить LLM-проверку"
   },
   socks5_transport_test: {
-    title: "SOCKS5 Transport Test",
-    description: "Проверяет, что outbound LLM traffic реально проходит через authenticated SOCKS5 path и сбой виден на правильном слое.",
+    title: "Проверка SOCKS5-транспорта",
+    description: "Проверяет, что исходящий LLM-трафик реально проходит через аутентифицированный SOCKS5-путь и сбой виден на правильном слое.",
     buttonLabel: "Проверить SOCKS5"
   }
 };
 
 function formatValue(value) {
   if (typeof value === "boolean") {
-    return value ? "yes" : "no";
+    return value ? "да" : "нет";
   }
 
   if (value === null || value === undefined || value === "") {
@@ -57,55 +57,55 @@ function DiagnosticResultDetails({ payload }) {
       <table className={styles.table}>
         <tbody>
           <tr>
-            <th>HTTP status</th>
+            <th>HTTP-статус</th>
             <td>{formatValue(payload.httpStatus)}</td>
           </tr>
           <tr>
-            <th>Diagnostic kind</th>
+            <th>Тип проверки</th>
             <td>{formatValue(payload.diagnosticKind)}</td>
           </tr>
           <tr>
-            <th>Effective provider</th>
+            <th>Поставщик</th>
             <td>{formatValue(result.providerId)}</td>
           </tr>
           <tr>
-            <th>Effective model</th>
+            <th>Модель</th>
             <td>{formatValue(result.modelId)}</td>
           </tr>
           <tr>
-            <th>Config state</th>
+            <th>Состояние конфигурации</th>
             <td>{formatValue(result.configState)}</td>
           </tr>
           <tr>
-            <th>SOCKS5 used</th>
+            <th>Используется SOCKS5</th>
             <td>{formatValue(result.transportUsed)}</td>
           </tr>
           <tr>
-            <th>Transport result</th>
+            <th>Результат транспорта</th>
             <td>{formatValue(result.transportState)}</td>
           </tr>
           <tr>
-            <th>Provider result</th>
+            <th>Результат поставщика</th>
             <td>{formatValue(result.providerState)}</td>
           </tr>
           <tr>
-            <th>Structured output</th>
+            <th>Структурированный вывод</th>
             <td>{formatValue(result.structuredOutputState)}</td>
           </tr>
           <tr>
-            <th>Local validation</th>
+            <th>Локальная проверка</th>
             <td>{formatValue(result.validationState)}</td>
           </tr>
           <tr>
-            <th>Retryable</th>
+            <th>Можно повторить</th>
             <td>{formatValue(result.retryable)}</td>
           </tr>
           <tr>
-            <th>Trace ID</th>
+            <th>ID трассировки</th>
             <td>{formatValue(result.traceId)}</td>
           </tr>
           <tr>
-            <th>Request ID</th>
+            <th>ID запроса</th>
             <td>{formatValue(result.requestId)}</td>
           </tr>
         </tbody>
@@ -113,7 +113,7 @@ function DiagnosticResultDetails({ payload }) {
 
       {result.error ? (
         <details className={styles.statusPanelWarning}>
-          <summary style={{ cursor: "pointer" }}>Failure details</summary>
+          <summary style={{ cursor: "pointer" }}>Подробности сбоя</summary>
           <pre style={{ margin: 0, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
             {JSON.stringify(result.error, null, 2)}
           </pre>

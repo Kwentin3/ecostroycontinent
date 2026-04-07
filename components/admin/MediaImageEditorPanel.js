@@ -250,7 +250,7 @@ export function MediaImageEditorPanel({
           </button>
         </div>
         <p className={styles.helpText}>
-          Следующая версия редактора поддерживает только draft-safe правки. Здесь можно повернуть, отразить и обрезать изображение без variant flow.
+          Следующая версия редактора поддерживает только безопасные правки черновика. Здесь можно повернуть, отразить и обрезать изображение без смены сценария вариантов.
         </p>
       </div>
 
@@ -259,7 +259,7 @@ export function MediaImageEditorPanel({
       {!sourceUrl ? (
         <div className={styles.mediaImageEditorEmpty}>
           <p>Сначала выберите изображение.</p>
-          <p className={styles.helpText}>После выбора файла откроется preview, и здесь появятся инструменты правки.</p>
+          <p className={styles.helpText}>После выбора файла откроется предпросмотр, и здесь появятся инструменты правки.</p>
         </div>
       ) : disabledReason ? (
         <div className={styles.mediaImageEditorEmpty}>

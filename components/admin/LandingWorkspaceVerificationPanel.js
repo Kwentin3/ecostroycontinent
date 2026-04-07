@@ -3,13 +3,46 @@ import { normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { SurfacePacket } from "./SurfacePacket";
 import styles from "./admin-ui.module.css";
 
+const OVERALL_STATUS_LABELS = {
+  blocked: "Заблокировано",
+  pass_with_warnings: "С предупреждениями",
+  pass: "ОК"
+};
+
+const SECTION_STATUS_LABELS = {
+  present: "Есть",
+  missing: "Не хватает",
+  absent: "Нет"
+};
+
+const ROUTE_FAMILY_LABELS = {
+  landing: "лендинг",
+  service: "услуга"
+};
+
+function formatOverallStatus(value) {
+  return OVERALL_STATUS_LABELS[value] || value;
+}
+
+function formatSectionStatus(value) {
+  return SECTION_STATUS_LABELS[value] || value;
+}
+
+function formatEligibility(value, positive, negative) {
+  return value ? positive : negative;
+}
+
+function formatRouteFamily(value) {
+  return ROUTE_FAMILY_LABELS[value] || value || "—";
+}
+
 function getLatestLandingWorkspaceRecord(auditItems = []) {
   return (Array.isArray(auditItems) ? auditItems : []).find((item) => item?.details?.landingWorkspace) ?? null;
 }
 
 function renderIssues(issues = []) {
   if (!issues.length) {
-    return <span className={styles.badge}>OK</span>;
+    return <span className={styles.badge}>ОК</span>;
   }
 
   return (
@@ -50,46 +83,46 @@ export function LandingWorkspaceVerificationPanel({
 
   return (
     <SurfacePacket
-      eyebrow="Landing report"
-      title="Landing candidate report"
+      eyebrow="Отчет по лендингу"
+      title="Отчет по лендингу"
       summary={normalizeLegacyCopy(effectiveReport.summary)}
-      legend="Preview, verification, and review visibility all read this same derived artifact slice."
+      legend="Предпросмотр, проверка и видимость проверки читают одну и ту же текущую проекцию."
       meta={[
-        `Status: ${effectiveReport.overallStatus}`,
-        `Sections: ${visibleSectionCount}/${effectiveReport.sections.length}`,
-        effectiveReport.approvalEligible ? "Approval-eligible" : "Not approval-eligible",
-        effectiveReport.renderCompatible ? "Render compatible" : "Render blocked",
-        effectiveReport.publishReady ? "Publish-ready" : "Not publish-ready"
+        `Статус: ${formatOverallStatus(effectiveReport.overallStatus)}`,
+        `Разделы: ${visibleSectionCount}/${effectiveReport.sections.length}`,
+        formatEligibility(effectiveReport.approvalEligible, "Можно согласовать", "Нельзя согласовать"),
+        formatEligibility(effectiveReport.renderCompatible, "Готов к показу", "Не готов к показу"),
+        formatEligibility(effectiveReport.publishReady, "Готово к публикации", "Не готово к публикации")
       ]}
     >
       <div className={styles.stack}>
         <div className={styles.gridTwo}>
           <div className={styles.timelineItem}>
-            <strong>Candidate</strong>
+            <strong>Черновик</strong>
             <p className={styles.mutedText}>{slice.candidateId}</p>
           </div>
           <div className={styles.timelineItem}>
-            <strong>Page anchor</strong>
+            <strong>Страница-источник</strong>
             <p className={styles.mutedText}>{slice.pageId || "—"}</p>
           </div>
           <div className={styles.timelineItem}>
-            <strong>Draft handle</strong>
+            <strong>ID черновика</strong>
             <p className={styles.mutedText}>{slice.landingDraftId || "—"}</p>
           </div>
           <div className={styles.timelineItem}>
-            <strong>Spec</strong>
-            <p className={styles.mutedText}>{slice.routeFamily} · {slice.specVersion}</p>
+            <strong>Спецификация</strong>
+            <p className={styles.mutedText}>{formatRouteFamily(slice.routeFamily)} · {slice.specVersion}</p>
           </div>
         </div>
 
         <div className={styles.timelineItem}>
-          <strong>Source context</strong>
+          <strong>Контекст источника</strong>
           <p className={styles.mutedText}>{normalizeLegacyCopy(effectiveReport.sourceContextSummary || slice.sourceContextSummary || "—")}</p>
         </div>
 
         {effectiveReport.llm ? (
           <div className={styles.timelineItem}>
-            <strong>LLM path</strong>
+            <strong>Путь LLM</strong>
             <p className={styles.mutedText}>
               {effectiveReport.llm.providerId}/{effectiveReport.llm.modelId} · {effectiveReport.llm.status} · {effectiveReport.llm.transportState} · {effectiveReport.llm.structuredOutputState} · {effectiveReport.llm.validationState}
             </p>
@@ -97,20 +130,20 @@ export function LandingWorkspaceVerificationPanel({
         ) : null}
 
         <section className={styles.panelMuted}>
-          <h4>Section projection</h4>
+          <h4>Проекция разделов</h4>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Section</th>
-                <th>Status</th>
-                <th>Render target</th>
+                <th>Раздел</th>
+                <th>Статус</th>
+                <th>Целевой блок</th>
               </tr>
             </thead>
             <tbody>
               {effectiveReport.sections.map((section) => (
                 <tr key={section.id}>
                   <td>{section.label}</td>
-                  <td><span className={styles.badge}>{section.status}</span></td>
+                  <td><span className={styles.badge}>{formatSectionStatus(section.status)}</span></td>
                   <td>{section.renderTarget}</td>
                 </tr>
               ))}
@@ -119,13 +152,13 @@ export function LandingWorkspaceVerificationPanel({
         </section>
 
         <section className={styles.panelMuted}>
-          <h4>Verification classes</h4>
+          <h4>Классы проверки</h4>
           <div className={styles.stack}>
             {effectiveReport.classResults.map((classResult) => (
               <div key={classResult.classId} className={styles.timelineItem}>
                 <strong>{classResult.classId}</strong>
                 <p className={styles.mutedText}>
-                  <span className={styles.badge}>{classResult.status}</span>
+                  <span className={styles.badge}>{formatOverallStatus(classResult.status)}</span>
                 </p>
                 {renderIssues(classResult.issues)}
               </div>
@@ -134,7 +167,7 @@ export function LandingWorkspaceVerificationPanel({
         </section>
 
         <section className={styles.panelMuted}>
-          <h4>Blocking issues</h4>
+          <h4>Блокирующие проблемы</h4>
           {effectiveReport.blockingIssues.length ? (
             <ul className={styles.surfacePacketList}>
               {effectiveReport.blockingIssues.map((issue) => (
@@ -145,7 +178,7 @@ export function LandingWorkspaceVerificationPanel({
               ))}
             </ul>
           ) : (
-            <p className={styles.emptyHint}>No blocking issues.</p>
+            <p className={styles.emptyHint}>Блокирующих проблем нет.</p>
           )}
         </section>
       </div>

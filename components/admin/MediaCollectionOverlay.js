@@ -223,7 +223,7 @@ export function MediaCollectionOverlay({
               {selectedCollection ? "Редактор коллекции" : "Новая коллекция"}
             </h3>
             <p className={styles.helpText}>
-              Коллекция остаётся отдельной сущностью, но теперь собирается прямо внутри media workspace без прыжка в отдельный экран.
+              Коллекция остаётся отдельной сущностью, но теперь собирается прямо внутри медиатеки без перехода на отдельный экран.
             </p>
           </div>
           <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={busy}>
@@ -243,7 +243,7 @@ export function MediaCollectionOverlay({
                   value={collectionQuery}
                   onChange={(event) => setCollectionQuery(event.target.value)}
                   className={styles.searchInput}
-                  placeholder="Название или usage"
+                  placeholder="Название или где используется"
                 />
               </label>
               <button
@@ -263,7 +263,7 @@ export function MediaCollectionOverlay({
                 onClick={() => applyCollectionSelection(NEW_COLLECTION_ID)}
               >
                 <strong>Новая коллекция</strong>
-                <span className={styles.mutedText}>Создать подборку прямо из текущих media cards.</span>
+                <span className={styles.mutedText}>Создать подборку прямо из текущих карточек медиа.</span>
               </button>
 
               {filteredCollections.map((collection) => (
@@ -286,7 +286,7 @@ export function MediaCollectionOverlay({
           <form className={styles.collectionOverlayForm} onSubmit={handleSubmit}>
             {seedAssetId ? (
               <div className={styles.statusPanelInfo}>
-                Текущий выбранный ассет будет сразу доступен в составе коллекции. Если он не нужен, его можно снять из списка ниже.
+                Текущий выбранный медиафайл будет сразу доступен в составе коллекции. Если он не нужен, его можно снять из списка ниже.
               </div>
             ) : null}
 
@@ -345,7 +345,7 @@ export function MediaCollectionOverlay({
                 />
               </label>
               <label className={`${styles.label} ${styles.gridWide}`}>
-                <span>Комментарий к изменению</span>
+                <span>Что хотим изменить</span>
                 <input
                   name="changeIntent"
                   value={fields.changeIntent}
@@ -378,7 +378,7 @@ export function MediaCollectionOverlay({
                       checked={fields.assetIds.includes(asset.id)}
                       onChange={() => toggleAsset(asset.id)}
                     />
-                    <span className={styles.mediaThumb}>
+                <span className={styles.mediaThumb}>
                       {asset.previewUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={asset.previewUrl} alt={asset.alt || asset.title || asset.originalFilename || "Предпросмотр"} />

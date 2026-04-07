@@ -7,9 +7,42 @@ import { normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { SurfacePacket } from "./SurfacePacket";
 import styles from "./admin-ui.module.css";
 
+const OVERALL_STATUS_LABELS = {
+  blocked: "Заблокировано",
+  pass_with_warnings: "С предупреждениями",
+  pass: "ОК"
+};
+
+const SECTION_STATUS_LABELS = {
+  present: "Есть",
+  missing: "Не хватает",
+  absent: "Нет"
+};
+
+const ROUTE_FAMILY_LABELS = {
+  landing: "лендинг",
+  service: "услуга"
+};
+
+function formatOverallStatus(value) {
+  return OVERALL_STATUS_LABELS[value] || value;
+}
+
+function formatSectionStatus(value) {
+  return SECTION_STATUS_LABELS[value] || value;
+}
+
+function formatEligibility(value, positive, negative) {
+  return value ? positive : negative;
+}
+
+function formatRouteFamily(value) {
+  return ROUTE_FAMILY_LABELS[value] || value || "—";
+}
+
 function renderIssues(issues = []) {
   if (!issues.length) {
-    return <span className={styles.badge}>OK</span>;
+    return <span className={styles.badge}>ОК</span>;
   }
 
   return (
@@ -48,46 +81,46 @@ export function ServiceLandingFactoryPanel({ entityType, revision, readiness, au
 
   return (
     <SurfacePacket
-      eyebrow="Landing factory"
-      title="Service candidate report"
+      eyebrow="Отчет по карточке услуги"
+      title="Отчет по карточке услуги"
       summary={normalizeLegacyCopy(report.summary)}
-      legend="Factory metadata, section projection, and verification state for the current service candidate."
+      legend="Метаданные фабрики, проекция разделов и состояние проверки для текущей карточки услуги."
       meta={[
-        `Status: ${report.overallStatus}`,
-        `Sections: ${visibleSectionCount}/${report.sections.length}`,
-        report.approvalEligible ? "Approval-eligible" : "Not approval-eligible",
-        report.renderCompatible ? "Render compatible" : "Render blocked",
-        report.publishReady ? "Publish-ready" : "Not publish-ready"
+        `Статус: ${formatOverallStatus(report.overallStatus)}`,
+        `Разделы: ${visibleSectionCount}/${report.sections.length}`,
+        formatEligibility(report.approvalEligible, "Можно согласовать", "Нельзя согласовать"),
+        formatEligibility(report.renderCompatible, "Готов к показу", "Не готов к показу"),
+        formatEligibility(report.publishReady, "Готово к публикации", "Не готово к публикации")
       ]}
     >
       <div className={styles.stack}>
         <div className={styles.gridTwo}>
           <div className={styles.timelineItem}>
-            <strong>Candidate</strong>
+            <strong>Черновик</strong>
             <p className={styles.mutedText}>{derivedArtifactSlice.candidateId}</p>
           </div>
           <div className={styles.timelineItem}>
-            <strong>Base revision</strong>
+            <strong>Базовая версия</strong>
             <p className={styles.mutedText}>{derivedArtifactSlice.baseRevisionId || "—"}</p>
           </div>
           <div className={styles.timelineItem}>
-            <strong>Route family</strong>
-            <p className={styles.mutedText}>{derivedArtifactSlice.routeFamily}</p>
+            <strong>Маршрут</strong>
+            <p className={styles.mutedText}>{formatRouteFamily(derivedArtifactSlice.routeFamily)}</p>
           </div>
           <div className={styles.timelineItem}>
-            <strong>Spec version</strong>
+            <strong>Версия спецификации</strong>
             <p className={styles.mutedText}>{derivedArtifactSlice.specVersion}</p>
           </div>
         </div>
 
         <div className={styles.timelineItem}>
-          <strong>Source context</strong>
+          <strong>Контекст источника</strong>
           <p className={styles.mutedText}>{normalizeLegacyCopy(report.sourceContextSummary || derivedArtifactSlice.sourceContextSummary || "—")}</p>
         </div>
 
         {report.llm ? (
           <div className={styles.timelineItem}>
-            <strong>LLM path</strong>
+            <strong>Путь LLM</strong>
             <p className={styles.mutedText}>
               {report.llm.providerId}/{report.llm.modelId} · {report.llm.status} · {report.llm.transportState} · {report.llm.structuredOutputState} · {report.llm.validationState}
             </p>
@@ -95,20 +128,20 @@ export function ServiceLandingFactoryPanel({ entityType, revision, readiness, au
         ) : null}
 
         <section className={styles.panelMuted}>
-          <h4>Section projection</h4>
+          <h4>Проекция разделов</h4>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Section</th>
-                <th>Status</th>
-                <th>Render target</th>
+                <th>Раздел</th>
+                <th>Статус</th>
+                <th>Целевой блок</th>
               </tr>
             </thead>
             <tbody>
               {report.sections.map((section) => (
                 <tr key={section.id}>
                   <td>{section.label}</td>
-                  <td><span className={styles.badge}>{section.status}</span></td>
+                  <td><span className={styles.badge}>{formatSectionStatus(section.status)}</span></td>
                   <td>{section.renderTarget}</td>
                 </tr>
               ))}
@@ -117,13 +150,13 @@ export function ServiceLandingFactoryPanel({ entityType, revision, readiness, au
         </section>
 
         <section className={styles.panelMuted}>
-          <h4>Verification classes</h4>
+          <h4>Классы проверки</h4>
           <div className={styles.stack}>
             {report.classResults.map((classResult) => (
               <div key={classResult.classId} className={styles.timelineItem}>
                 <strong>{classResult.classId}</strong>
                 <p className={styles.mutedText}>
-                  <span className={styles.badge}>{classResult.status}</span>
+                  <span className={styles.badge}>{formatOverallStatus(classResult.status)}</span>
                 </p>
                 {renderIssues(classResult.issues)}
               </div>
@@ -132,7 +165,7 @@ export function ServiceLandingFactoryPanel({ entityType, revision, readiness, au
         </section>
 
         <section className={styles.panelMuted}>
-          <h4>Blocking issues</h4>
+          <h4>Блокирующие проблемы</h4>
           {report.blockingIssues.length ? (
             <ul className={styles.surfacePacketList}>
               {report.blockingIssues.map((issue) => (
@@ -143,7 +176,7 @@ export function ServiceLandingFactoryPanel({ entityType, revision, readiness, au
               ))}
             </ul>
           ) : (
-            <p className={styles.emptyHint}>No blocking issues.</p>
+            <p className={styles.emptyHint}>Блокирующих проблем нет.</p>
           )}
         </section>
       </div>

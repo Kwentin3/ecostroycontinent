@@ -152,7 +152,7 @@ test("landing workspace prompt request stays pure and page anchored", () => {
   assert.equal(request.promptPacket.requestScope.workspace, "landing_workspace");
   assert.equal(request.promptPacket.requestScope.routeFamily, "landing");
   assert.match(request.promptPacket.prompt, /page=page_1/);
-  assert.match(request.promptPacket.prompt, /Do not invent a new Page owner/);
+  assert.match(request.promptPacket.prompt, /Не придумывайте нового владельца страницы/);
   assert.match(request.promptPacket.prompt, /proof=service_1, case_1, gallery_1, media_1/);
   assert.deepEqual(request.normalizedPayload, makePagePayload());
 });

@@ -9,7 +9,7 @@ import styles from "./admin-ui.module.css";
 const baseNavItems = [
   { href: "/admin", label: "Главная" },
   { href: "/admin/review", label: "Проверка" },
-  { href: "/admin/workspace/landing", label: "Лендинги" },
+  { href: "/admin/workspace/landing", label: "AI-верстка" },
   { href: "/admin/entities/global_settings", label: "Настройки" },
   { href: "/admin/entities/media_asset", label: "Медиа" },
   { href: "/admin/entities/service", label: "Услуги" },
@@ -55,7 +55,7 @@ function renderBreadcrumbs(breadcrumbs) {
 function renderInfraHealth(items) {
   return (
     <section className={styles.infraStatus} aria-label="Состояние инфраструктуры">
-      <p className={styles.infraStatusTitle}>Infra</p>
+      <p className={styles.infraStatusTitle}>Инфраструктура</p>
       <div className={styles.infraStatusList}>
         {items.map((item) => (
           <div key={item.key} className={styles.infraStatusRow}>

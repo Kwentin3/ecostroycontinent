@@ -1,7 +1,32 @@
 import { normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
+import { getRevisionStateLabel } from "../../lib/ui-copy.js";
 import { SurfacePacket } from "./SurfacePacket";
 import styles from "./admin-ui.module.css";
+
+const PREVIEW_MODE_LABELS = {
+  desktop: "компьютер",
+  tablet: "планшет",
+  mobile: "телефон"
+};
+
+function formatPreviewMode(value) {
+  return PREVIEW_MODE_LABELS[value] || value || "—";
+}
+
+const OVERALL_STATUS_LABELS = {
+  blocked: "Заблокировано",
+  pass_with_warnings: "С предупреждениями",
+  pass: "ОК"
+};
+
+function formatOverallStatus(value) {
+  return OVERALL_STATUS_LABELS[value] || value;
+}
+
+function formatEligibility(value, positive, negative) {
+  return value ? positive : negative;
+}
 
 function renderValue(value) {
   if (Array.isArray(value)) {
@@ -26,90 +51,90 @@ export function ServiceLandingWorkspacePanel({ entityType, memoryCard }) {
   const recentTurn = memoryCard.recentTurn ?? {};
   const candidatePointer = artifactState.candidatePointer ?? null;
   const derivedSlice = artifactState.derivedArtifactSlice ?? null;
-  const summary = artifactState.verificationSummary || "Session-scoped working state for the service workspace.";
+  const summary = artifactState.verificationSummary || "Сессионное рабочее состояние для карточки услуги.";
   const meta = [
-    sessionIdentity.sessionId ? `Session: ${sessionIdentity.sessionId}` : "Session: unavailable",
-    sessionIdentity.baseRevisionId ? `Base: ${sessionIdentity.baseRevisionId}` : "Base: none",
-    artifactState.reviewStatus ? `Review: ${artifactState.reviewStatus}` : "Review: pending",
-    candidatePointer?.candidateId ? `Candidate: ${candidatePointer.candidateId}` : "Candidate: none"
+    sessionIdentity.sessionId ? `Сессия: ${sessionIdentity.sessionId}` : "Сессия: недоступна",
+    sessionIdentity.baseRevisionId ? `База: ${sessionIdentity.baseRevisionId}` : "База: нет",
+    artifactState.reviewStatus ? `Проверка: ${getRevisionStateLabel(artifactState.reviewStatus)}` : "Проверка: ожидается",
+    candidatePointer?.candidateId ? `Черновик: ${candidatePointer.candidateId}` : "Черновик: нет"
   ];
 
   return (
     <SurfacePacket
-      eyebrow="Memory Card"
-      title="Service workspace state"
+      eyebrow="Память сессии"
+      title="Состояние карточки услуги"
       summary={normalizeLegacyCopy(summary)}
-      legend="Session-scoped working state. This is not canonical truth, not publish state, and not a second source of truth."
+      legend="Это только сессионное рабочее состояние. Оно не является исходной страницей, не является состоянием публикации и не может стать вторым источником истины."
       meta={meta}
     >
       <div className={styles.stack}>
         <div className={styles.gridTwo}>
           <div className={styles.timelineItem}>
-            <strong>Session identity</strong>
+            <strong>Сессия</strong>
             <p className={styles.mutedText}>
-              {sessionIdentity.actor?.displayName || sessionIdentity.actor?.username || "Unknown actor"} · {sessionIdentity.entityType || "service"} · {sessionIdentity.entityId || "new"}
+              {sessionIdentity.actor?.displayName || sessionIdentity.actor?.username || "Неизвестный оператор"} · {sessionIdentity.entityType === "service" ? "услуга" : sessionIdentity.entityType || "услуга"} · {sessionIdentity.entityId || "новая"}
             </p>
             <p className={styles.mutedText}>
-              Route locked: {sessionIdentity.routeLocked ? "yes" : "no"} · Entity locked: {sessionIdentity.entityLocked ? "yes" : "no"}
+              Маршрут зафиксирован: {sessionIdentity.routeLocked ? "да" : "нет"} · Карточка зафиксирована: {sessionIdentity.entityLocked ? "да" : "нет"}
             </p>
             <p className={styles.mutedText}>
-              Updated: {sessionIdentity.timestamps?.memoryCardUpdatedAt || "—"}
+              Обновлено: {sessionIdentity.timestamps?.memoryCardUpdatedAt || "—"}
             </p>
           </div>
           <div className={styles.timelineItem}>
-            <strong>Editorial intent</strong>
-            <p className={styles.mutedText}>Change: {renderValue(editorialIntent.changeIntent)}</p>
-            <p className={styles.mutedText}>Goal: {renderValue(editorialIntent.editorialGoal)}</p>
-            <p className={styles.mutedText}>Variant: {renderValue(editorialIntent.variantDirection)}</p>
-          </div>
-        </div>
-
-        <div className={styles.gridTwo}>
-          <div className={styles.timelineItem}>
-            <strong>Proof selection</strong>
-            <p className={styles.mutedText}>Cases: {renderValue(proofSelection.selectedCaseIds)}</p>
-            <p className={styles.mutedText}>Galleries: {renderValue(proofSelection.selectedGalleryIds)}</p>
-            <p className={styles.mutedText}>Media: {renderValue(proofSelection.selectedMedia)}</p>
-          </div>
-          <div className={styles.timelineItem}>
-            <strong>Artifact state</strong>
-            <p className={styles.mutedText}>
-              Candidate: {candidatePointer?.candidateId || "—"}
-            </p>
-            <p className={styles.mutedText}>
-              Spec: {artifactState.specVersion || "—"} · Review: {artifactState.reviewStatus || "—"}
-            </p>
-            <p className={styles.mutedText}>
-              Preview: {artifactState.previewMode || "desktop"}
-            </p>
+            <strong>Намерение правки</strong>
+            <p className={styles.mutedText}>Изменение: {renderValue(editorialIntent.changeIntent)}</p>
+            <p className={styles.mutedText}>Цель: {renderValue(editorialIntent.editorialGoal)}</p>
+            <p className={styles.mutedText}>Вариант: {renderValue(editorialIntent.variantDirection)}</p>
           </div>
         </div>
 
         <div className={styles.gridTwo}>
           <div className={styles.timelineItem}>
-            <strong>Trace</strong>
-            <p className={styles.mutedText}>LLM trace: {traceState.lastLlmTraceId || "—"}</p>
-            <p className={styles.mutedText}>Request: {traceState.requestId || "—"}</p>
-            <p className={styles.mutedText}>Generated: {traceState.generationTimestamp || "—"}</p>
+            <strong>Выбор доказательств</strong>
+            <p className={styles.mutedText}>Кейсы: {renderValue(proofSelection.selectedCaseIds)}</p>
+            <p className={styles.mutedText}>Коллекции: {renderValue(proofSelection.selectedGalleryIds)}</p>
+            <p className={styles.mutedText}>Медиа: {renderValue(proofSelection.selectedMedia)}</p>
           </div>
           <div className={styles.timelineItem}>
-            <strong>Decisions</strong>
-            <p className={styles.mutedText}>Accepted: {renderValue(editorialDecisions.acceptedDecisions)}</p>
-            <p className={styles.mutedText}>Rejected: {renderValue(editorialDecisions.rejectedDirections)}</p>
-            <p className={styles.mutedText}>Blockers: {renderValue(editorialDecisions.activeBlockers)}</p>
-            <p className={styles.mutedText}>Warnings: {renderValue(editorialDecisions.warnings)}</p>
+            <strong>Состояние черновика</strong>
+            <p className={styles.mutedText}>
+              Черновик: {candidatePointer?.candidateId || "—"}
+            </p>
+            <p className={styles.mutedText}>
+              Спецификация: {artifactState.specVersion || "—"} · Проверка: {getRevisionStateLabel(artifactState.reviewStatus) || "—"}
+            </p>
+            <p className={styles.mutedText}>
+              Предпросмотр: {formatPreviewMode(artifactState.previewMode)}
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.gridTwo}>
+          <div className={styles.timelineItem}>
+            <strong>Трассировка</strong>
+            <p className={styles.mutedText}>LLM-трассировка: {traceState.lastLlmTraceId || "—"}</p>
+            <p className={styles.mutedText}>Запрос: {traceState.requestId || "—"}</p>
+            <p className={styles.mutedText}>Сформировано: {traceState.generationTimestamp || "—"}</p>
+          </div>
+          <div className={styles.timelineItem}>
+            <strong>Принятые решения</strong>
+            <p className={styles.mutedText}>Принято: {renderValue(editorialDecisions.acceptedDecisions)}</p>
+            <p className={styles.mutedText}>Отклонено: {renderValue(editorialDecisions.rejectedDirections)}</p>
+            <p className={styles.mutedText}>Блокирующие: {renderValue(editorialDecisions.activeBlockers)}</p>
+            <p className={styles.mutedText}>Предупреждения: {renderValue(editorialDecisions.warnings)}</p>
           </div>
         </div>
 
         <div className={styles.timelineItem}>
-          <strong>Recent turn</strong>
-          <p className={styles.mutedText}>Last change: {renderValue(recentTurn.lastChange)}</p>
-          <p className={styles.mutedText}>Last blocker: {renderValue(recentTurn.lastBlocker)}</p>
-          <p className={styles.mutedText}>Outcome: {renderValue(recentTurn.generationOutcome)}</p>
-          <p className={styles.mutedText}>Archive pointer: {renderValue(archivePointer.pointer)}</p>
+          <strong>Последний шаг</strong>
+          <p className={styles.mutedText}>Последнее изменение: {renderValue(recentTurn.lastChange)}</p>
+          <p className={styles.mutedText}>Последний блокер: {renderValue(recentTurn.lastBlocker)}</p>
+          <p className={styles.mutedText}>Результат: {renderValue(recentTurn.generationOutcome)}</p>
+          <p className={styles.mutedText}>Указатель архива: {renderValue(archivePointer.pointer)}</p>
           {derivedSlice ? (
             <p className={styles.mutedText}>
-              Derived slice: {derivedSlice.candidateId || "—"} · {derivedSlice.reviewStatus || "—"}
+              Текущая проекция: {derivedSlice.candidateId || "—"} · {getRevisionStateLabel(derivedSlice.reviewStatus) || "—"}
             </p>
           ) : null}
         </div>

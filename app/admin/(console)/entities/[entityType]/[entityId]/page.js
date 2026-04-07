@@ -81,7 +81,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
         <>
           {normalizedType === ENTITY_TYPES.PAGE && entityId ? (
             <Link href={`/admin/workspace/landing/${entityId}`} className={styles.secondaryButton}>
-              Открыть landing workspace
+              Открыть AI-верстку
             </Link>
           ) : null}
           {returnTo ? <Link href={returnTo} className={styles.secondaryButton}>Вернуться к источнику</Link> : null}
