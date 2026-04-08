@@ -289,6 +289,7 @@ test("landing workspace generate route saves the page draft and anchors the sess
   assert.deepEqual(captured.requestInput.proofBasis, ["service_1", "case_1", "media_2", "media_1"]);
   assert.equal(captured.saveDraftInput.entityType, ENTITY_TYPES.PAGE);
   assert.equal(captured.saveDraftInput.entityId, "page_1");
+  assert.equal(captured.saveDraftInput.aiSourceBasis, "from_current_entity_only");
   assert.equal(captured.saveDraftInput.payload.primaryMediaAssetId, "media_1");
   assert.equal(captured.saveDraftInput.auditDetails.landingWorkspace.derivedArtifactSlice.pageId, "page_1");
   assert.equal(captured.saveDraftInput.auditDetails.landingWorkspace.derivedArtifactSlice.routeFamily, "landing");

@@ -317,7 +317,7 @@ export async function POST(request, { params }, overrides = {}) {
       changeIntent,
       payload: candidateResult.spec.payload,
       aiInvolvement: true,
-      aiSourceBasis: "from_current_page_only",
+      aiSourceBasis: "from_current_entity_only",
       auditDetails: routeDeps.buildLandingWorkspaceAuditDetails(candidateResult, draftDerivedArtifactSlice)
     });
     const readiness = await routeDeps.evaluateReadiness({
