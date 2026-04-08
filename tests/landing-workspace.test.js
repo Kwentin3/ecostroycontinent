@@ -28,7 +28,7 @@ function makePagePayload(overrides = {}) {
     defaultBlockCtaLabel: "Contact us",
     serviceIds: ["service_1"],
     caseIds: ["case_1"],
-    galleryIds: ["gallery_1"],
+    galleryIds: ["media_2"],
     primaryMediaAssetId: "media_1",
     seo: {
       metaTitle: "About",
@@ -50,6 +50,63 @@ function makeCanonicalPagePayload(overrides = {}) {
     ...flatPayload,
     ...flatPayload.seo
   });
+}
+
+function makeLandingDraft(overrides = {}) {
+  const hero = {
+    headline: "About us",
+    body: "Intro",
+    mediaAssetId: "media_1",
+    ...(overrides.hero ?? {})
+  };
+  const contentBand = {
+    body: "Body",
+    subtitle: "",
+    ...(overrides.contentBand ?? {})
+  };
+  const ctaBand = {
+    title: "Get in touch",
+    body: "Contact us",
+    note: "",
+    ...(overrides.ctaBand ?? {})
+  };
+  const shellRegions = {
+    headerRef: "landing_header",
+    footerRef: "landing_footer",
+    ...(overrides.shellRegions ?? {})
+  };
+  const seo = {
+    metaTitle: "About",
+    metaDescription: "About us",
+    canonicalIntent: "/about",
+    indexationFlag: "index",
+    openGraphTitle: "About",
+    openGraphDescription: "About us",
+    openGraphImageAssetId: "media_1",
+    ...(overrides.seo ?? {})
+  };
+
+  return {
+    compositionFamily: "landing",
+    pageType: "about",
+    slug: "about",
+    title: "About",
+    hero,
+    mediaAssetIds: ["media_2"],
+    serviceCardIds: ["service_1"],
+    caseCardIds: ["case_1"],
+    contentBand,
+    ctaVariant: "Contact us",
+    ctaBand,
+    shellRegions,
+    seo,
+    ...overrides,
+    hero,
+    contentBand,
+    ctaBand,
+    shellRegions,
+    seo
+  };
 }
 
 function makeMemorySlice(pageId = "other_page") {
@@ -80,9 +137,9 @@ function makeMemorySlice(pageId = "other_page") {
       variantDirection: "hero-first"
     },
     proofSelection: {
-      selectedMedia: ["media_1"],
+      selectedMedia: ["media_1", "media_2"],
       selectedCaseIds: ["case_1"],
-      selectedGalleryIds: ["gallery_1"]
+      selectedGalleryIds: []
     },
     artifactState: {
       candidatePointer: {
@@ -102,8 +159,9 @@ function makeMemorySlice(pageId = "other_page") {
         routeFamily: "landing",
         specVersion: "v1",
         sourceContextSummary: "page=page_1",
-        payload: makePagePayload(),
-        sections: projectLandingWorkspaceSections(makePagePayload()),
+        draft: makeLandingDraft(),
+        payload: makeCanonicalPagePayload(),
+        sections: projectLandingWorkspaceSections(makeLandingDraft()),
         previewMode: "tablet",
         verificationSummary: "Ready for review.",
         reviewStatus: "draft"
@@ -136,7 +194,7 @@ function makeMemorySlice(pageId = "other_page") {
 }
 
 test("landing workspace prompt request stays pure and page anchored", () => {
-  const sourcePayload = makeCanonicalPagePayload();
+  const sourcePayload = makeLandingDraft();
   const proofBasis = buildLandingWorkspaceProofBasis(sourcePayload);
   const request = buildLandingWorkspaceCandidateRequest({
     pageId: "page_1",
@@ -147,18 +205,20 @@ test("landing workspace prompt request stays pure and page anchored", () => {
     sourcePayload
   });
 
-  assert.equal(request.artifactClass, "landing_workspace_candidate_payload");
+  assert.equal(request.artifactClass, "landing_workspace_draft");
+  assert.equal(request.schemaId, "landing_workspace_draft.v1");
   assert.equal(request.schemaVersion, "v1");
   assert.equal(request.promptPacket.requestScope.workspace, "landing_workspace");
   assert.equal(request.promptPacket.requestScope.routeFamily, "landing");
+  assert.equal(request.promptPacket.canonicalContext.compositionFamily, "landing");
   assert.match(request.promptPacket.prompt, /page=page_1/);
   assert.match(request.promptPacket.prompt, /Не придумывайте нового владельца страницы/);
-  assert.match(request.promptPacket.prompt, /proof=service_1, case_1, gallery_1, media_1/);
-  assert.deepEqual(request.normalizedPayload, makePagePayload());
+  assert.match(request.promptPacket.prompt, /proof=service_1, case_1, media_2, media_1/);
+  assert.deepEqual(request.normalizedPayload, makeLandingDraft());
 });
 
 test("landing workspace derived slice and verification report share the same section projection", () => {
-  const sourcePayload = makeCanonicalPagePayload();
+  const sourcePayload = makeLandingDraft();
   const spec = buildLandingWorkspaceCandidateSpec({
     candidateId: "landing_candidate_1",
     pageId: "page_1",
@@ -191,11 +251,17 @@ test("landing workspace derived slice and verification report share the same sec
   assert.equal(derived.pageId, "page_1");
   assert.equal(derived.landingDraftId, "rev_2");
   assert.equal(derived.previewMode, "tablet");
-  assert.deepEqual(projectLandingWorkspaceCandidatePayload(derived.payload), spec.payload);
+  assert.deepEqual(spec.draft, sourcePayload);
+  assert.deepEqual(projectLandingWorkspaceCandidatePayload(spec.payload), spec.draft);
+  assert.deepEqual(derived.draft, spec.draft);
+  assert.deepEqual(derived.pagePayload, spec.payload);
   assert.ok(Array.isArray(derived.payload.blocks));
   assert.equal(derived.payload.blocks[0].type, "hero");
-  assert.deepEqual(report.sections.map((section) => section.id), derived.sections.map((section) => section.id));
-  assert.equal(report.sections[0].id, "landing_hero");
+  assert.equal(derived.blocks[0].id, "landing_hero");
+  assert.equal(derived.shellRegions[0].id, "landing_header");
+  assert.deepEqual(report.blocks.map((section) => section.id), derived.blocks.map((section) => section.id));
+  assert.equal(report.blocks[0].id, "landing_hero");
+  assert.equal(report.shellRegions.length, 2);
   assert.equal(report.renderCompatible, true);
   assert.equal(report.overallStatus, "pass");
 });
@@ -213,7 +279,7 @@ test("landing workspace session anchoring persists a pageId mismatch once and th
     variantDirection: "hero-first",
     selectedMedia: ["media_1"],
     selectedCaseIds: ["case_1"],
-    selectedGalleryIds: ["gallery_1"],
+    selectedGalleryIds: [],
     previewMode: "tablet",
     actor: {
       id: "user_1",
@@ -231,6 +297,7 @@ test("landing workspace session anchoring persists a pageId mismatch once and th
         }
       }
     }),
+    findConflictingLandingWorkspaceSession: async () => null,
     applyAcceptedMemoryDelta: async (input) => {
       anchoredCalls += 1;
       capturedDelta = input.delta;
@@ -271,6 +338,7 @@ test("landing workspace session anchoring persists a pageId mismatch once and th
         }
       }
     }),
+    findConflictingLandingWorkspaceSession: async () => null,
     applyAcceptedMemoryDelta: async () => {
       anchoredCalls += 1;
       return baseSlice;
@@ -280,4 +348,48 @@ test("landing workspace session anchoring persists a pageId mismatch once and th
   assert.equal(anchoredCalls, 0);
   assert.equal(capturedDelta, null);
   assert.equal(stableResult.sessionIdentity.entityId, "page_1");
+});
+
+test("landing workspace session guard blocks parallel active sessions for the same pageId", async () => {
+  const baseSlice = makeMemorySlice("other_page");
+  let anchoredCalls = 0;
+
+  const result = await readLandingWorkspaceSession("page_1", {
+    sessionId: "session_1",
+    baseRevisionId: "rev_base",
+    changeIntent: "Refine the landing page.",
+    actor: {
+      id: "user_1",
+      username: "seo_manager",
+      displayName: "SEO Manager",
+      role: "seo_manager"
+    }
+  }, {
+    sessionId: "session_1",
+    readMemoryCardSlice: async () => baseSlice,
+    readWorkspaceSessionRecord: async () => ({
+      workspace_memory_card: {
+        sessionIdentity: {
+          entityId: "other_page"
+        }
+      }
+    }),
+    findConflictingLandingWorkspaceSession: async () => ({
+      status: "blocked_by_active_page_session",
+      pageId: "page_1",
+      activeSessionId: "session_other",
+      actorUserId: "user_2",
+      actorDisplayName: "Another editor",
+      updatedAt: "2026-04-06T12:10:00.000Z"
+    }),
+    applyAcceptedMemoryDelta: async () => {
+      anchoredCalls += 1;
+      return baseSlice;
+    }
+  });
+
+  assert.equal(anchoredCalls, 0);
+  assert.equal(result.sessionIdentity.entityId, "other_page");
+  assert.equal(result.sessionGuard.status, "blocked_by_active_page_session");
+  assert.equal(result.sessionGuard.activeSessionId, "session_other");
 });

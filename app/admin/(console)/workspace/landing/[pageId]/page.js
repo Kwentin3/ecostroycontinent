@@ -27,7 +27,7 @@ export default async function LandingWorkspacePage({ params, searchParams }) {
     notFound();
   }
 
-  const canEdit = userCanEditContent(user);
+  const canEdit = userCanEditContent(user) && !data.sessionConflict;
   const pageLabel = getPayloadLabel(data.sourceRevision.payload) || pageId;
   const workspaceHref = buildLandingWorkspaceHref(pageId);
   const sourceEditorHref = `/admin/entities/page/${pageId}`;
@@ -66,6 +66,12 @@ export default async function LandingWorkspacePage({ params, searchParams }) {
     >
       <div className={styles.workspaceGrid}>
         <section className={styles.workspaceColumn}>
+          {data.sessionConflict ? (
+            <div className={styles.statusPanelBlocking}>
+              Another active landing workspace session is already anchored to this page. Resume that session before generating or sending this draft to review.
+            </div>
+          ) : null}
+
           <SurfacePacket
             eyebrow="Страница-источник"
             title={pageLabel}

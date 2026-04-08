@@ -58,6 +58,8 @@ function renderIssues(issues = []) {
 }
 
 export function ServiceLandingFactoryPanel({ entityType, revision, readiness, auditItems }) {
+  // Legacy service-review compatibility only. Landing-first verification lives in
+  // LandingWorkspaceVerificationPanel and should stay the primary semantic path.
   if (entityType !== ENTITY_TYPES.SERVICE) {
     return null;
   }

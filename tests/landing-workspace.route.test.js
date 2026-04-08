@@ -20,7 +20,7 @@ function makePagePayload(overrides = {}) {
     defaultBlockCtaLabel: "Contact us",
     serviceIds: ["service_1"],
     caseIds: ["case_1"],
-    galleryIds: ["gallery_1"],
+    galleryIds: ["media_2"],
     primaryMediaAssetId: "media_1",
     seo: {
       metaTitle: "About",
@@ -277,21 +277,26 @@ test("landing workspace generate route saves the page draft and anchors the sess
   assert.equal(location.pathname, "/admin/workspace/landing/page_1");
   assert.equal(location.searchParams.get("message"), "Черновик сохранён.");
   assert.equal(captured.readLandingWorkspaceSession.pageId, "page_1");
-  assert.deepEqual(captured.readLandingWorkspaceSession.input.selectedMedia, ["media_1"]);
+  assert.deepEqual(captured.readLandingWorkspaceSession.input.selectedMedia, ["media_1", "media_2"]);
   assert.deepEqual(captured.readLandingWorkspaceSession.input.selectedCaseIds, ["case_1"]);
-  assert.deepEqual(captured.readLandingWorkspaceSession.input.selectedGalleryIds, ["gallery_1"]);
+  assert.deepEqual(captured.readLandingWorkspaceSession.input.selectedGalleryIds, []);
   assert.equal(captured.requestInput.pageId, "page_1");
   assert.equal(captured.requestInput.landingDraftId, "draft_1");
   assert.equal(captured.requestInput.baseRevisionId, "rev_base");
+  assert.equal(captured.requestInput.sourcePayload.compositionFamily, "landing");
   assert.equal(captured.requestInput.sourcePayload.title, "About draft");
-  assert.deepEqual(captured.requestInput.proofBasis, ["service_1", "case_1", "gallery_1", "media_1"]);
+  assert.equal(captured.requestInput.sourcePayload.hero.headline, "About draft");
+  assert.deepEqual(captured.requestInput.proofBasis, ["service_1", "case_1", "media_2", "media_1"]);
   assert.equal(captured.saveDraftInput.entityType, ENTITY_TYPES.PAGE);
   assert.equal(captured.saveDraftInput.entityId, "page_1");
+  assert.equal(captured.saveDraftInput.payload.primaryMediaAssetId, "media_1");
   assert.equal(captured.saveDraftInput.auditDetails.landingWorkspace.derivedArtifactSlice.pageId, "page_1");
   assert.equal(captured.saveDraftInput.auditDetails.landingWorkspace.derivedArtifactSlice.routeFamily, "landing");
+  assert.equal(captured.saveDraftInput.auditDetails.landingWorkspace.derivedArtifactSlice.draft.compositionFamily, "landing");
   assert.equal(captured.memoryDeltaInput.delta.sessionIdentity.entityId, "page_1");
   assert.equal(captured.memoryDeltaInput.delta.artifactState.candidatePointer.revisionId, "rev_123");
   assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.landingDraftId, "rev_123");
+  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.pagePayload.primaryMediaAssetId, "media_1");
   assert.equal(captured.memoryDeltaInput.delta.artifactState.reviewStatus, "draft");
   assert.equal(captured.submitInput, undefined);
 });
@@ -322,4 +327,39 @@ test("landing workspace review handoff submits the existing draft and returns to
   assert.equal(captured.memoryDeltaInput.delta.artifactState.candidatePointer.revisionId, "draft_1");
   assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.reviewStatus, "review");
   assert.equal(captured.requestInput, undefined);
+});
+
+test("landing workspace generate route stops when another active session already owns the pageId", async () => {
+  const captured = {};
+  const request = buildRequest({
+    actionKind: "generate_candidate",
+    changeIntent: "Refine the hero.",
+    editorialGoal: "Refine the landing page from canonical Page truth.",
+    variantDirection: "hero-first",
+    previewMode: "tablet"
+  });
+  const deps = buildRouteDeps({ captured });
+
+  deps.readLandingWorkspaceSession = async (pageId, input) => {
+    captured.readLandingWorkspaceSession = { pageId, input };
+
+    return {
+      sessionGuard: {
+        status: "blocked_by_active_page_session",
+        pageId,
+        activeSessionId: "session_other"
+      }
+    };
+  };
+
+  const response = await POST(request, { params: { pageId: "page_1" } }, deps);
+  const location = new URL(response.headers.get("location"), "http://localhost");
+
+  assert.equal(response.status, 303);
+  assert.equal(location.pathname, "/admin/workspace/landing/page_1");
+  assert.equal(location.searchParams.get("error"), "Another active landing workspace session is already anchored to this page.");
+  assert.equal(captured.requestInput, undefined);
+  assert.equal(captured.saveDraftInput, undefined);
+  assert.equal(captured.submitInput, undefined);
+  assert.equal(captured.memoryDeltaInput, undefined);
 });

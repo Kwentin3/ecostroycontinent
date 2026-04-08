@@ -185,14 +185,25 @@ export async function POST(request, { params }, overrides = {}) {
       editorialGoal,
       variantDirection,
       proofBasis,
-      selectedMedia: sourceCandidatePayload.primaryMediaAssetId ? [sourceCandidatePayload.primaryMediaAssetId] : [],
-      selectedCaseIds: sourceCandidatePayload.caseIds ?? [],
-      selectedGalleryIds: sourceCandidatePayload.galleryIds ?? [],
+      selectedMedia: [
+        ...(sourceCandidatePayload.hero?.mediaAssetId ? [sourceCandidatePayload.hero.mediaAssetId] : []),
+        ...(sourceCandidatePayload.mediaAssetIds ?? [])
+      ],
+      selectedCaseIds: sourceCandidatePayload.caseCardIds ?? [],
+      selectedGalleryIds: [],
       previewMode,
       actor: user
     }, {
       actor: user
     });
+
+    if (memorySlice?.sessionGuard?.status === "blocked_by_active_page_session") {
+      return redirectWithError(
+        request,
+        fallbackPath,
+        new Error("Another active landing workspace session is already anchored to this page.")
+      );
+    }
 
     if (actionKind === "send_to_review") {
       if (!currentRevision) {

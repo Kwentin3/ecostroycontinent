@@ -79,7 +79,9 @@ export function LandingWorkspaceVerificationPanel({
     revision,
     llmResult: landingWorkspaceRecord?.details?.landingWorkspace?.llm ?? slice?.llm ?? null
   });
-  const visibleSectionCount = effectiveReport.sections.filter((section) => section.status === "present").length;
+  const blocks = effectiveReport.blocks ?? effectiveReport.sections ?? [];
+  const shellRegions = effectiveReport.shellRegions ?? [];
+  const visibleSectionCount = blocks.filter((section) => section.status === "present").length;
 
   return (
     <SurfacePacket
@@ -89,7 +91,7 @@ export function LandingWorkspaceVerificationPanel({
       legend="Предпросмотр, проверка и видимость проверки читают одну и ту же текущую проекцию."
       meta={[
         `Статус: ${formatOverallStatus(effectiveReport.overallStatus)}`,
-        `Разделы: ${visibleSectionCount}/${effectiveReport.sections.length}`,
+        `Разделы: ${visibleSectionCount}/${blocks.length}`,
         formatEligibility(effectiveReport.approvalEligible, "Можно согласовать", "Нельзя согласовать"),
         formatEligibility(effectiveReport.renderCompatible, "Готов к показу", "Не готов к показу"),
         formatEligibility(effectiveReport.publishReady, "Готово к публикации", "Не готово к публикации")
@@ -140,11 +142,33 @@ export function LandingWorkspaceVerificationPanel({
               </tr>
             </thead>
             <tbody>
-              {effectiveReport.sections.map((section) => (
+              {blocks.map((section) => (
                 <tr key={section.id}>
                   <td>{section.label}</td>
                   <td><span className={styles.badge}>{formatSectionStatus(section.status)}</span></td>
                   <td>{section.renderTarget}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <section className={styles.panelMuted}>
+          <h4>Shell Regions</h4>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Region</th>
+                <th>Status</th>
+                <th>Ref</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shellRegions.map((region) => (
+                <tr key={region.id}>
+                  <td>{region.label}</td>
+                  <td><span className={styles.badge}>{region.status || "fixed"}</span></td>
+                  <td>{region.ref || region.id}</td>
                 </tr>
               ))}
             </tbody>
