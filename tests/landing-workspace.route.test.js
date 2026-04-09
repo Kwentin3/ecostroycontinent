@@ -336,6 +336,84 @@ test("landing workspace review handoff submits the existing draft and returns to
   assert.equal(captured.requestInput, undefined);
 });
 
+test("landing workspace save route persists manual Stage A edits without going through generation", async () => {
+  const captured = {};
+  const manualDraft = buildLandingWorkspaceCandidateSpec({
+    candidateId: "landing_manual_candidate",
+    pageId: "page_1",
+    landingDraftId: "draft_1",
+    baseRevisionId: "rev_base",
+    payload: {
+      compositionFamily: "landing",
+      pageType: "about",
+      pageThemeKey: "forest_contrast",
+      slug: "about",
+      title: "About refreshed",
+      hero: {
+        headline: "About refreshed",
+        body: "Hero body updated",
+        mediaAssetId: "media_2",
+        textEmphasisPreset: "strong",
+        surfaceTone: "tinted"
+      },
+      mediaAssetIds: ["media_1"],
+      serviceCardIds: ["service_1"],
+      caseCardIds: ["case_1"],
+      contentBand: {
+        subtitle: "Why now",
+        body: "Content band updated",
+        textEmphasisPreset: "quiet",
+        surfaceTone: "plain"
+      },
+      ctaVariant: "callback",
+      ctaBand: {
+        title: "Discuss the project",
+        body: "CTA body updated",
+        note: "Answer within one day",
+        textEmphasisPreset: "strong",
+        surfaceTone: "emphasis"
+      },
+      shellRegions: {
+        headerRef: "landing_header",
+        footerRef: "landing_footer"
+      },
+      seo: {
+        metaTitle: "About",
+        metaDescription: "About us",
+        canonicalIntent: "/about",
+        indexationFlag: "index",
+        openGraphTitle: "About",
+        openGraphDescription: "About us",
+        openGraphImageAssetId: "media_1"
+      }
+    }
+  }).draft;
+  const request = buildRequest({
+    actionKind: "save_workspace_draft",
+    changeIntent: "Refine the landing composition.",
+    editorialGoal: "Refine the landing page from canonical Page truth.",
+    variantDirection: "hero-first",
+    previewMode: "desktop",
+    payloadJson: JSON.stringify(manualDraft)
+  });
+  const deps = buildRouteDeps({ captured });
+
+  const response = await POST(request, { params: { pageId: "page_1" } }, deps);
+  const location = new URL(response.headers.get("location"), "http://localhost");
+
+  assert.equal(response.status, 303);
+  assert.equal(location.pathname, "/admin/workspace/landing/page_1");
+  assert.equal(location.searchParams.get("message"), "РљРѕРјРїРѕР·РёС†РёСЏ СЃРѕС…СЂР°РЅРµРЅР°.");
+  assert.equal(captured.requestInput, undefined);
+  assert.equal(captured.saveDraftInput.aiInvolvement, false);
+  assert.equal(captured.saveDraftInput.aiSourceBasis, null);
+  assert.equal(captured.saveDraftInput.payload.pageThemeKey, "forest_contrast");
+  assert.equal(captured.saveDraftInput.payload.heroTextEmphasisPreset, "strong");
+  assert.equal(captured.saveDraftInput.payload.heroSurfaceTone, "tinted");
+  assert.equal(captured.memoryDeltaInput.delta.artifactState.derivedArtifactSlice.draft.pageThemeKey, "forest_contrast");
+  assert.equal(captured.memoryDeltaInput.delta.recentTurn.generationOutcome, "manual_update");
+});
+
 test("landing workspace generate route stops when another active session already owns the pageId", async () => {
   const captured = {};
   const request = buildRequest({

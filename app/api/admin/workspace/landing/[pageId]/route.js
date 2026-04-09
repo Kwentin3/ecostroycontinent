@@ -35,6 +35,18 @@ function buildFallbackPath(pageId) {
   return pageId ? `/admin/workspace/landing/${pageId}` : "/admin/workspace/landing";
 }
 
+function parseWorkspacePayloadJson(rawValue) {
+  if (!rawValue) {
+    throw new Error("РќРµС‚ РґР°РЅРЅС‹С… РєРѕРјРїРѕР·РёС†РёРё РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ.");
+  }
+
+  try {
+    return JSON.parse(rawValue);
+  } catch {
+    throw new Error("РљРѕРјРїРѕР·РёС†РёСЏ Р»РµРЅРґРёРЅРіР° РїРѕРІСЂРµР¶РґРµРЅР° РёР»Рё РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСЂРѕС‡РёС‚Р°РЅР°.");
+  }
+}
+
 function buildMemoryAnchorDelta({
   pageId,
   baseRevisionId,
@@ -159,6 +171,7 @@ export async function POST(request, { params }, overrides = {}) {
   const editorialGoal = getString(formData, "editorialGoal") || "Уточнить лендинг на основе страницы-источника.";
   const variantDirection = getString(formData, "variantDirection");
   const previewMode = getString(formData, "previewMode") || "desktop";
+  const payloadJson = getString(formData, "payloadJson");
 
   try {
     const aggregate = await routeDeps.getEntityAggregate(pageId);
@@ -203,6 +216,104 @@ export async function POST(request, { params }, overrides = {}) {
         fallbackPath,
         new Error("Another active landing workspace session is already anchored to this page.")
       );
+    }
+
+    if (actionKind === "save_workspace_draft") {
+      const manualPayload = parseWorkspacePayloadJson(payloadJson);
+      const manualProofBasis = routeDeps.buildLandingWorkspaceProofBasis(manualPayload);
+      const manualSourceContext = routeDeps.buildLandingWorkspaceSourceContextSummary({
+        pageId,
+        pageType: manualPayload?.pageType,
+        baseRevision,
+        currentRevision: workingRevision,
+        changeIntent,
+        proofBasis: manualProofBasis,
+        variantKey: variantDirection
+      });
+      const manualSpec = routeDeps.buildLandingWorkspaceCandidateSpec({
+        candidateId: memorySlice?.artifactState?.candidatePointer?.candidateId
+          || memorySlice?.artifactState?.derivedArtifactSlice?.candidateId
+          || `landing_manual_${pageId}`,
+        pageId,
+        landingDraftId: currentRevision?.id ?? "",
+        baseRevisionId: baseRevision?.id ?? "",
+        routeFamily: LANDING_WORKSPACE_ROUTE_FAMILY,
+        sourceContextSummary: manualSourceContext,
+        payload: manualPayload
+      });
+      const draftDerivedArtifactSlice = routeDeps.buildLandingWorkspaceDerivedArtifactSlice({
+        candidateSpec: manualSpec,
+        previewMode
+      });
+      const saved = await routeDeps.saveDraft({
+        entityType: ENTITY_TYPES.PAGE,
+        entityId: entity.id,
+        userId: user.id,
+        changeIntent,
+        payload: manualSpec.payload,
+        aiInvolvement: false,
+        aiSourceBasis: null,
+        auditDetails: routeDeps.buildLandingWorkspaceAuditDetails({ status: "manual_edit" }, draftDerivedArtifactSlice)
+      });
+      const readiness = await routeDeps.evaluateReadiness({
+        entity: saved.entity,
+        revision: saved.revision
+      });
+      const verificationReport = routeDeps.buildLandingWorkspaceVerificationReport({
+        candidateSpec: manualSpec,
+        readiness,
+        revision: saved.revision,
+        llmResult: null
+      });
+      const persistedDerivedArtifactSlice = routeDeps.buildLandingWorkspaceDerivedArtifactSlice({
+        candidateSpec: {
+          ...manualSpec,
+          landingDraftId: saved.revision.id
+        },
+        previewMode,
+        verificationSummary: verificationReport.summary,
+        reviewStatus: saved.revision.state
+      });
+
+      await routeDeps.applyAcceptedMemoryDelta({
+        entityType: ENTITY_TYPES.PAGE,
+        entityId: entity.id,
+        baseRevisionId: baseRevision?.id ?? "",
+        routeLocked: true,
+        entityLocked: true,
+        actor: user,
+        delta: routeDeps.buildMemoryAnchorDelta({
+          pageId: entity.id,
+          baseRevisionId: baseRevision?.id ?? "",
+          actor: user,
+          changeIntent,
+          editorialGoal,
+          variantDirection,
+          proofBasis: manualProofBasis,
+          previewMode: persistedDerivedArtifactSlice.previewMode,
+          candidateId: manualSpec.candidateId,
+          revisionId: saved.revision.id,
+          verificationSummary: verificationReport.summary,
+          activeBlockers: verificationReport.blockingIssues.map((issue) => issue.message),
+          warnings: verificationReport.warnings.map((issue) => issue.message),
+          reviewStatus: saved.revision.state,
+          derivedArtifactSlice: persistedDerivedArtifactSlice,
+          routeFamily: manualSpec.routeFamily,
+          requestId: memorySlice?.traceState?.requestId || "",
+          traceId: memorySlice?.traceState?.lastLlmTraceId || "",
+          lastChange: changeIntent,
+          lastBlocker: verificationReport.blockingIssues[0]?.message || "",
+          generationOutcome: "manual_update"
+        })
+      }, {
+        actor: user
+      });
+
+      return redirectWithQuery(request, fallbackPath, {
+        message: verificationReport.hasBlocking || verificationReport.overallStatus === "blocked"
+          ? "РљРѕРјРїРѕР·РёС†РёСЏ СЃРѕС…СЂР°РЅРµРЅР°; РѕСЃС‚Р°Р»РёСЃСЊ Р±Р»РѕРєРёСЂСѓСЋС‰РёРµ РїСЂРѕР±Р»РµРјС‹."
+          : "РљРѕРјРїРѕР·РёС†РёСЏ СЃРѕС…СЂР°РЅРµРЅР°."
+      });
     }
 
     if (actionKind === "send_to_review") {
