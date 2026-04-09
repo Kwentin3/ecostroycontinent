@@ -149,8 +149,8 @@ Build note:
 
 ## Git Status
 
-- Commit(s): pending
-- Push status: pending
+- Commit(s): `7cad87c` (`Extend landing composition stage A semantics`)
+- Push status: pushed to `origin/main`
 
 ## Rollout Status
 
@@ -160,6 +160,7 @@ Rollout prep status:
 - no migration required;
 - runtime-facing code and renderer semantics are in place;
 - safe next rollout would be the usual app deploy/build pipeline.
+- no deploy was executed from this workspace during the pass.
 
 ## Known Remaining Limitations
 
