@@ -1,7 +1,51 @@
 import Link from "next/link";
 
 import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { DEFAULT_LANDING_PAGE_THEME_KEY, DEFAULT_LANDING_SURFACE_TONE, DEFAULT_LANDING_TEXT_EMPHASIS_PRESET } from "../../lib/landing-composition/visual-semantics.js";
 import styles from "./public-ui.module.css";
+
+function getThemeClassName(pageThemeKey) {
+  switch (pageThemeKey || DEFAULT_LANDING_PAGE_THEME_KEY) {
+    case "forest_contrast":
+      return styles.themeForestContrast;
+    case "slate_editorial":
+      return styles.themeSlateEditorial;
+    case "earth_sand":
+    default:
+      return styles.themeEarthSand;
+  }
+}
+
+function getSurfaceToneClassName(surfaceTone) {
+  switch (surfaceTone || DEFAULT_LANDING_SURFACE_TONE) {
+    case "tinted":
+      return styles.sectionToneTinted;
+    case "emphasis":
+      return styles.sectionToneEmphasis;
+    case "plain":
+    default:
+      return styles.sectionTonePlain;
+  }
+}
+
+function getTextEmphasisClassName(textEmphasisPreset) {
+  switch (textEmphasisPreset || DEFAULT_LANDING_TEXT_EMPHASIS_PRESET) {
+    case "quiet":
+      return styles.textEmphasisQuiet;
+    case "strong":
+      return styles.textEmphasisStrong;
+    case "standard":
+    default:
+      return styles.textEmphasisStandard;
+  }
+}
+
+function getStageASectionClassNames({ surfaceTone, textEmphasisPreset }) {
+  return [
+    getSurfaceToneClassName(surfaceTone),
+    getTextEmphasisClassName(textEmphasisPreset)
+  ].join(" ");
+}
 
 function MediaHero({ asset, label = PUBLIC_COPY.mediaLabel, sectionId = "preview-media", sectionName = "media" }) {
   if (!asset) {
@@ -152,10 +196,16 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia }) {
 
 export function StandalonePage({ page, globalSettings, services, cases, galleries, resolveMedia }) {
   const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
+  const pageThemeClassName = getThemeClassName(page.pageThemeKey);
+  const heroBlock = Array.isArray(page.blocks) ? page.blocks.find((block) => block.type === "hero") : null;
+  const heroClassName = getStageASectionClassNames({
+    surfaceTone: heroBlock?.surfaceTone,
+    textEmphasisPreset: heroBlock?.textEmphasisPreset
+  });
 
   return (
-    <main className={styles.page}>
-      <section id="preview-page-hero" data-preview-section="hero" className={`${styles.hero} ${styles.previewSection}`}>
+    <main className={`${styles.page} ${pageThemeClassName}`}>
+      <section id="preview-page-hero" data-preview-section="hero" className={`${styles.hero} ${styles.previewSection} ${heroClassName}`}>
         <p className={styles.eyebrow}>{PUBLIC_COPY.pageEyebrow}</p>
         <h1>{page.h1}</h1>
         <p>{page.intro}</p>
@@ -170,7 +220,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
                   key={`${block.type}-${block.order}`}
                   id={`preview-page-${block.type}-${block.order}`}
                   data-preview-section={`page-${block.type}`}
-                  className={`${styles.card} ${styles.previewSection}`}
+                  className={`${styles.card} ${styles.previewSection} ${getStageASectionClassNames(block)}`}
                 >
                   {block.title ? <h2>{block.title}</h2> : null}
                   <p>{block.body}</p>
@@ -227,7 +277,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
                   key={`${block.type}-${block.order}`}
                   id={`preview-page-${block.type}-${block.order}`}
                   data-preview-section={`page-${block.type}`}
-                  className={`${styles.card} ${styles.previewSection}`}
+                  className={`${styles.card} ${styles.previewSection} ${getStageASectionClassNames(block)}`}
                 >
                   <h2>{block.title}</h2>
                   <p>{block.body}</p>
@@ -241,7 +291,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
                   key={`${block.type}-${block.order}`}
                   id={`preview-page-${block.type}-${block.order}`}
                   data-preview-section={`page-${block.type}`}
-                  className={`${styles.card} ${styles.previewSection}`}
+                  className={`${styles.card} ${styles.previewSection} ${getStageASectionClassNames(block)}`}
                 >
                   <h2>{block.title}</h2>
                   <p>{block.body}</p>

@@ -1,0 +1,1474 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-верстка — Рабочая зона лендинга v6</title>
+  <link rel="icon" href="data:," />
+  <style>
+    :root {
+      --bg: #f1ede4;
+      --surface: rgba(250,247,242,0.92);
+      --paper: rgba(255,255,255,0.92);
+      --paper-strong: #ffffff;
+      --line: rgba(86,69,49,0.12);
+      --line-soft: rgba(86,69,49,0.07);
+      --line-strong: rgba(86,69,49,0.22);
+      --text: #201911;
+      --muted: #796d5f;
+      --muted-light: #a2988b;
+      --accent: #c4622a;
+      --accent-soft: #f2ddd0;
+      --accent-wash: #fff8f3;
+      --accent-line: rgba(196,98,42,0.26);
+      --green: #2f7b57;
+      --green-soft: #dceee4;
+      --danger: #a34a39;
+      --danger-soft: #f3ddd7;
+      --block-tint: #fdf8f3;
+      --block-featured: linear-gradient(160deg, #fff8f2 0%, #ffffff 100%);
+      --shadow-sm: 0 2px 8px rgba(32,25,17,0.045);
+      --shadow-md: 0 8px 20px rgba(32,25,17,0.06);
+      --shadow-lg: 0 24px 54px rgba(32,25,17,0.09);
+      --shadow-accent: 0 12px 30px rgba(196,98,42,0.14);
+      --r-sm: 12px;
+      --r: 20px;
+      --r-lg: 28px;
+      --font: "Segoe UI", "Inter", sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(244, 214, 188, 0.34), transparent 26%),
+        radial-gradient(circle at right 18%, rgba(235, 227, 210, 0.42), transparent 24%),
+        var(--bg);
+    }
+
+    button, input { font: inherit; }
+
+    .workspace {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+      min-height: 100vh;
+    }
+
+    .topbar,
+    .panel,
+    .page-surface,
+    .toast,
+    .helper-drawer {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar {
+      border-radius: var(--r-lg);
+      padding: 12px 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .title-row,
+    .meta-row,
+    .top-actions,
+    .mode-toggle,
+    .library-filters,
+    .library-state,
+    .section-meta,
+    .toolbar,
+    .helper-actions,
+    .check-actions,
+    .selection-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: 23px;
+      line-height: 1.15;
+      font-weight: 650;
+    }
+
+    .status-pill,
+    .chip,
+    .badge,
+    .btn,
+    .mode-btn,
+    .filter-btn,
+    .toolbar-btn,
+    .lib-btn,
+    .mini-btn {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.16s ease;
+      padding: 8px 12px;
+    }
+
+    .chip,
+    .badge {
+      cursor: default;
+      background: rgba(255,255,255,0.74);
+      border-color: var(--line);
+      color: var(--muted);
+    }
+
+    .badge {
+      padding: 4px 8px;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 600;
+    }
+
+    .badge.used {
+      background: var(--accent-soft);
+      border-color: rgba(196,98,42,0.16);
+      color: var(--accent);
+    }
+
+    .badge.main {
+      background: var(--green-soft);
+      border-color: rgba(47,123,87,0.16);
+      color: var(--green);
+    }
+
+    .status-pill {
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--danger-soft);
+      border-color: rgba(163,74,57,0.14);
+      color: var(--danger);
+    }
+
+    .status-pill.ready {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: rgba(47,123,87,0.16);
+    }
+
+    .btn,
+    .mode-btn,
+    .filter-btn,
+    .toolbar-btn,
+    .lib-btn,
+    .mini-btn {
+      background: rgba(255,255,255,0.68);
+      border-color: var(--line);
+    }
+
+    .btn.soft,
+    .lib-btn.add {
+      background: var(--accent-soft);
+      border-color: rgba(196,98,42,0.18);
+      color: var(--accent);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #ca6c34, #b65528);
+      color: #fff;
+      border: none;
+      box-shadow: var(--shadow-accent);
+    }
+
+    .mode-btn.active,
+    .filter-btn.active,
+    .toolbar-btn.active {
+      background: #fff;
+      border-color: var(--line-strong);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn:hover,
+    .mode-btn:hover,
+    .filter-btn:hover,
+    .toolbar-btn:hover,
+    .lib-btn:hover,
+    .mini-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+    }
+
+    .btn:disabled,
+    .lib-btn:disabled,
+    .mini-btn:disabled,
+    .toolbar-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .muted { color: var(--muted); }
+    .muted-light { color: var(--muted-light); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 244px minmax(0, 1fr) 216px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .workspace.preview-mode .layout {
+      grid-template-columns: 228px minmax(0, 1fr) 198px;
+    }
+
+    .panel {
+      border-radius: var(--r);
+      padding: 13px;
+    }
+
+    .left-col,
+    .center-col,
+    .right-col {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-height: 0;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .panel-copy {
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted-light);
+    }
+
+    .library-group {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .material-item {
+      position: relative;
+      display: grid;
+      gap: 7px;
+      padding: 9px 10px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--line-soft);
+      background: rgba(255,255,255,0.82);
+      transition: 0.15s ease;
+    }
+
+    .material-item:hover { border-color: var(--accent-line); box-shadow: var(--shadow-sm); }
+    .material-item.selected {
+      background: var(--accent-wash);
+      border-color: var(--accent-line);
+    }
+    .material-item.used {
+      background: rgba(242,221,208,0.36);
+      border-color: rgba(196,98,42,0.16);
+    }
+
+    .material-top {
+      display: grid;
+      grid-template-columns: auto 40px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+    }
+
+    .family-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex: 0 0 8px;
+    }
+
+    .family-dot.media { background: #be6b3c; }
+    .family-dot.service { background: #8a8f62; }
+    .family-dot.case { background: #658596; }
+
+    .thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ead8c7, #f6eee4);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 11px;
+      border: 1px solid rgba(86,69,49,0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .thumb.media-facade {
+      background:
+        linear-gradient(180deg, #c9d9e8 0 48%, #d7bca7 48% 60%, #b78157 60% 100%);
+    }
+
+    .thumb.media-facade::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      height: 14px;
+      background: linear-gradient(180deg, #f7f1ea, #d8c2ae);
+      border-radius: 4px 4px 2px 2px;
+      box-shadow: inset 0 -2px 0 rgba(86,69,49,0.08);
+    }
+
+    .thumb.media-facade::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      bottom: 20px;
+      width: 20px;
+      height: 10px;
+      background: #8f5b37;
+      clip-path: polygon(0 100%, 50% 0, 100% 100%);
+    }
+
+    .thumb.media-process {
+      background:
+        linear-gradient(180deg, #cfd9df 0 32%, #ece2d8 32% 100%);
+    }
+
+    .thumb.media-process::before,
+    .thumb.media-process::after {
+      content: "";
+      position: absolute;
+      border-radius: 3px;
+      background: rgba(120, 102, 82, 0.28);
+    }
+
+    .thumb.media-process::before {
+      left: 7px;
+      right: 7px;
+      top: 9px;
+      height: 6px;
+      box-shadow: 0 9px 0 rgba(148,126,103,0.35), 0 18px 0 rgba(120,102,82,0.24);
+    }
+
+    .thumb.media-process::after {
+      left: 8px;
+      width: 10px;
+      bottom: 8px;
+      height: 10px;
+      background: rgba(190,107,60,0.34);
+    }
+
+    .thumb.service {
+      background: linear-gradient(135deg, #eef0e4, #f7f6ef);
+      color: #7a7f56;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .thumb.case {
+      background: linear-gradient(135deg, #e8eef1, #f7fafb);
+      color: #5f8192;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .material-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .material-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .material-actions-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .lib-icon-btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.8);
+      color: var(--text);
+      display: inline-grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.14s ease;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .lib-icon-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: #fff;
+    }
+
+    .lib-icon-btn.add {
+      color: var(--accent);
+      background: rgba(242,221,208,0.72);
+      border-color: rgba(196,98,42,0.2);
+    }
+
+    .lib-icon-btn.remove {
+      color: var(--muted);
+    }
+
+    .surface-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .surface-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .surface-desc {
+      font-size: 12px;
+      color: var(--muted-light);
+      margin-top: 3px;
+    }
+
+    .page-surface {
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      background: rgba(237,233,223,0.74);
+      padding: 12px;
+    }
+
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(241,237,228,0.74);
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .browser-dots { display: flex; gap: 5px; }
+    .browser-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(86,69,49,0.18);
+    }
+
+    .browser-url {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .browser-pill {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(196,98,42,0.1);
+      color: var(--accent);
+      margin: 0 2px 10px;
+    }
+
+    .page-body {
+      background: linear-gradient(180deg, #fffefc 0%, #fffaf6 100%);
+      border-radius: 22px;
+      box-shadow: 0 18px 34px rgba(28,22,16,0.08);
+      overflow: hidden;
+    }
+
+    .shell-region {
+      padding: 9px 28px;
+      background: rgba(241,237,228,0.54);
+      border-bottom: 1px solid var(--line-soft);
+      color: var(--muted-light);
+      font-size: 11px;
+      letter-spacing: 0.03em;
+    }
+
+    .shell-region.bottom {
+      border-top: 1px solid var(--line-soft);
+      border-bottom: none;
+    }
+
+    .page-block {
+      position: relative;
+      padding: 24px 28px;
+      border-bottom: 1px solid rgba(86,69,49,0.045);
+      background: transparent;
+      transition: 0.15s ease;
+      cursor: pointer;
+    }
+
+    .page-block::after {
+      content: "";
+      position: absolute;
+      inset: 8px 12px;
+      border: 1px dashed transparent;
+      border-radius: 16px;
+      pointer-events: none;
+      opacity: 0;
+      transition: 0.14s ease;
+    }
+
+    .page-block:last-of-type { border-bottom: none; }
+    .page-block:hover { background: rgba(255,250,246,0.68); }
+    .workspace:not(.preview-mode) .page-block:hover::after {
+      opacity: 1;
+      border-color: rgba(196,98,42,0.22);
+    }
+    .page-block.selected {
+      background: rgba(255,250,247,0.86);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+    .page-block.selected::after {
+      opacity: 1;
+      border-style: solid;
+      border-color: rgba(196,98,42,0.34);
+    }
+    .page-block.featured { background: linear-gradient(180deg, rgba(255,249,244,0.9), rgba(255,255,255,0.72)); }
+    .page-block.featured.selected { background: linear-gradient(180deg, rgba(255,244,236,0.95), rgba(255,250,247,0.88)); }
+    .page-block.tinted { background: linear-gradient(180deg, rgba(253,248,243,0.88), rgba(255,255,255,0.68)); }
+    .page-block.tinted.selected { background: linear-gradient(180deg, rgba(253,244,236,0.92), rgba(255,251,247,0.84)); }
+    .page-block.supporting { opacity: 0.84; }
+    .page-block.compact { padding-top: 18px; padding-bottom: 18px; }
+    .page-block.expanded { padding-top: 30px; padding-bottom: 30px; }
+    .page-block.centered { text-align: center; }
+
+    .block-chrome {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.14s ease;
+    }
+
+    .workspace:not(.preview-mode) .page-block:hover .block-chrome,
+    .workspace:not(.preview-mode) .page-block.selected .block-chrome {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .block-kebab {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(86,69,49,0.1);
+      background: rgba(255,255,255,0.88);
+      color: var(--muted);
+      display: inline-grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .block-menu {
+      display: none;
+      gap: 5px;
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(86,69,49,0.1);
+      background: rgba(255,255,255,0.96);
+      box-shadow: var(--shadow-md);
+      max-width: 220px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .page-block.menu-open .block-menu {
+      display: flex;
+    }
+
+    .block-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .block-role {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted-light);
+    }
+
+    .hero-layout,
+    .media-layout,
+    .cards-layout,
+    .cta-layout {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-layout { grid-template-columns: 1.15fr 0.85fr; align-items: start; }
+    .media-layout { grid-template-columns: repeat(3, 1fr); }
+    .cards-layout { grid-template-columns: repeat(3, 1fr); }
+    .cta-layout { grid-template-columns: 1fr auto; align-items: center; }
+
+    .hero-copy { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 0 0 14px; }
+    .hero-title { margin: 0 0 10px; font-size: 22px; font-weight: 700; line-height: 1.24; }
+
+    .hero-visual,
+    .media-thumb,
+    .card-surface {
+      border-radius: var(--r-sm);
+      border: 1px solid var(--line-soft);
+      background: linear-gradient(135deg, #e2d1c1, #f5ebe0);
+    }
+
+    .hero-visual {
+      aspect-ratio: 4 / 3;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .media-thumb {
+      aspect-ratio: 4 / 3;
+      display: grid;
+      place-items: center;
+      color: var(--muted-light);
+      font-size: 11px;
+    }
+
+    .card-surface {
+      padding: 14px;
+      background: rgba(255,255,255,0.9);
+    }
+
+    .card-surface strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .card-surface span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .copy-bridge {
+      margin: 0 28px;
+      padding: 5px 0 4px;
+      border-radius: var(--r-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .copy-bridge:hover { background: rgba(241,237,228,0.34); border-color: rgba(86,69,49,0.1); }
+    .copy-bridge.selected { background: rgba(255,255,255,0.7); border-color: rgba(196,98,42,0.18); }
+
+    .bridge-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .bridge-icon {
+      flex-shrink: 0;
+      color: var(--muted-light);
+      margin-top: 0;
+    }
+
+    .bridge-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted-light);
+      margin-bottom: 2px;
+    }
+
+    .bridge-text {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      font-style: italic;
+    }
+
+    .bridge-editor {
+      display: none;
+      margin-top: 6px;
+    }
+
+    .copy-bridge.selected .bridge-editor { display: block; }
+
+    .bridge-input {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(196,98,42,0.22);
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.92);
+      color: var(--text);
+    }
+
+    .section-actions { margin-top: 10px; }
+
+    .helper-drawer {
+      display: none;
+      border-radius: 16px;
+      padding: 10px 11px;
+      gap: 7px;
+      background: rgba(249,246,240,0.72);
+      box-shadow: none;
+    }
+
+    .helper-drawer.open { display: grid; }
+
+    .suggestion {
+      padding: 8px 9px;
+      border-radius: 12px;
+      border: 1px solid rgba(86,69,49,0.06);
+      background: rgba(255,255,255,0.66);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .selection-card.hidden { display: none; }
+
+    .right-col .panel {
+      background: rgba(249,246,240,0.72);
+      box-shadow: none;
+    }
+
+    .workspace.preview-mode #selectionCard {
+      display: none !important;
+    }
+
+    .check-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: min(340px, calc(100vw - 28px));
+      border-radius: 16px;
+      padding: 13px 14px;
+      font-size: 13px;
+      line-height: 1.45;
+      z-index: 20;
+    }
+
+    .workspace.preview-mode .block-toolbar,
+    .workspace.preview-mode .block-chrome,
+    .workspace.preview-mode .block-kebab,
+    .workspace.preview-mode .block-menu,
+    .workspace.preview-mode .section-actions,
+    .workspace.preview-mode .bridge-editor,
+    .workspace.preview-mode .bridge-edit,
+    .workspace.preview-mode .toolbar-edit-only {
+      display: none !important;
+    }
+
+    .workspace.preview-mode .copy-bridge {
+      border-color: transparent;
+      background: transparent;
+      margin-top: -4px;
+      margin-bottom: -4px;
+      cursor: default;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    @media (max-width: 1280px) {
+      .layout,
+      .hero-layout,
+      .media-layout,
+      .cards-layout,
+      .cta-layout,
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toast {
+        left: 16px;
+        right: 16px;
+        width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="workspace" class="workspace">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">AI-верстка · Рабочая зона лендинга</p>
+        <div class="title-row">
+          <h1>Дом в Сочи под ключ</h1>
+          <span id="statusPill" class="status-pill">Есть блокирующие проблемы</span>
+        </div>
+        <div class="meta-row" style="margin-top:8px;">
+          <span class="muted-light">Страница-источник: Дом в Сочи под ключ</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="sourceBtn" class="btn">Открыть страницу-источник</button>
+        <button id="draftBtn" class="btn soft">Сгенерировать черновик</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="left-col">
+        <section class="panel">
+          <div class="panel-title">Материалы</div>
+          <div class="panel-copy">Media, услуги и кейсы. Здесь понятно, что уже добавлено на страницу, а что ещё свободно.</div>
+          <div class="library-filters" style="margin-top:10px;">
+            <button class="filter-btn active" data-filter="all">Все</button>
+            <button class="filter-btn" data-filter="media">Media</button>
+            <button class="filter-btn" data-filter="service">Услуги</button>
+            <button class="filter-btn" data-filter="case">Кейсы</button>
+          </div>
+          <div id="libraryList" class="library-group"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Shell</div>
+          <div class="library-state" style="margin-top:10px;">
+            <span class="badge">Header зафиксирован</span>
+            <span class="badge">Footer зафиксирован</span>
+          </div>
+        </section>
+      </aside>
+
+      <main class="center-col">
+        <section class="surface-head">
+          <div>
+            <div class="surface-title">Собираем страницу в одном месте</div>
+            <div class="surface-desc">Выбираем материалы слева и работаем прямо на странице: акценты, порядок, короткие связки, затем предпросмотр как читатель.</div>
+          </div>
+          <div class="mode-toggle">
+            <button class="mode-btn active" data-mode="compose">Compose</button>
+            <button class="mode-btn" data-mode="preview">Предпросмотр</button>
+          </div>
+        </section>
+
+        <section class="page-surface">
+          <div class="browser-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <div class="browser-url">ecostroycontinent.ru / landing / draft</div>
+            <div id="browserPill" class="browser-pill">Собираем страницу</div>
+          </div>
+          <div id="pageBody" class="page-body"></div>
+        </section>
+      </main>
+
+      <aside class="right-col">
+        <section class="panel">
+          <div class="panel-title">Проверка</div>
+          <ul id="checkList" class="check-list"></ul>
+          <div class="check-actions" style="margin-top:12px;">
+            <button id="reviewBtn" class="btn primary" disabled>Передать на проверку</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">AI-помощь</div>
+          <div class="panel-copy">Не чат, а маленькая подсказка по выбранному месту на странице.</div>
+          <div class="helper-actions" style="margin-top:10px;">
+            <button id="helperBridgeBtn" class="mini-btn">Подсказать связку</button>
+            <button id="helperTightenBtn" class="mini-btn">Сделать короче</button>
+          </div>
+        </section>
+
+        <section id="helperDrawer" class="helper-drawer"></section>
+        <section id="selectionCard" class="panel selection-card hidden"></section>
+      </aside>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite">Слева выбираем материалы, в центре работаем только с одной страницей-поверхностью, справа держим короткую проверку и handoff.</div>
+
+  <script>
+    (() => {
+      const materials = [
+        { id: 'media-facade', type: 'media', name: 'Главный фасад', desc: 'Фото дома для первого доказательства', thumb: '16:9' },
+        { id: 'media-process', type: 'media', name: 'Ход стройки', desc: 'Галерея этапов для supporting proof', thumb: 'гал.' },
+        { id: 'service-turnkey', type: 'service', name: 'Дом под ключ', desc: 'Один маршрут от проекта до сдачи', thumb: 'усл.' },
+        { id: 'service-engineering', type: 'service', name: 'Инженерные сети', desc: 'Коммуникации без хаотичной стыковки подрядчиков', thumb: 'сети' },
+        { id: 'case-186', type: 'case', name: 'Кейс: дом 186 м²', desc: 'Сдали раньше срока и без лишних допработ', thumb: 'кейс' },
+        { id: 'case-slope', type: 'case', name: 'Кейс: сложный склон', desc: 'Решили рельеф и дренаж без резкого роста сметы', thumb: 'склон' }
+      ];
+
+      const state = {
+        mode: 'compose',
+        filter: 'all',
+        selectedMaterialId: 'service-turnkey',
+        selectedSectionId: 'case-186',
+        openMenuId: null,
+        helperOpen: false,
+        helperMessages: ['Выберите блок на странице, затем вызовите короткую AI-подсказку по связке или сокращению текста.'],
+        hero: {
+          title: 'Дом под ключ в Сочи без рассыпания сроков и сметы',
+          copy: 'Первый экран задаёт обещание и держит один главный proof. Все следующие блоки должны работать на усиление этого обещания.'
+        },
+        cta: {
+          title: 'Обсудим участок, бюджет и реальный маршрут работ',
+          copy: 'Финальный шаг звучит спокойно: не “оставьте заявку вообще”, а обсудим исходные условия и понятный план.'
+        },
+        blocks: [
+          {
+            id: 'media-facade',
+            prominence: 'main',
+            density: 'expanded',
+            align: 'left',
+            surface: 'soft',
+            bridge: 'Сразу после обещания показываем реальный объект, чтобы страница начиналась не с абстракции, а с подтверждения.'
+          },
+          {
+            id: 'case-186',
+            prominence: 'supporting',
+            density: 'compact',
+            align: 'left',
+            surface: 'plain',
+            bridge: 'Перед финальным шагом закрепляем доверие одним кейсом, который подтверждает сроки и управляемость проекта.'
+          }
+        ]
+      };
+
+      const workspace = document.getElementById('workspace');
+      const libraryList = document.getElementById('libraryList');
+      const pageBody = document.getElementById('pageBody');
+      const selectionCard = document.getElementById('selectionCard');
+      const helperDrawer = document.getElementById('helperDrawer');
+      const checkList = document.getElementById('checkList');
+      const reviewBtn = document.getElementById('reviewBtn');
+      const statusPill = document.getElementById('statusPill');
+      const browserPill = document.getElementById('browserPill');
+      const toast = document.getElementById('toast');
+      const helperBridgeBtn = document.getElementById('helperBridgeBtn');
+      const helperTightenBtn = document.getElementById('helperTightenBtn');
+      const draftBtn = document.getElementById('draftBtn');
+      const sourceBtn = document.getElementById('sourceBtn');
+
+      const prominenceLabels = { main: 'главный', standard: 'обычный', supporting: 'поддерживающий' };
+      const densityLabels = { compact: 'компактно', regular: 'обычно', expanded: 'шире' };
+      const alignLabels = { left: 'слева', center: 'по центру' };
+      const surfaceLabels = { plain: 'спокойно', soft: 'с акцентом' };
+
+      function setToast(text) {
+        toast.textContent = text;
+      }
+
+      function getMaterial(id) {
+        return materials.find((item) => item.id === id);
+      }
+
+      function getBlock(id) {
+        return state.blocks.find((item) => item.id === id);
+      }
+
+      function isUsed(id) {
+        return state.blocks.some((item) => item.id === id);
+      }
+
+      function createBlock(id) {
+        const material = getMaterial(id);
+        const presets = {
+          media: { prominence: 'standard', density: 'regular', align: 'left', surface: 'plain', bridge: 'Добавьте короткую связку, которая объясняет, зачем этот proof нужен именно здесь.' },
+          service: { prominence: 'standard', density: 'regular', align: 'left', surface: 'plain', bridge: 'Коротко покажите, как этот блок усиливает обещание страницы.' },
+          case: { prominence: 'supporting', density: 'compact', align: 'left', surface: 'plain', bridge: 'Свяжите кейс с доверием: зачем читателю этот proof именно перед следующим шагом.' }
+        };
+        return { id, ...presets[material.type] };
+      }
+
+      function computeBlockers() {
+        const blockers = [];
+        const hasMainMedia = state.blocks.some((block) => getMaterial(block.id).type === 'media' && block.prominence === 'main');
+        if (!hasMainMedia) blockers.push('Нужен один явно главный media-proof.');
+        if (state.blocks.length < 2) blockers.push('Сейчас между Hero и CTA слишком мало proof-блоков.');
+        if (state.blocks.some((block) => (block.bridge || '').trim().length < 42)) blockers.push('Хотя бы одна связка между блоками пока слишком слабая.');
+        return blockers;
+      }
+
+      function renderLibrary() {
+        const filtered = materials.filter((item) => state.filter === 'all' || item.type === state.filter);
+        libraryList.innerHTML = filtered.map((item) => {
+          const used = isUsed(item.id);
+          const selected = state.selectedMaterialId === item.id;
+          const block = getBlock(item.id);
+          const main = block && block.prominence === 'main';
+          const glyph = item.type === 'service' ? '▣' : item.type === 'case' ? '◈' : '';
+          return `
+            <article class="material-item ${used ? 'used' : ''} ${selected ? 'selected' : ''}" data-material-row="${item.id}" data-family="${item.type}">
+              <div class="material-top">
+                <span class="family-dot ${item.type}"></span>
+                <div class="thumb ${item.type} ${item.id}">${glyph}</div>
+                <div>
+                  <div class="material-name">${item.name}</div>
+                  <div class="material-desc">${item.desc}</div>
+                </div>
+              </div>
+              <div class="library-state">
+                ${main ? '<span class="badge main">главный</span>' : ''}
+                ${used ? '<span class="badge used">Добавлено</span>' : '<span class="badge">Свободно</span>'}
+              </div>
+              <div class="material-actions-row">
+                <button class="lib-icon-btn ${used ? 'remove' : 'add'}" title="${used ? 'Убрать' : 'Добавить'}" aria-label="${used ? 'Убрать' : 'Добавить'}" data-material-action="${used ? 'remove' : 'add'}" data-material-id="${item.id}">${used ? '−' : '+'}</button>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function renderHero() {
+        const selected = state.selectedSectionId === 'hero';
+        return `
+          <section class="page-block featured ${selected ? 'selected' : ''}" data-section-id="hero">
+            <div class="block-meta">
+              <span class="block-role">Hero</span>
+              <span class="badge main">главный экран</span>
+              <span class="badge">фиксирован</span>
+            </div>
+            <div class="hero-layout">
+              <div>
+                <h2 class="hero-title">${state.hero.title}</h2>
+                <p class="hero-copy">${state.hero.copy}</p>
+                <button class="btn primary" style="padding:9px 18px;">Оставить заявку</button>
+              </div>
+              <div class="hero-visual">Главный visual proof для первого экрана</div>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderBridge(block) {
+        const selected = state.selectedSectionId === block.id;
+        return `
+          <div class="copy-bridge ${selected ? 'selected' : ''}" data-bridge-for="${block.id}">
+            <div class="bridge-row">
+              <div class="bridge-icon">~</div>
+              <div>
+                <div class="bridge-label">Связка</div>
+                <div class="bridge-text">${block.bridge}</div>
+              </div>
+            </div>
+            <div class="bridge-editor">
+              <input class="bridge-input" data-bridge-input="${block.id}" value="${block.bridge.replace(/"/g, '&quot;')}" />
+            </div>
+            <div class="section-actions bridge-edit toolbar-edit-only" style="margin-top:8px;">
+              <button class="mini-btn" data-edit-bridge="${block.id}">Изменить</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDynamicBlock(block, index) {
+        const material = getMaterial(block.id);
+        const selected = state.selectedSectionId === block.id;
+        const prominenceClass = block.prominence === 'main' ? 'featured' : block.prominence === 'supporting' ? 'supporting' : '';
+        const densityClass = block.density === 'compact' ? 'compact' : block.density === 'expanded' ? 'expanded' : '';
+        const alignClass = block.align === 'center' ? 'centered' : '';
+        const surfaceClass = block.surface === 'soft' ? 'tinted' : '';
+        const canUp = index > 0;
+        const canDown = index < state.blocks.length - 1;
+
+        const toolbar = `
+          <div class="block-chrome toolbar-edit-only">
+            <button class="block-kebab" title="Действия блока" aria-label="Действия блока" data-menu-toggle="${block.id}">⋯</button>
+            <div class="block-menu">
+              <button class="toolbar-btn" data-tool="prominence" data-id="${block.id}">Акцент</button>
+              <button class="toolbar-btn" data-tool="density" data-id="${block.id}">Плотность</button>
+              <button class="toolbar-btn" data-tool="surface" data-id="${block.id}">Фон</button>
+              <button class="toolbar-btn" data-tool="align" data-id="${block.id}">Выравнивание</button>
+              <button class="toolbar-btn" data-move="up" data-id="${block.id}" ${canUp ? '' : 'disabled'}>Выше</button>
+              <button class="toolbar-btn" data-move="down" data-id="${block.id}" ${canDown ? '' : 'disabled'}>Ниже</button>
+              <button class="toolbar-btn" data-remove-block="${block.id}">Убрать</button>
+            </div>
+          </div>
+        `;
+
+        let body = '';
+        if (material.type === 'media') {
+          body = `
+            <div class="block-meta">
+              <span class="block-role">Media block</span>
+              <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabels[block.prominence]}</span>
+              <span class="badge">${densityLabels[block.density]}</span>
+            </div>
+            <div class="media-layout">
+              <div class="media-thumb">${material.name}</div>
+              <div class="media-thumb">Деталь</div>
+              <div class="media-thumb">Процесс</div>
+            </div>
+          `;
+        } else if (material.type === 'service') {
+          body = `
+            <div class="block-meta">
+              <span class="block-role">Service cards</span>
+              <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabels[block.prominence]}</span>
+              <span class="badge">${densityLabels[block.density]}</span>
+            </div>
+            <div class="cards-layout">
+              <div class="card-surface"><strong>${material.name}</strong><span>${material.desc}</span></div>
+              <div class="card-surface"><strong>Один маршрут</strong><span>Без разрывов между подрядчиками и лишних стыковок.</span></div>
+              <div class="card-surface"><strong>Читается как выгода</strong><span>Это не каталог услуг, а аргумент в пользу понятного процесса.</span></div>
+            </div>
+          `;
+        } else {
+          body = `
+            <div class="block-meta">
+              <span class="block-role">Case cards</span>
+              <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabels[block.prominence]}</span>
+              <span class="badge">${densityLabels[block.density]}</span>
+            </div>
+            <div class="cards-layout">
+              <div class="card-surface"><strong>${material.name}</strong><span>${material.desc}</span></div>
+              <div class="card-surface"><strong>Что считывает клиент</strong><span>Команда умеет держать сроки и сложность проекта под контролем.</span></div>
+              <div class="card-surface"><strong>Почему здесь</strong><span>Этот кейс закрепляет доверие ближе к финальному шагу.</span></div>
+            </div>
+          `;
+        }
+
+        return `
+          ${renderBridge(block)}
+          <section class="page-block ${prominenceClass} ${densityClass} ${alignClass} ${surfaceClass} ${selected ? 'selected' : ''} ${state.openMenuId === block.id ? 'menu-open' : ''}" data-section-id="${block.id}">
+            ${toolbar}
+            ${body}
+          </section>
+        `;
+      }
+
+      function renderCTA() {
+        const selected = state.selectedSectionId === 'cta';
+        return `
+          <section class="page-block tinted ${selected ? 'selected' : ''}" data-section-id="cta">
+            <div class="block-meta">
+              <span class="block-role">CTA band</span>
+              <span class="badge">фиксирован</span>
+            </div>
+            <div class="cta-layout">
+              <div>
+                <h3 style="margin:0 0 6px; font-size: 18px; font-weight: 700;">${state.cta.title}</h3>
+                <p class="muted">${state.cta.copy}</p>
+              </div>
+              <button class="btn soft" style="padding:9px 18px;">Оставить заявку</button>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderPage() {
+        pageBody.innerHTML = `
+          <div class="shell-region">Header / shell region · меню, контакты, навигация остаются фиксированными</div>
+          ${renderHero()}
+          ${state.blocks.map(renderDynamicBlock).join('')}
+          ${renderCTA()}
+          <div class="shell-region bottom">Footer / shell region · контакты, карта и нижняя навигация</div>
+        `;
+      }
+
+      function renderSelectionCard() {
+        const id = state.selectedSectionId;
+        if (!id || id === 'hero' || id === 'cta' || state.mode === 'preview') {
+          selectionCard.classList.add('hidden');
+          selectionCard.innerHTML = '';
+          return;
+        }
+        const block = getBlock(id);
+        const material = getMaterial(id);
+        selectionCard.classList.remove('hidden');
+        selectionCard.innerHTML = `
+          <div class="panel-title">Что хотим изменить</div>
+          <div class="panel-copy">${material.name}</div>
+          <div class="selection-row" style="margin-top:10px;">
+            <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabels[block.prominence]}</span>
+            <span class="badge">${densityLabels[block.density]}</span>
+            <span class="badge">${surfaceLabels[block.surface]}</span>
+          </div>
+          <div class="panel-copy" style="margin-top:10px;">Дайте этому блоку правильный вес и короткую связку. Остальное лучше не усложнять.</div>
+        `;
+      }
+
+      function renderHelper() {
+        helperDrawer.classList.toggle('open', state.helperOpen);
+        helperDrawer.innerHTML = state.helperOpen
+          ? state.helperMessages.map((msg) => `<div class="suggestion">${msg}</div>`).join('')
+          : '';
+      }
+
+      function renderChecks() {
+        const blockers = computeBlockers();
+        checkList.innerHTML = blockers.map((item) => `<li>${item}</li>`).join('');
+        const ready = blockers.length === 0;
+        reviewBtn.disabled = !ready;
+        statusPill.textContent = ready ? 'Можно передавать' : 'Есть блокирующие проблемы';
+        statusPill.classList.toggle('ready', ready);
+        browserPill.textContent = state.mode === 'preview' ? 'Предпросмотр' : 'Собираем страницу';
+      }
+
+      function render() {
+        renderLibrary();
+        renderPage();
+        renderSelectionCard();
+        renderHelper();
+        renderChecks();
+        workspace.classList.toggle('preview-mode', state.mode === 'preview');
+        if (state.mode === 'preview') {
+          state.openMenuId = null;
+        }
+      }
+
+      function addMaterial(id) {
+        if (isUsed(id)) return;
+        state.blocks.push(createBlock(id));
+        state.selectedMaterialId = id;
+        state.selectedSectionId = id;
+        setToast(`Материал «${getMaterial(id).name}» добавлен на страницу.`);
+        render();
+      }
+
+      function removeMaterial(id) {
+        state.blocks = state.blocks.filter((block) => block.id !== id);
+        if (state.selectedSectionId === id) state.selectedSectionId = state.blocks[0]?.id || 'hero';
+        state.selectedMaterialId = id;
+        setToast('Материал убран со страницы и снова доступен в библиотеке.');
+        render();
+      }
+
+      function moveBlock(id, direction) {
+        const index = state.blocks.findIndex((block) => block.id === id);
+        const nextIndex = direction === 'up' ? index - 1 : index + 1;
+        if (index < 0 || nextIndex < 0 || nextIndex >= state.blocks.length) return;
+        const copy = [...state.blocks];
+        [copy[index], copy[nextIndex]] = [copy[nextIndex], copy[index]];
+        state.blocks = copy;
+        setToast('Порядок proof-блоков изменён прямо на странице.');
+        render();
+      }
+
+      function cycle(id, key, values) {
+        const block = getBlock(id);
+        const currentIndex = values.indexOf(block[key]);
+        block[key] = values[(currentIndex + 1) % values.length];
+        setToast(`Для блока «${getMaterial(id).name}» обновлён параметр «${key}».`);
+        render();
+      }
+
+      function openHelper(kind) {
+        const id = state.selectedSectionId;
+        const material = id && id !== 'hero' && id !== 'cta' ? getMaterial(id) : null;
+        const name = material ? material.name : 'выбранного места';
+        if (kind === 'bridge') {
+          state.helperMessages = [
+            `Для ${name}: свяжите блок не описанием, а мыслью, зачем читателю нужен следующий шаг в истории.`,
+            'Хорошая связка здесь короткая: одна мысль, один поворот страницы, без лишнего микротекста.'
+          ];
+        } else {
+          state.helperMessages = [
+            `Для ${name}: попробуйте убрать треть слов и оставить только результат для клиента.`,
+            'Если фраза не меняет ритм страницы, лучше сократить её, чем поддерживать декоративный шум.'
+          ];
+        }
+        state.helperOpen = true;
+        renderHelper();
+        setToast('Открыта компактная AI-подсказка. Она помогает точечно и не превращается в главный режим работы.');
+      }
+
+      document.addEventListener('click', (event) => {
+        const filter = event.target.closest('[data-filter]');
+        if (filter) {
+          state.filter = filter.dataset.filter;
+          document.querySelectorAll('[data-filter]').forEach((btn) => btn.classList.toggle('active', btn === filter));
+          renderLibrary();
+          setToast(`Фильтр материалов: ${filter.textContent}.`);
+          return;
+        }
+
+        const materialRow = event.target.closest('[data-material-row]');
+        if (materialRow) {
+          state.selectedMaterialId = materialRow.dataset.materialRow;
+          renderLibrary();
+        }
+
+        const materialAction = event.target.closest('[data-material-action]');
+        if (materialAction) {
+          const id = materialAction.dataset.materialId;
+          if (materialAction.dataset.materialAction === 'add') addMaterial(id);
+          else removeMaterial(id);
+          return;
+        }
+
+        const menuToggle = event.target.closest('[data-menu-toggle]');
+        if (menuToggle) {
+          const id = menuToggle.dataset.menuToggle;
+          state.selectedSectionId = id;
+          state.openMenuId = state.openMenuId === id ? null : id;
+          render();
+          return;
+        }
+
+        const move = event.target.closest('[data-move]');
+        if (move) {
+          moveBlock(move.dataset.id, move.dataset.move);
+          return;
+        }
+
+        const remove = event.target.closest('[data-remove-block]');
+        if (remove) {
+          removeMaterial(remove.dataset.removeBlock);
+          return;
+        }
+
+        const tool = event.target.closest('[data-tool]');
+        if (tool) {
+          const map = {
+            prominence: ['main', 'standard', 'supporting'],
+            density: ['compact', 'regular', 'expanded'],
+            surface: ['plain', 'soft'],
+            align: ['left', 'center']
+          };
+          cycle(tool.dataset.id, tool.dataset.tool, map[tool.dataset.tool]);
+          return;
+        }
+
+        const editBridge = event.target.closest('[data-edit-bridge]');
+        if (editBridge) {
+          state.selectedSectionId = editBridge.dataset.editBridge;
+          render();
+          return;
+        }
+
+        const section = event.target.closest('[data-section-id]');
+        if (section) {
+          state.selectedSectionId = section.dataset.sectionId;
+          if (state.openMenuId && state.openMenuId !== state.selectedSectionId) state.openMenuId = null;
+          render();
+          return;
+        }
+
+        const bridge = event.target.closest('[data-bridge-for]');
+        if (bridge) {
+          state.selectedSectionId = bridge.dataset.bridgeFor;
+          render();
+          return;
+        }
+
+        if (state.openMenuId) {
+          state.openMenuId = null;
+          render();
+        }
+      });
+
+      document.addEventListener('input', (event) => {
+        const input = event.target.closest('[data-bridge-input]');
+        if (!input) return;
+        const block = getBlock(input.dataset.bridgeInput);
+        block.bridge = input.value;
+        renderChecks();
+      });
+
+      document.querySelectorAll('[data-mode]').forEach((button) => {
+        button.addEventListener('click', () => {
+          state.mode = button.dataset.mode;
+          if (state.mode === 'preview') state.openMenuId = null;
+          document.querySelectorAll('[data-mode]').forEach((btn) => btn.classList.toggle('active', btn === button));
+          setToast(state.mode === 'preview'
+            ? 'Предпросмотр убирает лишние controls и оставляет страницу для чтения.'
+            : 'Compose возвращает лёгкие in-place actions прямо на странице.');
+          render();
+        });
+      });
+
+      helperBridgeBtn.addEventListener('click', () => openHelper('bridge'));
+      helperTightenBtn.addEventListener('click', () => openHelper('tighten'));
+
+      draftBtn.addEventListener('click', () => {
+        if (!isUsed('service-turnkey')) state.blocks.splice(1, 0, createBlock('service-turnkey'));
+        if (!isUsed('media-process')) state.blocks.splice(2, 0, createBlock('media-process'));
+        state.selectedSectionId = 'service-turnkey';
+        setToast('Черновик дополнен новыми proof-блоками. Дальше работаем с ними прямо на странице.');
+        render();
+      });
+
+      sourceBtn.addEventListener('click', () => {
+        setToast('В production это был бы переход к Странице-источнику. В mockup оставляем только ясную операторскую CTA.');
+      });
+
+      reviewBtn.addEventListener('click', () => {
+        if (reviewBtn.disabled) {
+          setToast('Передать на проверку пока нельзя: сначала закройте блокирующие проблемы справа.');
+          return;
+        }
+        setToast('Mockup подтверждает только handoff-модель: review остаётся явным человеческим действием.');
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

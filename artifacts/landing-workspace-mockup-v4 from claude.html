@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-верстка · Рабочая зона лендинга v4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:            #ede9df;
+      --surface:       #f7f4ee;
+      --panel:         rgba(251,248,242,0.96);
+      --line:          rgba(72,58,38,0.13);
+      --line-soft:     rgba(72,58,38,0.07);
+      --text:          #1c1610;
+      --muted:         #78695a;
+      --muted-lt:      #a8998a;
+      --accent:        #c05a24;
+      --accent-s:      #f2dcd0;
+      --accent-line:   rgba(192,90,36,0.26);
+      --green:         #2b7549;
+      --green-s:       #d6ece1;
+      --shadow-sm:     0 2px 8px rgba(28,22,16,.06);
+      --shadow-md:     0 6px 20px rgba(28,22,16,.08);
+      --shadow-lg:     0 16px 44px rgba(28,22,16,.10);
+      --shadow-acc:    0 10px 28px rgba(192,90,36,.18);
+      --r:             18px;
+      --r-sm:          11px;
+      --r-lg:          24px;
+      --font:          "Onest","Segoe UI",sans-serif;
+
+      /* prominence visuals */
+      --block-main-bg: linear-gradient(160deg,#fff9f5 0%,#ffffff 100%);
+      --block-main-border: rgba(192,90,36,.18);
+      --block-main-shadow: 0 8px 28px rgba(192,90,36,.10);
+      --block-support-bg: #ffffff;
+      --block-low-bg:  #fdfcfa;
+      --block-low-opacity: .78;
+    }
+
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;font-family:var(--font);font-size:14px;line-height:1.5;background:var(--bg);color:var(--text);min-height:100vh}
+    button,textarea,input{font:inherit}
+    textarea{resize:none}
+
+    /* ── WORKSPACE GRID ─────────────────────── */
+    .ws{
+      display:grid;
+      grid-template-rows:auto 1fr;
+      grid-template-columns:268px 1fr 272px;
+      grid-template-areas:"top top top""lib  ctr  rgt";
+      gap:13px;
+      padding:13px;
+      max-width:1580px;
+      margin:0 auto;
+      min-height:100vh;
+    }
+
+    /* ── TOPBAR ─────────────────────────────── */
+    .topbar{
+      grid-area:top;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--r-lg);
+      box-shadow:var(--shadow-sm);
+      padding:12px 20px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .tb-brand{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .tb-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+    .tb-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .tb-page{font-size:15px;font-weight:600;flex:1;min-width:160px}
+    .tb-page em{font-style:normal;color:var(--muted);font-weight:400}
+    .tb-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+
+    .chip{
+      padding:5px 12px;border-radius:999px;font-size:12px;font-weight:600;
+      background:rgba(192,90,36,.1);color:var(--accent);
+      border:1px solid rgba(192,90,36,.18);
+    }
+    .chip.ok{background:var(--green-s);color:var(--green);border-color:rgba(43,117,73,.18)}
+
+    /* mode toggle */
+    .mtog{
+      display:flex;background:rgba(255,255,255,.5);
+      border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;
+    }
+    .mbtn{
+      padding:5px 13px;border-radius:999px;border:1px solid transparent;
+      background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-weight:500;
+      transition:all .15s;
+    }
+    .mbtn.active{background:#fff;color:var(--text);border-color:rgba(72,58,38,.12);box-shadow:var(--shadow-sm)}
+
+    /* generic button */
+    .btn{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:7px 14px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.72);color:var(--text);
+      cursor:pointer;font-size:13px;transition:all .15s;white-space:nowrap;
+    }
+    .btn:hover{background:#fff;box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+    .btn:active{transform:none}
+    .btn:disabled{opacity:.38;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-soft{background:var(--accent-s);color:var(--accent);border-color:rgba(192,90,36,.2)}
+    .btn-pri{
+      background:linear-gradient(135deg,#c46030,#a44920);color:#fff;border:none;
+      box-shadow:var(--shadow-acc);
+    }
+    .btn-pri:hover{background:linear-gradient(135deg,#d06a38,#b05228)}
+    .btn-ghost{background:transparent;border-color:var(--line)}
+
+    /* ── LEFT LIBRARY ───────────────────────── */
+    .lib-col{
+      grid-area:lib;
+      display:flex;flex-direction:column;gap:9px;
+      align-self:start;position:sticky;top:13px;
+      max-height:calc(100vh - 78px);overflow-y:auto;
+    }
+    .lib-col::-webkit-scrollbar{width:0}
+
+    .lib-head{
+      background:var(--panel);border:1px solid var(--line);
+      border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow-sm);
+    }
+    .lib-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-lt);margin:0 0 3px}
+    .lib-sub{font-size:12px;color:var(--muted);line-height:1.4}
+
+    .lib-sec{
+      background:var(--panel);border:1px solid var(--line);
+      border-radius:var(--r);padding:11px 12px;box-shadow:var(--shadow-sm);
+    }
+    .lib-sec-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-lt);margin:0 0 9px}
+
+    .lib-item{
+      display:flex;align-items:center;gap:9px;
+      padding:9px 10px;border-radius:var(--r-sm);
+      border:1px solid var(--line-soft);background:#fff;
+      transition:all .15s;margin-bottom:5px;
+    }
+    .lib-item:last-child{margin-bottom:0}
+
+    /* USED state */
+    .lib-item.used{
+      background:rgba(192,90,36,.06);
+      border-color:rgba(192,90,36,.18);
+    }
+
+    .lib-thumb{
+      width:38px;height:38px;flex-shrink:0;
+      border-radius:8px;
+      background:linear-gradient(135deg,#ead4c0,#f5ece2);
+      display:grid;place-items:center;font-size:15px;
+    }
+
+    .lib-info{flex:1;min-width:0}
+    .lib-name{font-size:12px;font-weight:600;color:var(--text);margin:0 0 1px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lib-desc{font-size:11px;color:var(--muted);line-height:1.3}
+
+    /* action button inside library item */
+    .lib-action{
+      flex-shrink:0;
+      padding:4px 10px;font-size:11px;font-weight:600;
+      border-radius:999px;border:1px solid;cursor:pointer;
+      transition:all .13s;white-space:nowrap;
+    }
+    .lib-action.add{
+      background:rgba(255,255,255,.8);color:var(--accent);
+      border-color:rgba(192,90,36,.28);
+    }
+    .lib-action.add:hover{background:var(--accent-s);box-shadow:var(--shadow-sm)}
+    .lib-action.remove{
+      background:rgba(192,90,36,.08);color:var(--muted);
+      border-color:rgba(192,90,36,.14);font-weight:500;
+    }
+    .lib-action.remove:hover{background:rgba(192,90,36,.14);color:var(--accent)}
+
+    .used-tag{
+      font-size:10px;font-weight:700;color:var(--accent);
+      padding:2px 6px;border-radius:999px;
+      background:rgba(192,90,36,.1);border:1px solid rgba(192,90,36,.14);
+      white-space:nowrap;flex-shrink:0;
+    }
+
+    .shell-tags{display:flex;flex-wrap:wrap;gap:5px}
+    .stag{font-size:11px;padding:4px 9px;border-radius:7px;background:rgba(72,58,38,.06);color:var(--muted)}
+
+    /* ── CENTER ─────────────────────────────── */
+    .ctr-col{
+      grid-area:ctr;
+      display:flex;flex-direction:column;gap:9px;
+    }
+    .ctr-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .ctr-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-lt);margin:0}
+    .ctr-route{font-size:11px;color:var(--muted);margin-top:2px}
+
+    /* Page surface */
+    .page-surface{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--r-lg);
+      box-shadow:var(--shadow-md);
+      overflow:hidden;
+    }
+
+    .browser-bar{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 16px;
+      background:rgba(237,233,223,.8);
+      border-bottom:1px solid var(--line-soft);
+    }
+    .bdots{display:flex;gap:4px}
+    .bdots span{width:8px;height:8px;border-radius:50%;background:rgba(72,58,38,.16)}
+    .burl{flex:1;text-align:center;font-size:11px;color:var(--muted)}
+    .bdraft{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(192,90,36,.1);color:var(--accent)}
+
+    .page-body{background:#fff}
+
+    /* shell regions */
+    .shell-rgn{
+      padding:9px 26px;
+      background:rgba(237,233,223,.45);
+      border-bottom:1px solid var(--line-soft);
+      color:var(--muted-lt);font-size:11px;letter-spacing:.02em;
+    }
+    .shell-rgn:last-child{border-bottom:none;border-top:1px solid var(--line-soft)}
+
+    /* ── PAGE BLOCKS ─────────────────────────── */
+    .page-block{
+      position:relative;
+      border-bottom:1px solid rgba(72,58,38,.05);
+      padding:22px 26px;
+      cursor:pointer;
+      transition:background .15s,box-shadow .15s,opacity .2s;
+      background:#fff;
+    }
+    .page-block:last-of-type{border-bottom:none}
+    .page-block:hover{background:#fffaf6}
+
+    /* SELECTED */
+    .page-block.selected{
+      background:#fffaf7 !important;
+      box-shadow:inset 3px 0 0 var(--accent);
+    }
+
+    /* PROMINENCE LEVELS */
+    .page-block[data-p="high"]{
+      background:var(--block-main-bg);
+      border-bottom-color:rgba(192,90,36,.08);
+    }
+    .page-block[data-p="high"].selected{
+      background:linear-gradient(160deg,#fff5ef,#fffaf7) !important;
+    }
+    .page-block[data-p="low"]{
+      background:var(--block-low-bg);
+      opacity:var(--block-low-opacity);
+    }
+    .page-block[data-p="low"].selected{opacity:1}
+
+    /* DENSITY */
+    .page-block[data-d="compact"]{padding-top:14px;padding-bottom:14px}
+    .page-block[data-d="airy"]{padding-top:30px;padding-bottom:30px}
+
+    /* floating block toolbar */
+    .btoolbar{
+      position:absolute;top:-1px;right:18px;
+      display:flex;gap:3px;align-items:center;
+      opacity:0;pointer-events:none;
+      transform:translateY(-3px);
+      transition:all .15s;z-index:10;
+      background:#fff;border:1px solid var(--line);
+      border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);
+      padding:5px 7px;box-shadow:var(--shadow-md);
+    }
+    .page-block.selected .btoolbar{opacity:1;pointer-events:auto;transform:translateY(0)}
+
+    .tbb{
+      padding:4px 9px;font-size:11px;font-weight:500;
+      border-radius:999px;border:1px solid rgba(72,58,38,.1);
+      background:rgba(237,233,223,.6);color:var(--text);
+      cursor:pointer;transition:all .12s;white-space:nowrap;
+    }
+    .tbb:hover{background:var(--accent-s);color:var(--accent);border-color:var(--accent-line)}
+    .tbb.active{background:var(--accent-s);color:var(--accent);border-color:var(--accent-line)}
+    .tbb-sep{width:1px;background:var(--line);margin:2px 3px;align-self:stretch}
+    .tbb-sm{padding:4px 7px}
+
+    .block-meta{display:flex;align-items:center;gap:7px;margin-bottom:11px}
+    .b-role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-lt)}
+    .b-badge{
+      font-size:10px;padding:2px 7px;border-radius:999px;
+      border:1px solid var(--line);color:var(--muted);
+    }
+    .b-badge.main{background:var(--accent-s);color:var(--accent);border-color:var(--accent-line)}
+    .b-badge.fixed{background:rgba(72,58,38,.06)}
+
+    /* hero */
+    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:start}
+    .hero-text h2{margin:0 0 9px;font-size:21px;font-weight:700;line-height:1.25}
+    .hero-copy{color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:13px}
+    .hero-cta{
+      display:inline-block;padding:8px 18px;border-radius:999px;
+      background:linear-gradient(135deg,#c46030,#a44920);color:#fff;
+      font-size:13px;font-weight:600;border:none;cursor:pointer;
+    }
+    .hero-visual{
+      border-radius:var(--r);
+      background:linear-gradient(160deg,#e4d2c2,#f4eae0);
+      aspect-ratio:4/3;display:grid;place-items:center;
+      text-align:center;padding:16px;color:var(--muted);font-size:12px;
+    }
+
+    /* media */
+    .media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .media-thumb{
+      aspect-ratio:4/3;border-radius:var(--r-sm);
+      background:linear-gradient(135deg,#decfc0,#eee5da);
+      display:grid;place-items:center;color:var(--muted-lt);font-size:10px;
+    }
+
+    /* cards */
+    .cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+    .svc-card,.case-card{
+      padding:12px;border-radius:var(--r-sm);
+      background:rgba(249,246,241,.9);
+      border:1px solid var(--line-soft);
+    }
+    .svc-card strong,.case-card strong{display:block;margin-bottom:3px;font-size:13px}
+    .svc-card span,.case-card span{font-size:11px;color:var(--muted)}
+
+    .add-card{
+      padding:12px;border-radius:var(--r-sm);
+      background:rgba(192,90,36,.03);
+      border:1px dashed rgba(192,90,36,.2);
+      display:grid;place-items:center;
+      color:var(--muted);font-size:11px;text-align:center;
+      cursor:pointer;transition:all .13s;
+    }
+    .add-card:hover{background:rgba(192,90,36,.07);color:var(--accent)}
+
+    /* cta */
+    .cta-grid{display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .cta-text h3{margin:0 0 5px;font-size:17px;font-weight:700}
+    .cta-text p{margin:0;color:var(--muted);font-size:13px}
+
+    /* ── CONNECTIVE COPY BRIDGE ──────────────── */
+    .bridge{
+      display:flex;align-items:flex-start;gap:7px;
+      padding:7px 26px;
+      background:rgba(237,233,223,.3);
+      border-bottom:1px solid var(--line-soft);
+      transition:background .13s;
+      cursor:text;
+    }
+    .bridge:hover{background:rgba(237,233,223,.6)}
+    .bridge:focus-within{background:#fff;border-bottom-color:rgba(192,90,36,.2)}
+    .bridge-ico{font-size:11px;color:var(--muted-lt);flex-shrink:0;margin-top:3px;user-select:none}
+    .bridge-ta{
+      flex:1;background:none;border:none;outline:none;
+      color:var(--muted);font-size:12px;font-style:italic;
+      line-height:1.5;min-height:18px;
+      transition:color .13s;
+    }
+    .bridge-ta:focus{color:var(--text);font-style:normal}
+    .bridge-ta::placeholder{color:var(--muted-lt)}
+
+    /* ── EMPTY STATE ─────────────────────────── */
+    .empty-state{
+      display:none;flex-direction:column;align-items:center;
+      justify-content:center;min-height:280px;padding:36px;
+      text-align:center;gap:12px;
+    }
+    .empty-state.on{display:flex}
+    .empty-ico{font-size:32px;opacity:.35}
+    .empty-ttl{font-size:15px;font-weight:600;margin:0}
+    .empty-dsc{font-size:12px;color:var(--muted);max-width:260px;margin:0}
+
+    /* preview mode */
+    .page-body.preview .btoolbar{display:none}
+    .page-body.preview .page-block{cursor:default}
+    .page-body.preview .page-block:hover{background:inherit}
+    .page-body.preview .page-block.selected{box-shadow:none;background:inherit}
+    .page-body.preview .page-block[data-p="high"]{background:var(--block-main-bg)}
+    .page-body.preview .page-block[data-p="low"]{opacity:.82}
+    .page-body.preview .bridge{display:none}
+
+    /* ── RIGHT COLUMN ────────────────────────── */
+    .rgt-col{
+      grid-area:rgt;
+      display:flex;flex-direction:column;gap:9px;
+      align-self:start;position:sticky;top:13px;
+    }
+    .rgt-panel{
+      background:var(--panel);border:1px solid var(--line);
+      border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow-sm);
+    }
+    .rgt-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-lt);margin:0 0 11px}
+
+    /* blockers */
+    .bl-list{margin:0 0 11px;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+    .bl-item{
+      display:flex;gap:7px;align-items:flex-start;
+      padding:8px 10px;border-radius:10px;
+      background:rgba(192,90,36,.06);border:1px solid rgba(192,90,36,.12);
+    }
+    .bl-ico{font-size:11px;flex-shrink:0;margin-top:1px}
+    .bl-txt{font-size:12px;color:var(--text);line-height:1.4}
+    .bl-item.ok{background:var(--green-s);border-color:rgba(43,117,73,.15)}
+    .bl-item.ok .bl-txt{color:var(--green)}
+
+    /* ctx */
+    .ctx-rows{display:flex;flex-direction:column;gap:5px}
+    .ctx-row{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+    .ctx-lbl{color:var(--muted)}
+    .ctx-val{font-weight:600}
+
+    /* helper */
+    .hlp-acts{display:flex;flex-direction:column;gap:5px}
+    .hlp-act{
+      display:flex;align-items:center;gap:7px;
+      padding:7px 10px;border-radius:10px;
+      border:1px solid var(--line-soft);background:#fff;
+      cursor:pointer;font-size:12px;color:var(--text);
+      transition:all .12s;
+    }
+    .hlp-act:hover{border-color:var(--accent-line);background:var(--accent-s);color:var(--accent)}
+    .hlp-act-ico{font-size:13px}
+
+    .hlp-hint{
+      margin-top:9px;padding:10px 11px;
+      border-radius:10px;background:rgba(237,233,223,.55);
+      border:1px solid var(--line-soft);
+      font-size:12px;color:var(--muted);line-height:1.5;
+      display:none;
+    }
+    .hlp-hint.on{display:block}
+    .hlp-hint strong{display:block;color:var(--text);margin-bottom:3px;font-size:12px}
+    .hlp-apply{
+      display:block;width:100%;margin-top:8px;padding:5px;
+      border-radius:999px;border:1px solid var(--accent-line);
+      background:var(--accent-s);color:var(--accent);
+      cursor:pointer;font-size:11px;font-weight:600;
+      transition:all .12s;
+    }
+    .hlp-apply:hover{background:var(--accent);color:#fff}
+
+    /* ── TOAST ───────────────────────────────── */
+    .toast{
+      position:fixed;bottom:16px;left:50%;
+      transform:translateX(-50%) translateY(0);
+      background:rgba(28,22,16,.88);color:rgba(255,255,255,.92);
+      padding:9px 18px;border-radius:999px;font-size:12px;
+      backdrop-filter:blur(10px);transition:opacity .25s,transform .25s;
+      z-index:200;white-space:nowrap;max-width:calc(100vw - 36px);text-align:center;
+    }
+    .toast.off{opacity:0;transform:translateX(-50%) translateY(8px);pointer-events:none}
+
+    @media(max-width:1040px){
+      .ws{grid-template-columns:1fr;grid-template-areas:"top""ctr""rgt""lib"}
+      .lib-col,.rgt-col{position:static;max-height:none}
+      .hero-grid,.media-grid,.cards-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="ws">
+
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <div class="tb-brand"><div class="tb-dot"></div><span class="tb-label">AI-верстка</span></div>
+    <div class="tb-page">Дом в Сочи под ключ <em>· рабочая зона</em></div>
+    <div class="tb-actions">
+      <span class="chip" id="statusChip">2 проблемы</span>
+      <div class="mtog">
+        <button class="mbtn active" data-mode="compose">Сборка</button>
+        <button class="mbtn" data-mode="preview">Глазами клиента</button>
+      </div>
+      <button class="btn btn-ghost" id="genBtn">Сгенерировать заново</button>
+      <button class="btn btn-pri" id="reviewBtn" disabled>Передать на проверку</button>
+    </div>
+  </header>
+
+  <!-- ── LIBRARY ── -->
+  <aside class="lib-col">
+    <div class="lib-head">
+      <h2 class="lib-ttl">Материалы</h2>
+      <p class="lib-sub">Добавляйте и убирайте материалы со страницы. Добавленные отмечены.</p>
+    </div>
+
+    <!-- Media -->
+    <div class="lib-sec">
+      <h3 class="lib-sec-ttl">Медиа</h3>
+
+      <div class="lib-item used" data-lib="hero-photo" data-target="block-hero">
+        <div class="lib-thumb">🏠</div>
+        <div class="lib-info">
+          <div class="lib-name">Главный фасад</div>
+          <div class="lib-desc">Вечерний свет, акцент на доме</div>
+        </div>
+        <span class="used-tag">Добавлено</span>
+      </div>
+
+      <div class="lib-item used" data-lib="process-gallery" data-target="block-media">
+        <div class="lib-thumb">📸</div>
+        <div class="lib-info">
+          <div class="lib-name">Процесс стройки</div>
+          <div class="lib-desc">Фундамент, коробка, инженерия</div>
+        </div>
+        <button class="lib-action remove" data-remove="block-media">Убрать</button>
+      </div>
+
+      <div class="lib-item" data-lib="interior-photos" data-target-new="interior">
+        <div class="lib-thumb">🛋️</div>
+        <div class="lib-info">
+          <div class="lib-name">Интерьеры</div>
+          <div class="lib-desc">3 объекта, финишная отделка</div>
+        </div>
+        <button class="lib-action add" data-add="interior">Добавить</button>
+      </div>
+    </div>
+
+    <!-- Services -->
+    <div class="lib-sec">
+      <h3 class="lib-sec-ttl">Карточки услуг</h3>
+      <div class="lib-item used" data-lib="services" data-target="block-services">
+        <div class="lib-thumb">⚙️</div>
+        <div class="lib-info">
+          <div class="lib-name">3 карточки услуг</div>
+          <div class="lib-desc">Под ключ, инженерия, смета</div>
+        </div>
+        <button class="lib-action remove" data-remove="block-services">Убрать</button>
+      </div>
+    </div>
+
+    <!-- Cases -->
+    <div class="lib-sec">
+      <h3 class="lib-sec-ttl">Кейсы</h3>
+
+      <div class="lib-item used" data-lib="case-186" data-target="block-cases">
+        <div class="lib-thumb">🏗️</div>
+        <div class="lib-info">
+          <div class="lib-name">Дом 186 м²</div>
+          <div class="lib-desc">Сдали на 12 дней раньше</div>
+        </div>
+        <button class="lib-action remove" data-remove="block-cases">Убрать</button>
+      </div>
+
+      <div class="lib-item used" data-lib="case-slope" data-target="block-cases">
+        <div class="lib-thumb">⛰️</div>
+        <div class="lib-info">
+          <div class="lib-name">Участок со склоном</div>
+          <div class="lib-desc">Дренаж без удорожания</div>
+        </div>
+        <span class="used-tag">Добавлено</span>
+      </div>
+
+      <div class="lib-item" data-lib="case-tuapse" data-target-new="case-tuapse">
+        <div class="lib-thumb">🏡</div>
+        <div class="lib-info">
+          <div class="lib-name">Дом в Туапсе</div>
+          <div class="lib-desc">214 м², нестандартный проект</div>
+        </div>
+        <button class="lib-action add" data-add="case-tuapse">Добавить</button>
+      </div>
+    </div>
+
+    <!-- Shell -->
+    <div class="lib-sec">
+      <h3 class="lib-sec-ttl">Shell (зафиксировано)</h3>
+      <div class="shell-tags">
+        <span class="stag">Header ↑</span>
+        <span class="stag">Footer ↓</span>
+        <span class="stag">Меню из источника</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── CENTER ── -->
+  <main class="ctr-col">
+    <div class="ctr-head">
+      <div>
+        <h2 class="ctr-ttl">Страница</h2>
+        <div class="ctr-route" id="routeLabel">Hero → Медиа → Услуги → Кейсы → CTA</div>
+      </div>
+    </div>
+
+    <div class="page-surface">
+      <div class="browser-bar">
+        <div class="bdots"><span></span><span></span><span></span></div>
+        <div class="burl">ecostroycontinent.ru / dom-v-sochi</div>
+        <div class="bdraft">черновик</div>
+      </div>
+
+      <div class="page-body" id="pageBody">
+        <div class="shell-rgn">↑ Header · меню и контакты из страницы-источника</div>
+
+        <!-- HERO — fixed, prominence=high -->
+        <div class="page-block selected" id="block-hero"
+             data-id="hero" data-role="Hero" data-fixed="1"
+             data-p="high" data-d="airy" tabindex="0">
+          <div class="btoolbar">
+            <button class="tbb active" data-act="prom">Акцент: главный</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="dens">Плотность: свободно</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="hlp">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="b-role">Hero</span>
+            <span class="b-badge fixed">Закреплён</span>
+            <span class="b-badge main" id="hero-badge">Главный акцент</span>
+          </div>
+          <div class="hero-grid">
+            <div class="hero-text">
+              <h2>Дом под ключ в Сочи — без потери сроков и контроля</h2>
+              <div class="hero-copy">Строим от фундамента до ключей: один маршрут, прозрачная смета, понятные этапы. Фасад и процесс — сразу, без абстрактных обещаний.</div>
+              <button class="hero-cta">Обсудить проект</button>
+            </div>
+            <div class="hero-visual">🏠<br><span style="margin-top:5px;display:block">Главный фасад · визуальный proof</span></div>
+          </div>
+        </div>
+
+        <!-- BRIDGE 1 -->
+        <div class="bridge"><span class="bridge-ico">↓</span><textarea class="bridge-ta" rows="1" placeholder="Связка перед следующим блоком…">После обещания — сразу показываем, как выглядит процесс.</textarea></div>
+
+        <!-- MEDIA -->
+        <div class="page-block" id="block-media"
+             data-id="media" data-role="Медиа"
+             data-p="medium" data-d="balanced" tabindex="0">
+          <div class="btoolbar">
+            <button class="tbb" data-act="prom">Акцент: средний</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="dens">Плотность: баланс</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb tbb-sm" data-act="up">↑</button>
+            <button class="tbb tbb-sm" data-act="dn">↓</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="rm">Убрать</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="hlp">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="b-role">Медиа</span>
+            <span class="b-badge" id="media-badge">Поддерживающий</span>
+          </div>
+          <div class="media-grid">
+            <div class="media-thumb">Фундамент</div>
+            <div class="media-thumb">Коробка</div>
+            <div class="media-thumb">Инженерия</div>
+          </div>
+        </div>
+
+        <!-- BRIDGE 2 -->
+        <div class="bridge"><span class="bridge-ico">↓</span><textarea class="bridge-ta" rows="1" placeholder="Связка перед следующим блоком…">Один маршрут от проекта до ключей — без разрывов между подрядчиками.</textarea></div>
+
+        <!-- SERVICES -->
+        <div class="page-block" id="block-services"
+             data-id="services" data-role="Услуги"
+             data-p="medium" data-d="balanced" tabindex="0">
+          <div class="btoolbar">
+            <button class="tbb" data-act="prom">Акцент: средний</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="dens">Плотность: баланс</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb tbb-sm" data-act="up">↑</button>
+            <button class="tbb tbb-sm" data-act="dn">↓</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="rm">Убрать</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="hlp">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="b-role">Карточки услуг</span>
+            <span class="b-badge" id="services-badge">Поддерживающий</span>
+          </div>
+          <div class="cards-grid">
+            <div class="svc-card"><strong>Дом под ключ</strong><span>Полный цикл: от проекта до сдачи</span></div>
+            <div class="svc-card"><strong>Инженерные сети</strong><span>Коммуникации в общем плане, без отдельного подрядчика</span></div>
+            <div class="svc-card"><strong>Смета без сюрпризов</strong><span>Прозрачный объём и этапность заранее</span></div>
+          </div>
+        </div>
+
+        <!-- BRIDGE 3 -->
+        <div class="bridge"><span class="bridge-ico">↓</span><textarea class="bridge-ta" rows="1" placeholder="Связка перед следующим блоком…">Это не слова — вот два дома, которые мы сдали точно в срок.</textarea></div>
+
+        <!-- CASES -->
+        <div class="page-block" id="block-cases"
+             data-id="cases" data-role="Кейсы"
+             data-p="medium" data-d="balanced" tabindex="0">
+          <div class="btoolbar">
+            <button class="tbb" data-act="prom">Акцент: средний</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="dens">Плотность: баланс</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb tbb-sm" data-act="up">↑</button>
+            <button class="tbb tbb-sm" data-act="dn">↓</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="rm">Убрать</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="hlp">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="b-role">Кейсы</span>
+            <span class="b-badge" id="cases-badge">Proof-блок</span>
+          </div>
+          <div class="cards-grid" id="casesGrid">
+            <div class="case-card"><strong>Дом 186 м²</strong><span>Сдали на 12 дней раньше плана и без допработ в финале</span></div>
+            <div class="case-card"><strong>Участок со склоном</strong><span>Решили дренаж и террасы без резкого удорожания</span></div>
+            <div class="add-card" id="addCaseSlot">+ кейс из библиотеки</div>
+          </div>
+        </div>
+
+        <!-- BRIDGE 4 -->
+        <div class="bridge"><span class="bridge-ico">↓</span><textarea class="bridge-ta" rows="1" placeholder="Связка перед CTA…">Если видите похожую задачу — обсудим конкретику.</textarea></div>
+
+        <!-- CTA — fixed -->
+        <div class="page-block" id="block-cta"
+             data-id="cta" data-role="CTA" data-fixed="1"
+             data-p="medium" data-d="compact" tabindex="0">
+          <div class="btoolbar">
+            <button class="tbb" data-act="prom">Акцент: средний</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="dens">Плотность: компактно</button>
+            <div class="tbb-sep"></div>
+            <button class="tbb" data-act="hlp">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="b-role">CTA</span>
+            <span class="b-badge fixed">Закреплён</span>
+          </div>
+          <div class="cta-grid">
+            <div class="cta-text">
+              <h3>Расскажите про участок и бюджет</h3>
+              <p>Покажем реалистичный маршрут — без лишних обещаний и навязанных допработ.</p>
+            </div>
+            <button class="hero-cta">Оставить заявку</button>
+          </div>
+        </div>
+
+        <div class="shell-rgn">↓ Footer · контакты, карта, нижняя навигация</div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-ico">📄</div>
+          <p class="empty-ttl">Страница пустая</p>
+          <p class="empty-dsc">Добавьте материалы из библиотеки слева, чтобы начать сборку</p>
+          <button class="btn btn-soft" id="seedBtn">Добавить базовый набор</button>
+        </div>
+      </div><!-- /page-body -->
+    </div><!-- /page-surface -->
+  </main>
+
+  <!-- ── RIGHT ── -->
+  <aside class="rgt-col">
+
+    <!-- Blockers -->
+    <div class="rgt-panel">
+      <h3 class="rgt-ttl">Проверка перед сдачей</h3>
+      <ul class="bl-list" id="blockersList">
+        <li class="bl-item"><span class="bl-ico">⚠</span><span class="bl-txt">Hero не опирается на один явный медиа-акцент</span></li>
+        <li class="bl-item"><span class="bl-ico">⚠</span><span class="bl-txt">Переход перед кейсами слишком нейтральный</span></li>
+      </ul>
+      <button class="btn btn-soft" style="width:100%;justify-content:center" id="resolveBtn">Закрыть проблемы</button>
+    </div>
+
+    <!-- Selected block ctx -->
+    <div class="rgt-panel" id="ctxPanel">
+      <h3 class="rgt-ttl">Выбранный блок</h3>
+      <div class="ctx-rows">
+        <div class="ctx-row"><span class="ctx-lbl">Блок</span><span class="ctx-val" id="ctxName">Hero</span></div>
+        <div class="ctx-row"><span class="ctx-lbl">Акцент</span><span class="ctx-val" id="ctxProm">Главный</span></div>
+        <div class="ctx-row"><span class="ctx-lbl">Плотность</span><span class="ctx-val" id="ctxDens">Свободно</span></div>
+        <div class="ctx-row"><span class="ctx-lbl">Позиция</span><span class="ctx-val" id="ctxPos">Закреплён</span></div>
+      </div>
+    </div>
+
+    <!-- Helper -->
+    <div class="rgt-panel">
+      <h3 class="rgt-ttl">Помощник</h3>
+      <div class="hlp-acts">
+        <div class="hlp-act" data-hint="rewrite"><span class="hlp-act-ico">✦</span>Переписать связку</div>
+        <div class="hlp-act" data-hint="stronger"><span class="hlp-act-ico">↑</span>Усилить proof-блок</div>
+        <div class="hlp-act" data-hint="transition"><span class="hlp-act-ico">→</span>Предложить переход</div>
+      </div>
+      <div class="hlp-hint" id="hlpHint">
+        <strong id="hlpHintTtl">Подсказка</strong>
+        <span id="hlpHintBody"></span>
+        <button class="hlp-apply" id="hlpApply">Применить</button>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<div class="toast off" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ── Const maps ─────────────────────────────── */
+const promLabels = {high:'Главный',medium:'Средний',low:'Фоновый'};
+const promBadge  = {high:'Главный акцент',medium:'Поддерживающий',low:'Фоновый'};
+const densLabels = {airy:'Свободно',balanced:'Баланс',compact:'Компактно'};
+const promCycle  = ['high','medium','low'];
+const densCycle  = ['airy','balanced','compact'];
+
+const hints = {
+  rewrite:{
+    ttl:'Переписать связку',
+    body:'Хорошая связка — одно предложение, объясняющее, почему следующий блок продолжает предыдущий, а не пересказывает его.'
+  },
+  stronger:{
+    ttl:'Усилить proof-блок',
+    body:'Замените общее описание одним конкретным результатом: число, срок или факт. Клиент считывает proof быстрее, чем обещание.'
+  },
+  transition:{
+    ttl:'Переход перед кейсами',
+    body:'Попробуйте: «Это не слова — вот два дома, которые мы сдали точно в срок.» Переход должен снимать сомнение, а не просто связывать блоки.'
+  }
+};
+
+/* ── DOM ────────────────────────────────────── */
+const pageBody   = document.getElementById('pageBody');
+const statusChip = document.getElementById('statusChip');
+const reviewBtn  = document.getElementById('reviewBtn');
+const genBtn     = document.getElementById('genBtn');
+const resolveBtn = document.getElementById('resolveBtn');
+const seedBtn    = document.getElementById('seedBtn');
+const routeLabel = document.getElementById('routeLabel');
+const blist      = document.getElementById('blockersList');
+const ctxName    = document.getElementById('ctxName');
+const ctxProm    = document.getElementById('ctxProm');
+const ctxDens    = document.getElementById('ctxDens');
+const ctxPos     = document.getElementById('ctxPos');
+const hlpHint    = document.getElementById('hlpHint');
+const hlpHintTtl = document.getElementById('hlpHintTtl');
+const hlpHintBody= document.getElementById('hlpHintBody');
+const hlpApply   = document.getElementById('hlpApply');
+const emptyState = document.getElementById('emptyState');
+const toastEl    = document.getElementById('toast');
+const casesGrid  = document.getElementById('casesGrid');
+
+let toastTimer;
+
+/* ── Toast ──────────────────────────────────── */
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.remove('off');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toastEl.classList.add('off'), 2600);
+}
+
+/* ── Blocks helpers ─────────────────────────── */
+function blocks(){ return [...pageBody.querySelectorAll('.page-block')] }
+function moveable(){ return blocks().filter(b=>!b.dataset.fixed) }
+
+/* ── Select ─────────────────────────────────── */
+function select(block){
+  blocks().forEach(b=>b.classList.remove('selected'));
+  block.classList.add('selected');
+  const mv = moveable();
+  const idx = mv.indexOf(block);
+  ctxName.textContent = block.querySelector('.b-role').textContent;
+  ctxProm.textContent = promLabels[block.dataset.p] || '—';
+  ctxDens.textContent = densLabels[block.dataset.d] || '—';
+  ctxPos.textContent  = block.dataset.fixed ? 'Закреплён' : `${idx+1} из ${mv.length}`;
+}
+
+/* ── Prominence ─────────────────────────────── */
+function cycleProm(block){
+  const cur  = block.dataset.p;
+  const next = promCycle[(promCycle.indexOf(cur)+1)%3];
+  block.dataset.p = next;
+
+  const promBtn = block.querySelector('[data-act="prom"]');
+  if(promBtn) promBtn.textContent = 'Акцент: ' + promLabels[next].toLowerCase();
+  promBtn?.classList.toggle('active', next === 'high');
+
+  const badge = block.querySelector('.b-badge.main, .b-badge:not(.fixed)');
+  if(badge){
+    badge.className = 'b-badge' + (next==='high' ? ' main' : '');
+    badge.textContent = promBadge[next];
+  }
+
+  select(block);
+  toast('Акцент → ' + promLabels[next]);
+}
+
+/* ── Density ────────────────────────────────── */
+function cycleDens(block){
+  const cur  = block.dataset.d;
+  const next = densCycle[(densCycle.indexOf(cur)+1)%3];
+  block.dataset.d = next;
+  const btn = block.querySelector('[data-act="dens"]');
+  if(btn) btn.textContent = 'Плотность: ' + densLabels[next].toLowerCase();
+  select(block);
+  toast('Плотность → ' + densLabels[next]);
+}
+
+/* ── Move ───────────────────────────────────── */
+function moveBlock(block, dir){
+  if(block.dataset.fixed){ toast('Hero и CTA закреплены.'); return }
+  const mv = moveable();
+  const idx = mv.indexOf(block);
+
+  function swapWithBridge(a, b){
+    // bridge immediately before b
+    const br = b.previousElementSibling;
+    pageBody.insertBefore(b, a);
+    if(br && br.classList.contains('bridge')){
+      pageBody.insertBefore(br, b);
+    }
+  }
+
+  if(dir==='up'){
+    if(idx===0){ toast('Нельзя — Hero закреплён.'); return }
+    const prev = mv[idx-1];
+    swapWithBridge(prev, block);
+    toast('Блок поднят выше');
+  } else {
+    if(idx===mv.length-1){ toast('Нельзя — CTA закреплён.'); return }
+    const next = mv[idx+1];
+    swapWithBridge(block, next);
+    toast('Блок опущен ниже');
+  }
+  updateRoute();
+}
+
+/* ── Remove block ───────────────────────────── */
+function removeBlock(block){
+  if(block.dataset.fixed){ toast('Этот блок нельзя убрать.'); return }
+  const roleName = block.querySelector('.b-role').textContent;
+  const prev = block.previousElementSibling;
+  if(prev?.classList.contains('bridge')) prev.remove();
+  block.remove();
+  updateRoute();
+  toast(`Блок «${roleName}» убран. Материал снова доступен в библиотеке.`);
+}
+
+/* ── Route label ────────────────────────────── */
+function updateRoute(){
+  const roles = blocks().map(b=>b.querySelector('.b-role')?.textContent).filter(Boolean);
+  routeLabel.textContent = roles.join(' → ');
+}
+
+/* ── Wire block events ──────────────────────── */
+function wireBlock(block){
+  block.addEventListener('click', e=>{
+    if(e.target.closest('.btoolbar')) return;
+    select(block);
+  });
+  block.addEventListener('keydown', e=>{
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); select(block) }
+  });
+  block.querySelectorAll('[data-act]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      select(block);
+      const a = btn.dataset.act;
+      if(a==='prom') cycleProm(block);
+      if(a==='dens') cycleDens(block);
+      if(a==='up')   moveBlock(block,'up');
+      if(a==='dn')   moveBlock(block,'dn');
+      if(a==='rm')   removeBlock(block);
+      if(a==='hlp'){
+        hlpHintTtl.textContent = 'Помощник для «'+block.querySelector('.b-role').textContent+'»';
+        hlpHintBody.textContent = 'Выберите действие из панели помощника ниже.';
+        hlpHint.classList.add('on');
+      }
+    });
+  });
+}
+
+blocks().forEach(wireBlock);
+
+/* ── Library interactions ───────────────────── */
+
+// "Убрать" buttons in library
+document.querySelectorAll('.lib-action.remove').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const blockId = btn.dataset.remove;
+    const block = document.getElementById(blockId);
+    if(!block){ toast('Блок уже не на странице.'); return }
+
+    // Update lib item to "not used"
+    const item = btn.closest('.lib-item');
+    item.classList.remove('used');
+    btn.className = 'lib-action add';
+    btn.textContent = 'Добавить';
+    btn.dataset.add = blockId.replace('block-','');
+    delete btn.dataset.remove;
+    item.querySelector('.used-tag')?.remove();
+
+    // Actually remove from page
+    removeBlock(block);
+  });
+});
+
+// "Добавить" buttons in library — delegate for dynamic ones too
+document.querySelector('.lib-col').addEventListener('click', e=>{
+  const btn = e.target.closest('.lib-action.add');
+  if(!btn) return;
+
+  const item = btn.closest('.lib-item');
+  const addId = btn.dataset.add;
+
+  // Mark as used in library
+  item.classList.add('used');
+  const usedTag = document.createElement('span');
+  usedTag.className = 'used-tag';
+  usedTag.textContent = 'Добавлено';
+  btn.replaceWith(usedTag);
+
+  // Insert block into page (before CTA bridge)
+  if(addId === 'interior'){
+    const ctaBlock = document.getElementById('block-cta');
+    const bridge = ctaBlock.previousElementSibling;
+    const newBlock = buildBlock('interior', 'Интерьеры', 'medium', 'balanced');
+    newBlock.innerHTML += `<div class="media-grid">
+      <div class="media-thumb">Интерьер 1</div>
+      <div class="media-thumb">Интерьер 2</div>
+      <div class="media-thumb">Интерьер 3</div>
+    </div>`;
+    const newBridge = buildBridge('Связка перед интерьерами…');
+    pageBody.insertBefore(newBridge, bridge || ctaBlock);
+    pageBody.insertBefore(newBlock, bridge || ctaBlock);
+    wireBlock(newBlock);
+    autoresize(newBridge.querySelector('textarea'));
+    updateRoute();
+    toast('Блок «Интерьеры» добавлен на страницу.');
+  } else if(addId === 'case-tuapse'){
+    // Add as a card inside cases block
+    const addSlot = document.getElementById('addCaseSlot');
+    if(addSlot){
+      const card = document.createElement('div');
+      card.className = 'case-card';
+      card.innerHTML = '<strong>Дом в Туапсе</strong><span>214 м², нестандартный проект, точно в срок</span>';
+      addSlot.replaceWith(card);
+    }
+    toast('Кейс «Дом в Туапсе» добавлен.');
+  } else {
+    toast(`Материал добавлен на страницу.`);
+  }
+});
+
+function buildBlock(id, role, prom, dens){
+  const el = document.createElement('div');
+  el.className = 'page-block';
+  el.id = 'block-' + id;
+  el.dataset.id   = id;
+  el.dataset.role = role;
+  el.dataset.p    = prom;
+  el.dataset.d    = dens;
+  el.tabIndex = 0;
+  el.innerHTML = `
+    <div class="btoolbar">
+      <button class="tbb" data-act="prom">Акцент: средний</button>
+      <div class="tbb-sep"></div>
+      <button class="tbb" data-act="dens">Плотность: баланс</button>
+      <div class="tbb-sep"></div>
+      <button class="tbb tbb-sm" data-act="up">↑</button>
+      <button class="tbb tbb-sm" data-act="dn">↓</button>
+      <div class="tbb-sep"></div>
+      <button class="tbb" data-act="rm">Убрать</button>
+      <div class="tbb-sep"></div>
+      <button class="tbb" data-act="hlp">✦ Помощник</button>
+    </div>
+    <div class="block-meta">
+      <span class="b-role">${role}</span>
+      <span class="b-badge">Поддерживающий</span>
+    </div>`;
+  return el;
+}
+
+function buildBridge(placeholder){
+  const el = document.createElement('div');
+  el.className = 'bridge';
+  el.innerHTML = `<span class="bridge-ico">↓</span><textarea class="bridge-ta" rows="1" placeholder="${placeholder}"></textarea>`;
+  return el;
+}
+
+/* ── Bridge auto-resize ─────────────────────── */
+function autoresize(ta){
+  function resize(){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px'}
+  ta.addEventListener('input', resize);
+  resize();
+}
+document.querySelectorAll('.bridge-ta').forEach(autoresize);
+
+/* ── Mode toggle ────────────────────────────── */
+document.querySelectorAll('.mbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.mbtn').forEach(b=>b.classList.toggle('active',b===btn));
+    if(btn.dataset.mode==='preview'){
+      pageBody.classList.add('preview');
+      toast('Режим «глазами клиента» — страница без редакторских контролов.');
+    } else {
+      pageBody.classList.remove('preview');
+      toast('Режим сборки — выбирайте блоки, меняйте акценты.');
+    }
+  });
+});
+
+/* ── Blockers resolve ───────────────────────── */
+resolveBtn.addEventListener('click',()=>{
+  blist.innerHTML=`
+    <li class="bl-item ok"><span class="bl-ico">✓</span><span class="bl-txt">Медиа-акцент в Hero определён</span></li>
+    <li class="bl-item ok"><span class="bl-ico">✓</span><span class="bl-txt">Переход перед кейсами обновлён</span></li>`;
+  resolveBtn.textContent='Проблемы закрыты';
+  resolveBtn.disabled=true;
+  statusChip.textContent='Готово к сдаче';
+  statusChip.className='chip ok';
+  reviewBtn.disabled=false;
+  toast('Все проблемы закрыты. Можно передавать на проверку.');
+});
+
+reviewBtn.addEventListener('click',()=>toast('Страница передана на проверку.'));
+
+/* ── Generate ───────────────────────────────── */
+genBtn.addEventListener('click',()=>{
+  genBtn.disabled=true; genBtn.textContent='Генерируем…';
+  setTimeout(()=>{
+    genBtn.disabled=false; genBtn.textContent='Сгенерировать заново';
+    toast('Черновик обновлён. Проверьте акценты и связки.');
+  },1100);
+});
+
+/* ── Seed empty ─────────────────────────────── */
+seedBtn?.addEventListener('click',()=>{
+  emptyState.classList.remove('on');
+  toast('Базовый набор добавлен.');
+});
+
+/* ── Helper ─────────────────────────────────── */
+document.querySelectorAll('.hlp-act').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const h = hints[btn.dataset.hint];
+    if(!h) return;
+    hlpHintTtl.textContent = h.ttl;
+    hlpHintBody.textContent = h.body;
+    hlpHint.classList.add('on');
+    toast('Подсказка открыта.');
+  });
+});
+
+hlpApply.addEventListener('click',()=>{
+  hlpHint.classList.remove('on');
+  toast('Подсказка применена. Отредактируйте связку в нужном блоке.');
+});
+
+/* ── Init ───────────────────────────────────── */
+select(document.getElementById('block-hero'));
+updateRoute();
+
+})();
+</script>
+</body>
+</html>

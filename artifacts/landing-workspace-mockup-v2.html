@@ -1,0 +1,1171 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-верстка — Рабочая зона лендинга v2</title>
+  <link rel="icon" href="data:," />
+  <style>
+    :root {
+      --bg: #f6f2ea;
+      --paper: rgba(255,255,255,0.92);
+      --paper-strong: #ffffff;
+      --line: rgba(92, 79, 61, 0.12);
+      --line-strong: rgba(92, 79, 61, 0.2);
+      --text: #251f18;
+      --muted: #726556;
+      --accent: #c46931;
+      --accent-soft: #f4e1d3;
+      --accent-wash: #fff7f1;
+      --green: #2e7b57;
+      --green-soft: #dcefe5;
+      --danger: #a24b37;
+      --danger-soft: #f4ddd7;
+      --shadow: 0 18px 40px rgba(49, 34, 15, 0.07);
+      --radius: 22px;
+      --radius-sm: 16px;
+      --font: "Segoe UI", "Inter", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background:
+        radial-gradient(circle at top left, rgba(244, 214, 189, 0.34), transparent 26%),
+        radial-gradient(circle at right 20%, rgba(236, 228, 210, 0.5), transparent 24%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button, input, select { font: inherit; }
+
+    .app {
+      max-width: 1540px;
+      margin: 0 auto;
+      min-height: 100%;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .topbar,
+    .panel,
+    .preview-shell,
+    .toast,
+    .helper-drawer {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar {
+      border-radius: 26px;
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .title-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 650;
+    }
+
+    .muted { color: var(--muted); }
+
+    .meta-line,
+    .status-line,
+    .mode-switch,
+    .mini-actions,
+    .selection-actions,
+    .block-controls,
+    .legend,
+    .shell-line,
+    .helper-actions,
+    .filter-switch {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .meta-line { margin-top: 8px; }
+
+    .chip,
+    .badge,
+    .ghost-btn,
+    .soft-btn,
+    .primary-btn,
+    .toggle,
+    .mini-btn,
+    .material-action,
+    .control-btn,
+    .filter-btn {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.18s ease;
+      padding: 9px 12px;
+    }
+
+    .chip,
+    .badge {
+      cursor: default;
+      border-color: var(--line);
+      background: rgba(255,255,255,0.7);
+      color: var(--muted);
+    }
+
+    .badge {
+      padding: 5px 9px;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .badge.used {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(196,105,49,0.16);
+    }
+
+    .badge.main {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: rgba(46,123,87,0.18);
+    }
+
+    .ghost-btn,
+    .mini-btn,
+    .control-btn,
+    .filter-btn {
+      border-color: var(--line);
+      background: rgba(255,255,255,0.68);
+    }
+
+    .soft-btn {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(196,105,49,0.18);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #ca7237, #bb5b2b);
+      color: #fff;
+      box-shadow: 0 12px 26px rgba(196, 105, 49, 0.24);
+    }
+
+    .toggle.active,
+    .filter-btn.active,
+    .control-btn.active {
+      background: #fff;
+      border-color: var(--line-strong);
+      box-shadow: 0 8px 18px rgba(49, 34, 15, 0.08);
+      color: var(--text);
+    }
+
+    .ghost-btn:hover,
+    .soft-btn:hover,
+    .primary-btn:hover,
+    .mini-btn:hover,
+    .material-action:hover,
+    .control-btn:hover,
+    .toggle:hover,
+    .filter-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+    }
+
+    .primary-btn:disabled,
+    .ghost-btn:disabled,
+    .material-action:disabled,
+    .mini-btn:disabled,
+    .control-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .status-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .status-pill.ready {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 278px minmax(0, 1fr) 248px;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .panel {
+      border-radius: var(--radius);
+      padding: 16px;
+      min-height: 0;
+    }
+
+    .left-col,
+    .right-col,
+    .center-col {
+      min-height: 0;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .panel-copy {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .library-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .material-row {
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.74);
+      padding: 10px 11px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .material-row.used {
+      background: rgba(244,225,211,0.48);
+    }
+
+    .material-row.selected {
+      border-color: rgba(196,105,49,0.32);
+      background: var(--accent-wash);
+    }
+
+    .material-top {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      border: 1px solid rgba(92,79,61,0.08);
+      background: linear-gradient(135deg, #e5d6c5, #f8f2ea 60%, #e7d9c9);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .material-name {
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+
+    .material-meta {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .material-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .material-action {
+      padding: 7px 11px;
+      border-color: var(--line);
+      background: rgba(255,255,255,0.72);
+    }
+
+    .material-action.add {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(196,105,49,0.18);
+    }
+
+    .center-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .center-stage {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.38fr) minmax(0, 0.62fr);
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .center-stage.preview-mode {
+      grid-template-columns: minmax(220px, 0.28fr) minmax(0, 0.72fr);
+    }
+
+    .rail,
+    .preview-wrap {
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.76);
+      padding: 14px;
+      min-height: 0;
+    }
+
+    .rail-head,
+    .preview-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .shell-line {
+      margin-bottom: 10px;
+    }
+
+    .rail-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .composition-block {
+      position: relative;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.95);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .composition-block:hover { border-color: var(--line-strong); }
+
+    .composition-block.selected {
+      border-color: rgba(196,105,49,0.34);
+      background: var(--accent-wash);
+      box-shadow: 0 14px 28px rgba(196, 105, 49, 0.1);
+    }
+
+    .composition-block.fixed {
+      background: rgba(248,245,240,0.94);
+      border-style: dashed;
+      cursor: default;
+    }
+
+    .block-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .block-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .block-sub {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .block-copy {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.45;
+      min-height: 20px;
+    }
+
+    .block-copy[contenteditable="true"] {
+      padding: 7px 10px;
+      border-radius: 12px;
+      border: 1px dashed rgba(196,105,49,0.28);
+      background: rgba(255,255,255,0.84);
+    }
+
+    .block-copy.placeholder {
+      color: #8a7b6b;
+      font-style: italic;
+    }
+
+    .selection-strip {
+      display: none;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding-top: 4px;
+    }
+
+    .composition-block.selected .selection-strip {
+      display: flex;
+    }
+
+    .block-controls {
+      display: none;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .composition-block.selected .block-controls {
+      display: flex;
+    }
+
+    .control-btn,
+    .mini-btn {
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+
+    .preview-shell {
+      border-radius: 28px;
+      padding: 13px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(249,246,241,0.99));
+    }
+
+    .browser-bar {
+      border-radius: 15px;
+      padding: 9px 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      background: rgba(245,240,232,0.9);
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .preview-page {
+      border-radius: 22px;
+      background: var(--paper-strong);
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      min-height: 760px;
+    }
+
+    .preview-shell-row {
+      border-radius: 16px;
+      padding: 12px 14px;
+      border: 1px dashed rgba(92,79,61,0.15);
+      background: #faf6f0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .preview-connector {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--muted);
+      padding: 2px 4px 0 4px;
+    }
+
+    .preview-section {
+      border-radius: 22px;
+      border: 1px solid rgba(92,79,61,0.09);
+      background: #fff;
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+      transition: 0.18s ease;
+    }
+
+    .preview-section.selected {
+      border-color: rgba(196,105,49,0.3);
+      box-shadow: 0 14px 28px rgba(196,105,49,0.12);
+    }
+
+    .preview-section.main {
+      background: linear-gradient(180deg, #fff8f3, #fff);
+    }
+
+    .preview-section.supporting {
+      background: #fcfaf7;
+    }
+
+    .preview-section.soft {
+      background: linear-gradient(180deg, #f7f1ea, #fff);
+    }
+
+    .preview-section.expanded { padding: 24px; }
+    .preview-section.compact { padding: 14px; }
+    .preview-section.centered { text-align: center; }
+
+    .hero-grid,
+    .media-grid,
+    .cards-grid,
+    .cta-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-grid,
+    .media-grid { grid-template-columns: 1.1fr 0.9fr; }
+    .cards-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cta-grid { grid-template-columns: 1fr auto; align-items: center; }
+
+    .surface-box,
+    .mini-card {
+      border-radius: 16px;
+      background: #f8f3ed;
+      border: 1px solid rgba(92,79,61,0.08);
+      padding: 13px;
+    }
+
+    .surface-box strong,
+    .mini-card strong { display: block; margin-bottom: 5px; }
+
+    .helper-card,
+    .check-card,
+    .selection-card {
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.76);
+      padding: 14px;
+    }
+
+    .selection-card.hidden { display: none; }
+
+    .helper-drawer {
+      display: none;
+      border-radius: 18px;
+      padding: 12px;
+      gap: 10px;
+    }
+
+    .helper-drawer.open { display: grid; }
+
+    .suggestion {
+      border-radius: 14px;
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      padding: 11px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .check-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: min(340px, calc(100vw - 30px));
+      border-radius: 16px;
+      padding: 13px 14px;
+      z-index: 20;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 1280px) {
+      .layout,
+      .center-stage,
+      .hero-grid,
+      .media-grid,
+      .cards-grid,
+      .cta-grid,
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toast {
+        left: 16px;
+        right: 16px;
+        width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">AI-верстка · Рабочая зона лендинга</div>
+        <div class="title-row">
+          <h1>Дом в Сочи под ключ</h1>
+          <span id="statusPill" class="status-pill">Есть блокирующие проблемы</span>
+        </div>
+        <div class="meta-line">
+          <span class="chip"><strong>Страница-источник:</strong> Дом в Сочи под ключ</span>
+          <span class="chip"><strong>Режим:</strong> сборка черновика из proof-материалов</span>
+        </div>
+      </div>
+      <div class="status-line">
+        <button id="sourceBtn" class="ghost-btn">Открыть страницу-источник</button>
+        <button id="seedBtn" class="soft-btn">Сгенерировать черновик</button>
+        <button id="reviewBtn" class="primary-btn" disabled>Передать на проверку</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="left-col">
+        <section class="panel">
+          <h2 class="panel-title">Материалы страницы</h2>
+          <p class="panel-copy">Слева только reusable proof-материалы: media, service cards и case cards. То, что уже на странице, помечаем как `Добавлено` или `Используется`.</p>
+          <div class="filter-switch" style="margin-top: 12px;">
+            <button class="filter-btn active" data-filter="all">Все</button>
+            <button class="filter-btn" data-filter="media">Media</button>
+            <button class="filter-btn" data-filter="service">Услуги</button>
+            <button class="filter-btn" data-filter="case">Кейсы</button>
+          </div>
+          <div id="libraryList" class="library-list"></div>
+        </section>
+      </aside>
+
+      <main class="center-col">
+        <section class="panel center-head">
+          <div>
+            <h2 class="panel-title">Собираем страницу</h2>
+            <p class="panel-copy">Сначала выберите материалы слева. Затем дайте им ритм: главный proof, поддерживающий proof и короткие связки между блоками. Preview должен читаться как страница для человека, а не как редактор.</p>
+          </div>
+          <div>
+            <div class="mode-switch">
+              <button class="toggle active" data-mode="compose">Compose</button>
+              <button class="toggle" data-mode="preview">Предпросмотр</button>
+            </div>
+            <div class="legend" style="margin-top: 10px; justify-content: flex-end;">
+              <span class="badge main">главный</span>
+              <span class="badge used">добавлено</span>
+              <span class="badge">bounded sequence</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="centerStage" class="center-stage">
+          <div class="rail">
+            <div class="rail-head">
+              <div>
+                <h3 class="panel-title" style="font-size: 17px;">Composition rail</h3>
+                <div class="panel-copy">Hero и CTA фиксированы, proof-блоки между ними можно добавлять, убирать и переставлять.</div>
+              </div>
+              <span id="flowChip" class="badge">Текущий ритм: hero → proof → CTA</span>
+            </div>
+            <div class="shell-line">
+              <span class="badge">Header зафиксирован</span>
+              <span class="badge">Footer зафиксирован</span>
+            </div>
+            <div id="railList" class="rail-list"></div>
+          </div>
+
+          <div class="preview-wrap">
+            <div class="preview-head">
+              <div>
+                <h3 class="panel-title" style="font-size: 17px;">Предпросмотр</h3>
+                <div class="panel-copy">Большая живая поверхность для чтения композиции как лендинга.</div>
+              </div>
+              <span id="previewMeta" class="badge">Смотрим как читатель</span>
+            </div>
+            <div class="preview-shell">
+              <div class="browser-bar">
+                <span>ecostroycontinent.ru / landing / draft</span>
+                <span>Черновик AI-верстки</span>
+              </div>
+              <div id="previewPage" class="preview-page"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="right-col">
+        <section class="panel helper-card">
+          <h2 class="panel-title" style="font-size: 17px;">AI-помощь</h2>
+          <p class="panel-copy">В MVP это не чат. Только короткие подсказки по текущему блоку или по связке между блоками.</p>
+          <div class="helper-actions" style="margin-top: 10px;">
+            <button id="helperCopyBtn" class="mini-btn">Подсказать связку</button>
+            <button id="helperTightenBtn" class="mini-btn">Сделать короче</button>
+          </div>
+        </section>
+
+        <section id="helperDrawer" class="helper-drawer"></section>
+
+        <section id="selectionCard" class="panel selection-card hidden"></section>
+
+        <section class="panel check-card">
+          <h2 class="panel-title" style="font-size: 17px;">Проверка</h2>
+          <p class="panel-copy">Только короткий summary того, что мешает review.</p>
+          <ul id="checkList" class="check-list"></ul>
+        </section>
+      </aside>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite">Выберите материалы слева и соберите bounded story rail. Preview занимает главное место, helper остаётся вторичным.</div>
+
+  <script>
+    (() => {
+      const materials = [
+        { id: 'media-facade', type: 'media', name: 'Главный фасад', meta: 'Фото дома в тёплом свете для первого доказательства', thumb: '16:9' },
+        { id: 'media-process', type: 'media', name: 'Ход стройки', meta: 'Серия кадров процесса, если нужен supporting proof', thumb: 'галерея' },
+        { id: 'service-turnkey', type: 'service', name: 'Дом под ключ', meta: 'Полный цикл: проект, стройка, координация', thumb: 'усл.' },
+        { id: 'service-engineering', type: 'service', name: 'Инженерные сети', meta: 'Коммуникации без отдельного хаотичного подрядчика', thumb: 'сети' },
+        { id: 'case-186', type: 'case', name: 'Кейс: дом 186 м²', meta: 'Сдали раньше срока, без лишних допработ', thumb: 'кейс' },
+        { id: 'case-slope', type: 'case', name: 'Кейс: сложный склон', meta: 'Решили дренаж и террасы без резкого роста сметы', thumb: 'рельеф' }
+      ];
+
+      const defaults = {
+        'media-facade': { type: 'media', title: 'Media block', subtitle: 'Главный визуальный proof', copy: 'Показываем реальный фасад и сразу подтверждаем, что речь идёт не о красивой картинке, а о выполненном объекте.', prominence: 'main', density: 'wide', align: 'left', surface: 'soft' },
+        'media-process': { type: 'media', title: 'Media block', subtitle: 'Галерея процесса', copy: 'Если нужен supporting proof, коротко показываем, как выглядит путь от этапа к этапу.', prominence: 'support', density: 'regular', align: 'left', surface: 'plain' },
+        'service-turnkey': { type: 'service', title: 'Service cards', subtitle: 'Выгоды без каталожного шума', copy: 'Коротко объясняем, почему у клиента один маршрут, одна координация и меньше риска рассыпания сроков.', prominence: 'normal', density: 'regular', align: 'left', surface: 'plain' },
+        'service-engineering': { type: 'service', title: 'Service cards', subtitle: 'Инженерия как часть общей сборки', copy: 'Подчёркиваем, что инженерные сети включены в маршрут, а не добавляются хаотично после основной стройки.', prominence: 'support', density: 'compact', align: 'left', surface: 'plain' },
+        'case-186': { type: 'case', title: 'Case cards', subtitle: 'Кейс как доказательство сроков', copy: 'Оставляем только один ясный вывод: команда умеет удерживать срок и объём работ без лишней драмы.', prominence: 'normal', density: 'regular', align: 'left', surface: 'soft' },
+        'case-slope': { type: 'case', title: 'Case cards', subtitle: 'Кейс как доказательство опыта', copy: 'Этот кейс нужен, когда важно показать работу со сложным участком и инженерной логикой.', prominence: 'support', density: 'compact', align: 'left', surface: 'plain' }
+      };
+
+      const state = {
+        mode: 'compose',
+        filter: 'all',
+        selectedMaterialId: 'service-engineering',
+        selectedBlockId: 'media-facade',
+        blocks: ['media-facade', 'case-186'],
+        helperOpen: false,
+        helperText: ['Выберите блок, затем попросите короткую подсказку по связке или сокращению copy.'],
+        hero: {
+          title: 'Дом под ключ в Сочи без рассыпания сроков и сметы',
+          copy: 'Первый экран только задаёт обещание и показывает один главный proof. Всё остальное должно усиливать эту мысль, а не спорить с ней.'
+        },
+        cta: {
+          copy: 'В конце просим не “оставить заявку вообще”, а обсудить участок, бюджет и реальный маршрут работ.'
+        }
+      };
+
+      const libraryList = document.getElementById('libraryList');
+      const railList = document.getElementById('railList');
+      const previewPage = document.getElementById('previewPage');
+      const helperDrawer = document.getElementById('helperDrawer');
+      const selectionCard = document.getElementById('selectionCard');
+      const checkList = document.getElementById('checkList');
+      const reviewBtn = document.getElementById('reviewBtn');
+      const statusPill = document.getElementById('statusPill');
+      const flowChip = document.getElementById('flowChip');
+      const centerStage = document.getElementById('centerStage');
+      const toast = document.getElementById('toast');
+      const previewMeta = document.getElementById('previewMeta');
+      const sourceBtn = document.getElementById('sourceBtn');
+      const seedBtn = document.getElementById('seedBtn');
+      const helperCopyBtn = document.getElementById('helperCopyBtn');
+      const helperTightenBtn = document.getElementById('helperTightenBtn');
+
+      const prominenceLabels = { main: 'главный', normal: 'обычный', support: 'поддерживающий' };
+      const densityLabels = { compact: 'компактно', regular: 'обычно', wide: 'шире' };
+      const alignLabels = { left: 'слева', center: 'по центру' };
+      const surfaceLabels = { plain: 'обычный фон', soft: 'мягкий фон' };
+
+      function showToast(text) { toast.textContent = text; }
+
+      function getBlockConfig(id) {
+        const base = defaults[id];
+        return {
+          id,
+          ...base,
+          material: materials.find((item) => item.id === id)
+        };
+      }
+
+      function computeBlockers() {
+        const blockers = [];
+        const usedBlocks = state.blocks.map(getBlockConfig);
+        const hasMainMedia = usedBlocks.some((block) => block.type === 'media' && defaults[block.id].prominence === 'main');
+        if (!hasMainMedia) blockers.push('Нужен один явно главный media-proof в середине страницы.');
+        if (state.blocks.length < 2) blockers.push('Сейчас в story rail слишком мало proof-блоков для уверенного лендинга.');
+        const missingGlue = state.blocks.some((id) => defaults[id].copy.trim().length < 48);
+        if (missingGlue) blockers.push('Хотя бы одна связка между блоками слишком короткая и не помогает чтению страницы.');
+        return blockers;
+      }
+
+      function renderLibrary() {
+        const filtered = materials.filter((item) => state.filter === 'all' || item.type === state.filter);
+        libraryList.innerHTML = filtered.map((item) => {
+          const used = state.blocks.includes(item.id);
+          const active = state.selectedMaterialId === item.id;
+          const conf = defaults[item.id];
+          const main = used && conf.prominence === 'main';
+          return `
+            <article class="material-row ${used ? 'used' : ''} ${active ? 'selected' : ''}" data-material-row="${item.id}">
+              <div class="material-top">
+                <div class="thumb">${item.thumb}</div>
+                <div>
+                  <div class="material-name">${item.name}</div>
+                  <div class="material-meta">${item.meta}</div>
+                </div>
+                <div class="legend">
+                  ${main ? '<span class="badge main">главный</span>' : ''}
+                  ${used ? '<span class="badge used">Добавлено</span>' : '<span class="badge">Свободно</span>'}
+                </div>
+              </div>
+              <div class="material-actions">
+                <span class="badge">${item.type === 'media' ? 'Media' : item.type === 'service' ? 'Услуга' : 'Кейс'}</span>
+                <button class="material-action ${used ? '' : 'add'}" data-material-action="${used ? 'remove' : 'add'}" data-material-id="${item.id}">${used ? 'Убрать' : 'Добавить'}</button>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function renderRail() {
+        const dynamicBlocks = state.blocks.map((id) => getBlockConfig(id));
+        const heroSelected = state.selectedBlockId === 'hero';
+        const ctaSelected = state.selectedBlockId === 'cta';
+
+        const renderFixed = (id, title, sub, copy, selected) => `
+          <article class="composition-block fixed ${selected ? 'selected' : ''}" data-block-id="${id}">
+            <div class="block-top">
+              <div class="block-name">${title}</div>
+              <span class="badge">fixed</span>
+            </div>
+            <div class="block-sub">${sub}</div>
+            <div class="block-copy">${copy}</div>
+          </article>
+        `;
+
+        const renderBlock = (block, index) => {
+          const selected = state.selectedBlockId === block.id;
+          const canUp = index > 0;
+          const canDown = index < dynamicBlocks.length - 1;
+          return `
+            <article class="composition-block ${selected ? 'selected' : ''}" data-block-id="${block.id}">
+              <div class="block-top">
+                <div class="block-name">${block.title}</div>
+                <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabels[block.prominence]}</span>
+              </div>
+              <div class="block-sub">${block.material.name} · ${block.subtitle}</div>
+              <div class="block-copy ${block.copy ? '' : 'placeholder'}" ${selected ? 'contenteditable="true"' : ''} data-copy-id="${block.id}">${block.copy || 'Нажмите, чтобы добавить короткую связку для этого блока.'}</div>
+              <div class="selection-strip">
+                <button class="mini-btn" data-move="up" data-block-id="${block.id}" ${canUp ? '' : 'disabled'}>Выше</button>
+                <button class="mini-btn" data-move="down" data-block-id="${block.id}" ${canDown ? '' : 'disabled'}>Ниже</button>
+                <button class="mini-btn" data-remove-block="${block.id}">Убрать</button>
+              </div>
+              <div class="block-controls">
+                <button class="control-btn ${block.prominence === 'main' ? 'active' : ''}" data-control="prominence" data-block-id="${block.id}">Акцент: ${prominenceLabels[block.prominence]}</button>
+                <button class="control-btn ${block.density === 'wide' ? 'active' : ''}" data-control="density" data-block-id="${block.id}">Плотность: ${densityLabels[block.density]}</button>
+                <button class="control-btn ${block.align === 'center' ? 'active' : ''}" data-control="align" data-block-id="${block.id}">Выравнивание: ${alignLabels[block.align]}</button>
+                <button class="control-btn ${block.surface === 'soft' ? 'active' : ''}" data-control="surface" data-block-id="${block.id}">Фон: ${surfaceLabels[block.surface]}</button>
+              </div>
+            </article>
+          `;
+        };
+
+        railList.innerHTML = [
+          renderFixed('hero', 'Hero', 'Обещание страницы и один главный proof', state.hero.copy, heroSelected),
+          ...dynamicBlocks.map(renderBlock),
+          renderFixed('cta', 'CTA band', 'Финальный спокойный следующий шаг', state.cta.copy, ctaSelected)
+        ].join('');
+
+        flowChip.textContent = `Текущий ритм: hero → ${dynamicBlocks.map((block) => block.type).join(' → ') || 'proof'} → CTA`;
+      }
+
+      function renderPreview() {
+        const blocks = state.blocks.map((id) => getBlockConfig(id));
+        const sections = blocks.map((block) => {
+          const selected = state.selectedBlockId === block.id;
+          const prominenceClass = block.prominence === 'main' ? 'main' : block.prominence === 'support' ? 'supporting' : '';
+          const densityClass = block.density === 'wide' ? 'expanded' : block.density === 'compact' ? 'compact' : '';
+          const surfaceClass = block.surface === 'soft' ? 'soft' : '';
+          const alignClass = block.align === 'center' ? 'centered' : '';
+          const connector = `<div class="preview-connector">${block.copy}</div>`;
+          const body = block.type === 'media'
+            ? `<div class="media-grid"><div><span class="badge">Media block</span><h3>${block.material.name}</h3><div class="muted">${block.subtitle}</div></div><div class="surface-box"><strong>Визуальный proof</strong>${block.material.meta}</div></div>`
+            : block.type === 'service'
+              ? `<span class="badge">Service cards</span><div class="cards-grid"><div class="mini-card"><strong>${block.material.name}</strong>${block.material.meta}</div><div class="mini-card"><strong>Прозрачный маршрут</strong>Один понятный цикл работ и координации.</div><div class="mini-card"><strong>Без каталога</strong>Только то, что усиливает обещание лендинга.</div></div>`
+              : `<span class="badge">Case cards</span><div class="cards-grid"><div class="mini-card"><strong>${block.material.name}</strong>${block.material.meta}</div><div class="mini-card"><strong>Что считывает клиент</strong>У команды есть реальный опыт и контролируемый процесс.</div><div class="mini-card"><strong>Почему здесь</strong>Этот кейс завершает аргумент перед CTA.</div></div>`;
+          return `
+            ${connector}
+            <section class="preview-section ${prominenceClass} ${densityClass} ${surfaceClass} ${alignClass} ${selected ? 'selected' : ''}">
+              ${body}
+            </section>
+          `;
+        }).join('');
+
+        previewPage.innerHTML = `
+          <div class="preview-shell-row">Header / shell region · меню, контакты, навигация из страницы-источника</div>
+          <section class="preview-section main selected ${state.selectedBlockId === 'hero' ? 'selected' : ''}">
+            <div class="hero-grid">
+              <div>
+                <span class="badge main">Hero</span>
+                <h2 style="margin:8px 0 8px; font-size: 32px; line-height: 1.1;">${state.hero.title}</h2>
+                <div class="muted" style="line-height:1.5;">${state.hero.copy}</div>
+              </div>
+              <div class="surface-box"><strong>Главный visual proof</strong>Выбранный материал для Hero должен подтверждать обещание, а не просто украшать страницу.</div>
+            </div>
+          </section>
+          ${sections}
+          <section class="preview-section soft ${state.selectedBlockId === 'cta' ? 'selected' : ''}">
+            <div class="cta-grid">
+              <div>
+                <span class="badge">CTA band</span>
+                <h3 style="margin:8px 0 6px;">Обсудим участок, бюджет и реальный маршрут работ</h3>
+                <div class="muted">${state.cta.copy}</div>
+              </div>
+              <button class="soft-btn" style="justify-self:end;">Оставить заявку</button>
+            </div>
+          </section>
+          <div class="preview-shell-row">Footer / shell region · контакты, карта, нижняя навигация</div>
+        `;
+      }
+
+      function renderSelectionCard() {
+        const id = state.selectedBlockId;
+        if (!id || id === 'hero' || id === 'cta') {
+          selectionCard.classList.add('hidden');
+          selectionCard.innerHTML = '';
+          return;
+        }
+        const block = getBlockConfig(id);
+        selectionCard.classList.remove('hidden');
+        selectionCard.innerHTML = `
+          <h2 class="panel-title" style="font-size: 17px;">Выбранный блок</h2>
+          <p class="panel-copy">${block.material.name}</p>
+          <div class="mini-actions" style="margin-top:10px;">
+            <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabels[block.prominence]}</span>
+            <span class="badge">${densityLabels[block.density]}</span>
+            <span class="badge">${alignLabels[block.align]}</span>
+          </div>
+          <div class="panel-copy" style="margin-top:10px;">Что хотим изменить: дать этому proof правильный вес и короткую связку перед следующим блоком.</div>
+        `;
+      }
+
+      function renderHelper() {
+        helperDrawer.innerHTML = state.helperOpen ? state.helperText.map((text) => `<div class="suggestion">${text}</div>`).join('') : '';
+        helperDrawer.classList.toggle('open', state.helperOpen);
+      }
+
+      function renderChecks() {
+        const blockers = computeBlockers();
+        checkList.innerHTML = blockers.map((item) => `<li>${item}</li>`).join('');
+        const ready = blockers.length === 0;
+        reviewBtn.disabled = !ready;
+        statusPill.textContent = ready ? 'Можно передавать' : 'Есть блокирующие проблемы';
+        statusPill.classList.toggle('ready', ready);
+        previewMeta.textContent = ready ? 'Черновик читается цельно' : `Нужно закрыть: ${blockers.length}`;
+      }
+
+      function render() {
+        renderLibrary();
+        renderRail();
+        renderPreview();
+        renderSelectionCard();
+        renderHelper();
+        renderChecks();
+      }
+
+      function addMaterial(id) {
+        if (state.blocks.includes(id)) return;
+        state.blocks.push(id);
+        state.selectedMaterialId = id;
+        state.selectedBlockId = id;
+        showToast(`Материал «${materials.find((item) => item.id === id).name}» добавлен в composition rail.`);
+        render();
+      }
+
+      function removeMaterial(id) {
+        state.blocks = state.blocks.filter((blockId) => blockId !== id);
+        if (state.selectedBlockId === id) state.selectedBlockId = state.blocks[0] || 'hero';
+        state.selectedMaterialId = id;
+        showToast(`Материал убран со страницы, но остался доступным в левом rail.`);
+        render();
+      }
+
+      function cycle(id, key, values) {
+        const current = defaults[id][key];
+        const next = values[(values.indexOf(current) + 1) % values.length];
+        defaults[id][key] = next;
+        state.selectedBlockId = id;
+        const label = key === 'prominence' ? prominenceLabels[next] : key === 'density' ? densityLabels[next] : key === 'align' ? alignLabels[next] : surfaceLabels[next];
+        showToast(`Для блока «${materials.find((item) => item.id === id).name}» изменён параметр: ${label}.`);
+        render();
+      }
+
+      function moveBlock(id, dir) {
+        const index = state.blocks.indexOf(id);
+        const newIndex = dir === 'up' ? index - 1 : index + 1;
+        if (index < 0 || newIndex < 0 || newIndex >= state.blocks.length) return;
+        const copy = [...state.blocks];
+        [copy[index], copy[newIndex]] = [copy[newIndex], copy[index]];
+        state.blocks = copy;
+        showToast(`Порядок proof-блоков обновлён. Preview сразу показывает новый ритм страницы.`);
+        render();
+      }
+
+      function updateCopy(id, text) {
+        defaults[id].copy = text.trim();
+        renderChecks();
+      }
+
+      function openHelper(kind) {
+        const selectedId = state.selectedBlockId;
+        const selected = selectedId && selectedId !== 'hero' && selectedId !== 'cta' ? getBlockConfig(selectedId) : null;
+        const targetName = selected ? selected.material.name : 'текущего блока';
+        if (kind === 'copy') {
+          state.helperText = [
+            `Подсказка для ${targetName}: начните связку не с описания блока, а с мысли, которую читатель должен унести дальше.`,
+            'Хорошая связка здесь короткая: одна мысль, один поворот сюжета, без микро-статьи.'
+          ];
+        } else {
+          state.helperText = [
+            `Для ${targetName} попробуйте сократить текст на треть и оставить только результат для клиента.`,
+            'Если фраза не меняет ритм страницы, её лучше убрать, чем оставить как декоративный абзац.'
+          ];
+        }
+        state.helperOpen = true;
+        renderHelper();
+        showToast('Открыта компактная AI-подсказка. Она помогает compose-flow, но не превращается в чат.');
+      }
+
+      document.addEventListener('click', (event) => {
+        const filterBtn = event.target.closest('[data-filter]');
+        if (filterBtn) {
+          state.filter = filterBtn.dataset.filter;
+          document.querySelectorAll('[data-filter]').forEach((btn) => btn.classList.toggle('active', btn === filterBtn));
+          renderLibrary();
+          showToast(`Показаны материалы типа: ${filterBtn.textContent}.`);
+          return;
+        }
+
+        const materialRow = event.target.closest('[data-material-row]');
+        if (materialRow) {
+          state.selectedMaterialId = materialRow.dataset.materialRow;
+          renderLibrary();
+        }
+
+        const materialAction = event.target.closest('[data-material-action]');
+        if (materialAction) {
+          const id = materialAction.dataset.materialId;
+          if (materialAction.dataset.materialAction === 'add') addMaterial(id);
+          if (materialAction.dataset.materialAction === 'remove') removeMaterial(id);
+          return;
+        }
+
+        const blockEl = event.target.closest('[data-block-id]');
+        if (blockEl) {
+          state.selectedBlockId = blockEl.dataset.blockId;
+          render();
+        }
+
+        const moveBtn = event.target.closest('[data-move]');
+        if (moveBtn) {
+          moveBlock(moveBtn.dataset.blockId, moveBtn.dataset.move);
+          return;
+        }
+
+        const removeBlock = event.target.closest('[data-remove-block]');
+        if (removeBlock) {
+          removeMaterial(removeBlock.dataset.removeBlock);
+          return;
+        }
+
+        const control = event.target.closest('[data-control]');
+        if (control) {
+          const map = {
+            prominence: ['main', 'normal', 'support'],
+            density: ['compact', 'regular', 'wide'],
+            align: ['left', 'center'],
+            surface: ['plain', 'soft']
+          };
+          cycle(control.dataset.blockId, control.dataset.control, map[control.dataset.control]);
+        }
+      });
+
+      document.addEventListener('input', (event) => {
+        const editable = event.target.closest('[data-copy-id]');
+        if (!editable) return;
+        updateCopy(editable.dataset.copyId, editable.textContent);
+      });
+
+      document.querySelectorAll('[data-mode]').forEach((button) => {
+        button.addEventListener('click', () => {
+          state.mode = button.dataset.mode;
+          document.querySelectorAll('[data-mode]').forEach((btn) => btn.classList.toggle('active', btn === button));
+          centerStage.classList.toggle('preview-mode', state.mode === 'preview');
+          showToast(state.mode === 'preview' ? 'Preview расширен: читаем страницу как живой лендинг.' : 'Compose возвращает более удобный баланс между rail и preview.');
+        });
+      });
+
+      helperCopyBtn.addEventListener('click', () => openHelper('copy'));
+      helperTightenBtn.addEventListener('click', () => openHelper('tighten'));
+
+      sourceBtn.addEventListener('click', () => {
+        showToast('В production это был бы переход в Страницу-источник. В mockup сохраняем только ясную операторскую CTA.');
+      });
+
+      seedBtn.addEventListener('click', () => {
+        if (!state.blocks.includes('service-turnkey')) state.blocks.splice(1, 0, 'service-turnkey');
+        state.selectedBlockId = 'service-turnkey';
+        showToast('Черновик дополнен ещё одним proof-блоком. Дальше оператор сам переставляет и усиливает материалы.');
+        render();
+      });
+
+      reviewBtn.addEventListener('click', () => {
+        if (reviewBtn.disabled) {
+          showToast('Передать на проверку пока нельзя: сначала закройте блокирующие проблемы справа.');
+          return;
+        }
+        showToast('Mockup подтверждает handoff-модель: review остаётся явным человеческим действием, а не автоматической публикацией.');
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

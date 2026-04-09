@@ -57,17 +57,23 @@ function makeLandingDraft(overrides = {}) {
     headline: "About us",
     body: "Intro",
     mediaAssetId: "media_1",
+    textEmphasisPreset: "standard",
+    surfaceTone: "plain",
     ...(overrides.hero ?? {})
   };
   const contentBand = {
     body: "Body",
     subtitle: "",
+    textEmphasisPreset: "standard",
+    surfaceTone: "plain",
     ...(overrides.contentBand ?? {})
   };
   const ctaBand = {
     title: "Get in touch",
     body: "Contact us",
     note: "",
+    textEmphasisPreset: "standard",
+    surfaceTone: "plain",
     ...(overrides.ctaBand ?? {})
   };
   const shellRegions = {
@@ -89,6 +95,7 @@ function makeLandingDraft(overrides = {}) {
   return {
     compositionFamily: "landing",
     pageType: "about",
+    pageThemeKey: "earth_sand",
     slug: "about",
     title: "About",
     hero,
@@ -255,8 +262,11 @@ test("landing workspace derived slice and verification report share the same sec
   assert.deepEqual(projectLandingWorkspaceCandidatePayload(spec.payload), spec.draft);
   assert.deepEqual(derived.draft, spec.draft);
   assert.deepEqual(derived.pagePayload, spec.payload);
+  assert.equal(derived.pagePayload.pageThemeKey, "earth_sand");
   assert.ok(Array.isArray(derived.payload.blocks));
   assert.equal(derived.payload.blocks[0].type, "hero");
+  assert.equal(derived.payload.blocks[0].textEmphasisPreset, "standard");
+  assert.equal(derived.payload.blocks[0].surfaceTone, "plain");
   assert.equal(derived.blocks[0].id, "landing_hero");
   assert.equal(derived.shellRegions[0].id, "landing_header");
   assert.deepEqual(report.blocks.map((section) => section.id), derived.blocks.map((section) => section.id));
@@ -264,6 +274,46 @@ test("landing workspace derived slice and verification report share the same sec
   assert.equal(report.shellRegions.length, 2);
   assert.equal(report.renderCompatible, true);
   assert.equal(report.overallStatus, "pass");
+  assert.equal(report.pageThemeKey, "earth_sand");
+  assert.equal(report.classResults.some((result) => result.classId === "visual/readability" && result.status === "pass"), true);
+});
+
+test("landing workspace verification warns when stage A visual semantics create softer readability risk", () => {
+  const sourcePayload = makeLandingDraft({
+    pageThemeKey: "slate_editorial",
+    contentBand: {
+      body: "Body",
+      subtitle: "",
+      textEmphasisPreset: "strong",
+      surfaceTone: "emphasis"
+    }
+  });
+  const spec = buildLandingWorkspaceCandidateSpec({
+    candidateId: "landing_candidate_1",
+    pageId: "page_1",
+    landingDraftId: "rev_2",
+    baseRevisionId: "rev_base",
+    sourceContextSummary: "page=page_1",
+    payload: sourcePayload
+  });
+  const report = buildLandingWorkspaceVerificationReport({
+    candidateSpec: spec,
+    readiness: {
+      summary: "Ready.",
+      hasBlocking: false,
+      results: []
+    },
+    revision: {
+      state: "draft",
+      ownerReviewRequired: false,
+      ownerApprovalStatus: "not_required",
+      previewStatus: "preview_renderable"
+    }
+  });
+
+  const visualClass = report.classResults.find((result) => result.classId === "visual/readability");
+  assert.equal(visualClass?.status, "warning");
+  assert.equal(report.warnings.some((issue) => issue.code === "contrast_warning_content_band"), true);
 });
 
 test("landing workspace session anchoring persists a pageId mismatch once and then stays stable", async () => {

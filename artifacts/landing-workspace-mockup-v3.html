@@ -1,0 +1,1102 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-верстка — Рабочая зона лендинга v3</title>
+  <link rel="icon" href="data:," />
+  <style>
+    :root {
+      --bg: #f5f1e8;
+      --paper: rgba(255,255,255,0.9);
+      --paper-strong: #ffffff;
+      --line: rgba(97, 83, 64, 0.12);
+      --line-strong: rgba(97, 83, 64, 0.22);
+      --text: #261f18;
+      --muted: #73685a;
+      --accent: #c4662d;
+      --accent-soft: #f3dfcf;
+      --accent-wash: #fff8f2;
+      --green: #2f7c58;
+      --green-soft: #dcefe5;
+      --danger: #a34b39;
+      --danger-soft: #f4ddd6;
+      --shadow: 0 18px 46px rgba(48, 34, 17, 0.07);
+      --radius: 24px;
+      --font: "Segoe UI", "Inter", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(244, 213, 188, 0.34), transparent 28%),
+        radial-gradient(circle at right 18%, rgba(233, 226, 211, 0.44), transparent 26%),
+        var(--bg);
+    }
+
+    button, input { font: inherit; }
+
+    .app {
+      max-width: 1540px;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .topbar,
+    .panel,
+    .page-shell,
+    .toast,
+    .helper-drawer {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar {
+      border-radius: 24px;
+      padding: 15px 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .title-row,
+    .meta-row,
+    .top-actions,
+    .library-filters,
+    .helper-actions,
+    .next-actions,
+    .block-toolbar,
+    .section-meta,
+    .library-status,
+    .section-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 650;
+    }
+
+    h2, h3 { margin: 0; }
+
+    .muted { color: var(--muted); }
+
+    .chip,
+    .badge,
+    .ghost-btn,
+    .soft-btn,
+    .primary-btn,
+    .toggle,
+    .filter-btn,
+    .mini-btn,
+    .tool-btn,
+    .material-btn {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.18s ease;
+      padding: 8px 12px;
+    }
+
+    .chip,
+    .badge {
+      cursor: default;
+      background: rgba(255,255,255,0.74);
+      border-color: var(--line);
+      color: var(--muted);
+    }
+
+    .badge {
+      padding: 5px 9px;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .badge.used {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(196,102,45,0.18);
+    }
+
+    .badge.main {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: rgba(47,124,88,0.18);
+    }
+
+    .ghost-btn,
+    .filter-btn,
+    .mini-btn,
+    .tool-btn,
+    .material-btn,
+    .toggle {
+      background: rgba(255,255,255,0.66);
+      border-color: var(--line);
+    }
+
+    .soft-btn {
+      background: var(--accent-soft);
+      border-color: rgba(196,102,45,0.18);
+      color: var(--accent);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #cb7338, #bb5929);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(196, 102, 45, 0.22);
+    }
+
+    .toggle.active,
+    .filter-btn.active,
+    .tool-btn.active {
+      background: #fff;
+      border-color: var(--line-strong);
+      box-shadow: 0 8px 18px rgba(48, 34, 17, 0.08);
+    }
+
+    .ghost-btn:hover,
+    .soft-btn:hover,
+    .primary-btn:hover,
+    .toggle:hover,
+    .filter-btn:hover,
+    .mini-btn:hover,
+    .tool-btn:hover,
+    .material-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+    }
+
+    .primary-btn:disabled,
+    .ghost-btn:disabled,
+    .mini-btn:disabled,
+    .tool-btn:disabled,
+    .material-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .status-pill {
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-pill.ready {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 264px minmax(0, 1fr) 232px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      border-radius: var(--radius);
+      padding: 15px;
+    }
+
+    .left-col,
+    .right-col,
+    .center-col {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      min-height: 0;
+    }
+
+    .panel-title {
+      font-size: 17px;
+      font-weight: 650;
+    }
+
+    .panel-copy {
+      margin-top: 6px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .library-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .material-item {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.78);
+      transition: 0.18s ease;
+    }
+
+    .material-item.selected {
+      background: var(--accent-wash);
+      border-color: rgba(196,102,45,0.3);
+    }
+
+    .material-item.used {
+      background: rgba(243,223,207,0.45);
+    }
+
+    .material-top {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(97,83,64,0.08);
+      background: linear-gradient(135deg, #e5d5c4, #f8f2ea 62%, #e7d8c8);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .material-name {
+      font-weight: 600;
+      margin-bottom: 2px;
+      line-height: 1.2;
+    }
+
+    .material-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .center-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .mode-switch { display: flex; gap: 8px; }
+
+    .page-shell {
+      border-radius: 30px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,244,238,0.98));
+    }
+
+    .browser-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 15px;
+      background: rgba(245,240,232,0.92);
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .page-canvas {
+      background: var(--paper-strong);
+      border-radius: 24px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      min-height: 760px;
+    }
+
+    .shell-region {
+      border-radius: 16px;
+      border: 1px dashed rgba(97,83,64,0.14);
+      background: #faf6f0;
+      color: var(--muted);
+      padding: 12px 14px;
+      font-size: 13px;
+    }
+
+    .landing-section,
+    .bridge-row {
+      border-radius: 22px;
+      transition: 0.18s ease;
+    }
+
+    .landing-section {
+      position: relative;
+      padding: 18px;
+      border: 1px solid rgba(97,83,64,0.09);
+      background: #fff;
+      display: grid;
+      gap: 10px;
+    }
+
+    .landing-section.selected {
+      border-color: rgba(196,102,45,0.3);
+      box-shadow: 0 16px 28px rgba(196,102,45,0.11);
+      background: var(--accent-wash);
+    }
+
+    .landing-section.main { background: linear-gradient(180deg, #fff8f2, #fff); }
+    .landing-section.supporting { background: #fcfaf7; }
+    .landing-section.soft { background: linear-gradient(180deg, #f8f1ea, #fff); }
+    .landing-section.expanded { padding: 24px; }
+    .landing-section.compact { padding: 14px; }
+    .landing-section.centered { text-align: center; }
+
+    .hero-grid,
+    .media-grid,
+    .cards-grid,
+    .cta-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-grid,
+    .media-grid { grid-template-columns: 1.12fr 0.88fr; }
+    .cards-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cta-grid { grid-template-columns: 1fr auto; align-items: center; }
+
+    .surface-box,
+    .mini-card {
+      border-radius: 16px;
+      background: #f8f2ea;
+      border: 1px solid rgba(97,83,64,0.08);
+      padding: 13px;
+    }
+
+    .surface-box strong,
+    .mini-card strong { display: block; margin-bottom: 5px; }
+
+    .bridge-row {
+      padding: 6px 4px 0 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .bridge-line {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .bridge-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .bridge-editor {
+      display: none;
+      margin-top: 8px;
+    }
+
+    .bridge-row.selected .bridge-editor {
+      display: block;
+    }
+
+    .bridge-input {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(196,102,45,0.22);
+      background: rgba(255,255,255,0.88);
+      padding: 9px 11px;
+      color: var(--text);
+    }
+
+    .block-toolbar {
+      position: absolute;
+      top: -13px;
+      right: 18px;
+      display: none;
+      gap: 6px;
+      padding: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(97,83,64,0.12);
+      box-shadow: 0 10px 20px rgba(48,34,17,0.08);
+    }
+
+    .landing-section.selected .block-toolbar {
+      display: flex;
+    }
+
+    .tool-btn,
+    .mini-btn { padding: 7px 10px; font-size: 12px; }
+
+    .helper-drawer {
+      display: none;
+      border-radius: 18px;
+      padding: 12px;
+      gap: 9px;
+    }
+
+    .helper-drawer.open { display: grid; }
+
+    .suggestion {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.8);
+      padding: 11px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .check-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .selection-card.hidden { display: none; }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: min(340px, calc(100vw - 30px));
+      border-radius: 16px;
+      padding: 13px 14px;
+      font-size: 14px;
+      line-height: 1.4;
+      z-index: 20;
+    }
+
+    .preview-mode .block-toolbar,
+    .preview-mode .bridge-edit-trigger,
+    .preview-mode .bridge-editor,
+    .preview-mode .section-actions,
+    .preview-mode .tool-only-compose {
+      display: none !important;
+    }
+
+    @media (max-width: 1280px) {
+      .layout,
+      .hero-grid,
+      .media-grid,
+      .cards-grid,
+      .cta-grid,
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toast {
+        left: 16px;
+        right: 16px;
+        width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">AI-верстка · Рабочая зона лендинга</div>
+        <div class="title-row">
+          <h1>Дом в Сочи под ключ</h1>
+          <span id="statusPill" class="status-pill">Есть блокирующие проблемы</span>
+        </div>
+        <div class="meta-row" style="margin-top:8px;">
+          <span class="chip"><strong>Страница-источник:</strong> Дом в Сочи под ключ</span>
+          <span class="chip">Одна центральная рабочая поверхность</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="sourceBtn" class="ghost-btn">Открыть страницу-источник</button>
+        <button id="draftBtn" class="soft-btn">Сгенерировать черновик</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="left-col">
+        <section class="panel">
+          <h2 class="panel-title">Материалы</h2>
+          <p class="panel-copy">Только reusable proof-объекты: media, услуги и кейсы. Всё, что уже стоит на странице, помечаем как `Добавлено` или `Используется`.</p>
+          <div class="library-filters" style="margin-top:12px;">
+            <button class="filter-btn active" data-filter="all">Все</button>
+            <button class="filter-btn" data-filter="media">Media</button>
+            <button class="filter-btn" data-filter="service">Услуги</button>
+            <button class="filter-btn" data-filter="case">Кейсы</button>
+          </div>
+          <div id="libraryList" class="library-list"></div>
+        </section>
+        <section class="panel">
+          <h2 class="panel-title">Shell</h2>
+          <div class="library-status" style="margin-top:10px;">
+            <span class="badge">Header зафиксирован</span>
+            <span class="badge">Footer зафиксирован</span>
+          </div>
+        </section>
+      </aside>
+
+      <main class="center-col">
+        <section class="panel center-head">
+          <div>
+            <h2 class="panel-title">Собираем лендинг прямо на странице</h2>
+            <p class="panel-copy">Выбираем proof-материалы слева, а дальше работаем только в одной центральной сцене: выбираем акценты, переставляем блоки и дописываем короткие связки прямо в потоке страницы.</p>
+          </div>
+          <div class="mode-switch">
+            <button class="toggle active" data-mode="compose">Compose</button>
+            <button class="toggle" data-mode="preview">Предпросмотр</button>
+          </div>
+        </section>
+
+        <section id="pageShell" class="page-shell">
+          <div class="browser-bar">
+            <span>ecostroycontinent.ru / landing / draft</span>
+            <span id="previewMeta">Сейчас редактируем в месте чтения</span>
+          </div>
+          <div id="pageCanvas" class="page-canvas"></div>
+        </section>
+      </main>
+
+      <aside class="right-col">
+        <section class="panel">
+          <h2 class="panel-title">Проверка</h2>
+          <ul id="checkList" class="check-list"></ul>
+          <div class="next-actions" style="margin-top:12px;">
+            <button id="reviewBtn" class="primary-btn" disabled>Передать на проверку</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">AI-помощь</h2>
+          <p class="panel-copy">Не чат. Только короткие подсказки по связке или сокращению текста для выбранного блока.</p>
+          <div class="helper-actions" style="margin-top:10px;">
+            <button id="helperBridgeBtn" class="mini-btn">Подсказать связку</button>
+            <button id="helperTightenBtn" class="mini-btn">Сделать короче</button>
+          </div>
+        </section>
+
+        <section id="helperDrawer" class="helper-drawer"></section>
+
+        <section id="selectionCard" class="panel selection-card hidden"></section>
+      </aside>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite">Выберите материал слева и добавьте его прямо на страницу. В центре теперь одна рабочая поверхность без отдельного composition rail.</div>
+
+  <script>
+    (() => {
+      const materials = [
+        { id: 'media-facade', type: 'media', name: 'Главный фасад', meta: 'Фото дома для первого доказательства', thumb: '16:9' },
+        { id: 'media-process', type: 'media', name: 'Ход стройки', meta: 'Галерея этапов для supporting proof', thumb: 'гал.' },
+        { id: 'service-turnkey', type: 'service', name: 'Дом под ключ', meta: 'Один маршрут от проекта до сдачи', thumb: 'усл.' },
+        { id: 'service-engineering', type: 'service', name: 'Инженерные сети', meta: 'Коммуникации без отдельного хаотичного подрядчика', thumb: 'сети' },
+        { id: 'case-186', type: 'case', name: 'Кейс: дом 186 м²', meta: 'Сдали раньше срока и без лишних допработ', thumb: 'кейс' },
+        { id: 'case-slope', type: 'case', name: 'Кейс: сложный склон', meta: 'Решили рельеф и дренаж без резкого роста сметы', thumb: 'склон' }
+      ];
+
+      const state = {
+        mode: 'compose',
+        filter: 'all',
+        selectedMaterialId: 'service-turnkey',
+        selectedSectionId: 'case-186',
+        helperOpen: false,
+        helperMessages: ['Выберите блок на странице, затем попросите короткую подсказку по связке или по сокращению copy.'],
+        hero: {
+          title: 'Дом под ключ в Сочи без рассыпания сроков и сметы',
+          copy: 'Первый экран задаёт обещание и оставляет только один главный proof. Всё остальное должно усиливать эту мысль, а не спорить с ней.'
+        },
+        cta: {
+          copy: 'Предлагаем не абстрактную заявку, а разговор про участок, бюджет и реалистичный маршрут работ.'
+        },
+        blocks: [
+          {
+            id: 'media-facade',
+            prominence: 'main',
+            density: 'expanded',
+            align: 'left',
+            surface: 'soft',
+            bridge: 'Сразу после обещания показываем реальный объект, чтобы страница начиналась не с абстракции, а с подтверждения.'
+          },
+          {
+            id: 'case-186',
+            prominence: 'supporting',
+            density: 'compact',
+            align: 'left',
+            surface: 'plain',
+            bridge: 'Перед финальным шагом закрепляем доверие одним кейсом, который подтверждает сроки и управляемость проекта.'
+          }
+        ]
+      };
+
+      const libraryList = document.getElementById('libraryList');
+      const pageCanvas = document.getElementById('pageCanvas');
+      const selectionCard = document.getElementById('selectionCard');
+      const helperDrawer = document.getElementById('helperDrawer');
+      const checkList = document.getElementById('checkList');
+      const reviewBtn = document.getElementById('reviewBtn');
+      const statusPill = document.getElementById('statusPill');
+      const previewMeta = document.getElementById('previewMeta');
+      const pageShell = document.getElementById('pageShell');
+      const toast = document.getElementById('toast');
+      const helperBridgeBtn = document.getElementById('helperBridgeBtn');
+      const helperTightenBtn = document.getElementById('helperTightenBtn');
+      const draftBtn = document.getElementById('draftBtn');
+      const sourceBtn = document.getElementById('sourceBtn');
+
+      const prominenceLabel = { main: 'главный', standard: 'обычный', supporting: 'поддерживающий' };
+      const densityLabel = { compact: 'компактно', regular: 'обычно', expanded: 'шире' };
+      const alignLabel = { left: 'слева', center: 'по центру' };
+      const surfaceLabel = { plain: 'обычный фон', soft: 'мягкий фон' };
+
+      function toastMessage(text) {
+        toast.textContent = text;
+      }
+
+      function getMaterial(id) {
+        return materials.find((item) => item.id === id);
+      }
+
+      function getBlock(id) {
+        return state.blocks.find((item) => item.id === id);
+      }
+
+      function isUsed(id) {
+        return state.blocks.some((block) => block.id === id);
+      }
+
+      function makeDefaultBlock(id) {
+        const material = getMaterial(id);
+        if (!material) return null;
+        const presets = {
+          media: {
+            bridge: 'Добавьте короткую связку, которая объясняет, почему этот proof идёт именно здесь.',
+            prominence: 'standard',
+            density: 'regular',
+            align: 'left',
+            surface: 'plain'
+          },
+          service: {
+            bridge: 'Коротко покажите, как этот блок поддерживает обещание страницы.',
+            prominence: 'standard',
+            density: 'regular',
+            align: 'left',
+            surface: 'plain'
+          },
+          case: {
+            bridge: 'Свяжите кейс с доверием: зачем читателю этот proof именно перед CTA.',
+            prominence: 'supporting',
+            density: 'compact',
+            align: 'left',
+            surface: 'plain'
+          }
+        };
+        return { id, ...presets[material.type] };
+      }
+
+      function computeBlockers() {
+        const blockers = [];
+        const mainMedia = state.blocks.some((block) => getMaterial(block.id).type === 'media' && block.prominence === 'main');
+        if (!mainMedia) blockers.push('На странице нет одного явно главного media-proof.');
+        if (state.blocks.length < 2) blockers.push('Слишком мало proof-блоков между Hero и CTA.');
+        if (state.blocks.some((block) => (block.bridge || '').trim().length < 48)) blockers.push('Хотя бы одна связка между блоками слишком слабая и слишком короткая.');
+        return blockers;
+      }
+
+      function renderLibrary() {
+        const filtered = materials.filter((item) => state.filter === 'all' || item.type === state.filter);
+        libraryList.innerHTML = filtered.map((item) => {
+          const used = isUsed(item.id);
+          const selected = state.selectedMaterialId === item.id;
+          const usedBlock = getBlock(item.id);
+          const isMain = usedBlock && usedBlock.prominence === 'main';
+          return `
+            <article class="material-item ${used ? 'used' : ''} ${selected ? 'selected' : ''}" data-material-row="${item.id}">
+              <div class="material-top">
+                <div class="thumb">${item.thumb}</div>
+                <div>
+                  <div class="material-name">${item.name}</div>
+                  <div class="material-meta">${item.meta}</div>
+                </div>
+              </div>
+              <div class="library-status">
+                ${isMain ? '<span class="badge main">главный</span>' : ''}
+                ${used ? '<span class="badge used">Добавлено</span>' : '<span class="badge">Свободно</span>'}
+              </div>
+              <div class="section-actions">
+                <button class="material-btn ${used ? '' : 'soft-btn'}" data-material-action="${used ? 'remove' : 'add'}" data-material-id="${item.id}">${used ? 'Убрать' : 'Добавить'}</button>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function renderHero() {
+        const selected = state.selectedSectionId === 'hero';
+        return `
+          <section class="landing-section main ${selected ? 'selected' : ''}" data-section-id="hero">
+            <div class="hero-grid">
+              <div>
+                <div class="section-meta">
+                  <span class="badge main">Hero</span>
+                  <span class="badge">фиксирован</span>
+                </div>
+                <h2 style="margin:10px 0 8px; font-size: 33px; line-height: 1.08;">${state.hero.title}</h2>
+                <div class="muted" style="line-height:1.5;">${state.hero.copy}</div>
+              </div>
+              <div class="surface-box"><strong>Главный visual proof</strong>Первый экран показывает один ясный результат и не распыляет внимание на несколько конкурирующих материалов.</div>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderBlock(block, index) {
+        const material = getMaterial(block.id);
+        const selected = state.selectedSectionId === block.id;
+        const prominenceClass = block.prominence === 'main' ? 'main' : block.prominence === 'supporting' ? 'supporting' : '';
+        const densityClass = block.density === 'expanded' ? 'expanded' : block.density === 'compact' ? 'compact' : '';
+        const alignClass = block.align === 'center' ? 'centered' : '';
+        const surfaceClass = block.surface === 'soft' ? 'soft' : '';
+        const canUp = index > 0;
+        const canDown = index < state.blocks.length - 1;
+
+        const body = material.type === 'media'
+          ? `
+            <div class="media-grid">
+              <div>
+                <div class="section-meta">
+                  <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabel[block.prominence]}</span>
+                  <span class="badge">Media block</span>
+                </div>
+                <h3 style="margin-top:10px; font-size: 24px;">${material.name}</h3>
+                <div class="muted">${material.meta}</div>
+              </div>
+              <div class="surface-box"><strong>Что считывает читатель</strong>Этот визуал подтверждает, что команда показывает реальный объект и реальную работу.</div>
+            </div>`
+          : material.type === 'service'
+            ? `
+            <div class="section-meta">
+              <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabel[block.prominence]}</span>
+              <span class="badge">Service cards</span>
+            </div>
+            <h3 style="font-size: 22px; margin-top: 4px;">${material.name}</h3>
+            <div class="cards-grid">
+              <div class="mini-card"><strong>${material.name}</strong>${material.meta}</div>
+              <div class="mini-card"><strong>Польза для клиента</strong>Один маршрут без разрывов между подрядчиками.</div>
+              <div class="mini-card"><strong>Как это читается</strong>Услуга работает как аргумент, а не как каталог.</div>
+            </div>`
+            : `
+            <div class="section-meta">
+              <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabel[block.prominence]}</span>
+              <span class="badge">Case cards</span>
+            </div>
+            <h3 style="font-size: 22px; margin-top: 4px;">${material.name}</h3>
+            <div class="cards-grid">
+              <div class="mini-card"><strong>${material.name}</strong>${material.meta}</div>
+              <div class="mini-card"><strong>Почему здесь</strong>Этот кейс закрепляет доверие перед следующим шагом.</div>
+              <div class="mini-card"><strong>Что остаётся в памяти</strong>Команда умеет удерживать сложный проект под контролем.</div>
+            </div>`;
+
+        return `
+          <div class="bridge-row ${selected ? 'selected' : ''}" data-bridge-for="${block.id}">
+            <div class="bridge-line">
+              <span class="bridge-label">Связка</span>
+              <span>${block.bridge}</span>
+              <button class="mini-btn bridge-edit-trigger tool-only-compose" data-edit-bridge="${block.id}">Изменить</button>
+            </div>
+            <div class="bridge-editor">
+              <input class="bridge-input" data-bridge-input="${block.id}" value="${block.bridge.replace(/"/g, '&quot;')}" />
+            </div>
+          </div>
+          <section class="landing-section ${prominenceClass} ${densityClass} ${alignClass} ${surfaceClass} ${selected ? 'selected' : ''}" data-section-id="${block.id}">
+            <div class="block-toolbar">
+              <button class="tool-btn" data-tool="prominence" data-id="${block.id}">Акцент</button>
+              <button class="tool-btn" data-tool="density" data-id="${block.id}">Плотность</button>
+              <button class="tool-btn" data-tool="align" data-id="${block.id}">Выравн.</button>
+              <button class="tool-btn" data-tool="surface" data-id="${block.id}">Фон</button>
+            </div>
+            ${body}
+            <div class="section-actions tool-only-compose">
+              <button class="mini-btn" data-move="up" data-id="${block.id}" ${canUp ? '' : 'disabled'}>Выше</button>
+              <button class="mini-btn" data-move="down" data-id="${block.id}" ${canDown ? '' : 'disabled'}>Ниже</button>
+              <button class="mini-btn" data-remove-block="${block.id}">Убрать</button>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderCTA() {
+        const selected = state.selectedSectionId === 'cta';
+        return `
+          <section class="landing-section soft ${selected ? 'selected' : ''}" data-section-id="cta">
+            <div class="cta-grid">
+              <div>
+                <div class="section-meta">
+                  <span class="badge">CTA band</span>
+                  <span class="badge">фиксирован</span>
+                </div>
+                <h3 style="margin:10px 0 6px; font-size: 24px;">Обсудим участок, бюджет и реальный маршрут работ</h3>
+                <div class="muted">${state.cta.copy}</div>
+              </div>
+              <button class="soft-btn" style="justify-self:end;">Оставить заявку</button>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderPage() {
+        pageCanvas.innerHTML = `
+          <div class="shell-region">Header / shell region · навигация, контакты и шапка остаются фиксированными</div>
+          ${renderHero()}
+          ${state.blocks.map(renderBlock).join('')}
+          ${renderCTA()}
+          <div class="shell-region">Footer / shell region · контакты, карта и нижняя навигация</div>
+        `;
+      }
+
+      function renderSelectionCard() {
+        const id = state.selectedSectionId;
+        if (!id || id === 'hero' || id === 'cta') {
+          selectionCard.classList.add('hidden');
+          selectionCard.innerHTML = '';
+          return;
+        }
+        const block = getBlock(id);
+        const material = getMaterial(id);
+        selectionCard.classList.remove('hidden');
+        selectionCard.innerHTML = `
+          <h2 class="panel-title">Что хотим изменить</h2>
+          <p class="panel-copy">${material.name}</p>
+          <div class="section-meta" style="margin-top:10px;">
+            <span class="badge ${block.prominence === 'main' ? 'main' : 'used'}">${prominenceLabel[block.prominence]}</span>
+            <span class="badge">${densityLabel[block.density]}</span>
+            <span class="badge">${alignLabel[block.align]}</span>
+          </div>
+          <p class="panel-copy" style="margin-top:10px;">Нужен правильный вес для блока и короткая связка перед ним. Остальное лучше не усложнять.</p>
+        `;
+      }
+
+      function renderHelper() {
+        helperDrawer.classList.toggle('open', state.helperOpen);
+        helperDrawer.innerHTML = state.helperOpen ? state.helperMessages.map((message) => `<div class="suggestion">${message}</div>`).join('') : '';
+      }
+
+      function renderChecks() {
+        const blockers = computeBlockers();
+        checkList.innerHTML = blockers.map((item) => `<li>${item}</li>`).join('');
+        const ready = blockers.length === 0;
+        reviewBtn.disabled = !ready;
+        statusPill.textContent = ready ? 'Можно передавать' : 'Есть блокирующие проблемы';
+        statusPill.classList.toggle('ready', ready);
+        previewMeta.textContent = state.mode === 'preview' ? 'Смотрим как читатель' : 'Редактируем прямо в месте чтения';
+      }
+
+      function render() {
+        renderLibrary();
+        renderPage();
+        renderSelectionCard();
+        renderHelper();
+        renderChecks();
+        pageShell.classList.toggle('preview-mode', state.mode === 'preview');
+      }
+
+      function addMaterial(id) {
+        if (isUsed(id)) return;
+        const block = makeDefaultBlock(id);
+        state.blocks.push(block);
+        state.selectedMaterialId = id;
+        state.selectedSectionId = id;
+        toastMessage(`Материал «${getMaterial(id).name}» добавлен прямо на страницу.`);
+        render();
+      }
+
+      function removeMaterial(id) {
+        state.blocks = state.blocks.filter((block) => block.id !== id);
+        if (state.selectedSectionId === id) state.selectedSectionId = state.blocks[0]?.id || 'hero';
+        state.selectedMaterialId = id;
+        toastMessage('Материал убран со страницы и снова доступен в библиотеке.');
+        render();
+      }
+
+      function moveBlock(id, direction) {
+        const index = state.blocks.findIndex((block) => block.id === id);
+        const nextIndex = direction === 'up' ? index - 1 : index + 1;
+        if (index < 0 || nextIndex < 0 || nextIndex >= state.blocks.length) return;
+        const copy = [...state.blocks];
+        [copy[index], copy[nextIndex]] = [copy[nextIndex], copy[index]];
+        state.blocks = copy;
+        toastMessage('Порядок proof-блоков изменён прямо на странице. Отдельный rail больше не нужен.');
+        render();
+      }
+
+      function cycle(id, key, values) {
+        const block = getBlock(id);
+        const currentIndex = values.indexOf(block[key]);
+        block[key] = values[(currentIndex + 1) % values.length];
+        toastMessage(`Для блока «${getMaterial(id).name}» обновлён параметр «${key}».`);
+        render();
+      }
+
+      function openHelper(kind) {
+        const id = state.selectedSectionId;
+        const block = id && id !== 'hero' && id !== 'cta' ? getBlock(id) : null;
+        const name = block ? getMaterial(id).name : 'текущего блока';
+        if (kind === 'bridge') {
+          state.helperMessages = [
+            `Для ${name}: сделайте связку короче и начните её с мысли, зачем следующий блок нужен читателю именно сейчас.`,
+            'Связка должна поворачивать историю вперёд, а не повторять заголовок блока другими словами.'
+          ];
+        } else {
+          state.helperMessages = [
+            `Для ${name}: попробуйте убрать треть слов и оставить только результат для клиента.`,
+            'Если текст не меняет ритм страницы, его лучше сократить, чем украшать.'
+          ];
+        }
+        state.helperOpen = true;
+        renderHelper();
+        toastMessage('Открыта компактная AI-подсказка. Она вторична и не конкурирует с центральной страницей.');
+      }
+
+      document.addEventListener('click', (event) => {
+        const filter = event.target.closest('[data-filter]');
+        if (filter) {
+          state.filter = filter.dataset.filter;
+          document.querySelectorAll('[data-filter]').forEach((btn) => btn.classList.toggle('active', btn === filter));
+          renderLibrary();
+          toastMessage(`Фильтр материалов: ${filter.textContent}.`);
+          return;
+        }
+
+        const row = event.target.closest('[data-material-row]');
+        if (row) {
+          state.selectedMaterialId = row.dataset.materialRow;
+          renderLibrary();
+        }
+
+        const materialAction = event.target.closest('[data-material-action]');
+        if (materialAction) {
+          const id = materialAction.dataset.materialId;
+          materialAction.dataset.materialAction === 'add' ? addMaterial(id) : removeMaterial(id);
+          return;
+        }
+
+        const section = event.target.closest('[data-section-id]');
+        if (section) {
+          state.selectedSectionId = section.dataset.sectionId;
+          render();
+          return;
+        }
+
+        const move = event.target.closest('[data-move]');
+        if (move) {
+          moveBlock(move.dataset.id, move.dataset.move);
+          return;
+        }
+
+        const remove = event.target.closest('[data-remove-block]');
+        if (remove) {
+          removeMaterial(remove.dataset.removeBlock);
+          return;
+        }
+
+        const tool = event.target.closest('[data-tool]');
+        if (tool) {
+          const valueMap = {
+            prominence: ['main', 'standard', 'supporting'],
+            density: ['compact', 'regular', 'expanded'],
+            align: ['left', 'center'],
+            surface: ['plain', 'soft']
+          };
+          cycle(tool.dataset.id, tool.dataset.tool, valueMap[tool.dataset.tool]);
+          return;
+        }
+
+        const editBridge = event.target.closest('[data-edit-bridge]');
+        if (editBridge) {
+          state.selectedSectionId = editBridge.dataset.editBridge;
+          render();
+        }
+      });
+
+      document.addEventListener('input', (event) => {
+        const input = event.target.closest('[data-bridge-input]');
+        if (!input) return;
+        const block = getBlock(input.dataset.bridgeInput);
+        block.bridge = input.value;
+        renderChecks();
+      });
+
+      document.querySelectorAll('[data-mode]').forEach((button) => {
+        button.addEventListener('click', () => {
+          state.mode = button.dataset.mode;
+          document.querySelectorAll('[data-mode]').forEach((btn) => btn.classList.toggle('active', btn === button));
+          toastMessage(state.mode === 'preview' ? 'Preview-mode убирает лишние подсказки и оставляет только чтение страницы.' : 'Compose-mode возвращает лёгкие in-place controls прямо на странице.');
+          render();
+        });
+      });
+
+      helperBridgeBtn.addEventListener('click', () => openHelper('bridge'));
+      helperTightenBtn.addEventListener('click', () => openHelper('tighten'));
+
+      draftBtn.addEventListener('click', () => {
+        if (!isUsed('service-turnkey')) state.blocks.splice(1, 0, makeDefaultBlock('service-turnkey'));
+        if (!isUsed('media-process')) state.blocks.splice(2, 0, makeDefaultBlock('media-process'));
+        state.selectedSectionId = 'service-turnkey';
+        toastMessage('Черновик дополнен новыми proof-блоками. Дальше оператор работает прямо на странице.');
+        render();
+      });
+
+      sourceBtn.addEventListener('click', () => {
+        toastMessage('В production отсюда был бы переход к Странице-источнику. В mockup оставляем только операторскую ссылку.');
+      });
+
+      reviewBtn.addEventListener('click', () => {
+        if (reviewBtn.disabled) {
+          toastMessage('Передать на проверку пока нельзя: сначала закройте блокирующие проблемы справа.');
+          return;
+        }
+        toastMessage('Mockup подтверждает только handoff-модель: review остаётся явным человеческим действием.');
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

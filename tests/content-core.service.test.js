@@ -34,6 +34,7 @@ test("normalizeEntityInput keeps fixed page route truth for contacts pages", () 
 test("normalizeEntityInput keeps service and case references inside page blocks only", () => {
   const page = normalizeEntityInput(ENTITY_TYPES.PAGE, {
     pageType: PAGE_TYPES.ABOUT,
+    pageThemeKey: "forest_contrast",
     title: "About",
     h1: "About company",
     intro: "Company intro",
@@ -48,12 +49,53 @@ test("normalizeEntityInput keeps service and case references inside page blocks 
   });
 
   assert.equal(page.slug, "about");
+  assert.equal(page.pageThemeKey, "forest_contrast");
   assert.deepEqual(
     page.blocks.map((block) => block.type),
     ["hero", "rich_text", "service_list", "case_list", "gallery", "cta"]
   );
+  assert.equal(page.blocks[0].textEmphasisPreset, "standard");
+  assert.equal(page.blocks[0].surfaceTone, "plain");
+  assert.equal(page.blocks[1].textEmphasisPreset, "standard");
   assert.equal("serviceIds" in page, false);
   assert.equal("caseIds" in page, false);
+});
+
+test("normalizeEntityInput persists bounded landing visual semantics without opening raw styling freedom", () => {
+  const page = normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    pageType: PAGE_TYPES.ABOUT,
+    pageThemeKey: "slate_editorial",
+    title: "About",
+    h1: "About company",
+    intro: "Company intro",
+    body: "Body text",
+    heroTextEmphasisPreset: "strong",
+    heroSurfaceTone: "tinted",
+    contentBandTextEmphasisPreset: "quiet",
+    contentBandSurfaceTone: "emphasis",
+    ctaTextEmphasisPreset: "strong",
+    ctaSurfaceTone: "emphasis",
+    serviceIds: [],
+    caseIds: [],
+    galleryIds: [],
+    primaryMediaAssetId: "media-1",
+    ctaTitle: "Need a quote?",
+    ctaBody: "Send us details",
+    defaultBlockCtaLabel: "Request quote"
+  });
+
+  assert.equal(page.pageThemeKey, "slate_editorial");
+  assert.equal(page.blocks[0].type, "hero");
+  assert.equal(page.blocks[0].textEmphasisPreset, "strong");
+  assert.equal(page.blocks[0].surfaceTone, "tinted");
+  assert.equal(page.blocks[1].type, "rich_text");
+  assert.equal(page.blocks[1].textEmphasisPreset, "quiet");
+  assert.equal(page.blocks[1].surfaceTone, "emphasis");
+  assert.equal(page.blocks.at(-1).type, "cta");
+  assert.equal(page.blocks.at(-1).textEmphasisPreset, "strong");
+  assert.equal(page.blocks.at(-1).surfaceTone, "emphasis");
+  assert.equal("heroFontSize" in page, false);
+  assert.equal("pagePaletteOverride" in page, false);
 });
 
 test("normalizeEntityInput reads page seo from either top-level fields or nested seo payload", () => {

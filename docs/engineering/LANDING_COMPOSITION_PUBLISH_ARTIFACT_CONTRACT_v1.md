@@ -28,6 +28,7 @@ No new immutable snapshot store is required for v1.
 
 - approved landing composition spec version
 - canonical draft payload
+- verified Stage A visual-semantic fields such as `pageThemeKey`, `textEmphasisPreset`, and `surfaceTone`
 - target `Page` owner
 - published reference set for media, services, cases, and shell data
 - SEO fields used by the published landing surface

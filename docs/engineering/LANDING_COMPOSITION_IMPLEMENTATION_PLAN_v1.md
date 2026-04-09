@@ -22,6 +22,7 @@ Implement the landing-first composition workspace as the primary AI-assisted sur
 
 - landing composition candidate/spec projection
 - block registry enforcement
+- Stage A visual-semantic contract fields and theme/token registry wiring
 - verification/report wiring
 - preview rendering path
 - publish handoff into existing workflow
@@ -33,6 +34,7 @@ Implement the landing-first composition workspace as the primary AI-assisted sur
 |---|---|---|---|
 | Draft/spec projection | Convert structured entities and assets into the landing draft/spec view. | Landing spec contract, current truth model, LLM baseline. | Route-family expansion, raw HTML/JSX, generic page-builder freedom. |
 | Block registry enforcement | Apply the allowed landing block set and reject unsupported shapes. | Block registry contract, candidate/spec projection. | Generic block platform, unrestricted composition. |
+| Theme/token registry wiring | Resolve `pageThemeKey` and Stage A surface semantics through a compact landing token registry. | Spec contract, render contract, verification contract. | Raw color freedom, arbitrary palette editing, shell-specific styling freedom. |
 | Verification and report wiring | Produce the machine-verifiable report and gate approval/publish outcomes. | Spec projection, registry enforcement, readiness logic. | New publish architecture, public AI features. |
 | Preview rendering path | Render the approved landing artifact deterministically for review/preview. | Spec, registry, verification, current renderer/runtime behavior. | Page-builder UX, design-system rewrite. |
 | Publish handoff | Attach approval to the existing publish flow and pointer semantics. | Verification success, current publish semantics. | New snapshot store, bypass paths. |
@@ -45,6 +47,7 @@ Implement the landing-first composition workspace as the primary AI-assisted sur
 - Finalize the landing composition contracts.
 - Freeze the allowed block ids.
 - Freeze the required verification outputs.
+- Freeze Stage A visual-semantic fields and their bounded scope.
 
 ### Phase 1 - draft and spec handling
 
@@ -57,6 +60,8 @@ Implement the landing-first composition workspace as the primary AI-assisted sur
 
 - Produce the verification report.
 - Block unsupported blocks and unsupported refs.
+- Resolve Stage A theme/tone semantics deterministically.
+- Enforce readability and contrast guardrails for Stage A text-bearing blocks.
 - Render preview deterministically from the approved registry.
 
 ### Phase 3 - publish handoff and rollback
@@ -75,6 +80,9 @@ Implement the landing-first composition workspace as the primary AI-assisted sur
 
 - `/cases/[slug]` as an AI workspace target
 - `/about` and `/contacts` as AI workspace targets
+- bounded page-palette override path beyond `pageThemeKey`
+- `surfaceTone` on proof-heavy blocks
+- broader density/prominence/layout semantics
 - prompt-lab style UX
 - public AI surfaces
 - broad page-builder freedom

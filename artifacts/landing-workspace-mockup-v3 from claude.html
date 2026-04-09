@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-верстка · Рабочая зона лендинга v3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0ece3;
+      --surface: #faf7f2;
+      --panel: rgba(252,249,244,0.94);
+      --line: rgba(80,65,45,0.12);
+      --line-soft: rgba(80,65,45,0.07);
+      --text: #1e1810;
+      --muted: #7a6d5e;
+      --muted-light: #a89e90;
+      --accent: #c4622a;
+      --accent-soft: #f3ddd0;
+      --accent-line: rgba(196,98,42,0.28);
+      --green: #2e7a52;
+      --green-soft: #d9ede2;
+      --block-bg: #ffffff;
+      --block-bg-tint: #fdf8f3;
+      --block-bg-featured: linear-gradient(160deg, #fff9f5 0%, #ffffff 100%);
+      --shadow-sm: 0 2px 8px rgba(30,24,16,0.06);
+      --shadow-md: 0 8px 24px rgba(30,24,16,0.08);
+      --shadow-lg: 0 20px 48px rgba(30,24,16,0.10);
+      --shadow-accent: 0 12px 32px rgba(196,98,42,0.15);
+      --r: 20px;
+      --r-sm: 12px;
+      --r-lg: 26px;
+      --font: "Onest", "Segoe UI", sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button, textarea, input { font: inherit; }
+
+    /* ─── LAYOUT ─────────────────────────────── */
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      grid-template-columns: 260px 1fr 280px;
+      grid-template-areas:
+        "topbar topbar topbar"
+        "left   center right";
+      gap: 14px;
+      padding: 14px;
+      max-width: 1600px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+
+    /* ─── TOPBAR ──────────────────────────────── */
+
+    .topbar {
+      grid-area: topbar;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .brand-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .topbar-page {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .topbar-page span {
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 6px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .status-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(196,98,42,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(196,98,42,0.2);
+    }
+
+    .status-chip.ok {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: rgba(46,122,82,0.2);
+    }
+
+    /* ─── BUTTONS ─────────────────────────────── */
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.7);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: #fff; box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+    .btn:active { transform: none; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-soft {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(196,98,42,0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #c96931, #a84e20);
+      color: #fff;
+      border: none;
+      box-shadow: var(--shadow-accent);
+    }
+
+    .btn-primary:hover { background: linear-gradient(135deg, #d4743c, #b45a2a); }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--line);
+    }
+
+    .mode-toggle {
+      display: flex;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .mode-btn {
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .mode-btn.active {
+      background: #fff;
+      color: var(--text);
+      border-color: rgba(80,65,45,0.12);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ─── LEFT COLUMN ─────────────────────────── */
+
+    .left-col {
+      grid-area: left;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-self: start;
+      position: sticky;
+      top: 14px;
+      max-height: calc(100vh - 90px);
+      overflow-y: auto;
+    }
+
+    .left-col::-webkit-scrollbar { width: 0; }
+
+    .lib-header {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .lib-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 0 0 4px;
+    }
+
+    .lib-desc {
+      font-size: 12px;
+      color: var(--muted-light);
+      line-height: 1.4;
+    }
+
+    .lib-section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .lib-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted-light);
+      margin: 0 0 10px;
+    }
+
+    .lib-items { display: flex; flex-direction: column; gap: 6px; }
+
+    .lib-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 11px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--line-soft);
+      background: var(--block-bg);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .lib-item:hover { border-color: var(--accent-line); box-shadow: var(--shadow-sm); }
+
+    .lib-item.used {
+      background: var(--accent-soft);
+      border-color: rgba(196,98,42,0.22);
+      cursor: default;
+    }
+
+    .lib-item.used:hover { box-shadow: none; }
+
+    .lib-item-thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ead6c4, #f5ece2);
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+    }
+
+    .lib-item-body { flex: 1; min-width: 0; }
+
+    .lib-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lib-item-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .lib-item-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      flex-shrink: 0;
+      align-self: flex-start;
+      margin-top: 1px;
+    }
+
+    .lib-item.used .lib-item-badge {
+      background: rgba(196,98,42,0.15);
+      color: var(--accent);
+    }
+
+    .lib-item-used-label {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .shell-info {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .shell-tag {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(80,65,45,0.06);
+      color: var(--muted);
+    }
+
+    /* ─── CENTER ──────────────────────────────── */
+
+    .center-col {
+      grid-area: center;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .center-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .center-header-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .center-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0;
+    }
+
+    .center-route {
+      font-size: 12px;
+      color: var(--muted-light);
+      margin-top: 2px;
+    }
+
+    /* ─── PAGE SURFACE ────────────────────────── */
+
+    .page-surface {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(240,236,227,0.7);
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .browser-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(80,65,45,0.18);
+    }
+
+    .browser-url {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .browser-draft {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(196,98,42,0.1);
+      color: var(--accent);
+    }
+
+    .page-body {
+      padding: 0;
+      background: #fff;
+    }
+
+    /* ─── PAGE BLOCKS ─────────────────────────── */
+
+    .page-block {
+      position: relative;
+      border-bottom: 1px solid rgba(80,65,45,0.06);
+      padding: 24px 28px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: #fff;
+    }
+
+    .page-block:last-child { border-bottom: none; }
+
+    .page-block:hover { background: #fffaf6; }
+
+    .page-block.selected {
+      background: #fffaf7;
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .page-block.featured {
+      background: var(--block-bg-featured);
+    }
+
+    .page-block.featured.selected {
+      background: linear-gradient(160deg, #fff5ef 0%, #fffaf7 100%);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .page-block.tinted { background: var(--block-bg-tint); }
+    .page-block.tinted.selected { background: #fdf5ee; box-shadow: inset 3px 0 0 var(--accent); }
+
+    .page-block.supporting { opacity: 0.92; }
+    .page-block.lowlight { opacity: 0.75; }
+
+    .page-block.preview-mode-hidden { display: none; }
+
+    /* floating block toolbar */
+    .block-toolbar {
+      position: absolute;
+      top: -1px;
+      right: 20px;
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: all 0.15s;
+      pointer-events: none;
+      z-index: 10;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-top: none;
+      border-radius: 0 0 var(--r-sm) var(--r-sm);
+      padding: 5px 8px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .page-block.selected .block-toolbar {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .tb-btn {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 999px;
+      border: 1px solid var(--line-soft);
+      background: rgba(240,236,227,0.7);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.13s;
+    }
+
+    .tb-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+
+    .tb-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+
+    .tb-sep {
+      width: 1px;
+      background: var(--line);
+      margin: 2px 3px;
+    }
+
+    .tb-move {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    /* Block inner layout */
+    .block-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .block-role {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted-light);
+    }
+
+    .block-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .block-badge.high {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent-line);
+    }
+
+    .block-badge.fixed {
+      background: rgba(80,65,45,0.07);
+    }
+
+    /* Hero block */
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .hero-text h2 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--text);
+    }
+
+    .hero-copy {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+
+    .hero-cta {
+      display: inline-block;
+      padding: 9px 20px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #c96931, #a84e20);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+
+    .hero-visual {
+      border-radius: var(--r);
+      background: linear-gradient(160deg, #e6d4c4, #f5ebe0);
+      aspect-ratio: 4/3;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Media block */
+    .media-layout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .media-thumb {
+      aspect-ratio: 4/3;
+      border-radius: var(--r-sm);
+      background: linear-gradient(135deg, #e0d0c0, #f0e8e0);
+      display: grid;
+      place-items: center;
+      color: var(--muted-light);
+      font-size: 11px;
+    }
+
+    /* Service cards */
+    .cards-layout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .service-card {
+      padding: 14px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--line-soft);
+    }
+
+    .service-card strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .service-card span { font-size: 12px; color: var(--muted); }
+
+    /* Case cards */
+    .case-card {
+      padding: 14px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--line-soft);
+    }
+
+    .case-card strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .case-card span { font-size: 12px; color: var(--muted); }
+
+    /* CTA */
+    .cta-layout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .cta-text h3 {
+      margin: 0 0 6px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .cta-text p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* connective copy inline edit */
+    .copy-bridge {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      background: rgba(240,236,227,0.5);
+      border: 1px dashed rgba(80,65,45,0.15);
+      margin: 0 28px;
+      transition: all 0.15s;
+      cursor: text;
+    }
+
+    .copy-bridge:hover { background: rgba(240,236,227,0.8); border-color: rgba(80,65,45,0.25); }
+    .copy-bridge:focus-within { background: #fff; border-color: var(--accent-line); border-style: solid; }
+
+    .copy-bridge-icon {
+      font-size: 13px;
+      opacity: 0.5;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .copy-bridge-field {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--muted);
+      font-size: 12px;
+      resize: none;
+      min-height: 20px;
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    .copy-bridge-field:focus { color: var(--text); font-style: normal; }
+
+    /* shell regions */
+    .shell-region {
+      padding: 10px 28px;
+      background: rgba(240,236,227,0.5);
+      border-bottom: 1px solid var(--line-soft);
+      color: var(--muted-light);
+      font-size: 11px;
+      letter-spacing: 0.03em;
+    }
+
+    .shell-region:last-child {
+      border-bottom: none;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    /* empty state */
+    .page-empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      padding: 40px;
+      text-align: center;
+      gap: 14px;
+    }
+
+    .page-empty-state.visible { display: flex; }
+
+    .empty-icon { font-size: 36px; opacity: 0.4; }
+    .empty-title { font-size: 16px; font-weight: 600; color: var(--text); margin: 0; }
+    .empty-desc { font-size: 13px; color: var(--muted); max-width: 280px; margin: 0; }
+
+    /* preview mode overlay for page */
+    .page-body.preview-mode .block-toolbar { display: none; }
+    .page-body.preview-mode .page-block { cursor: default; }
+    .page-body.preview-mode .page-block:hover { background: inherit; }
+    .page-body.preview-mode .page-block.selected { box-shadow: none; background: inherit; }
+    .page-body.preview-mode .copy-bridge { display: none; }
+    .page-body.preview-mode .block-meta .block-badge:not(.high) { display: none; }
+
+    /* ─── RIGHT COLUMN ────────────────────────── */
+
+    .right-col {
+      grid-area: right;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-self: start;
+      position: sticky;
+      top: 14px;
+    }
+
+    .right-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted-light);
+      margin: 0 0 12px;
+    }
+
+    /* blockers */
+    .blockers-list {
+      margin: 0 0 12px;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .blocker-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      background: rgba(196,98,42,0.06);
+      border: 1px solid rgba(196,98,42,0.12);
+    }
+
+    .blocker-icon { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+    .blocker-text { font-size: 12px; color: var(--text); line-height: 1.4; }
+
+    .blocker-item.resolved {
+      background: var(--green-soft);
+      border-color: rgba(46,122,82,0.15);
+    }
+
+    .blocker-item.resolved .blocker-text { color: var(--green); }
+
+    /* block context */
+    .ctx-rows { display: flex; flex-direction: column; gap: 6px; }
+
+    .ctx-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .ctx-label { color: var(--muted); }
+    .ctx-val { font-weight: 600; color: var(--text); }
+
+    /* helper stub */
+    .helper-stub {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .helper-action {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--line-soft);
+      background: var(--block-bg);
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text);
+      transition: all 0.13s;
+    }
+
+    .helper-action:hover {
+      border-color: var(--accent-line);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .helper-action-icon { font-size: 14px; }
+
+    .helper-suggestion {
+      padding: 10px 12px;
+      border-radius: var(--r-sm);
+      background: rgba(240,236,227,0.6);
+      border: 1px solid var(--line-soft);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      display: none;
+    }
+
+    .helper-suggestion.visible { display: block; }
+
+    .helper-suggestion strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .helper-apply-btn {
+      display: block;
+      width: 100%;
+      padding: 6px;
+      margin-top: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-line);
+      background: var(--accent-soft);
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: all 0.13s;
+    }
+
+    .helper-apply-btn:hover { background: var(--accent); color: #fff; }
+
+    /* ─── FOOTER TOAST ─────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(0);
+      background: rgba(30,24,16,0.9);
+      color: rgba(255,255,255,0.9);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 12px;
+      backdrop-filter: blur(10px);
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 100;
+      white-space: nowrap;
+      max-width: calc(100vw - 40px);
+      text-align: center;
+    }
+
+    .toast.hidden { opacity: 0; transform: translateX(-50%) translateY(10px); pointer-events: none; }
+
+    /* ─── RESPONSIVE ─────────────────────────────── */
+
+    @media (max-width: 1200px) {
+      .workspace {
+        grid-template-columns: 240px 1fr 250px;
+      }
+    }
+
+    @media (max-width: 1000px) {
+      .workspace {
+        grid-template-areas:
+          "topbar"
+          "center"
+          "right"
+          "left";
+        grid-template-columns: 1fr;
+      }
+      .left-col, .right-col { position: static; max-height: none; }
+      .hero-layout, .media-layout, .cards-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="workspace">
+
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-dot"></div>
+      <span class="brand-label">AI-верстка</span>
+    </div>
+    <div class="topbar-page">
+      Дом в Сочи под ключ
+      <span>· рабочая зона лендинга</span>
+    </div>
+    <div class="topbar-right">
+      <span id="statusChip" class="status-chip">2 проблемы перед сдачей</span>
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="compose">Сборка</button>
+        <button class="mode-btn" data-mode="preview">Глазами клиента</button>
+      </div>
+      <button class="btn btn-ghost" id="generateBtn">Сгенерировать заново</button>
+      <button class="btn btn-primary" id="reviewBtn" disabled>Передать на проверку</button>
+    </div>
+  </header>
+
+  <!-- ── LEFT LIBRARY ── -->
+  <aside class="left-col">
+    <div class="lib-header">
+      <h2 class="lib-title">Материалы</h2>
+      <p class="lib-desc">Выберите материалы из библиотеки, чтобы добавить их на страницу.</p>
+    </div>
+
+    <!-- Media -->
+    <div class="lib-section">
+      <h3 class="lib-section-title">Медиа</h3>
+      <div class="lib-items">
+        <div class="lib-item used" data-lib="hero-photo">
+          <div class="lib-item-thumb">🏠</div>
+          <div class="lib-item-body">
+            <div class="lib-item-name">Главный фасад</div>
+            <div class="lib-item-desc">Тёплый вечерний свет, акцент на доме</div>
+          </div>
+          <span class="lib-item-badge">Hero</span>
+          <span class="lib-item-used-label">✓</span>
+        </div>
+        <div class="lib-item used" data-lib="process-gallery">
+          <div class="lib-item-thumb">📸</div>
+          <div class="lib-item-body">
+            <div class="lib-item-name">Процесс стройки</div>
+            <div class="lib-item-desc">Серия: фундамент, коробка, инженерия</div>
+          </div>
+          <span class="lib-item-badge">Gallery</span>
+          <span class="lib-item-used-label">✓</span>
+        </div>
+        <div class="lib-item" data-lib="interior-photos">
+          <div class="lib-item-thumb">🛋️</div>
+          <div class="lib-item-body">
+            <div class="lib-item-name">Интерьеры</div>
+            <div class="lib-item-desc">3 готовых объекта, финишная отделка</div>
+          </div>
+          <span class="lib-item-badge">Gallery</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services -->
+    <div class="lib-section">
+      <h3 class="lib-section-title">Карточки услуг</h3>
+      <div class="lib-items">
+        <div class="lib-item used" data-lib="services-block">
+          <div class="lib-item-thumb">⚙️</div>
+          <div class="lib-item-body">
+            <div class="lib-item-name">3 карточки услуг</div>
+            <div class="lib-item-desc">Под ключ, инженерия, смета</div>
+          </div>
+          <span class="lib-item-badge">Cards</span>
+          <span class="lib-item-used-label">✓</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cases -->
+    <div class="lib-section">
+      <h3 class="lib-section-title">Кейсы</h3>
+      <div class="lib-items">
+        <div class="lib-item used" data-lib="case-186">
+          <div class="lib-item-thumb">🏗️</div>
+          <div class="lib-item-body">
+            <div class="lib-item-name">Дом 186 м²</div>
+            <div class="lib-item-desc">Сдали на 12 дней раньше плана</div>
+          </div>
+          <span class="lib-item-badge">Кейс</span>
+          <span class="lib-item-used-label">✓</span>
+        </div>
+        <div class="lib-item used" data-lib="case-slope">
+          <div class="lib-item-thumb">⛰️</div>
+          <div class="lib-item-body">
+            <div class="lib-item-name">Участок со склоном</div>
+            <div class="lib-item-desc">Дренаж и террасы без удорожания</div>
+          </div>
+          <span class="lib-item-badge">Кейс</span>
+          <span class="lib-item-used-label">✓</span>
+        </div>
+        <div class="lib-item" data-lib="case-tur">
+          <div class="lib-item-thumb">🏡</div>
+          <div class="lib-item-body">
+            <div class="lib-item-name">Дом в Туапсе</div>
+            <div class="lib-item-desc">Нестандартный проект, 214 м²</div>
+          </div>
+          <span class="lib-item-badge">Кейс</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shell info -->
+    <div class="lib-section">
+      <h3 class="lib-section-title">Shell (зафиксировано)</h3>
+      <div class="shell-info">
+        <span class="shell-tag">Header ↑</span>
+        <span class="shell-tag">Footer ↓</span>
+        <span class="shell-tag">Меню из страницы-источника</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── CENTER ── -->
+  <main class="center-col">
+    <div class="center-header">
+      <div class="center-header-left">
+        <h2 class="center-title">Страница</h2>
+        <div class="center-route" id="routeSummary">Hero → Медиа → Услуги → Контент → Кейсы → CTA</div>
+      </div>
+    </div>
+
+    <!-- Page surface -->
+    <div class="page-surface">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">ecostroycontinent.ru / dom-v-sochi</div>
+        <div class="browser-draft">черновик</div>
+      </div>
+      <div class="page-body" id="pageBody">
+        <div class="shell-region">↑ Header · контакты и меню из страницы-источника</div>
+
+        <!-- HERO -->
+        <div class="page-block featured selected" id="block-hero"
+             data-id="hero" data-role="Hero" data-fixed="true"
+             data-prominence="high" data-density="airy"
+             tabindex="0">
+          <div class="block-toolbar">
+            <button class="tb-btn active" data-action="prominence">Акцент: высокий</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="density">Плотность: свободно</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="helper">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="block-role">Hero</span>
+            <span class="block-badge fixed">Закреплён</span>
+            <span class="block-badge high">Главный акцент</span>
+          </div>
+          <div class="hero-layout">
+            <div class="hero-text">
+              <h2>Дом под ключ в Сочи — без потери сроков и контроля</h2>
+              <div class="hero-copy">Строим от фундамента до ключей: один маршрут, прозрачная смета, понятные этапы. Фасад и процесс — сразу, без абстрактных обещаний.</div>
+              <button class="hero-cta">Обсудить проект</button>
+            </div>
+            <div class="hero-visual">🏠<br><span style="font-size:11px;margin-top:6px;display:block">Главный фасад · визуальный proof</span></div>
+          </div>
+        </div>
+
+        <!-- Bridge 1 -->
+        <div class="copy-bridge" data-bridge="hero-media">
+          <div class="copy-bridge-icon">✎</div>
+          <textarea class="copy-bridge-field" rows="1" placeholder="Связка между Hero и медиа-блоком…">После обещания — сразу показываем, как выглядит процесс.</textarea>
+        </div>
+
+        <!-- MEDIA -->
+        <div class="page-block" id="block-media"
+             data-id="media" data-role="Медиа"
+             data-prominence="medium" data-density="balanced"
+             tabindex="0">
+          <div class="block-toolbar">
+            <button class="tb-btn" data-action="prominence">Акцент: средний</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="density">Плотность: баланс</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn tb-move" data-move="up">↑</button>
+            <button class="tb-btn tb-move" data-move="down">↓</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="remove">Убрать</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="helper">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="block-role">Медиа</span>
+            <span class="block-badge">Поддерживающий</span>
+          </div>
+          <div class="media-layout">
+            <div class="media-thumb">Фундамент</div>
+            <div class="media-thumb">Коробка</div>
+            <div class="media-thumb">Инженерия</div>
+          </div>
+        </div>
+
+        <!-- Bridge 2 -->
+        <div class="copy-bridge" data-bridge="media-services">
+          <div class="copy-bridge-icon">✎</div>
+          <textarea class="copy-bridge-field" rows="1" placeholder="Связка между медиа и услугами…">Один маршрут от проекта до ключей — без разрывов между подрядчиками.</textarea>
+        </div>
+
+        <!-- SERVICES -->
+        <div class="page-block tinted" id="block-services"
+             data-id="services" data-role="Услуги"
+             data-prominence="medium" data-density="balanced"
+             tabindex="0">
+          <div class="block-toolbar">
+            <button class="tb-btn" data-action="prominence">Акцент: средний</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="density">Плотность: баланс</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn tb-move" data-move="up">↑</button>
+            <button class="tb-btn tb-move" data-move="down">↓</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="remove">Убрать</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="helper">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="block-role">Карточки услуг</span>
+            <span class="block-badge">Поддерживающий</span>
+          </div>
+          <div class="cards-layout">
+            <div class="service-card"><strong>Дом под ключ</strong><span>Полный цикл: от проекта до сдачи</span></div>
+            <div class="service-card"><strong>Инженерные сети</strong><span>Коммуникации в общем плане, без отдельного подрядчика</span></div>
+            <div class="service-card"><strong>Смета без сюрпризов</strong><span>Прозрачный объём и этапность заранее</span></div>
+          </div>
+        </div>
+
+        <!-- Bridge 3 -->
+        <div class="copy-bridge" data-bridge="services-cases">
+          <div class="copy-bridge-icon">✎</div>
+          <textarea class="copy-bridge-field" rows="1" placeholder="Связка между услугами и кейсами…">Это не слова — вот два дома, которые мы сдали в срок.</textarea>
+        </div>
+
+        <!-- CASES -->
+        <div class="page-block" id="block-cases"
+             data-id="cases" data-role="Кейсы"
+             data-prominence="medium" data-density="balanced"
+             tabindex="0">
+          <div class="block-toolbar">
+            <button class="tb-btn" data-action="prominence">Акцент: средний</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="density">Плотность: баланс</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn tb-move" data-move="up">↑</button>
+            <button class="tb-btn tb-move" data-move="down">↓</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="remove">Убрать</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="helper">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="block-role">Кейсы</span>
+            <span class="block-badge">Proof-блок</span>
+          </div>
+          <div class="cards-layout">
+            <div class="case-card"><strong>Дом 186 м²</strong><span>Сдали на 12 дней раньше плана и без допработ в финале</span></div>
+            <div class="case-card"><strong>Участок со склоном</strong><span>Решили дренаж и террасы без резкого удорожания</span></div>
+            <div class="case-card" style="display:grid;place-items:center;background:rgba(196,98,42,0.04);border-color:rgba(196,98,42,0.12);">
+              <span style="font-size:12px;color:var(--muted);text-align:center">+ добавить кейс<br>из библиотеки</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bridge 4 -->
+        <div class="copy-bridge" data-bridge="cases-cta">
+          <div class="copy-bridge-icon">✎</div>
+          <textarea class="copy-bridge-field" rows="1" placeholder="Связка перед CTA…">Если видите похожую задачу — обсудим конкретику.</textarea>
+        </div>
+
+        <!-- CTA -->
+        <div class="page-block tinted" id="block-cta"
+             data-id="cta" data-role="CTA" data-fixed="true"
+             data-prominence="medium" data-density="compact"
+             tabindex="0">
+          <div class="block-toolbar">
+            <button class="tb-btn" data-action="prominence">Акцент: средний</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="density">Плотность: компактно</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-action="helper">✦ Помощник</button>
+          </div>
+          <div class="block-meta">
+            <span class="block-role">CTA</span>
+            <span class="block-badge fixed">Закреплён</span>
+          </div>
+          <div class="cta-layout">
+            <div class="cta-text">
+              <h3>Расскажите про участок и бюджет</h3>
+              <p>Покажем реалистичный маршрут — без лишних обещаний и навязанных допработ.</p>
+            </div>
+            <button class="hero-cta">Оставить заявку</button>
+          </div>
+        </div>
+
+        <div class="shell-region">↓ Footer · контакты, карта, нижняя навигация</div>
+
+        <!-- Empty state -->
+        <div class="page-empty-state" id="emptyState">
+          <div class="empty-icon">📄</div>
+          <p class="empty-title">Страница пока пустая</p>
+          <p class="empty-desc">Добавьте материалы из библиотеки слева, чтобы начать сборку лендинга</p>
+          <button class="btn btn-soft" id="seedBtn">Добавить базовый набор</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── RIGHT ── -->
+  <aside class="right-col">
+
+    <!-- Blockers -->
+    <div class="right-panel">
+      <h3 class="panel-title">Проверка перед сдачей</h3>
+      <ul class="blockers-list" id="blockersList">
+        <li class="blocker-item">
+          <span class="blocker-icon">⚠</span>
+          <span class="blocker-text">Hero не опирается на один явный медиа-акцент</span>
+        </li>
+        <li class="blocker-item">
+          <span class="blocker-icon">⚠</span>
+          <span class="blocker-text">Переход перед кейсами слишком нейтральный</span>
+        </li>
+      </ul>
+      <button class="btn btn-soft" style="width:100%;justify-content:center;" id="resolveBtn">Отметить как решённые</button>
+    </div>
+
+    <!-- Block context -->
+    <div class="right-panel" id="ctxPanel">
+      <h3 class="panel-title">Выбранный блок</h3>
+      <div class="ctx-rows">
+        <div class="ctx-row"><span class="ctx-label">Блок</span><span class="ctx-val" id="ctxName">Hero</span></div>
+        <div class="ctx-row"><span class="ctx-label">Акцент</span><span class="ctx-val" id="ctxProminence">Высокий</span></div>
+        <div class="ctx-row"><span class="ctx-label">Плотность</span><span class="ctx-val" id="ctxDensity">Свободно</span></div>
+        <div class="ctx-row"><span class="ctx-label">Позиция</span><span class="ctx-val" id="ctxPos">1 из 4</span></div>
+      </div>
+    </div>
+
+    <!-- Helper -->
+    <div class="right-panel">
+      <h3 class="panel-title">Помощник</h3>
+      <div class="helper-stub">
+        <div class="helper-action" data-hint="rewrite">
+          <span class="helper-action-icon">✦</span>
+          Переписать связку
+        </div>
+        <div class="helper-action" data-hint="stronger">
+          <span class="helper-action-icon">↑</span>
+          Усилить proof-блок
+        </div>
+        <div class="helper-action" data-hint="transition">
+          <span class="helper-action-icon">→</span>
+          Предложить переход
+        </div>
+      </div>
+      <div class="helper-suggestion" id="helperSuggestion">
+        <strong id="helperHintTitle">Подсказка</strong>
+        <span id="helperHintBody">...</span>
+        <button class="helper-apply-btn" id="helperApplyBtn">Применить к выбранному блоку</button>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- Toast -->
+<div class="toast hidden" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── State ──────────────────────────────────────────────────────────
+  const state = {
+    selectedId: 'hero',
+    mode: 'compose',
+    blockOrder: ['hero', 'media', 'services', 'cases', 'cta'],
+    prominenceLabels: { high: 'Высокий', medium: 'Средний', low: 'Низкий' },
+    densityLabels: { airy: 'Свободно', balanced: 'Баланс', compact: 'Компактно' },
+    prominenceCycle: ['high', 'medium', 'low'],
+    densityCycle: ['airy', 'balanced', 'compact'],
+    hintsResolved: false,
+  };
+
+  // ── DOM references ─────────────────────────────────────────────────
+  const pageBody     = document.getElementById('pageBody');
+  const statusChip   = document.getElementById('statusChip');
+  const reviewBtn    = document.getElementById('reviewBtn');
+  const generateBtn  = document.getElementById('generateBtn');
+  const resolveBtn   = document.getElementById('resolveBtn');
+  const seedBtn      = document.getElementById('seedBtn');
+  const routeSummary = document.getElementById('routeSummary');
+  const blockersList = document.getElementById('blockersList');
+  const ctxName      = document.getElementById('ctxName');
+  const ctxProminence= document.getElementById('ctxProminence');
+  const ctxDensity   = document.getElementById('ctxDensity');
+  const ctxPos       = document.getElementById('ctxPos');
+  const helperSugg   = document.getElementById('helperSuggestion');
+  const helperTitle  = document.getElementById('helperHintTitle');
+  const helperBody   = document.getElementById('helperHintBody');
+  const helperApply  = document.getElementById('helperApplyBtn');
+  const toastEl      = document.getElementById('toast');
+  const emptyState   = document.getElementById('emptyState');
+
+  let toastTimer;
+
+  // ── Toast ──────────────────────────────────────────────────────────
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.add('hidden'), 2800);
+  }
+
+  // ── Block helpers ──────────────────────────────────────────────────
+  function getBlocks() {
+    return [...document.querySelectorAll('.page-block')];
+  }
+
+  function getBlock(id) {
+    return document.getElementById('block-' + id);
+  }
+
+  function getBlockIndex(block) {
+    const moveable = getBlocks().filter(b => !b.dataset.fixed);
+    return moveable.indexOf(block);
+  }
+
+  // ── Select block ───────────────────────────────────────────────────
+  function selectBlock(block) {
+    getBlocks().forEach(b => b.classList.remove('selected'));
+    block.classList.add('selected');
+    state.selectedId = block.dataset.id;
+    updateContextPanel(block);
+  }
+
+  function updateContextPanel(block) {
+    const moveable = getBlocks().filter(b => !b.dataset.fixed);
+    const idx = moveable.indexOf(block);
+    ctxName.textContent = block.querySelector('.block-role').textContent;
+    ctxProminence.textContent = state.prominenceLabels[block.dataset.prominence] || '—';
+    ctxDensity.textContent = state.densityLabels[block.dataset.density] || '—';
+    ctxPos.textContent = block.dataset.fixed === 'true'
+      ? 'Закреплён'
+      : `${idx + 1} из ${moveable.length}`;
+  }
+
+  // ── Cycle prominence ───────────────────────────────────────────────
+  function cycleProminence(block) {
+    const cur = block.dataset.prominence;
+    const next = state.prominenceCycle[(state.prominenceCycle.indexOf(cur) + 1) % 3];
+    block.dataset.prominence = next;
+
+    const btn = block.querySelector('[data-action="prominence"]');
+    if (btn) btn.textContent = 'Акцент: ' + state.prominenceLabels[next].toLowerCase();
+
+    // Update badge
+    const badge = [...block.querySelectorAll('.block-badge')].find(b => b.classList.contains('high'));
+    if (next === 'high') {
+      block.classList.add('featured');
+      if (badge) { badge.textContent = 'Главный акцент'; badge.classList.add('high'); }
+    } else if (next === 'medium') {
+      block.classList.remove('featured', 'lowlight');
+      block.classList.add('supporting');
+      if (badge) { badge.textContent = 'Поддерживающий'; badge.classList.remove('high'); }
+    } else {
+      block.classList.remove('featured', 'supporting');
+      block.classList.add('lowlight');
+      if (badge) { badge.textContent = 'Фоновый'; badge.classList.remove('high'); }
+    }
+
+    updateContextPanel(block);
+    toast(`Акцент блока «${block.querySelector('.block-role').textContent}» → ${state.prominenceLabels[next]}`);
+  }
+
+  // ── Cycle density ──────────────────────────────────────────────────
+  function cycleDensity(block) {
+    const cur = block.dataset.density;
+    const next = state.densityCycle[(state.densityCycle.indexOf(cur) + 1) % 3];
+    block.dataset.density = next;
+    const btn = block.querySelector('[data-action="density"]');
+    if (btn) btn.textContent = 'Плотность: ' + state.densityLabels[next].toLowerCase();
+    updateContextPanel(block);
+    toast(`Плотность → ${state.densityLabels[next]}`);
+  }
+
+  // ── Move block ─────────────────────────────────────────────────────
+  function moveBlock(block, dir) {
+    if (block.dataset.fixed === 'true') {
+      toast('Hero и CTA закреплены — bounded composition.');
+      return;
+    }
+
+    const allBlocks = getBlocks();
+    const moveable = allBlocks.filter(b => !b.dataset.fixed || b.dataset.fixed === 'false');
+    const idx = moveable.indexOf(block);
+
+    // Also need to move adjacent copy-bridge
+    const pageBodyEl = pageBody;
+
+    if (dir === 'up' && idx > 0) {
+      const prev = moveable[idx - 1];
+      if (prev.dataset.fixed === 'true') { toast('Нельзя подняться выше — Hero закреплён.'); return; }
+      // swap in DOM
+      const bridgeBefore = block.previousElementSibling;
+      const bridgeBeforePrev = prev.previousElementSibling;
+      if (bridgeBefore && bridgeBefore.classList.contains('copy-bridge')) {
+        pageBodyEl.insertBefore(block, prev);
+        pageBodyEl.insertBefore(bridgeBefore, block);
+      } else {
+        pageBodyEl.insertBefore(block, prev);
+      }
+      toast(`Блок «${block.querySelector('.block-role').textContent}» поднят выше`);
+    } else if (dir === 'down' && idx < moveable.length - 1) {
+      const next = moveable[idx + 1];
+      if (next.dataset.fixed === 'true') { toast('Нельзя опуститься ниже — CTA закреплён.'); return; }
+      const bridgeAfter = next.nextElementSibling;
+      if (bridgeAfter && bridgeAfter.classList.contains('copy-bridge')) {
+        pageBodyEl.insertBefore(next, block);
+      } else {
+        pageBodyEl.insertBefore(next, block);
+      }
+      toast(`Блок «${block.querySelector('.block-role').textContent}» опущен ниже`);
+    } else {
+      toast('Нельзя двигать дальше — bounded sequence.');
+    }
+
+    updateRouteLabel();
+  }
+
+  // ── Remove block ───────────────────────────────────────────────────
+  function removeBlock(block) {
+    if (block.dataset.fixed === 'true') {
+      toast('Этот блок нельзя убрать — он часть структуры страницы.');
+      return;
+    }
+    const roleName = block.querySelector('.block-role').textContent;
+    const bridgeBefore = block.previousElementSibling;
+    if (bridgeBefore && bridgeBefore.classList.contains('copy-bridge')) {
+      bridgeBefore.remove();
+    }
+    block.remove();
+
+    // Mark lib item as unused
+    const libMap = { media: 'process-gallery', services: 'services-block', cases: 'case-186' };
+    if (libMap[block.dataset.id]) {
+      const libItem = document.querySelector(`[data-lib="${libMap[block.dataset.id]}"]`);
+      if (libItem) {
+        libItem.classList.remove('used');
+        libItem.querySelector('.lib-item-used-label')?.remove();
+      }
+    }
+
+    updateRouteLabel();
+    toast(`Блок «${roleName}» убран со страницы. Материал вернулся в библиотеку.`);
+  }
+
+  // ── Helper hints ───────────────────────────────────────────────────
+  const hints = {
+    rewrite: {
+      title: 'Переписать связку',
+      body: 'Связка должна быть одним коротким предложением, которое объясняет, почему следующий блок продолжает предыдущий — не пересказывает его.'
+    },
+    stronger: {
+      title: 'Усилить proof-блок',
+      body: 'Выберите один конкретный результат как заголовок кейса: число, срок или факт. Читатель считывает proof быстрее, чем обещание.'
+    },
+    transition: {
+      title: 'Предложить переход',
+      body: 'Попробуйте: "Это не слова — вот два дома, которые мы сдали точно в срок." Переход между услугами и кейсами должен убирать сомнение, а не просто связывать блоки.'
+    },
+  };
+
+  document.querySelectorAll('.helper-action').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const hint = hints[btn.dataset.hint];
+      if (!hint) return;
+      helperTitle.textContent = hint.title;
+      helperBody.textContent = hint.body;
+      helperSugg.classList.add('visible');
+      toast('Подсказка помощника открыта');
+    });
+  });
+
+  helperApply.addEventListener('click', () => {
+    const bridge = document.querySelector('.copy-bridge:focus-within textarea, .copy-bridge textarea');
+    if (bridge) {
+      // find closest bridge to selected block
+    }
+    helperSugg.classList.remove('visible');
+    toast('Подсказка применена. Отредактируйте связку в нужном месте страницы.');
+  });
+
+  // ── Library: add material ──────────────────────────────────────────
+  document.querySelectorAll('.lib-item:not(.used)').forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.add('used');
+      const badge = document.createElement('span');
+      badge.className = 'lib-item-used-label';
+      badge.textContent = '✓';
+      item.appendChild(badge);
+      toast(`Материал «${item.querySelector('.lib-item-name').textContent}» добавлен. В MVP добавление происходит в нужную позицию.`);
+    });
+  });
+
+  // ── Mode toggle ────────────────────────────────────────────────────
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+      const mode = btn.dataset.mode;
+      state.mode = mode;
+      if (mode === 'preview') {
+        pageBody.classList.add('preview-mode');
+        toast('Режим «глазами клиента» — контролы скрыты, страница читается как история.');
+      } else {
+        pageBody.classList.remove('preview-mode');
+        toast('Режим сборки — выбирайте блоки и настраивайте акценты.');
+      }
+    });
+  });
+
+  // ── Blockers resolve ───────────────────────────────────────────────
+  resolveBtn.addEventListener('click', () => {
+    state.hintsResolved = true;
+    blockersList.innerHTML = `
+      <li class="blocker-item resolved"><span class="blocker-icon">✓</span><span class="blocker-text">Медиа-акцент в Hero определён</span></li>
+      <li class="blocker-item resolved"><span class="blocker-icon">✓</span><span class="blocker-text">Переход перед кейсами обновлён</span></li>
+    `;
+    resolveBtn.textContent = 'Проблемы закрыты';
+    resolveBtn.disabled = true;
+    statusChip.textContent = 'Готово к сдаче';
+    statusChip.classList.add('ok');
+    reviewBtn.disabled = false;
+    toast('Все блокирующие проблемы закрыты. Можно передавать на проверку.');
+  });
+
+  // ── Review button ──────────────────────────────────────────────────
+  reviewBtn.addEventListener('click', () => {
+    toast('Страница передана на проверку. В production это отправит задачу редактору.');
+  });
+
+  // ── Generate ───────────────────────────────────────────────────────
+  generateBtn.addEventListener('click', () => {
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Генерируем…';
+    setTimeout(() => {
+      generateBtn.disabled = false;
+      generateBtn.textContent = 'Сгенерировать заново';
+      toast('Черновик обновлён. Проверьте акценты и связки перед сдачей.');
+    }, 1200);
+  });
+
+  // ── Seed empty ─────────────────────────────────────────────────────
+  if (seedBtn) {
+    seedBtn.addEventListener('click', () => {
+      emptyState.classList.remove('visible');
+      toast('Базовый набор добавлен. Начните с hero и первого proof-блока.');
+    });
+  }
+
+  // ── Route label ────────────────────────────────────────────────────
+  function updateRouteLabel() {
+    const roles = getBlocks().map(b => b.querySelector('.block-role')?.textContent || '').filter(Boolean);
+    routeSummary.textContent = roles.join(' → ');
+  }
+
+  // ── Block click/keyboard ───────────────────────────────────────────
+  getBlocks().forEach(block => {
+    block.addEventListener('click', (e) => {
+      // Don't select if clicking toolbar button
+      if (e.target.closest('.block-toolbar')) return;
+      selectBlock(block);
+    });
+
+    block.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectBlock(block);
+      }
+    });
+
+    // Toolbar actions
+    block.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectBlock(block);
+        const action = btn.dataset.action;
+        if (action === 'prominence') cycleProminence(block);
+        if (action === 'density') cycleDensity(block);
+        if (action === 'helper') {
+          helperTitle.textContent = 'Помощник для «' + block.querySelector('.block-role').textContent + '»';
+          helperBody.textContent = 'Выберите действие из панели помощника справа, чтобы получить конкретную подсказку для этого блока.';
+          helperSugg.classList.add('visible');
+        }
+        if (action === 'remove') removeBlock(block);
+      });
+    });
+
+    // Move buttons
+    block.querySelectorAll('[data-move]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moveBlock(block, btn.dataset.move);
+      });
+    });
+  });
+
+  // ── Auto-resize textareas ──────────────────────────────────────────
+  document.querySelectorAll('.copy-bridge-field').forEach(ta => {
+    function resize() {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    }
+    ta.addEventListener('input', resize);
+    resize();
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────
+  selectBlock(getBlock('hero'));
+  updateRouteLabel();
+
+})();
+</script>
+</body>
+</html>
