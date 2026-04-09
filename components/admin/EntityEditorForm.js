@@ -114,6 +114,8 @@ export function EntityEditorForm({
   error
 }) {
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
+  const historyHref = entityId ? `/admin/entities/${entityType}/${entityId}/history` : "";
+  const canDeleteEntity = Boolean(entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE));
   const canPublish = user.role === "superadmin";
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
   const showActionabilityPanel = [
@@ -174,18 +176,6 @@ export function EntityEditorForm({
             </summary>
             <div className={styles.compactDisclosureBody}>
               <p className={styles.surfacePacketLegend}>{getEntityEditorLegend(entityType)}</p>
-              {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
-              {entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE) ? (
-                <ConfirmActionForm
-                  action={`/api/admin/entities/${entityType}/delete`}
-                  confirmMessage="Удалить эту сущность? Действие необратимо."
-                >
-                  <input type="hidden" name="entityId" value={entityId} />
-                  <input type="hidden" name="redirectTo" value={`/admin/entities/${entityType}`} />
-                  <input type="hidden" name="failureRedirectTo" value={redirectTo} />
-                  <button type="submit" className={styles.dangerButton}>Удалить</button>
-                </ConfirmActionForm>
-              ) : null}
             </div>
           </details>
         ) : (
@@ -200,6 +190,22 @@ export function EntityEditorForm({
             {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
           </SurfacePacket>
         )}
+        {entityId || canDeleteEntity ? (
+          <div className={styles.inlineActions}>
+            {entityId ? <Link href={historyHref} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
+            {canDeleteEntity ? (
+              <ConfirmActionForm
+                action={`/api/admin/entities/${entityType}/delete`}
+                confirmMessage="Удалить эту сущность? Действие необратимо."
+              >
+                <input type="hidden" name="entityId" value={entityId} />
+                <input type="hidden" name="redirectTo" value={`/admin/entities/${entityType}`} />
+                <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                <button type="submit" className={styles.dangerButton}>Удалить</button>
+              </ConfirmActionForm>
+            ) : null}
+          </div>
+        ) : null}
         {entityType === "media_asset" ? renderMediaUpload(redirectTo) : null}
         <section className={styles.panel}>
           <form action={`/api/admin/entities/${entityType}/save`} method="post" className={styles.formGrid}>
