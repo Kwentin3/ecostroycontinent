@@ -35,6 +35,10 @@ const STATUS_SORT_ORDER = {
   published: 2
 };
 
+function getTestGraphTeardownHref(entityType, entityId) {
+  return `/admin/entities/${entityType}/${entityId}/test-graph-teardown`;
+}
+
 function buildTitleFromFilename(filename) {
   const base = (filename || "")
     .replace(/\.[^.]+$/, "")
@@ -508,6 +512,11 @@ function MediaInspector({
           <button type="button" className={styles.dangerButton} onClick={onDelete} disabled={deleteBusy}>
             {deleteBusy ? "Удаляем..." : "Удалить"}
           </button>
+          {item.isTestData ? (
+            <Link href={getTestGraphTeardownHref("media_asset", item.id)} className={styles.secondaryButton}>
+              Удалить тестовый граф
+            </Link>
+          ) : null}
           <Link href={`/admin/entities/media_asset/${item.id}/history`} className={styles.secondaryButton}>
             История
           </Link>

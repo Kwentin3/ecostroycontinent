@@ -91,6 +91,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
       <EntityEditorForm
         entityType={normalizedType}
         entityId={entityId}
+        entityCreationOrigin={data.state.entity.creationOrigin}
         value={deriveEditorValue(normalizedType, data.currentRevision || data.state.activePublishedRevision)}
         currentRevision={data.currentRevision}
         activePublishedRevision={data.state.activePublishedRevision}

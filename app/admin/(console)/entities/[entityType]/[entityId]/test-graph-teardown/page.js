@@ -1,0 +1,142 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { AdminShell } from "../../../../../../../components/admin/AdminShell";
+import { ConfirmActionForm } from "../../../../../../../components/admin/ConfirmActionForm";
+import styles from "../../../../../../../components/admin/admin-ui.module.css";
+import {
+  evaluateTestGraphTeardown,
+  getEntityAdminHref,
+  isTestGraphTeardownEntityTypeSupported
+} from "../../../../../../../lib/admin/test-graph-teardown.js";
+import { normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
+import { requireEditorUser } from "../../../../../../../lib/admin/page-helpers.js";
+import { assertEntityType } from "../../../../../../../lib/content-core/service.js";
+import { ENTITY_TYPE_LABELS } from "../../../../../../../lib/content-core/content-types.js";
+
+function getStatusLabel(member) {
+  if (member.published) {
+    return "Опубликовано";
+  }
+
+  if (member.hasReviewRevision) {
+    return "На проверке";
+  }
+
+  return "Черновик";
+}
+
+export default async function TestGraphTeardownPage({ params, searchParams }) {
+  const { entityType, entityId } = await params;
+  const query = await searchParams;
+  const user = await requireEditorUser();
+  const normalizedType = assertEntityType(entityType);
+
+  if (!isTestGraphTeardownEntityTypeSupported(normalizedType)) {
+    notFound();
+  }
+
+  const evaluation = await evaluateTestGraphTeardown({
+    entityType: normalizedType,
+    entityId
+  });
+
+  if (!evaluation.exists) {
+    notFound();
+  }
+
+  const sourceHref = getEntityAdminHref(normalizedType, entityId);
+  const successRedirectTo = normalizedType === "media_asset"
+    ? "/admin/entities/media_asset"
+    : `/admin/entities/${normalizedType}`;
+  const failureRedirectTo = `/admin/entities/${normalizedType}/${entityId}/test-graph-teardown`;
+
+  return (
+    <AdminShell
+      user={user}
+      title="Удаление тестового графа"
+      breadcrumbs={[
+        { label: "Админка", href: "/admin" },
+        { label: ENTITY_TYPE_LABELS[normalizedType], href: successRedirectTo },
+        { label: evaluation.root?.label || "Тестовый граф" }
+      ]}
+      activeHref={successRedirectTo}
+      actions={<Link href={sourceHref} className={styles.secondaryButton}>Вернуться к объекту</Link>}
+    >
+      <div className={styles.stack}>
+        {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
+        {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
+        <section className={styles.panel}>
+          <p className={styles.helpText}>
+            Сначала проверьте dry-run. Этот экран удаляет только чистый тестовый граф и не работает как обычный unpublish.
+          </p>
+          <div className={styles.badgeRow}>
+            <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
+            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть published truth</span> : null}
+            <span className={`${styles.badge} ${evaluation.allowed ? styles.mediaBadgesuccess : styles.mediaBadgedanger}`}>
+              {evaluation.allowed ? "Teardown разрешён" : "Teardown заблокирован"}
+            </span>
+          </div>
+        </section>
+
+        <section className={`${styles.panel} ${styles.panelMuted}`}>
+          <h3>Dry-run</h3>
+          <div className={styles.cockpitCoverageSummary}>
+            <strong>{evaluation.root?.label || entityId}</strong>
+            <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[normalizedType]}</span>
+          </div>
+          <ul className={styles.stack}>
+            {evaluation.members.map((member) => (
+              <li key={`${member.entityType}:${member.entityId}`} className={styles.timelineItem}>
+                <div className={styles.cockpitCoverageSummary}>
+                  <strong>{member.label}</strong>
+                  <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[member.entityType]}</span>
+                </div>
+                <div className={styles.badgeRow}>
+                  <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
+                  <span className={`${styles.badge} ${member.published ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
+                    {getStatusLabel(member)}
+                  </span>
+                  {member.deactivatePublished ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Будет снят published pointer</span> : null}
+                  <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Будет удалён</span>
+                </div>
+                <div className={styles.inlineActions}>
+                  <Link href={member.href} className={styles.secondaryButton}>Открыть</Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {evaluation.blockers.length > 0 ? (
+          <section className={styles.statusPanelBlocking}>
+            <strong>Teardown остановлен.</strong>
+            <ul className={styles.stack}>
+              {evaluation.blockers.map((blocker) => (
+                <li key={blocker} className={styles.timelineItem}>{blocker}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {evaluation.allowed ? (
+          <section className={styles.panel}>
+            <h3>Выполнение</h3>
+            <p className={styles.helpText}>
+              Сначала будут деактивированы published pointers для test-marked участников графа, затем объекты удалятся в безопасном порядке.
+            </p>
+            <ConfirmActionForm
+              action={`/api/admin/entities/${normalizedType}/${entityId}/test-graph-teardown`}
+              confirmMessage="Удалить тестовый граф? Действие необратимо."
+              className={styles.inlineActions}
+            >
+              <input type="hidden" name="redirectTo" value={successRedirectTo} />
+              <input type="hidden" name="failureRedirectTo" value={failureRedirectTo} />
+              <button type="submit" className={styles.dangerButton}>Удалить тестовый граф</button>
+            </ConfirmActionForm>
+          </section>
+        ) : null}
+      </div>
+    </AdminShell>
+  );
+}

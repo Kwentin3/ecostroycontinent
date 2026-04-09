@@ -70,3 +70,28 @@ test("entity save route keeps normal editor create unmarked", async () => {
   assert.equal(response.status, 303);
   assert.equal(captured.creationOrigin, null);
 });
+
+test("entity save route forwards explicit agent test marker for page create", async () => {
+  let captured = null;
+  const response = await POST(
+    buildRequest({
+      pageType: "about",
+      title: "Test page",
+      h1: "Test page",
+      intro: "Intro",
+      creationOrigin: "agent_test"
+    }),
+    { params: { entityType: "page" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      saveDraft: async (input) => {
+        captured = input;
+        return { entity: { id: "entity_page_1" } };
+      }
+    }
+  );
+
+  assert.equal(response.status, 303);
+  assert.equal(captured.creationOrigin, "agent_test");
+});

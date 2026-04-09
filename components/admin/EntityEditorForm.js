@@ -16,6 +16,8 @@ import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
 import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
+import { isAgentTestCreationOrigin } from "../../lib/admin/entity-origin.js";
+import { getTestGraphTeardownHref } from "../../lib/admin/test-graph-teardown.js";
 import styles from "./admin-ui.module.css";
 
 const OBLIGATION_LABELS = {
@@ -99,6 +101,7 @@ function renderMediaUpload(redirectTo) {
 export function EntityEditorForm({
   entityType,
   entityId,
+  entityCreationOrigin = null,
   value,
   currentRevision,
   activePublishedRevision,
@@ -116,6 +119,11 @@ export function EntityEditorForm({
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const historyHref = entityId ? `/admin/entities/${entityType}/${entityId}/history` : "";
   const canDeleteEntity = Boolean(entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE));
+  const canTeardownTestGraph = Boolean(
+    entityId
+    && isAgentTestCreationOrigin(entityCreationOrigin)
+    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+  );
   const canPublish = user.role === "superadmin";
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
   const showActionabilityPanel = [
@@ -193,6 +201,14 @@ export function EntityEditorForm({
         {entityId || canDeleteEntity ? (
           <div className={styles.inlineActions}>
             {entityId ? <Link href={historyHref} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
+            {isAgentTestCreationOrigin(entityCreationOrigin) ? (
+              <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
+            ) : null}
+            {canTeardownTestGraph ? (
+              <Link href={getTestGraphTeardownHref(entityType, entityId)} className={styles.secondaryButton}>
+                Удалить тестовый граф
+              </Link>
+            ) : null}
             {canDeleteEntity ? (
               <ConfirmActionForm
                 action={`/api/admin/entities/${entityType}/delete`}
@@ -210,6 +226,7 @@ export function EntityEditorForm({
         <section className={styles.panel}>
           <form action={`/api/admin/entities/${entityType}/save`} method="post" className={styles.formGrid}>
             <input type="hidden" name="entityId" value={entityId || ""} />
+            {!entityId && entityCreationOrigin ? <input type="hidden" name="creationOrigin" value={entityCreationOrigin} /> : null}
             <label className={styles.label}>
               <span>{CHANGE_INTENT_LABEL}</span>
               <input name="changeIntent" defaultValue={normalizeLegacyCopy(currentRevision?.changeIntent) || "Черновик сохранён из редактора."} />

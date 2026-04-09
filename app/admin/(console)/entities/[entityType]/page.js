@@ -23,6 +23,23 @@ function supportsDeleteTool(entityType) {
     || entityType === ENTITY_TYPES.CASE;
 }
 
+function buildListActions(normalizedType) {
+  if (normalizedType === ENTITY_TYPES.PAGE) {
+    return (
+      <>
+        <Link href="/admin/entities/page/new?creationOrigin=agent_test" className={styles.secondaryButton}>
+          Новая тестовая страница
+        </Link>
+        <Link href="/admin/entities/page/new" className={styles.primaryButton}>
+          {ADMIN_COPY.newItem}
+        </Link>
+      </>
+    );
+  }
+
+  return <Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>{ADMIN_COPY.newItem}</Link>;
+}
+
 export default async function EntityListPage({ params, searchParams }) {
   const { entityType } = await params;
   const user = await requireEditorUser();
@@ -215,7 +232,7 @@ export default async function EntityListPage({ params, searchParams }) {
         { label: ENTITY_TYPE_LABELS[normalizedType] }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
-      actions={<Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>{ADMIN_COPY.newItem}</Link>}
+      actions={buildListActions(normalizedType)}
     >
       <div className={styles.stack}>
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
@@ -297,6 +314,7 @@ export default async function EntityListPage({ params, searchParams }) {
                       <div className={styles.cockpitCoverageSummary}>
                         <strong>{row.entityLabel}</strong>
                         <span className={styles.mutedText}>{row.entityTypeLabel}</span>
+                        {row.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
                       </div>
                     </td>
                     <td>

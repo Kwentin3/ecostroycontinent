@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../../components/admin/AdminShell";
 import { EntityEditorForm } from "../../../../../../components/admin/EntityEditorForm";
+import { normalizeEntityCreationOrigin } from "../../../../../../lib/admin/entity-origin.js";
 import { loadEditorPageData } from "../../../../../../lib/admin/entity-ui";
 import { normalizeAdminReturnTo } from "../../../../../../lib/admin/relation-navigation.js";
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
@@ -60,6 +61,13 @@ export default async function NewEntityPage({ params, searchParams }) {
 
   const data = await loadEditorPageData(normalizedType, null);
   const returnTo = normalizeAdminReturnTo(query?.returnTo);
+  let creationOrigin = null;
+
+  try {
+    creationOrigin = normalizeEntityCreationOrigin(query?.creationOrigin);
+  } catch {
+    creationOrigin = null;
+  }
 
   return (
     <AdminShell
@@ -76,6 +84,7 @@ export default async function NewEntityPage({ params, searchParams }) {
       <EntityEditorForm
         entityType={normalizedType}
         entityId={null}
+        entityCreationOrigin={creationOrigin}
         value={normalizedType === "page" ? { pageType: "about" } : {}}
         currentRevision={null}
         activePublishedRevision={null}
