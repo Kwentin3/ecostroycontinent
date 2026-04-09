@@ -942,6 +942,30 @@
   flex-wrap: wrap;
 }
 
+.entityDeleteToolbar {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.entityDeleteBulkForm {
+  display: grid;
+  gap: 12px;
+}
+
+.entityDeleteCheckboxStack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.entityDeleteCheckboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
 .relationSummary {
   display: grid;
   gap: var(--space-2);
@@ -1285,12 +1309,33 @@
 }
 
 .mediaLibraryThumb {
+  position: relative;
   display: grid;
   place-items: center;
   min-height: 168px;
   border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--panel-muted);
+}
+
+.mediaDeleteMarker {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(38, 76, 59, 0.18);
+  box-shadow: 0 4px 10px rgba(31, 42, 34, 0.12);
+}
+
+.mediaDeleteMarker input {
+  margin: 0;
 }
 
 .mediaLibraryThumb img {

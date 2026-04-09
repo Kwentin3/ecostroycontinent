@@ -1,13 +1,14 @@
 import path from "node:path";
 
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server.js";
 
+import { normalizeEntityCreationOrigin } from "../../../../../../lib/admin/entity-origin.js";
 import { getString } from "../../../../../../lib/admin/form-data.js";
+import { getMediaLibraryCard } from "../../../../../../lib/admin/media-gallery.js";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
 import { userCanEditContent } from "../../../../../../lib/auth/session.js";
 import { saveDraft } from "../../../../../../lib/content-core/service.js";
 import { deleteMediaFile, storeMediaFile } from "../../../../../../lib/media/storage.js";
-import { getMediaLibraryCard } from "../../../../../../lib/admin/media-gallery.js";
 
 function buildTitleFromFilename(filename) {
   const base = (filename || "")
@@ -19,14 +20,23 @@ function buildTitleFromFilename(filename) {
   return base || "Медиафайл";
 }
 
-export async function POST(request) {
-  const { user, response } = await requireRouteUser(request);
+export async function POST(request, _context, deps = {}) {
+  const routeDeps = {
+    requireRouteUser,
+    userCanEditContent,
+    saveDraft,
+    storeMediaFile,
+    deleteMediaFile,
+    getMediaLibraryCard,
+    ...deps
+  };
+  const { user, response } = await routeDeps.requireRouteUser(request);
 
   if (response) {
     return response;
   }
 
-  if (!userCanEditContent(user)) {
+  if (!routeDeps.userCanEditContent(user)) {
     return NextResponse.json({ ok: false, error: "Недостаточно прав для загрузки медиа." }, { status: 403 });
   }
 
@@ -44,19 +54,21 @@ export async function POST(request) {
   const storageKey = `${crypto.randomUUID()}${path.extname(file.name)}`;
   const bytes = Buffer.from(await file.arrayBuffer());
   const title = getString(formData, "title") || buildTitleFromFilename(file.name);
+  const creationOrigin = normalizeEntityCreationOrigin(getString(formData, "creationOrigin"));
 
   try {
-    await storeMediaFile({
+    await routeDeps.storeMediaFile({
       storageKey,
       bytes,
       contentType: file.type
     });
 
-    const saved = await saveDraft({
+    const saved = await routeDeps.saveDraft({
       entityType: "media_asset",
       entityId: null,
       userId: user.id,
       changeIntent: getString(formData, "changeIntent") || "Новый media asset собран из медиатеки.",
+      creationOrigin,
       payload: {
         title,
         alt: getString(formData, "alt"),
@@ -74,7 +86,7 @@ export async function POST(request) {
       }
     });
 
-    const item = await getMediaLibraryCard(saved.entity.id);
+    const item = await routeDeps.getMediaLibraryCard(saved.entity.id);
 
     return NextResponse.json({
       ok: true,
@@ -83,7 +95,7 @@ export async function POST(request) {
     });
   } catch (error) {
     try {
-      await deleteMediaFile(storageKey);
+      await routeDeps.deleteMediaFile(storageKey);
     } catch {
       // Best-effort cleanup for a failed create path.
     }

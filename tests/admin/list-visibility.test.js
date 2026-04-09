@@ -12,6 +12,7 @@ function buildCard(entityType, entityId, revisionNumber = 1, state = "draft", pa
     entity: {
       id: entityId,
       entityType,
+      creationOrigin: null,
       updatedAt
     },
     latestRevision: {
@@ -119,6 +120,7 @@ test("list row projections surface blocked, proof gap, partial and missing state
   });
 
   assert.equal(blockedRow.signalState, "blocked");
+  assert.equal(blockedRow.isTestData, false);
   assert.equal(blockedRow.signalLabel, "Заблокировано");
   assert.equal(blockedRow.actionLabel, "Исправить");
   assert.equal(blockedRow.actionHref, "/admin/entities/service/service-1?returnTo=%2Fadmin%2Fentities%2Fservice");
@@ -241,4 +243,40 @@ test("list surface view model prioritizes blockers and keeps row summaries compa
     "Нет версии: 0"
   ]);
   assert.match(viewModel.summaryNote, /блокирующие строки и строки с доказательствами/);
+});
+
+test("list row projection marks agent-created test rows", () => {
+  const row = buildListRowProjection({
+    card: {
+      ...buildCard(
+        ENTITY_TYPES.SERVICE,
+        "service-test",
+        1,
+        "draft",
+        {
+          title: "Test service",
+          h1: "Test service",
+          summary: "Summary",
+          serviceScope: "Scope",
+          ctaVariant: "call"
+        }
+      ),
+      entity: {
+        id: "service-test",
+        entityType: ENTITY_TYPES.SERVICE,
+        creationOrigin: "agent_test",
+        updatedAt: "2026-03-29T10:00:00Z"
+      }
+    },
+    entityType: ENTITY_TYPES.SERVICE,
+    readiness: {
+      summary: "Готово.",
+      hasBlocking: false,
+      results: []
+    },
+    obligations: [],
+    listHref: "/admin/entities/service?testOnly=1"
+  });
+
+  assert.equal(row.isTestData, true);
 });

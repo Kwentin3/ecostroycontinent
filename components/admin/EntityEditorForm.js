@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ConfirmActionForm } from "./ConfirmActionForm";
 import { EntityActionabilityPanel } from "./EntityActionabilityPanel";
 import { EntityTruthSections } from "./EntityTruthSections";
 import { FilterableChecklist } from "./FilterableChecklist";
@@ -174,6 +175,17 @@ export function EntityEditorForm({
             <div className={styles.compactDisclosureBody}>
               <p className={styles.surfacePacketLegend}>{getEntityEditorLegend(entityType)}</p>
               {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
+              {entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE) ? (
+                <ConfirmActionForm
+                  action={`/api/admin/entities/${entityType}/delete`}
+                  confirmMessage="Удалить эту сущность? Действие необратимо."
+                >
+                  <input type="hidden" name="entityId" value={entityId} />
+                  <input type="hidden" name="redirectTo" value={`/admin/entities/${entityType}`} />
+                  <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                  <button type="submit" className={styles.dangerButton}>Удалить</button>
+                </ConfirmActionForm>
+              ) : null}
             </div>
           </details>
         ) : (

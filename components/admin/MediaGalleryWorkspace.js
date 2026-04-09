@@ -14,6 +14,7 @@ import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
 
 const FILTERS = [
+  { key: "test-only", label: "Только тестовые" },
   { key: "all", label: "Все" },
   { key: "recent", label: "Недавние" },
   { key: "mine", label: "Мои" },
@@ -85,6 +86,8 @@ function formatDate(value) {
 
 function matchesFilter(item, filterKey, currentUsername) {
   switch (filterKey) {
+    case "test-only":
+      return item.isTestData;
     case "recent":
       return item.recent;
     case "mine":
@@ -340,7 +343,9 @@ function MediaInspector({
   onOpenCollectionManager,
   onCreateCollection,
   onLifecycleAction,
+  onDelete,
   lifecycleBusy,
+  deleteBusy,
   returnTo = ""
 }) {
   if (!item) {
@@ -378,6 +383,7 @@ function MediaInspector({
 
       <div className={styles.badgeRow}>
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
+        {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
         {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
         <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
           {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст есть"}
@@ -498,6 +504,9 @@ function MediaInspector({
             disabled={lifecycleBusy || (!item.canArchive && !item.canRestore)}
           >
             {lifecycleBusy ? "Сохраняем..." : item.archived ? "Вернуть из архива" : "В архив"}
+          </button>
+          <button type="button" className={styles.dangerButton} onClick={onDelete} disabled={deleteBusy}>
+            {deleteBusy ? "Удаляем..." : "Удалить"}
           </button>
           <Link href={`/admin/entities/media_asset/${item.id}/history`} className={styles.secondaryButton}>
             История
@@ -776,6 +785,7 @@ export function MediaGalleryWorkspace({
   initialSelectedId,
   initialCollectionId = "",
   initialCompose = "",
+  initialFilterKey = "all",
   currentUsername,
   initialMessage = "",
   initialError = "",
@@ -785,10 +795,11 @@ export function MediaGalleryWorkspace({
   const [collections, setCollections] = useState(initialCollections);
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const [filterKey, setFilterKey] = useState("all");
+  const [filterKey, setFilterKey] = useState(initialFilterKey || "all");
   const [collectionFilterId, setCollectionFilterId] = useState(initialCollectionId || COLLECTION_FILTER_ALL);
   const [sortMode, setSortMode] = useState("newest");
   const [selectedId, setSelectedId] = useState(initialSelectedId || initialItems[0]?.id || "");
+  const [selectedDeleteIds, setSelectedDeleteIds] = useState([]);
   const [message, setMessage] = useState(initialMessage);
   const [error, setError] = useState(initialError);
   const [recentlySavedId, setRecentlySavedId] = useState("");
@@ -802,6 +813,7 @@ export function MediaGalleryWorkspace({
   const [overlayBusy, setOverlayBusy] = useState(false);
   const [overlayError, setOverlayError] = useState("");
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [draftFile, setDraftFile] = useState(null);
   const [editedBinaryFile, setEditedBinaryFile] = useState(null);
@@ -840,6 +852,10 @@ export function MediaGalleryWorkspace({
   }, [items, selectedId]);
 
   useEffect(() => {
+    setSelectedDeleteIds((current) => current.filter((entityId) => items.some((item) => item.id === entityId && item.isTestData)));
+  }, [items]);
+
+  useEffect(() => {
     if (!draftPreviewUrl.startsWith("blob:")) {
       return undefined;
     }
@@ -871,6 +887,7 @@ export function MediaGalleryWorkspace({
     .filter((item) => matchesCollectionFilter(item, collectionFilterId))
     .sort((left, right) => compareItems(left, right, sortMode));
   const summaryItems = [
+    { label: "Тестовые", value: items.filter((item) => item.isTestData).length },
     { label: "Всего", value: items.length },
     { label: "Нет альтернативного текста", value: items.filter((item) => item.missingAlt).length },
     { label: "Сироты", value: items.filter((item) => item.orphaned).length },
@@ -879,6 +896,7 @@ export function MediaGalleryWorkspace({
     { label: "Сломанные", value: items.filter((item) => item.brokenBinary).length }
   ];
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
+  const selectedTestDeleteCount = selectedDeleteIds.length;
   const currentWorkspaceHref = typeof window === "undefined"
     ? workspaceContextHref
     : `${window.location.pathname}${window.location.search}`;
@@ -989,6 +1007,99 @@ export function MediaGalleryWorkspace({
           : null,
       collectionId: overlayMode === "collections" ? collectionContext.selectedCollectionId : ""
     });
+  }
+
+  function toggleDeleteSelection(entityId) {
+    setSelectedDeleteIds((current) => (
+      current.includes(entityId)
+        ? current.filter((value) => value !== entityId)
+        : [...current, entityId]
+    ));
+  }
+
+  async function performDeleteRequest(entityIds, { testOnly = false } = {}) {
+    const formData = new FormData();
+
+    for (const entityId of entityIds) {
+      formData.append("entityId", entityId);
+    }
+
+    if (testOnly) {
+      formData.set("testOnly", "true");
+    }
+
+    formData.set("responseMode", "json");
+    const response = await fetch("/api/admin/entities/media_asset/delete", {
+      method: "POST",
+      body: formData
+    });
+    const payload = await response.json();
+
+    if ((payload.deletedIds ?? []).length > 0) {
+      setItems((current) => current.filter((item) => !(payload.deletedIds ?? []).includes(item.id)));
+      setSelectedDeleteIds((current) => current.filter((entityId) => !(payload.deletedIds ?? []).includes(entityId)));
+    }
+
+    if (payload.message) {
+      setMessage(payload.message);
+    }
+
+    if (payload.error) {
+      setError(payload.error);
+    } else {
+      setError("");
+    }
+
+    if (!response.ok && (payload.deletedCount ?? 0) === 0) {
+      throw new Error(payload.error || "Не удалось удалить выбранные объекты.");
+    }
+
+    return payload;
+  }
+
+  async function handleDeleteSelectedItem() {
+    if (!selectedItem) {
+      return;
+    }
+
+    if (!window.confirm("Удалить эту карточку? Действие необратимо.")) {
+      return;
+    }
+
+    setDeleteBusy(true);
+    setMessage("");
+    setError("");
+
+    try {
+      await performDeleteRequest([selectedItem.id]);
+    } catch (deleteError) {
+      setError(deleteError.message || "Не удалось удалить карточку.");
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+
+  async function handleBulkDeleteTestData() {
+    if (selectedDeleteIds.length === 0) {
+      setError("Сначала выберите тестовые объекты для удаления.");
+      return;
+    }
+
+    if (!window.confirm("Удалить выбранные тестовые объекты? Действие необратимо.")) {
+      return;
+    }
+
+    setDeleteBusy(true);
+    setMessage("");
+    setError("");
+
+    try {
+      await performDeleteRequest(selectedDeleteIds, { testOnly: true });
+    } catch (deleteError) {
+      setError(deleteError.message || "Не удалось удалить тестовые объекты.");
+    } finally {
+      setDeleteBusy(false);
+    }
   }
 
   function handleAssetFieldChange(field, value) {
@@ -1366,6 +1477,16 @@ export function MediaGalleryWorkspace({
             <button type="button" className={styles.secondaryButton} onClick={() => openCollectionManager()}>
               Коллекции
             </button>
+            {selectedItem ? (
+              <button type="button" className={styles.dangerButton} onClick={handleDeleteSelectedItem} disabled={deleteBusy}>
+                {deleteBusy ? "Удаляем..." : "Удалить выбранный"}
+              </button>
+            ) : null}
+            {selectedTestDeleteCount > 0 ? (
+              <button type="button" className={styles.dangerButton} onClick={handleBulkDeleteTestData} disabled={deleteBusy}>
+                {deleteBusy ? "Удаляем..." : `Удалить тестовые (${selectedTestDeleteCount})`}
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -1453,6 +1574,19 @@ export function MediaGalleryWorkspace({
                       aria-pressed={selected}
                     >
                       <span className={styles.mediaLibraryThumb}>
+                        {item.isTestData ? (
+                          <label
+                            className={styles.mediaDeleteMarker}
+                            onClick={(event) => event.stopPropagation()}
+                            onKeyDown={(event) => event.stopPropagation()}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedDeleteIds.includes(item.id)}
+                              onChange={() => toggleDeleteSelection(item.id)}
+                            />
+                          </label>
+                        ) : null}
                         {item.hasPreview ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
@@ -1466,6 +1600,7 @@ export function MediaGalleryWorkspace({
                         <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
                         <span className={styles.mediaBadgeCluster}>
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
+                          {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тест</span> : null}
                           {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
                           <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
                           {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст"}
@@ -1496,6 +1631,8 @@ export function MediaGalleryWorkspace({
             onCreateCollection={(assetId) => openCollectionManager({ seedAssetId: assetId, createNew: true })}
             onLifecycleAction={handleLifecycleAction}
             lifecycleBusy={lifecycleBusy}
+            onDelete={handleDeleteSelectedItem}
+            deleteBusy={deleteBusy}
             returnTo={currentWorkspaceHref}
           />
         </div>

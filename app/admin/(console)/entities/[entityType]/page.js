@@ -1,26 +1,35 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../components/admin/AdminShell";
+import { ConfirmActionForm } from "../../../../../components/admin/ConfirmActionForm";
 import { MediaGalleryWorkspace } from "../../../../../components/admin/MediaGalleryWorkspace";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { buildListRowProjection, buildListSurfaceViewModel } from "../../../../../lib/admin/list-visibility.js";
 import { listCollectionLibraryCards, listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
 import { normalizeAdminReturnTo } from "../../../../../lib/admin/relation-navigation.js";
-import { requireEditorUser } from "../../../../../lib/admin/page-helpers";
+import { requireEditorUser } from "../../../../../lib/admin/page-helpers.js";
 import { getEntityListLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
-import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service";
+import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service.js";
 import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
 import { findEntityByTypeSingleton, findRevisionById, listPublishObligations } from "../../../../../lib/content-core/repository.js";
 import { ADMIN_COPY, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
+
+function supportsDeleteTool(entityType) {
+  return entityType === ENTITY_TYPES.MEDIA_ASSET
+    || entityType === ENTITY_TYPES.SERVICE
+    || entityType === ENTITY_TYPES.CASE;
+}
 
 export default async function EntityListPage({ params, searchParams }) {
   const { entityType } = await params;
   const user = await requireEditorUser();
   const normalizedType = assertEntityType(entityType);
   const query = await searchParams;
+  const deleteToolEnabled = supportsDeleteTool(normalizedType);
+  const testOnly = query?.testOnly === "1";
 
   if (!ENTITY_TYPE_LABELS[normalizedType]) {
     notFound();
@@ -92,6 +101,10 @@ export default async function EntityListPage({ params, searchParams }) {
       workspaceQuery.set("error", query.error);
     }
 
+    if (testOnly) {
+      workspaceQuery.set("testOnly", "1");
+    }
+
     if (workspaceReturnTo) {
       workspaceQuery.set("returnTo", workspaceReturnTo);
     }
@@ -116,6 +129,7 @@ export default async function EntityListPage({ params, searchParams }) {
             initialSelectedId={selectedAssetId}
             initialCollectionId={initialCollectionId}
             initialCompose={initialCompose}
+            initialFilterKey={testOnly ? "test-only" : "all"}
             currentUsername={user.username}
             initialMessage={query?.message ? normalizeLegacyCopy(query.message) : ""}
             initialError={query?.error ? normalizeLegacyCopy(query.error) : ""}
@@ -132,6 +146,10 @@ export default async function EntityListPage({ params, searchParams }) {
     : null;
   const cards = await listEntityCards(normalizedType);
   const listHrefParams = new URLSearchParams();
+
+  if (deleteToolEnabled && testOnly) {
+    listHrefParams.set("testOnly", "1");
+  }
 
   if (query?.message) {
     listHrefParams.set("message", query.message);
@@ -180,7 +198,13 @@ export default async function EntityListPage({ params, searchParams }) {
       });
     })
   );
-  const viewModel = buildListSurfaceViewModel(rowModels.filter(Boolean));
+  const projectedRows = rowModels.filter(Boolean);
+  const filteredRows = deleteToolEnabled && testOnly
+    ? projectedRows.filter((row) => row.isTestData)
+    : projectedRows;
+  const viewModel = buildListSurfaceViewModel(filteredRows);
+  const testRows = projectedRows.filter((row) => row.isTestData);
+  const currentListPath = `/admin/entities/${normalizedType}${deleteToolEnabled && testOnly ? "?testOnly=1" : ""}`;
 
   return (
     <AdminShell
@@ -204,9 +228,45 @@ export default async function EntityListPage({ params, searchParams }) {
           bullets={viewModel.bullets}
         />
         <section className={styles.panel}>
+          {deleteToolEnabled ? (
+            <div className={styles.entityDeleteToolbar}>
+              <div className={styles.inlineActions}>
+                <Link
+                  href={testOnly ? `/admin/entities/${normalizedType}` : `/admin/entities/${normalizedType}?testOnly=1`}
+                  className={styles.secondaryButton}
+                >
+                  {testOnly ? "Показать все" : "Только тестовые"}
+                </Link>
+                <span className={styles.mutedText}>Тестовых: {testRows.length}</span>
+              </div>
+              {testRows.length > 0 ? (
+                <ConfirmActionForm
+                  action={`/api/admin/entities/${normalizedType}/delete`}
+                  confirmMessage="Удалить выбранные тестовые объекты? Действие необратимо."
+                  className={styles.entityDeleteBulkForm}
+                >
+                  <input type="hidden" name="testOnly" value="true" />
+                  <input type="hidden" name="redirectTo" value={currentListPath} />
+                  <input type="hidden" name="failureRedirectTo" value={currentListPath} />
+                  <div className={styles.inlineActions}>
+                    <button type="submit" className={styles.dangerButton}>Удалить тестовые</button>
+                  </div>
+                  <div className={styles.entityDeleteCheckboxStack}>
+                    {viewModel.rows.filter((row) => row.isTestData).map((row) => (
+                      <label key={`delete-${row.key}`} className={styles.entityDeleteCheckboxLabel}>
+                        <input type="checkbox" name="entityId" value={row.entityId} />
+                        <span>{row.entityLabel}</span>
+                      </label>
+                    ))}
+                  </div>
+                </ConfirmActionForm>
+              ) : null}
+            </div>
+          ) : null}
           <table className={styles.table}>
             <thead>
               <tr>
+                {deleteToolEnabled ? <th>Тест</th> : null}
                 <th>Сущность</th>
                 <th>Последняя версия</th>
                 <th>Сигнал</th>
@@ -216,9 +276,11 @@ export default async function EntityListPage({ params, searchParams }) {
             <tbody>
               {viewModel.rows.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={deleteToolEnabled ? 5 : 4}>
                     <div className={styles.emptyState}>
-                      <p className={styles.mutedText}>Сущностей этого типа пока нет.</p>
+                      <p className={styles.mutedText}>
+                        {testOnly ? "Тестовых сущностей этого типа пока нет." : "Сущностей этого типа пока нет."}
+                      </p>
                       <Link href={`/admin/entities/${normalizedType}/new`}>Создать первую</Link>
                     </div>
                   </td>
@@ -226,6 +288,11 @@ export default async function EntityListPage({ params, searchParams }) {
               ) : (
                 viewModel.rows.map((row) => (
                   <tr key={row.key}>
+                    {deleteToolEnabled ? (
+                      <td>
+                        {row.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : <span className={styles.mutedText}>—</span>}
+                      </td>
+                    ) : null}
                     <td>
                       <div className={styles.cockpitCoverageSummary}>
                         <strong>{row.entityLabel}</strong>
@@ -271,4 +338,3 @@ export default async function EntityListPage({ params, searchParams }) {
     </AdminShell>
   );
 }
-
