@@ -17,6 +17,7 @@ import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } 
 import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
 import { isAgentTestCreationOrigin } from "../../lib/admin/entity-origin.js";
+import { getLegacyTestFixtureNormalizationHref } from "../../lib/admin/legacy-test-fixture-normalization.js";
 import { getTestGraphTeardownHref } from "../../lib/admin/test-graph-teardown.js";
 import { getLiveDeactivationHref } from "../../lib/admin/live-deactivation.js";
 import styles from "./admin-ui.module.css";
@@ -133,6 +134,12 @@ export function EntityEditorForm({
     && isAgentTestCreationOrigin(entityCreationOrigin)
     && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
   );
+  const canNormalizeLegacyTestFixture = Boolean(
+    entityId
+    && canPublish
+    && !isAgentTestCreationOrigin(entityCreationOrigin)
+    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+  );
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
   const showActionabilityPanel = [
     ENTITY_TYPES.GLOBAL_SETTINGS,
@@ -218,6 +225,11 @@ export function EntityEditorForm({
             {canTeardownTestGraph ? (
               <Link href={getTestGraphTeardownHref(entityType, entityId)} className={styles.secondaryButton}>
                 Удалить тестовый граф
+              </Link>
+            ) : null}
+            {canNormalizeLegacyTestFixture ? (
+              <Link href={getLegacyTestFixtureNormalizationHref(entityType, entityId)} className={styles.secondaryButton}>
+                Пометить как тестовые
               </Link>
             ) : null}
             {canLiveDeactivate ? (
