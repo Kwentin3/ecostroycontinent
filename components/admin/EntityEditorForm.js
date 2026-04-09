@@ -18,6 +18,7 @@ import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../l
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
 import { isAgentTestCreationOrigin } from "../../lib/admin/entity-origin.js";
 import { getTestGraphTeardownHref } from "../../lib/admin/test-graph-teardown.js";
+import { getLiveDeactivationHref } from "../../lib/admin/live-deactivation.js";
 import styles from "./admin-ui.module.css";
 
 const OBLIGATION_LABELS = {
@@ -119,12 +120,19 @@ export function EntityEditorForm({
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const historyHref = entityId ? `/admin/entities/${entityType}/${entityId}/history` : "";
   const canDeleteEntity = Boolean(entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE));
+  const canPublish = user.role === "superadmin";
+  const canLiveDeactivate = Boolean(
+    entityId
+    && canPublish
+    && activePublishedRevision
+    && !isAgentTestCreationOrigin(entityCreationOrigin)
+    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+  );
   const canTeardownTestGraph = Boolean(
     entityId
     && isAgentTestCreationOrigin(entityCreationOrigin)
     && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
   );
-  const canPublish = user.role === "superadmin";
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
   const showActionabilityPanel = [
     ENTITY_TYPES.GLOBAL_SETTINGS,
@@ -204,9 +212,17 @@ export function EntityEditorForm({
             {isAgentTestCreationOrigin(entityCreationOrigin) ? (
               <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
             ) : null}
+            {!activePublishedRevision && currentRevision?.state === "published" ? (
+              <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Р’РЅРµ live</span>
+            ) : null}
             {canTeardownTestGraph ? (
               <Link href={getTestGraphTeardownHref(entityType, entityId)} className={styles.secondaryButton}>
                 Удалить тестовый граф
+              </Link>
+            ) : null}
+            {canLiveDeactivate ? (
+              <Link href={getLiveDeactivationHref(entityType, entityId)} className={styles.secondaryButton}>
+                Р’С‹РІРµСЃС‚Рё РёР· Р¶РёРІРѕРіРѕ РєРѕРЅС‚СѓСЂР°
               </Link>
             ) : null}
             {canDeleteEntity ? (
