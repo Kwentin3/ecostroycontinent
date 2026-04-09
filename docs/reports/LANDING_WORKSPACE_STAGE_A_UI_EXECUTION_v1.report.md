@@ -145,20 +145,20 @@ Deliberately avoided:
 Both passed.
 
 Additional operational checks:
-- `build-and-publish` GitHub Actions run `24183485987` succeeded
-- `deploy-phase1` GitHub Actions run `24184650021` succeeded
+- `build-and-publish` GitHub Actions run `24184827085` succeeded
+- `deploy-phase1` GitHub Actions run `24184911311` succeeded
 - live `https://ecostroycontinent.ru/api/health` returned `200 OK`
 - live `/admin/workspace/landing` and `/admin/workspace/landing/[pageId]` routes returned auth redirects to `/admin/login`, confirming reachability through the deployed contour
 
 ## Git Status
 
-- Commit(s): pending
-- Push status: pending
+- Commit(s): `696ffa5` (`Implement stage A landing workspace screen`)
+- Push status: pushed to `origin/main`
 
 ## Rollout Status
 
 - rollout executed through `deploy-phase1`
-- deployed image: `ghcr.io/kwentin3/ecostroycontinent-app@sha256:1cbd744b44a4ecf9ce5f58d0e57e73605f4e1bebb98e411592f5b4df5d16aebc`
+- deployed image: `ghcr.io/kwentin3/ecostroycontinent-app@sha256:f1eddfff62c1a1c1b230621a8bcb4a6d4cd55b844c0cbacd3e497d8c9c6c5068`
 
 ## Known Limitations
 

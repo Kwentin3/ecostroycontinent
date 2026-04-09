@@ -9,8 +9,8 @@ This report checks whether the new Stage A landing workspace screen is now real 
 ### Deployed contour
 
 Confirmed:
-- `build-and-publish` run `24183485987` succeeded
-- `deploy-phase1` run `24184650021` succeeded
+- `build-and-publish` run `24184827085` succeeded
+- `deploy-phase1` run `24184911311` succeeded
 - `https://ecostroycontinent.ru/api/health` returned `200 OK`
 
 ### Admin routes
