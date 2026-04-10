@@ -81,11 +81,17 @@
 
 - `npm test`
 - `npm run build`
+- `git push origin main`
+- GitHub Actions `build-and-publish` run `24241557668`
+- GitHub Actions `deploy-phase1` run `24241634341`
 
 Результат:
 
 - tests: green (`138/138`)
 - build: green
+- push: green
+- image publish: green (`ghcr.io/kwentin3/ecostroycontinent-app@sha256:97b1fbed419aa036972f5da88de76324bc337ed805a922e41b60b016507fd21e`)
+- server deploy + health probe through Traefik: green
 - сохранён уже известный нерелевантный warning Turbopack NFT вокруг `next.config.mjs`; новый create flow его не добавлял
 
 ## 9. Risks Found
