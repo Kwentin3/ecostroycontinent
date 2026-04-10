@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { normalizePageMetadata } from "../../lib/admin/page-metadata-state.js";
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import styles from "./PageMetadataModal.module.css";
 
@@ -11,23 +12,6 @@ const TABS = [
   { id: "seo", label: "SEO" }
 ];
 
-function normalizeMetadata(metadata = {}) {
-  return {
-    slug: metadata.slug || "",
-    pageType: metadata.pageType || "about",
-    pageThemeKey: metadata.pageThemeKey || "earth_sand",
-    seo: {
-      metaTitle: metadata.seo?.metaTitle || "",
-      metaDescription: metadata.seo?.metaDescription || "",
-      canonicalIntent: metadata.seo?.canonicalIntent || "",
-      indexationFlag: metadata.seo?.indexationFlag || "index",
-      openGraphTitle: metadata.seo?.openGraphTitle || "",
-      openGraphDescription: metadata.seo?.openGraphDescription || "",
-      openGraphImageAssetId: metadata.seo?.openGraphImageAssetId || ""
-    }
-  };
-}
-
 export function PageMetadataModal({
   open,
   pageLabel,
@@ -36,13 +20,13 @@ export function PageMetadataModal({
   onSave
 }) {
   const [activeTab, setActiveTab] = useState("main");
-  const [draft, setDraft] = useState(() => normalizeMetadata(metadata));
+  const [draft, setDraft] = useState(() => normalizePageMetadata(metadata));
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [isError, setIsError] = useState(false);
   const [position, setPosition] = useState({ x: 48, y: 72 });
   const dragRef = useRef(null);
-  const normalizedMetadata = useMemo(() => normalizeMetadata(metadata), [metadata]);
+  const normalizedMetadata = useMemo(() => normalizePageMetadata(metadata), [metadata]);
 
   useEffect(() => {
     if (!open) {
