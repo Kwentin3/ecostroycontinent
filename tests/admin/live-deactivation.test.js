@@ -99,6 +99,41 @@ test("evaluateLiveDeactivation allows an ordinary published page with no incomin
   assert.ok(result.routeEffects.routeOutcome.includes("404"));
 });
 
+test("evaluateLiveDeactivation allows an ordinary published media asset with no incoming refs", async () => {
+  const aggregate = makeAggregate(ENTITY_TYPES.MEDIA_ASSET, "media_live_1", {
+    activePublishedRevisionId: "rev_media_live_1",
+    latestPayload: {
+      title: "Pilot media"
+    }
+  });
+
+  const result = await evaluateLiveDeactivation(
+    {
+      entityType: ENTITY_TYPES.MEDIA_ASSET,
+      entityId: "media_live_1"
+    },
+    buildDeps({
+      aggregate,
+      latestCards: {
+        [ENTITY_TYPES.PAGE]: [],
+        [ENTITY_TYPES.SERVICE]: [],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      },
+      publishedCards: {
+        [ENTITY_TYPES.PAGE]: [],
+        [ENTITY_TYPES.SERVICE]: [],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      }
+    })
+  );
+
+  assert.equal(result.allowed, true);
+  assert.equal(result.routeEffects.routePath, "/api/media/media_live_1, /api/media-public/media_live_1");
+  assert.ok(result.routeEffects.routeOutcome.includes("404"));
+});
+
 test("evaluateLiveDeactivation refuses when surviving published page points to service", async () => {
   const service = makeAggregate(ENTITY_TYPES.SERVICE, "service_live_1", {
     activePublishedRevisionId: "rev_service_live_1",
@@ -133,6 +168,51 @@ test("evaluateLiveDeactivation refuses when surviving published page points to s
       publishedCards: {
         [ENTITY_TYPES.PAGE]: [makePublishedCard(page)],
         [ENTITY_TYPES.SERVICE]: [makePublishedCard(service)],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      }
+    })
+  );
+
+  assert.equal(result.allowed, false);
+  assert.ok(result.blockers.includes("На сущность ссылается опубликованная страница."));
+  assert.equal(result.publishedIncomingRefs.length, 1);
+  assert.equal(result.publishedIncomingRefs[0].entityId, "page_live_1");
+});
+
+test("evaluateLiveDeactivation refuses when surviving published page points to media", async () => {
+  const media = makeAggregate(ENTITY_TYPES.MEDIA_ASSET, "media_live_1", {
+    activePublishedRevisionId: "rev_media_live_1",
+    latestPayload: {
+      title: "Pilot media"
+    }
+  });
+  const page = makeAggregate(ENTITY_TYPES.PAGE, "page_live_1", {
+    activePublishedRevisionId: "rev_page_live_1",
+    latestPayload: {
+      pageType: PAGE_TYPES.ABOUT,
+      title: "About",
+      h1: "About",
+      primaryMediaAssetId: "media_live_1"
+    }
+  });
+
+  const result = await evaluateLiveDeactivation(
+    {
+      entityType: ENTITY_TYPES.MEDIA_ASSET,
+      entityId: "media_live_1"
+    },
+    buildDeps({
+      aggregate: media,
+      latestCards: {
+        [ENTITY_TYPES.PAGE]: [makeLatestCard(page)],
+        [ENTITY_TYPES.SERVICE]: [],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      },
+      publishedCards: {
+        [ENTITY_TYPES.PAGE]: [makePublishedCard(page)],
+        [ENTITY_TYPES.SERVICE]: [],
         [ENTITY_TYPES.CASE]: [],
         [ENTITY_TYPES.GALLERY]: []
       }
@@ -248,7 +328,7 @@ test("evaluateLiveDeactivation exposes review residue details", async () => {
   );
 
   assert.equal(result.allowed, false);
-  assert.ok(result.blockers.includes("Сущность участвует в review/publish-потоке."));
+  assert.ok(result.blockers.includes("У сущности есть ревизия на проверке."));
   assert.equal(result.reviewResidue.length, 1);
   assert.equal(result.reviewResidue[0].href, "/admin/review/rev_case_draft");
 });
@@ -292,7 +372,7 @@ test("evaluateLiveDeactivation exposes open publish obligations", async () => {
   );
 
   assert.equal(result.allowed, false);
-  assert.ok(result.blockers.includes("У сущности есть открытые обязательства publish-потока."));
+  assert.ok(result.blockers.includes("У сущности есть открытые обязательства по публикации."));
   assert.equal(result.openObligations.length, 1);
   assert.equal(result.openObligations[0].id, "obligation_1");
 });
@@ -330,7 +410,7 @@ test("evaluateLiveDeactivation refuses test-marked published root", async () => 
   );
 
   assert.equal(result.allowed, false);
-  assert.ok(result.blockers.includes("Тестовый опубликованный объект нужно разбирать через удаление тестового графа, а не через выведение из живого контура."));
+  assert.ok(result.blockers.includes("Тестовый опубликованный объект нужно убирать через удаление тестового графа."));
 });
 
 test("executeLiveDeactivation clears published pointer and records audit evidence", async () => {

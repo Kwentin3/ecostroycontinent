@@ -8,9 +8,16 @@ import {
   isLiveDeactivationEntityTypeSupported
 } from "../../../../../../../lib/admin/live-deactivation.js";
 import { userCanPublish } from "../../../../../../../lib/auth/session.js";
+import { ENTITY_TYPES } from "../../../../../../../lib/content-core/content-types.js";
 
 function makeSuccessMessage() {
-  return "Сущность выведена из живого контура.";
+  return "Объект снят с публикации.";
+}
+
+function getEntitySourceHref(entityType, entityId) {
+  return entityType === ENTITY_TYPES.MEDIA_ASSET
+    ? `/admin/entities/media_asset?asset=${entityId}`
+    : `/admin/entities/${entityType}/${entityId}`;
 }
 
 export async function POST(request, { params }, deps = {}) {
@@ -39,7 +46,7 @@ export async function POST(request, { params }, deps = {}) {
 
   const formData = await request.formData();
   const redirectTo = getString(formData, "redirectTo")
-    || `/admin/entities/${entityType}/${entityId}`;
+    || getEntitySourceHref(entityType, entityId);
   const failureRedirectTo = getString(formData, "failureRedirectTo")
     || `/admin/entities/${entityType}/${entityId}/live-deactivation`;
 

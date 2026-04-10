@@ -8,6 +8,10 @@ import {
   assessEntityDelete,
   isDeleteToolEntityTypeSupported
 } from "../../../../../../../lib/admin/entity-delete.js";
+import {
+  getLiveDeactivationHref,
+  isLiveDeactivationEntityTypeSupported
+} from "../../../../../../../lib/admin/live-deactivation.js";
 import { appendAdminReturnTo, normalizeAdminReturnTo } from "../../../../../../../lib/admin/relation-navigation.js";
 import { normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
 import { requireEditorUser } from "../../../../../../../lib/admin/page-helpers.js";
@@ -19,15 +23,19 @@ function getCurrentStateLabel(root) {
     return "Состояние не удалось определить.";
   }
 
+  if (root.published && root.hasReviewRevision) {
+    return "Есть опубликованная версия и ревизия на проверке";
+  }
+
   if (root.published) {
-    return "Есть active published truth";
+    return "Есть опубликованная версия";
   }
 
   if (root.hasReviewRevision) {
-    return "Есть review-state revision";
+    return "Есть ревизия на проверке";
   }
 
-  return "Live truth нет";
+  return "Живой публикации нет";
 }
 
 function getEntitySourceHref(entityType, entityId) {
@@ -65,7 +73,17 @@ export default async function DeleteEntityPage({ params, searchParams }) {
   const fallbackSourceHref = getEntitySourceHref(normalizedType, entityId);
   const sourceHref = normalizedReturnTo || fallbackSourceHref;
   const redirectTo = normalizedReturnTo || getEntityListHref(normalizedType);
-  const failureRedirectTo = appendAdminReturnTo(`/admin/entities/${normalizedType}/${entityId}/delete`, normalizedReturnTo);
+  const currentDeleteHref = appendAdminReturnTo(`/admin/entities/${normalizedType}/${entityId}/delete`, normalizedReturnTo);
+  const failureRedirectTo = currentDeleteHref;
+  const canUseLiveDeactivation = isLiveDeactivationEntityTypeSupported(normalizedType);
+  const liveDeactivationHref = canUseLiveDeactivation
+    ? appendAdminReturnTo(getLiveDeactivationHref(normalizedType, entityId), currentDeleteHref)
+    : "";
+  const hasOnlyOwnPublishedVersion = Boolean(evaluation.root?.published)
+    && evaluation.publishedIncomingRefs.length === 0
+    && evaluation.draftIncomingRefs.length === 0
+    && !evaluation.root?.hasReviewRevision
+    && (evaluation.root?.openObligationsCount ?? 0) === 0;
 
   return (
     <AdminShell
@@ -85,21 +103,21 @@ export default async function DeleteEntityPage({ params, searchParams }) {
 
         <section className={styles.panel}>
           <p className={styles.helpText}>
-            Это preflight-проверка перед обычным удалением. Она показывает, что именно заблокирует удаление, и не
+            Это проверка перед удалением. Она показывает, что именно заблокирует удаление, и не
             подменяет ни вывод из живого контура, ни удаление тестового графа.
           </p>
           <div className={styles.badgeRow}>
             <span className={`${styles.badge} ${evaluation.allowed ? styles.mediaBadgesuccess : styles.mediaBadgedanger}`}>
               {evaluation.allowed ? "Удаление разрешено" : "Удаление заблокировано"}
             </span>
-            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть published truth</span> : null}
-            {evaluation.root?.hasReviewRevision ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Есть review residue</span> : null}
+            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
+            {evaluation.root?.hasReviewRevision ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Есть ревизия на проверке</span> : null}
             {evaluation.root?.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
           </div>
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Dry-run</h3>
+          <h3>Проверка перед удалением</h3>
           <ul className={styles.stack}>
             <li className={styles.timelineItem}>
               <strong>Объект</strong>
@@ -112,17 +130,31 @@ export default async function DeleteEntityPage({ params, searchParams }) {
             <li className={styles.timelineItem}>
               <strong>Что произойдёт</strong>
               <p className={styles.mutedText}>
-                Если удаление разрешено, сущность будет удалена из admin truth. Для media storage cleanup останется
-                best-effort, но published/review/ref safety rules здесь не ослабляются.
+                Если удаление разрешено, объект будет удалён из административной системы. Для медиафайлов физическая
+                очистка хранилища выполняется по возможности, но правила безопасности здесь не ослабляются.
               </p>
             </li>
           </ul>
         </section>
 
+        {!evaluation.allowed && canUseLiveDeactivation && evaluation.root?.published ? (
+          <section className={styles.panel}>
+            <h3>Следующий шаг</h3>
+            <p className={styles.helpText}>
+              {hasOnlyOwnPublishedVersion
+                ? "Объект удерживает в публикации собственная опубликованная версия. Сначала снимите его с публикации, затем вернитесь на этот экран и повторите удаление."
+                : "Сначала откройте экран снятия с публикации. Там будет видно, можно ли безопасно убрать объект из живого контура или сначала нужно разобрать ссылки и незавершённые состояния."}
+            </p>
+            <div className={styles.inlineActions}>
+              <Link href={liveDeactivationHref} className={styles.primaryButton}>Снять с публикации</Link>
+            </div>
+          </section>
+        ) : null}
+
         <section className={`${styles.panel} ${styles.panelMuted}`}>
           <h3>Что сейчас мешает удалению</h3>
           {evaluation.stateBlockers.length === 0 ? (
-            <p className={styles.mutedText}>Собственных state-blockers не найдено.</p>
+            <p className={styles.mutedText}>Собственных причин блокировки не найдено.</p>
           ) : (
             <ul className={styles.stack}>
               {evaluation.stateBlockers.map((blocker) => (
@@ -202,7 +234,7 @@ export default async function DeleteEntityPage({ params, searchParams }) {
           <section className={styles.panel}>
             <h3>Подтверждение</h3>
             <p className={styles.helpText}>
-              Это необратимое действие. Если объект должен остаться в истории admin truth, используйте другой
+              Это необратимое действие. Если объект должен остаться в истории системы, используйте другой
               операционный путь, а не обычное удаление.
             </p>
             <ConfirmActionForm

@@ -6,12 +6,20 @@ import { ConfirmActionForm } from "../../../../../../../components/admin/Confirm
 import styles from "../../../../../../../components/admin/admin-ui.module.css";
 import {
   evaluateLiveDeactivation,
+  getLiveDeactivationHref,
   isLiveDeactivationEntityTypeSupported
 } from "../../../../../../../lib/admin/live-deactivation.js";
+import { appendAdminReturnTo, normalizeAdminReturnTo } from "../../../../../../../lib/admin/relation-navigation.js";
 import { normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
 import { requirePublishUser } from "../../../../../../../lib/admin/page-helpers.js";
 import { assertEntityType } from "../../../../../../../lib/content-core/service.js";
-import { ENTITY_TYPE_LABELS } from "../../../../../../../lib/content-core/content-types.js";
+import { ENTITY_TYPE_LABELS, ENTITY_TYPES } from "../../../../../../../lib/content-core/content-types.js";
+
+function getEntitySourceHref(entityType, entityId) {
+  return entityType === ENTITY_TYPES.MEDIA_ASSET
+    ? `/admin/entities/media_asset?asset=${entityId}`
+    : `/admin/entities/${entityType}/${entityId}`;
+}
 
 export default async function LiveDeactivationPage({ params, searchParams }) {
   const { entityType, entityId } = await params;
@@ -32,8 +40,10 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
     notFound();
   }
 
-  const sourceHref = `/admin/entities/${normalizedType}/${entityId}`;
-  const failureRedirectTo = `/admin/entities/${normalizedType}/${entityId}/live-deactivation`;
+  const normalizedReturnTo = normalizeAdminReturnTo(query?.returnTo);
+  const fallbackSourceHref = getEntitySourceHref(normalizedType, entityId);
+  const sourceHref = normalizedReturnTo || fallbackSourceHref;
+  const failureRedirectTo = appendAdminReturnTo(getLiveDeactivationHref(normalizedType, entityId), normalizedReturnTo);
 
   return (
     <AdminShell
@@ -53,29 +63,29 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
 
         <section className={styles.panel}>
           <p className={styles.helpText}>
-            Это отдельная admin-only операция. Она снимает сущность с живого published contour, но не удаляет её и не
-            заменяет rollback или удаление тестового графа.
+            Это отдельная операция администратора. Она снимает объект с публикации, но не удаляет его и не
+            заменяет ни откат, ни удаление тестового графа.
           </p>
           <div className={styles.badgeRow}>
             <span className={`${styles.badge} ${evaluation.allowed ? styles.mediaBadgesuccess : styles.mediaBadgedanger}`}>
               {evaluation.allowed ? "Операция разрешена" : "Операция заблокирована"}
             </span>
-            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть active published truth</span> : null}
+            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
             {evaluation.root?.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
           </div>
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Dry-run</h3>
+          <h3>Проверка перед снятием с публикации</h3>
           <div className={styles.cockpitCoverageSummary}>
             <strong>{evaluation.root?.label || entityId}</strong>
             <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[normalizedType]}</span>
           </div>
           <ul className={styles.stack}>
             <li className={styles.timelineItem}>
-              <strong>Текущий live state</strong>
+              <strong>Текущее состояние публикации</strong>
               <p className={styles.mutedText}>
-                {evaluation.root?.published ? "Активная опубликованная truth есть." : "Активной опубликованной truth нет."}
+                {evaluation.root?.published ? "Опубликованная версия активна." : "Активной опубликованной версии нет."}
               </p>
             </li>
             <li className={styles.timelineItem}>
@@ -95,11 +105,11 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
               <p className={styles.mutedText}>{evaluation.routeEffects?.sitemapImpact || "Отдельный sitemap runtime route в текущем коде не найден."}</p>
             </li>
             <li className={styles.timelineItem}>
-              <strong>Revalidation paths</strong>
+              <strong>Какие адреса обновятся</strong>
               <p className={styles.mutedText}>
                 {(evaluation.routeEffects?.revalidationPaths ?? []).length > 0
                   ? evaluation.routeEffects.revalidationPaths.join(", ")
-                  : "Отдельных путей для revalidation не рассчитано."}
+                  : "Отдельного обновления страниц не требуется."}
               </p>
             </li>
           </ul>
@@ -150,16 +160,16 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Review residue</h3>
+          <h3>Ревизии на проверке</h3>
           {evaluation.reviewResidue?.length === 0 ? (
-            <p className={styles.mutedText}>Review-state ревизий не найдено.</p>
+            <p className={styles.mutedText}>Ревизий на проверке не найдено.</p>
           ) : (
             <ul className={styles.stack}>
               {evaluation.reviewResidue.map((item) => (
                 <li key={`${item.kind}:${item.id}`} className={styles.timelineItem}>
                   <div className={styles.cockpitCoverageSummary}>
                     <strong>{item.label}</strong>
-                    <span className={styles.mutedText}>Review / publish</span>
+                    <span className={styles.mutedText}>Проверка и публикация</span>
                   </div>
                   <p className={styles.mutedText}>{item.reason}</p>
                   {item.href ? (
@@ -174,16 +184,16 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Open publish obligations</h3>
+          <h3>Открытые обязательства по публикации</h3>
           {evaluation.openObligations?.length === 0 ? (
-            <p className={styles.mutedText}>Открытых publish-обязательств не найдено.</p>
+            <p className={styles.mutedText}>Открытых обязательств по публикации не найдено.</p>
           ) : (
             <ul className={styles.stack}>
               {evaluation.openObligations.map((item) => (
                 <li key={`${item.kind}:${item.id}`} className={styles.timelineItem}>
                   <div className={styles.cockpitCoverageSummary}>
                     <strong>{item.label}</strong>
-                    <span className={styles.mutedText}>Review / publish</span>
+                    <span className={styles.mutedText}>Проверка и публикация</span>
                   </div>
                   <p className={styles.mutedText}>{item.reason}</p>
                   {item.href ? (
@@ -223,17 +233,17 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
           <section className={styles.panel}>
             <h3>Выполнение</h3>
             <p className={styles.helpText}>
-              Сначала будет снят active published pointer, затем публичный контур будет переоценён через revalidation.
-              История и админская truth сохранятся, hard delete в этом срезе не выполняется.
+              Сначала будет снята действующая опубликованная версия, затем публичный контур будет обновлён.
+              История объекта сохранится, окончательное удаление в этом сценарии не выполняется.
             </p>
             <ConfirmActionForm
               action={`/api/admin/entities/${normalizedType}/${entityId}/live-deactivation`}
-              confirmMessage="Вывести сущность из живого контура? Публичный маршрут перестанет быть live."
+              confirmMessage="Снять объект с публикации? Публичный маршрут перестанет быть доступным."
               className={styles.inlineActions}
             >
               <input type="hidden" name="redirectTo" value={sourceHref} />
               <input type="hidden" name="failureRedirectTo" value={failureRedirectTo} />
-              <button type="submit" className={styles.dangerButton}>Вывести из живого контура</button>
+              <button type="submit" className={styles.dangerButton}>Снять с публикации</button>
             </ConfirmActionForm>
           </section>
         ) : null}

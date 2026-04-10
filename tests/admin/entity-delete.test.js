@@ -69,7 +69,7 @@ test("safe delete refuses published service truth", async () => {
   );
 
   assert.equal(result.allowed, false);
-  assert.ok(result.reasons.includes("Сущность опубликована и участвует в живом контуре."));
+  assert.ok(result.reasons.includes("У объекта есть действующая опубликованная версия."));
   assert.ok(result.stateBlockers.some((item) => item.kind === "published_truth"));
 });
 
@@ -178,7 +178,7 @@ test("delete batch summary keeps deleted and refused counts", () => {
   const summary = buildDeleteBatchSummary([
     { deleted: true, reasons: [] },
     { deleted: false, reasons: ["Объект используется в опубликованной странице."] },
-    { deleted: false, reasons: ["Объект участвует в review/publish-потоке."] }
+    { deleted: false, reasons: ["У объекта есть ревизия на проверке."] }
   ]);
 
   assert.equal(summary.deletedCount, 1);
