@@ -16,6 +16,7 @@ import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
 import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
+import { getEntityDeletePreviewHref } from "../../lib/admin/entity-delete.js";
 import { isAgentTestCreationOrigin } from "../../lib/admin/entity-origin.js";
 import { getLegacyTestFixtureNormalizationHref } from "../../lib/admin/legacy-test-fixture-normalization.js";
 import { getTestGraphTeardownHref } from "../../lib/admin/test-graph-teardown.js";
@@ -120,7 +121,8 @@ export function EntityEditorForm({
 }) {
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const historyHref = entityId ? `/admin/entities/${entityType}/${entityId}/history` : "";
-  const canDeleteEntity = Boolean(entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE));
+  const canDeletePreview = Boolean(entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE));
+  const canDeleteEntity = false; // Entity delete now always goes through the explicit preview screen.
   const canPublish = user.role === "superadmin";
   const canLiveDeactivate = Boolean(
     entityId
@@ -235,6 +237,11 @@ export function EntityEditorForm({
             {canLiveDeactivate ? (
               <Link href={getLiveDeactivationHref(entityType, entityId)} className={styles.secondaryButton}>
                 Р’С‹РІРµСЃС‚Рё РёР· Р¶РёРІРѕРіРѕ РєРѕРЅС‚СѓСЂР°
+              </Link>
+            ) : null}
+            {canDeletePreview ? (
+              <Link href={getEntityDeletePreviewHref(entityType, entityId)} className={styles.dangerButton}>
+                Удалить
               </Link>
             ) : null}
             {canDeleteEntity ? (

@@ -149,6 +149,54 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
           )}
         </section>
 
+        <section className={`${styles.panel} ${styles.panelMuted}`}>
+          <h3>Review residue</h3>
+          {evaluation.reviewResidue?.length === 0 ? (
+            <p className={styles.mutedText}>Review-state ревизий не найдено.</p>
+          ) : (
+            <ul className={styles.stack}>
+              {evaluation.reviewResidue.map((item) => (
+                <li key={`${item.kind}:${item.id}`} className={styles.timelineItem}>
+                  <div className={styles.cockpitCoverageSummary}>
+                    <strong>{item.label}</strong>
+                    <span className={styles.mutedText}>Review / publish</span>
+                  </div>
+                  <p className={styles.mutedText}>{item.reason}</p>
+                  {item.href ? (
+                    <div className={styles.inlineActions}>
+                      <Link href={item.href} className={styles.secondaryButton}>Открыть</Link>
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className={`${styles.panel} ${styles.panelMuted}`}>
+          <h3>Open publish obligations</h3>
+          {evaluation.openObligations?.length === 0 ? (
+            <p className={styles.mutedText}>Открытых publish-обязательств не найдено.</p>
+          ) : (
+            <ul className={styles.stack}>
+              {evaluation.openObligations.map((item) => (
+                <li key={`${item.kind}:${item.id}`} className={styles.timelineItem}>
+                  <div className={styles.cockpitCoverageSummary}>
+                    <strong>{item.label}</strong>
+                    <span className={styles.mutedText}>Review / publish</span>
+                  </div>
+                  <p className={styles.mutedText}>{item.reason}</p>
+                  {item.href ? (
+                    <div className={styles.inlineActions}>
+                      <Link href={item.href} className={styles.secondaryButton}>Открыть</Link>
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
         {evaluation.warnings.length > 0 ? (
           <section className={styles.statusPanelWarning}>
             <strong>Что изменится после операции</strong>

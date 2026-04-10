@@ -15,6 +15,7 @@ function makeAggregate(entityType, entityId, overrides = {}) {
     revisions: overrides.revisions ?? [
       {
         id: `rev_${entityId}`,
+        revisionNumber: 1,
         state: "draft",
         payload: overrides.payload ?? {}
       }
@@ -49,6 +50,8 @@ test("safe delete allows an unpublished unreferenced agent-test media asset", as
 
   assert.equal(result.allowed, true);
   assert.deepEqual(result.reasons, []);
+  assert.equal(result.publishedIncomingRefs.length, 0);
+  assert.equal(result.draftIncomingRefs.length, 0);
 });
 
 test("safe delete refuses published service truth", async () => {
@@ -59,13 +62,15 @@ test("safe delete refuses published service truth", async () => {
     },
     buildDeps({
       aggregate: makeAggregate(ENTITY_TYPES.SERVICE, "service_1", {
-        activePublishedRevisionId: "rev_published"
+        activePublishedRevisionId: "rev_published",
+        payload: { title: "Service 1" }
       })
     })
   );
 
   assert.equal(result.allowed, false);
   assert.ok(result.reasons.includes("Сущность опубликована и участвует в живом контуре."));
+  assert.ok(result.stateBlockers.some((item) => item.kind === "published_truth"));
 });
 
 test("safe delete refuses entity referenced by published page", async () => {
@@ -83,6 +88,7 @@ test("safe delete refuses entity referenced by published page", async () => {
             entityType: ENTITY_TYPES.PAGE,
             revision: {
               payload: {
+                title: "Page 1",
                 caseCardIds: ["case_1"]
               }
             }
@@ -94,6 +100,9 @@ test("safe delete refuses entity referenced by published page", async () => {
 
   assert.equal(result.allowed, false);
   assert.ok(result.reasons.includes("Объект используется в опубликованной странице."));
+  assert.equal(result.publishedIncomingRefs.length, 1);
+  assert.equal(result.publishedIncomingRefs[0].entityType, ENTITY_TYPES.PAGE);
+  assert.equal(result.publishedIncomingRefs[0].entityId, "page_1");
 });
 
 test("safe delete refuses entity referenced by non-test draft", async () => {
@@ -114,6 +123,7 @@ test("safe delete refuses entity referenced by non-test draft", async () => {
             latestRevision: {
               state: "draft",
               payload: {
+                title: "Service draft",
                 primaryMediaAssetId: "media_1"
               }
             }
@@ -125,6 +135,43 @@ test("safe delete refuses entity referenced by non-test draft", async () => {
 
   assert.equal(result.allowed, false);
   assert.ok(result.reasons.includes("Объект используется в рабочем черновике услуги."));
+  assert.equal(result.draftIncomingRefs.length, 1);
+  assert.equal(result.draftIncomingRefs[0].entityType, ENTITY_TYPES.SERVICE);
+  assert.equal(result.draftIncomingRefs[0].entityId, "service_1");
+});
+
+test("safe delete exposes state blockers for review residue and open obligations", async () => {
+  const result = await assessEntityDelete(
+    {
+      entityType: ENTITY_TYPES.SERVICE,
+      entityId: "service_1"
+    },
+    buildDeps({
+      aggregate: makeAggregate(ENTITY_TYPES.SERVICE, "service_1", {
+        revisions: [
+          {
+            id: "rev_review",
+            revisionNumber: 2,
+            state: "review",
+            payload: {
+              title: "Service 1"
+            }
+          }
+        ]
+      }),
+      obligations: [
+        {
+          id: "obligation_1",
+          status: "open",
+          obligationType: "redirect_required"
+        }
+      ]
+    })
+  );
+
+  assert.equal(result.allowed, false);
+  assert.ok(result.stateBlockers.some((item) => item.kind === "review_revision" && item.href === "/admin/review/rev_review"));
+  assert.ok(result.stateBlockers.some((item) => item.kind === "open_obligation"));
 });
 
 test("delete batch summary keeps deleted and refused counts", () => {

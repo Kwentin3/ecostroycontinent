@@ -142,6 +142,7 @@ test("evaluateLiveDeactivation refuses when surviving published page points to s
   assert.equal(result.allowed, false);
   assert.ok(result.blockers.includes("На сущность ссылается опубликованная страница."));
   assert.equal(result.publishedIncomingRefs.length, 1);
+  assert.equal(result.publishedIncomingRefs[0].entityId, "page_live_1");
 });
 
 test("evaluateLiveDeactivation refuses when non-test draft case points to service", async () => {
@@ -192,9 +193,10 @@ test("evaluateLiveDeactivation refuses when non-test draft case points to servic
   assert.equal(result.allowed, false);
   assert.ok(result.blockers.includes("На сущность ссылается рабочий нетестовый черновик кейса."));
   assert.equal(result.draftIncomingRefs.length, 1);
+  assert.equal(result.draftIncomingRefs[0].entityId, "case_draft_1");
 });
 
-test("evaluateLiveDeactivation refuses when entity has review revision", async () => {
+test("evaluateLiveDeactivation exposes review residue details", async () => {
   const aggregate = makeAggregate(ENTITY_TYPES.CASE, "case_live_1", {
     activePublishedRevisionId: "rev_case_live_1",
     revisions: [
@@ -247,6 +249,52 @@ test("evaluateLiveDeactivation refuses when entity has review revision", async (
 
   assert.equal(result.allowed, false);
   assert.ok(result.blockers.includes("Сущность участвует в review/publish-потоке."));
+  assert.equal(result.reviewResidue.length, 1);
+  assert.equal(result.reviewResidue[0].href, "/admin/review/rev_case_draft");
+});
+
+test("evaluateLiveDeactivation exposes open publish obligations", async () => {
+  const aggregate = makeAggregate(ENTITY_TYPES.SERVICE, "service_live_1", {
+    activePublishedRevisionId: "rev_service_live_1",
+    latestPayload: {
+      slug: "service-live",
+      title: "Service live"
+    }
+  });
+
+  const result = await evaluateLiveDeactivation(
+    {
+      entityType: ENTITY_TYPES.SERVICE,
+      entityId: "service_live_1"
+    },
+    buildDeps({
+      aggregate,
+      latestCards: {
+        [ENTITY_TYPES.PAGE]: [],
+        [ENTITY_TYPES.SERVICE]: [makeLatestCard(aggregate)],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      },
+      publishedCards: {
+        [ENTITY_TYPES.PAGE]: [],
+        [ENTITY_TYPES.SERVICE]: [makePublishedCard(aggregate)],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      },
+      obligations: [
+        {
+          id: "obligation_1",
+          status: "open",
+          obligationType: "redirect_required"
+        }
+      ]
+    })
+  );
+
+  assert.equal(result.allowed, false);
+  assert.ok(result.blockers.includes("У сущности есть открытые обязательства publish-потока."));
+  assert.equal(result.openObligations.length, 1);
+  assert.equal(result.openObligations[0].id, "obligation_1");
 });
 
 test("evaluateLiveDeactivation refuses test-marked published root", async () => {
