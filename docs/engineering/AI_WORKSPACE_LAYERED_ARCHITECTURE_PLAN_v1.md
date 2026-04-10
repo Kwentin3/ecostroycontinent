@@ -1,8 +1,11 @@
-# AI_WORKSPACE_LAYERED_ARCHITECTURE_PLAN_v1
+﻿# AI_WORKSPACE_LAYERED_ARCHITECTURE_PLAN_v1
 
 ## 1. Objective
 
 This plan defines the cleanest layered architecture for the AI-assisted landing composition workspace so the current rollout can stay isolated, prompt assembly can stay deterministic, Memory Card can stay session-scoped, and canonical content/revision/publish truth can stay the only source of truth.
+
+Alignment note, 2026-04-10:
+This architecture doc now sits under the single Страницы workflow model. "Landing composition workspace" here refers to the embedded page workspace and its right-side AI assistant layer, not to a separate top-level product surface.
 
 The goal is not to invent a new platform. The goal is to make the existing seams explicit enough that future implementation can move without truth leakage, memory leakage, preview drift, or provider leakage.
 
@@ -332,3 +335,4 @@ The cleanest practical architecture is:
 The most important isolation rule is that Memory Card is session-scoped working state only, and the only path into it is through accepted deltas that pass the workflow gate.
 
 If we keep that rule intact, the rest of the system can stay landing-first, reviewable, and safe to evolve.
+

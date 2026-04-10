@@ -95,3 +95,50 @@ test("entity save route forwards explicit agent test marker for page create", as
   assert.equal(response.status, 303);
   assert.equal(captured.creationOrigin, "agent_test");
 });
+
+test("entity save route can redirect freshly created page into the unified workspace", async () => {
+  const response = await POST(
+    buildRequest({
+      pageType: "about",
+      title: "Company",
+      h1: "Company",
+      redirectMode: "page_workspace",
+      failureRedirectTo: "/admin/entities/page?create=1"
+    }),
+    { params: { entityType: "page" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      saveDraft: async () => ({ entity: { id: "page_77" } })
+    }
+  );
+
+  assert.equal(response.status, 303);
+  assert.equal(response.headers.get("location"), "http://localhost:3000/admin/entities/page/page_77?message=%D0%A7%D0%B5%D1%80%D0%BD%D0%BE%D0%B2%D0%B8%D0%BA+%D1%81%D0%BE%D1%85%D1%80%D0%B0%D0%BD%D1%91%D0%BD.");
+});
+
+test("entity save route returns registry-native fallback when page creation fails", async () => {
+  const response = await POST(
+    buildRequest({
+      pageType: "contacts",
+      title: "Contact center",
+      h1: "Contact center",
+      redirectMode: "page_workspace",
+      failureRedirectTo: "/admin/entities/page?create=1"
+    }),
+    { params: { entityType: "page" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      saveDraft: async () => {
+        throw new Error("page type collision");
+      }
+    }
+  );
+
+  assert.equal(response.status, 303);
+  assert.equal(
+    response.headers.get("location"),
+    "http://localhost:3000/admin/entities/page?create=1&error=page+type+collision&createPageType=contacts&createTitle=Contact+center"
+  );
+});

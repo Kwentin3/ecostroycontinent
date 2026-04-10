@@ -222,25 +222,58 @@ test("list surface view model prioritizes blockers and keeps row summaries compa
       },
       obligations: [],
       listHref: "/admin/entities/case"
+    }),
+    buildListRowProjection({
+      card: {
+        entity: {
+          id: "page-inactive",
+          entityType: ENTITY_TYPES.PAGE,
+          creationOrigin: null,
+          activePublishedRevisionId: null,
+          updatedAt: "2026-03-30T10:00:00Z"
+        },
+        latestRevision: {
+          revisionNumber: 5,
+          state: "published",
+          payload: {
+            title: "Contacts",
+            h1: "Contacts",
+            pageType: "contacts",
+            blocks: [{ type: "rich_text", body: "Contacts body" }]
+          },
+          updatedAt: "2026-03-30T10:00:00Z"
+        }
+      },
+      entityType: ENTITY_TYPES.PAGE,
+      readiness: {
+        summary: "Готово.",
+        hasBlocking: false,
+        results: []
+      },
+      obligations: [],
+      listHref: "/admin/entities/page"
     })
   ]);
 
-  assert.equal(viewModel.summary.total, 3);
+  assert.equal(viewModel.summary.total, 4);
   assert.equal(viewModel.summary.blocked, 1);
   assert.equal(viewModel.summary.proof_gap, 1);
   assert.equal(viewModel.summary.ready, 1);
+  assert.equal(viewModel.summary.inactive, 1);
   assert.deepEqual(viewModel.rows.map((row) => row.signalState), [
     "blocked",
     "proof_gap",
+    "inactive",
     "ready"
   ]);
   assert.deepEqual(viewModel.bullets, [
-    "Всего записей: 3",
+    "Всего записей: 4",
     "Заблокировано: 1",
     "Нужны доказательства: 1",
     "Частично: 0",
     "Готово: 1",
-    "Нет версии: 0"
+    "Нет версии: 0",
+    "Вне live: 1"
   ]);
   assert.match(viewModel.summaryNote, /блокирующие строки и строки с доказательствами/);
 });

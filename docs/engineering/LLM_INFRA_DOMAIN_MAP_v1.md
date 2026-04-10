@@ -2,7 +2,10 @@
 
 ## Purpose
 
-This cluster defines the minimum engineering canon for safe LLM integration in `Экостройконтинент`.
+This cluster defines the minimum engineering canon for safe LLM integration in Экостройконтинент.
+
+Alignment note, 2026-04-10:
+When this cluster refers to landing/workspace artifact generation, it refers to the embedded AI assistance inside the page workflow under Страницы, not to a separate top-level AI editor surface.
 
 It exists to keep provider choice, transport, structured output, and local validation out of business code while still giving the landing factory a stable way to request structured artifacts.
 
@@ -85,5 +88,6 @@ Product posture stays in `docs/product-ux/`.
 - Memory or retrieval layers
 - Session-scoped Memory Card ownership
 - Wider AI assistant surfaces beyond the landing factory use case
+
 
 

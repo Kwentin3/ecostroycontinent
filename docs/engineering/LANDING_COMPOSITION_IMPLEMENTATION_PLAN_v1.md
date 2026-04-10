@@ -1,100 +1,91 @@
-# LANDING_COMPOSITION_IMPLEMENTATION_PLAN_v1
+﻿# LANDING_COMPOSITION_IMPLEMENTATION_PLAN_v1
+
+Статус: refactored to single-page-workflow model
+Дата: 2026-04-10
 
 ## Purpose
 
-This plan sequences the landing-first composition workspace so the implementation can stay narrow, reviewable, and deterministic.
+Этот план переводит composition work из старой landing-workspace narrative в единый домен `Страницы`.
 
-It assumes the existing LLM baseline, Memory Card semantics, and admin write-side model remain in place.
+Главная идея:
+- `Page` остаётся canonical owner standalone page truth;
+- composition work происходит в главном page workspace;
+- AI встроен как assistive panel, а не как отдельный primary surface.
 
 ## Objective
 
-Implement the landing-first composition workspace as the primary AI-assisted surface for the project, while keeping service pages as an adjacent route-owning SEO surface and not as the primary AI workspace target.
-
-## Current baseline
-
-- LLM infra baseline already exists.
-- Memory Card is session-scoped and accepted-delta only.
-- The admin shell and review flow already exist.
-- Service route truth remains available as adjacent substrate.
-- The workspace should not become a generic page builder.
-
-## Remaining implementation scope
-
-- landing composition candidate/spec projection
-- block registry enforcement
-- Stage A visual-semantic contract fields and theme/token registry wiring
-- verification/report wiring
-- preview rendering path
-- publish handoff into existing workflow
-- one real landing proving path
+Implementation direction для docs:
+- один реестр `Страницы` как верхний уровень работы;
+- один главный экран страницы как место composition work;
+- metadata as separate management layer;
+- source picking through compact launchers and specialized modal galleries;
+- review/publish remain explicit and reused.
 
 ## Workstreams
 
-| Workstream | Owns | Depends on | Does not own |
-|---|---|---|---|
-| Draft/spec projection | Convert structured entities and assets into the landing draft/spec view. | Landing spec contract, current truth model, LLM baseline. | Route-family expansion, raw HTML/JSX, generic page-builder freedom. |
-| Block registry enforcement | Apply the allowed landing block set and reject unsupported shapes. | Block registry contract, candidate/spec projection. | Generic block platform, unrestricted composition. |
-| Theme/token registry wiring | Resolve `pageThemeKey` and Stage A surface semantics through a compact landing token registry. | Spec contract, render contract, verification contract. | Raw color freedom, arbitrary palette editing, shell-specific styling freedom. |
-| Verification and report wiring | Produce the machine-verifiable report and gate approval/publish outcomes. | Spec projection, registry enforcement, readiness logic. | New publish architecture, public AI features. |
-| Preview rendering path | Render the approved landing artifact deterministically for review/preview. | Spec, registry, verification, current renderer/runtime behavior. | Page-builder UX, design-system rewrite. |
-| Publish handoff | Attach approval to the existing publish flow and pointer semantics. | Verification success, current publish semantics. | New snapshot store, bypass paths. |
-| Pilot execution and QA | Prove the end-to-end flow on one real landing composition. | All prior workstreams, real content readiness. | General rollout to all surfaces, broader product scope. |
+| Workstream | Owns | Does not own |
+| --- | --- | --- |
+| Pages registry UX | cards/list toggle, search, filters, minimal page card, entry into work | second AI domain |
+| Main page workspace | center canvas, left source launchers, right AI panel | separate top-level AI screen |
+| Metadata layer | tabbed, movable modal for rare/management fields | replacing the main page workflow |
+| Composition contract integration | page-owned composition, proof refs, connective-copy posture | page-builder freedom |
+| Review/publish handoff | reuse explicit downstream workflow | new publish model |
 
 ## Ordered phases
 
-### Phase 0 - contract lock
+### Phase 0 - lock the model
 
-- Finalize the landing composition contracts.
-- Freeze the allowed block ids.
-- Freeze the required verification outputs.
-- Freeze Stage A visual-semantic fields and their bounded scope.
+- Confirm one user domain: `Страницы`.
+- Remove the separate top-level AI surface posture from planning docs.
+- Lock `Page` as owner of composition and connective copy.
 
-### Phase 1 - draft and spec handling
+### Phase 1 - registry screen
 
-- Build the landing draft/spec projection.
-- Keep canonical truth in Content Core.
-- Keep the landing draft workspace-facing, not published truth.
-- Ensure every publishable landing draft resolves to one canonical `Page` owner before publish.
+- Define `Страницы` registry as the first-layer overview.
+- Default view = cards.
+- Secondary view = list.
+- Search and filters are first-layer tools.
+- Page card stays minimal.
 
-### Phase 2 - verification and preview
+### Phase 2 - main page workspace
 
-- Produce the verification report.
-- Block unsupported blocks and unsupported refs.
-- Resolve Stage A theme/tone semantics deterministically.
-- Enforce readability and contrast guardrails for Stage A text-bearing blocks.
-- Render preview deterministically from the approved registry.
+- Center = page canvas / story rail.
+- Left = compact source launchers.
+- Right = pinned AI panel.
+- Do not surface long source lists directly on the left rail.
 
-### Phase 3 - publish handoff and rollback
+### Phase 3 - source access model
 
-- Connect approval to the existing publish path and canonical `Page` owner.
-- Preserve pointer-based rollback semantics.
-- Keep publish separate from draft and review state.
+- `Медиа`, `Кейсы`, `Услуги` open through specialized selection modals.
+- Keep source access lightweight.
+- Avoid warehouse-like endless rail behavior.
 
-### Phase 4 - limited rollout
+### Phase 4 - metadata separation
 
-- Exercise the flow on a real landing composition.
-- Confirm that the rollout does not imply route-family explosion.
-- Confirm that public reads remain published-only.
+- Move route/SEO/service fields that are rare or managerial into metadata modal.
+- Keep frequent composition work in the main workspace.
+- Use tabs and movable behavior for metadata management.
 
-## Deferred items
+### Phase 5 - composition ownership alignment
 
-- `/cases/[slug]` as an AI workspace target
-- `/about` and `/contacts` as AI workspace targets
-- bounded page-palette override path beyond `pageThemeKey`
-- `surfaceTone` on proof-heavy blocks
-- broader density/prominence/layout semantics
-- prompt-lab style UX
-- public AI surfaces
-- broad page-builder freedom
-- replacing the current publish workflow
-- solving all content/evidence gaps in code
-- any route-family expansion beyond the composition workspace and the existing route-owning pages
+- Keep connective copy inside page workflow.
+- Keep AI assistive only.
+- Keep review/publish unchanged.
 
-## What should not be attempted in first rollout
+## Deferred / not in this pass
 
-- Multi-route landing generation
-- A generic block editor
-- New route-family ownership
-- Public AI generation surfaces
-- A new CMS architecture
-- A new publish architecture
+- generic page builder behavior;
+- separate AI product surface;
+- broad route-family expansion;
+- runtime, API, DB or publish redesign;
+- surfacing technical diagnostics in the first UX layer.
+
+## Success condition for documentation and implementation follow-up
+
+После выравнивания docs implementation teams should read one consistent model:
+- user enters through `Страницы`;
+- user works inside one main page workspace;
+- AI is embedded, assistive, and subordinate;
+- metadata are a separate management layer;
+- page owns composition and bridges;
+- review/publish stay explicit.

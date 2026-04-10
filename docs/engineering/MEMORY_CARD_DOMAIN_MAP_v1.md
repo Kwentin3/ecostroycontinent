@@ -2,7 +2,10 @@
 
 ## Purpose
 
-Memory Card is the session-scoped mutable working-state layer for the AI-assisted landing composition workspace in `Экостройконтинент`. It keeps one active run coherent across generation, review, and revision without competing with canonical truth.
+Memory Card is the session-scoped mutable working-state layer for the AI-assisted landing composition workspace in Экостройконтинент. It keeps one active run coherent across generation, review, and revision without competing with canonical truth.
+
+Alignment note, 2026-04-10:
+In the current docs model, "landing composition workspace" means the embedded page workspace inside the single Страницы domain, not a separate top-level AI screen.
 
 ## What It Is
 
@@ -162,5 +165,6 @@ Rule: the archive pointer may reference history, but the active Memory Card does
 Read this document first, then `MEMORY_CARD_PROMPT_CONTEXT_CONTRACT_v1.md`.
 
 The prompt context contract depends on this domain map.
+
 
 

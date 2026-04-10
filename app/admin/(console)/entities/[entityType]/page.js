@@ -4,17 +4,25 @@ import { notFound, redirect } from "next/navigation";
 import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { ConfirmActionForm } from "../../../../../components/admin/ConfirmActionForm";
 import { MediaGalleryWorkspace } from "../../../../../components/admin/MediaGalleryWorkspace";
+import { PageRegistryClient } from "../../../../../components/admin/PageRegistryClient";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
+import { getPayloadLabel } from "../../../../../lib/admin/entity-ui.js";
 import { buildListRowProjection, buildListSurfaceViewModel } from "../../../../../lib/admin/list-visibility.js";
 import { listCollectionLibraryCards, listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
+import { buildRegistryCreateState } from "../../../../../lib/admin/page-registry-create.js";
+import {
+  buildPageWorkspaceBaseValue,
+  buildPageWorkspaceMetadataState,
+  getPageCardPreviewUrl
+} from "../../../../../lib/admin/page-workspace.js";
 import { normalizeAdminReturnTo } from "../../../../../lib/admin/relation-navigation.js";
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers.js";
 import { getEntityListLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
+import { findEntityByTypeSingleton, findRevisionById, listPublishObligations } from "../../../../../lib/content-core/repository.js";
 import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service.js";
 import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
-import { findEntityByTypeSingleton, findRevisionById, listPublishObligations } from "../../../../../lib/content-core/repository.js";
 import { ADMIN_COPY, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
 
 function supportsDeleteTool(entityType) {
@@ -25,19 +33,53 @@ function supportsDeleteTool(entityType) {
 
 function buildListActions(normalizedType) {
   if (normalizedType === ENTITY_TYPES.PAGE) {
-    return (
-      <>
-        <Link href="/admin/entities/page/new?creationOrigin=agent_test" className={styles.secondaryButton}>
-          Новая тестовая страница
-        </Link>
-        <Link href="/admin/entities/page/new" className={styles.primaryButton}>
-          {ADMIN_COPY.newItem}
-        </Link>
-      </>
-    );
+    return null;
   }
 
   return <Link href={`/admin/entities/${normalizedType}/new`} className={styles.primaryButton}>{ADMIN_COPY.newItem}</Link>;
+}
+
+function formatUpdatedAtLabel(timestamp) {
+  if (!timestamp) {
+    return "";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("ru-RU", {
+      day: "numeric",
+      month: "short"
+    }).format(new Date(timestamp));
+  } catch {
+    return "";
+  }
+}
+
+function buildPageRegistryRecords(cards, rows) {
+  const cardsById = new Map(cards.map((card) => [card.entity.id, card]));
+
+  return rows.map((row) => {
+    const card = cardsById.get(row.entityId);
+    const pageValue = buildPageWorkspaceBaseValue(card?.latestRevision ?? null);
+    const metadata = buildPageWorkspaceMetadataState(pageValue);
+
+    return {
+      id: row.entityId,
+      title: getPayloadLabel(card?.latestRevision?.payload) || row.entityLabel || row.entityId,
+      slug: metadata.slug,
+      href: `/admin/entities/page/${row.entityId}`,
+      historyHref: `/admin/entities/page/${row.entityId}/history`,
+      previewUrl: getPageCardPreviewUrl(pageValue.primaryMediaAssetId),
+      signalLabel: row.signalLabel,
+      signalTone: row.signalTone,
+      signalState: row.signalState,
+      signalReason: row.signalReason,
+      versionLabel: row.versionLabel,
+      versionState: card?.latestRevision?.state || "missing",
+      versionStateLabel: row.versionStateLabel,
+      metadata,
+      updatedAtLabel: formatUpdatedAtLabel(row.updatedAtTs)
+    };
+  });
 }
 
 export default async function EntityListPage({ params, searchParams }) {
@@ -222,6 +264,50 @@ export default async function EntityListPage({ params, searchParams }) {
   const viewModel = buildListSurfaceViewModel(filteredRows);
   const testRows = projectedRows.filter((row) => row.isTestData);
   const currentListPath = `/admin/entities/${normalizedType}${deleteToolEnabled && testOnly ? "?testOnly=1" : ""}`;
+
+  if (normalizedType === ENTITY_TYPES.PAGE) {
+    const pageRecords = buildPageRegistryRecords(cards, viewModel.rows);
+    const createState = buildRegistryCreateState(query);
+
+    return (
+      <AdminShell
+        user={user}
+        title={ENTITY_TYPE_LABELS[normalizedType]}
+        breadcrumbs={[
+          { label: "Админка", href: "/admin" },
+          { label: ENTITY_TYPE_LABELS[normalizedType] }
+        ]}
+        activeHref="/admin/entities/page"
+        actions={buildListActions(normalizedType)}
+      >
+        <div className={styles.stack}>
+          {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
+          {query?.error && !createState.open ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
+          <SurfacePacket
+            eyebrow="Реестр страниц"
+            title="Страницы"
+            summary="Это единый вход в page workflow: обзор страниц, поиск нужной и переход в основной рабочий экран без хопа в отдельную AI-поверхность."
+            legend={getEntityListLegend(normalizedType)}
+            bullets={[
+              ...viewModel.bullets,
+              "Карточки являются режимом по умолчанию; список остаётся вторичным представлением.",
+              "Метаданные открываются через меню карточки и не конкурируют с мольбертом страницы."
+            ]}
+          />
+          <section className={styles.panel}>
+            <PageRegistryClient
+              initialRecords={pageRecords}
+              metadataSaveUrlBuilder={(pageId) => `/api/admin/entities/page/${pageId}/workspace`}
+              initialCreateOpen={createState.open}
+              initialCreateTitle={createState.title}
+              initialCreateType={createState.pageType}
+              initialCreateError={createState.error}
+            />
+          </section>
+        </div>
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell

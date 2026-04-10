@@ -29,6 +29,7 @@ export function PreviewViewport({
   device = "desktop",
   hrefBase,
   searchParams,
+  onDeviceChange,
   children
 }) {
   const activeOption = DEVICE_OPTIONS.find((option) => option.value === device) || DEVICE_OPTIONS[0];
@@ -41,16 +42,34 @@ export function PreviewViewport({
           <p className={styles.previewViewportHint}>{hint}</p>
         </div>
         <div className={styles.previewViewportControls}>
-          {DEVICE_OPTIONS.map((option) => (
-            <Link
-              key={option.value}
-              href={hrefBase ? buildPreviewHref(hrefBase, searchParams, option.value) : "#"}
-              className={option.value === device ? styles.primaryButton : styles.secondaryButton}
-              aria-pressed={option.value === device}
-            >
-              {option.label}
-            </Link>
-          ))}
+          {DEVICE_OPTIONS.map((option) => {
+            const className = option.value === device ? styles.primaryButton : styles.secondaryButton;
+
+            if (typeof onDeviceChange === "function") {
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={className}
+                  aria-pressed={option.value === device}
+                  onClick={() => onDeviceChange(option.value)}
+                >
+                  {option.label}
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={option.value}
+                href={hrefBase ? buildPreviewHref(hrefBase, searchParams, option.value) : "#"}
+                className={className}
+                aria-pressed={option.value === device}
+              >
+                {option.label}
+              </Link>
+            );
+          })}
         </div>
       </div>
       <div className={styles.previewViewportFrame}>
