@@ -50,6 +50,17 @@ function getEntityListHref(entityType) {
     : `/admin/entities/${entityType}`;
 }
 
+function getIncomingPublishedAction(ref, returnTo) {
+  if (!isLiveDeactivationEntityTypeSupported(ref?.entityType)) {
+    return null;
+  }
+
+  return {
+    href: appendAdminReturnTo(getLiveDeactivationHref(ref.entityType, ref.entityId), returnTo),
+    label: "Снять с публикации"
+  };
+}
+
 export default async function DeleteEntityPage({ params, searchParams }) {
   const { entityType, entityId } = await params;
   const query = await searchParams;
@@ -178,22 +189,35 @@ export default async function DeleteEntityPage({ params, searchParams }) {
         <section className={`${styles.panel} ${styles.panelMuted}`}>
           <h3>Входящие опубликованные ссылки</h3>
           {evaluation.publishedIncomingRefs.length === 0 ? (
-            <p className={styles.mutedText}>Публикуемых входящих ссылок не найдено.</p>
+            <p className={styles.mutedText}>Опубликованных входящих ссылок не найдено.</p>
           ) : (
-            <ul className={styles.stack}>
-              {evaluation.publishedIncomingRefs.map((ref) => (
-                <li key={`${ref.entityType}:${ref.entityId}:published`} className={styles.timelineItem}>
-                  <div className={styles.cockpitCoverageSummary}>
-                    <strong>{ref.label}</strong>
-                    <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[ref.entityType]}</span>
-                  </div>
-                  <p className={styles.mutedText}>{ref.reason}</p>
-                  <div className={styles.inlineActions}>
-                    <Link href={ref.href} className={styles.secondaryButton}>Открыть</Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className={styles.helpText}>
+                Эти объекты всё ещё держат удаляемую сущность в живом контуре. Сначала откройте нужный объект и снимите
+                его с публикации или уберите ссылку, затем вернитесь на этот экран.
+              </p>
+              <ul className={styles.stack}>
+                {evaluation.publishedIncomingRefs.map((ref) => {
+                  const action = getIncomingPublishedAction(ref, currentDeleteHref);
+
+                  return (
+                    <li key={`${ref.entityType}:${ref.entityId}:published`} className={styles.timelineItem}>
+                      <div className={styles.cockpitCoverageSummary}>
+                        <strong>{ref.label}</strong>
+                        <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[ref.entityType]}</span>
+                      </div>
+                      <p className={styles.mutedText}>{ref.reason}</p>
+                      <div className={styles.inlineActions}>
+                        <Link href={ref.href} className={styles.secondaryButton}>Открыть</Link>
+                        {action ? (
+                          <Link href={action.href} className={styles.secondaryButton}>{action.label}</Link>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </section>
 
@@ -202,20 +226,26 @@ export default async function DeleteEntityPage({ params, searchParams }) {
           {evaluation.draftIncomingRefs.length === 0 ? (
             <p className={styles.mutedText}>Висящих нетестовых черновиков не найдено.</p>
           ) : (
-            <ul className={styles.stack}>
-              {evaluation.draftIncomingRefs.map((ref) => (
-                <li key={`${ref.entityType}:${ref.entityId}:draft`} className={styles.timelineItem}>
-                  <div className={styles.cockpitCoverageSummary}>
-                    <strong>{ref.label}</strong>
-                    <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[ref.entityType]}</span>
-                  </div>
-                  <p className={styles.mutedText}>{ref.reason}</p>
-                  <div className={styles.inlineActions}>
-                    <Link href={ref.href} className={styles.secondaryButton}>Открыть</Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className={styles.helpText}>
+                Эти черновики пока не опубликованы, но после удаления в них останутся висящие ссылки. Сначала откройте
+                их и уберите связь, затем возвращайтесь к удалению.
+              </p>
+              <ul className={styles.stack}>
+                {evaluation.draftIncomingRefs.map((ref) => (
+                  <li key={`${ref.entityType}:${ref.entityId}:draft`} className={styles.timelineItem}>
+                    <div className={styles.cockpitCoverageSummary}>
+                      <strong>{ref.label}</strong>
+                      <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[ref.entityType]}</span>
+                    </div>
+                    <p className={styles.mutedText}>{ref.reason}</p>
+                    <div className={styles.inlineActions}>
+                      <Link href={ref.href} className={styles.secondaryButton}>Открыть черновик</Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </section>
 
