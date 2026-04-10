@@ -8,10 +8,11 @@ import {
   assessEntityDelete,
   isDeleteToolEntityTypeSupported
 } from "../../../../../../../lib/admin/entity-delete.js";
+import { appendAdminReturnTo, normalizeAdminReturnTo } from "../../../../../../../lib/admin/relation-navigation.js";
 import { normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
 import { requireEditorUser } from "../../../../../../../lib/admin/page-helpers.js";
 import { assertEntityType } from "../../../../../../../lib/content-core/service.js";
-import { ENTITY_TYPE_LABELS } from "../../../../../../../lib/content-core/content-types.js";
+import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../../lib/content-core/content-types.js";
 
 function getCurrentStateLabel(root) {
   if (!root) {
@@ -27,6 +28,18 @@ function getCurrentStateLabel(root) {
   }
 
   return "Live truth нет";
+}
+
+function getEntitySourceHref(entityType, entityId) {
+  return entityType === ENTITY_TYPES.MEDIA_ASSET
+    ? `/admin/entities/media_asset?asset=${entityId}`
+    : `/admin/entities/${entityType}/${entityId}`;
+}
+
+function getEntityListHref(entityType) {
+  return entityType === ENTITY_TYPES.MEDIA_ASSET
+    ? "/admin/entities/media_asset"
+    : `/admin/entities/${entityType}`;
 }
 
 export default async function DeleteEntityPage({ params, searchParams }) {
@@ -48,8 +61,11 @@ export default async function DeleteEntityPage({ params, searchParams }) {
     notFound();
   }
 
-  const sourceHref = `/admin/entities/${normalizedType}/${entityId}`;
-  const failureRedirectTo = `/admin/entities/${normalizedType}/${entityId}/delete`;
+  const normalizedReturnTo = normalizeAdminReturnTo(query?.returnTo);
+  const fallbackSourceHref = getEntitySourceHref(normalizedType, entityId);
+  const sourceHref = normalizedReturnTo || fallbackSourceHref;
+  const redirectTo = normalizedReturnTo || getEntityListHref(normalizedType);
+  const failureRedirectTo = appendAdminReturnTo(`/admin/entities/${normalizedType}/${entityId}/delete`, normalizedReturnTo);
 
   return (
     <AdminShell
@@ -195,7 +211,7 @@ export default async function DeleteEntityPage({ params, searchParams }) {
               className={styles.inlineActions}
             >
               <input type="hidden" name="entityId" value={entityId} />
-              <input type="hidden" name="redirectTo" value={`/admin/entities/${normalizedType}`} />
+              <input type="hidden" name="redirectTo" value={redirectTo} />
               <input type="hidden" name="failureRedirectTo" value={failureRedirectTo} />
               <button type="submit" className={styles.dangerButton}>Удалить</button>
             </ConfirmActionForm>

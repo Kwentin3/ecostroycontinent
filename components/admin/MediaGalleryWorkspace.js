@@ -39,6 +39,10 @@ function getTestGraphTeardownHref(entityType, entityId) {
   return `/admin/entities/${entityType}/${entityId}/test-graph-teardown`;
 }
 
+function getDeletePreviewHref(entityType, entityId, returnTo = "") {
+  return appendAdminReturnTo(`/admin/entities/${entityType}/${entityId}/delete`, returnTo);
+}
+
 function buildTitleFromFilename(filename) {
   const base = (filename || "")
     .replace(/\.[^.]+$/, "")
@@ -214,6 +218,10 @@ function getWarningNote(item) {
     return "Карточка уже в архиве и не должна участвовать в новых привязках, пока вы не вернёте её в активный список.";
   }
 
+  if (item.publishedRevisionNumber) {
+    return `У карточки есть active published truth (ревизия #${item.publishedRevisionNumber}). Удаление и прямые правки теперь идут через отдельный preflight-сценарий.`;
+  }
+
   if (item.missingAlt) {
     return "Нужно добавить alt, чтобы не оставлять ассет сырым.";
   }
@@ -347,9 +355,8 @@ function MediaInspector({
   onOpenCollectionManager,
   onCreateCollection,
   onLifecycleAction,
-  onDelete,
   lifecycleBusy,
-  deleteBusy,
+  deleteHref = "",
   returnTo = ""
 }) {
   if (!item) {
@@ -386,6 +393,7 @@ function MediaInspector({
       </div>
 
       <div className={styles.badgeRow}>
+        {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть published truth</span> : null}
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
         {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
         {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
@@ -509,15 +517,15 @@ function MediaInspector({
           >
             {lifecycleBusy ? "Сохраняем..." : item.archived ? "Вернуть из архива" : "В архив"}
           </button>
-          <button type="button" className={styles.dangerButton} onClick={onDelete} disabled={deleteBusy}>
-            {deleteBusy ? "Удаляем..." : "Удалить"}
-          </button>
+          <Link href={deleteHref} className={styles.dangerButton}>
+            Удалить
+          </Link>
           {item.isTestData ? (
-            <Link href={getTestGraphTeardownHref("media_asset", item.id)} className={styles.secondaryButton}>
+            <Link href={appendAdminReturnTo(getTestGraphTeardownHref("media_asset", item.id), returnTo)} className={styles.secondaryButton}>
               Удалить тестовый граф
             </Link>
           ) : null}
-          <Link href={`/admin/entities/media_asset/${item.id}/history`} className={styles.secondaryButton}>
+          <Link href={appendAdminReturnTo(`/admin/entities/media_asset/${item.id}/history`, returnTo)} className={styles.secondaryButton}>
             История
           </Link>
         </div>
@@ -909,6 +917,9 @@ export function MediaGalleryWorkspace({
   const currentWorkspaceHref = typeof window === "undefined"
     ? workspaceContextHref
     : `${window.location.pathname}${window.location.search}`;
+  const selectedDeleteHref = selectedItem
+    ? getDeletePreviewHref("media_asset", selectedItem.id, currentWorkspaceHref)
+    : "";
   const selectedHiddenByFilter = Boolean(selectedItem && !filtered.some((item) => item.id === selectedItem.id));
 
   const displayedItems = (() => {
@@ -1064,28 +1075,6 @@ export function MediaGalleryWorkspace({
     }
 
     return payload;
-  }
-
-  async function handleDeleteSelectedItem() {
-    if (!selectedItem) {
-      return;
-    }
-
-    if (!window.confirm("Удалить эту карточку? Действие необратимо.")) {
-      return;
-    }
-
-    setDeleteBusy(true);
-    setMessage("");
-    setError("");
-
-    try {
-      await performDeleteRequest([selectedItem.id]);
-    } catch (deleteError) {
-      setError(deleteError.message || "Не удалось удалить карточку.");
-    } finally {
-      setDeleteBusy(false);
-    }
   }
 
   async function handleBulkDeleteTestData() {
@@ -1487,9 +1476,7 @@ export function MediaGalleryWorkspace({
               Коллекции
             </button>
             {selectedItem ? (
-              <button type="button" className={styles.dangerButton} onClick={handleDeleteSelectedItem} disabled={deleteBusy}>
-                {deleteBusy ? "Удаляем..." : "Удалить выбранный"}
-              </button>
+              <Link href={selectedDeleteHref} className={styles.dangerButton}>Удалить выбранный</Link>
             ) : null}
             {selectedTestDeleteCount > 0 ? (
               <button type="button" className={styles.dangerButton} onClick={handleBulkDeleteTestData} disabled={deleteBusy}>
@@ -1609,6 +1596,7 @@ export function MediaGalleryWorkspace({
                         <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
                         <span className={styles.mediaBadgeCluster}>
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
+                          {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Live</span> : null}
                           {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тест</span> : null}
                           {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
                           <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
@@ -1640,8 +1628,7 @@ export function MediaGalleryWorkspace({
             onCreateCollection={(assetId) => openCollectionManager({ seedAssetId: assetId, createNew: true })}
             onLifecycleAction={handleLifecycleAction}
             lifecycleBusy={lifecycleBusy}
-            onDelete={handleDeleteSelectedItem}
-            deleteBusy={deleteBusy}
+            deleteHref={selectedDeleteHref}
             returnTo={currentWorkspaceHref}
           />
         </div>

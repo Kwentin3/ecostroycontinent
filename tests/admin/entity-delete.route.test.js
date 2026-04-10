@@ -86,3 +86,30 @@ test("delete route redirects with refusal message for single delete", async () =
   assert.equal(location.pathname, "/admin/entities/service/service_1");
   assert.equal(location.searchParams.get("error"), "Сущность опубликована и участвует в живом контуре.");
 });
+
+test("delete route honors custom workspace redirect after successful media delete", async () => {
+  const response = await POST(
+    buildRequest({
+      entityId: "media_1",
+      redirectTo: "/admin/entities/media_asset?asset=media_1&filter=test-only",
+      failureRedirectTo: "/admin/entities/media_asset/media_1/delete?returnTo=%2Fadmin%2Fentities%2Fmedia_asset%3Fasset%3Dmedia_1"
+    }),
+    { params: { entityType: "media_asset" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      deleteEntityWithSafety: async ({ entityId }) => ({
+        deleted: true,
+        entityId,
+        decision: { entityId }
+      })
+    }
+  );
+  const location = new URL(response.headers.get("location"), "http://localhost");
+
+  assert.equal(response.status, 303);
+  assert.equal(location.pathname, "/admin/entities/media_asset");
+  assert.equal(location.searchParams.get("asset"), "media_1");
+  assert.equal(location.searchParams.get("filter"), "test-only");
+  assert.equal(location.searchParams.get("message"), "Сущность удалена.");
+});
