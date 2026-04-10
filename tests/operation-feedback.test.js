@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { redirectToAdmin, redirectWithQuery } from "../lib/admin/operation-feedback.js";
+import { redirectToAdmin, redirectWithQuery, toOperatorMessage } from "../lib/admin/operation-feedback.js";
 
 test("admin redirects from POST handlers use 303 See Other", () => {
   const response = redirectToAdmin("/admin/no-access");
@@ -22,4 +22,19 @@ test("redirectWithQuery preserves query parameters and uses 303 See Other", () =
   assert.equal(location.pathname, "/admin/entities/media_asset");
   assert.equal(location.searchParams.get("message"), "Медиафайл загружен.");
   assert.equal(location.searchParams.get("entityId"), "entity_123");
+});
+
+test("toOperatorMessage turns zod validation payload into user-friendly field feedback", () => {
+  const message = toOperatorMessage(new Error(`[
+    {
+      "origin": "string",
+      "code": "too_small",
+      "minimum": 1,
+      "inclusive": true,
+      "path": ["h1"],
+      "message": "Too small: expected string to have >=1 characters"
+    }
+  ]`));
+
+  assert.equal(message, "Основной заголовок (H1): поле обязательно для заполнения.");
 });
