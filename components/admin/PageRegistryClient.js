@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { normalizePageRegistryRecord, normalizePageRegistryRecords } from "../../lib/admin/page-registry-records.js";
 import { PageMetadataModal } from "./PageMetadataModal";
 import styles from "./PageRegistryClient.module.css";
 
@@ -36,7 +37,7 @@ export function PageRegistryClient({
   initialCreateType = "about",
   initialCreateError = ""
 }) {
-  const [records, setRecords] = useState(initialRecords);
+  const [records, setRecords] = useState(() => normalizePageRegistryRecords(initialRecords));
   const [viewMode, setViewMode] = useState("cards");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -48,6 +49,10 @@ export function PageRegistryClient({
   const [createType, setCreateType] = useState(initialCreateType);
   const [createError, setCreateError] = useState(initialCreateError);
   const metadataRecord = records.find((record) => record.id === metadataRecordId) || null;
+
+  useEffect(() => {
+    setRecords(normalizePageRegistryRecords(initialRecords));
+  }, [initialRecords]);
 
   useEffect(() => {
     setCreateOpen(initialCreateOpen);
@@ -103,11 +108,11 @@ export function PageRegistryClient({
 
     setRecords((current) => current.map((record) => (
       record.id === metadataRecord.id
-        ? {
+        ? normalizePageRegistryRecord({
             ...record,
             metadata: result.metadata || nextMetadata,
-            slug: (result.metadata || nextMetadata).slug
-          }
+            slug: (result.metadata || nextMetadata)?.slug || record.slug
+          })
         : record
     )));
 
