@@ -174,6 +174,59 @@ test("evaluateTestGraphTeardown refuses a mixed graph with incoming non-test pub
 
   assert.equal(result.allowed, false);
   assert.ok(result.blockers.includes("На тестовый объект ссылается опубликованная нетестовая страница."));
+  assert.equal(result.blockingRefs.length, 1);
+  assert.equal(result.blockingRefs[0].entityType, ENTITY_TYPES.PAGE);
+  assert.equal(result.blockingRefs[0].entityId, "page_live_1");
+});
+
+test("evaluateTestGraphTeardown allows teardown when only non-test media survives outside the test graph", async () => {
+  const service = makeAggregate(ENTITY_TYPES.SERVICE, "service_test_1", {
+    activePublishedRevisionId: "rev_service_pub",
+    latestState: "published",
+    latestPayload: {
+      title: "Test service",
+      primaryMediaAssetId: "media_live_1"
+    }
+  });
+  const media = makeAggregate(ENTITY_TYPES.MEDIA_ASSET, "media_live_1", {
+    creationOrigin: null,
+    activePublishedRevisionId: "rev_media_live",
+    latestState: "published",
+    latestPayload: {
+      title: "Live media",
+      storageKey: "media/live.png"
+    }
+  });
+  const deps = buildDeps({
+    aggregates: {
+      service_test_1: service,
+      media_live_1: media
+    },
+    latestCards: {
+      [ENTITY_TYPES.PAGE]: [],
+      [ENTITY_TYPES.SERVICE]: [makeLatestCard(service)],
+      [ENTITY_TYPES.CASE]: [],
+      [ENTITY_TYPES.GALLERY]: []
+    },
+    publishedCards: {
+      [ENTITY_TYPES.PAGE]: [],
+      [ENTITY_TYPES.SERVICE]: [makePublishedCard(service)],
+      [ENTITY_TYPES.CASE]: [],
+      [ENTITY_TYPES.GALLERY]: []
+    }
+  });
+
+  const result = await evaluateTestGraphTeardown({
+    entityType: ENTITY_TYPES.SERVICE,
+    entityId: "service_test_1"
+  }, deps);
+
+  assert.equal(result.allowed, true);
+  assert.deepEqual(result.deletePlan.map((item) => item.entityId), ["service_test_1"]);
+  assert.equal(result.blockers.length, 0);
+  assert.equal(result.survivingRefs.length, 1);
+  assert.equal(result.survivingRefs[0].entityType, ENTITY_TYPES.MEDIA_ASSET);
+  assert.equal(result.survivingRefs[0].entityId, "media_live_1");
 });
 
 test("executeTestGraphTeardown deactivates published truth and deletes in dependency-aware order", async () => {

@@ -108,12 +108,55 @@ export default async function TestGraphTeardownPage({ params, searchParams }) {
           </ul>
         </section>
 
+        {evaluation.survivingRefs?.length > 0 ? (
+          <section className={`${styles.panel} ${styles.panelMuted}`}>
+            <h3>Что останется в системе</h3>
+            <ul className={styles.stack}>
+              {evaluation.survivingRefs.map((ref) => (
+                <li key={`surviving:${ref.entityType}:${ref.entityId}:${ref.reason}`} className={styles.timelineItem}>
+                  <div className={styles.cockpitCoverageSummary}>
+                    <strong>{ref.label}</strong>
+                    <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[ref.entityType]}</span>
+                  </div>
+                  <p className={styles.mutedText}>{ref.reason}</p>
+                  <div className={styles.inlineActions}>
+                    <Link href={ref.href} className={styles.secondaryButton}>Открыть</Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         {evaluation.blockers.length > 0 ? (
           <section className={styles.statusPanelBlocking}>
             <strong>Teardown остановлен.</strong>
             <ul className={styles.stack}>
               {evaluation.blockers.map((blocker) => (
                 <li key={blocker} className={styles.timelineItem}>{blocker}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {evaluation.blockingRefs?.length > 0 ? (
+          <section className={`${styles.panel} ${styles.panelMuted}`}>
+            <h3>Какие объекты сейчас мешают teardown</h3>
+            <ul className={styles.stack}>
+              {evaluation.blockingRefs.map((ref) => (
+                <li key={`blocking:${ref.entityType}:${ref.entityId}:${ref.reason}`} className={styles.timelineItem}>
+                  <div className={styles.cockpitCoverageSummary}>
+                    <strong>{ref.label}</strong>
+                    <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[ref.entityType]}</span>
+                  </div>
+                  <div className={styles.badgeRow}>
+                    {ref.state ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{ref.state}</span> : null}
+                  </div>
+                  <p className={styles.mutedText}>{ref.reason}</p>
+                  <div className={styles.inlineActions}>
+                    <Link href={ref.href} className={styles.secondaryButton}>Открыть</Link>
+                  </div>
+                </li>
               ))}
             </ul>
           </section>
