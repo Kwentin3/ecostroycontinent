@@ -29,7 +29,7 @@ function toneClassName(tone = "") {
 
 export function PageRegistryClient({
   initialRecords,
-  metadataSaveUrlBuilder,
+  metadataSaveBasePath = "/api/admin/entities/page",
   createFallbackHref = "/admin/entities/page/new",
   initialCreateOpen = false,
   initialCreateTitle = "",
@@ -85,7 +85,7 @@ export function PageRegistryClient({
       return { message: "Страница не найдена." };
     }
 
-    const response = await fetch(metadataSaveUrlBuilder(metadataRecord.id), {
+    const response = await fetch(`${metadataSaveBasePath}/${metadataRecord.id}/workspace`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

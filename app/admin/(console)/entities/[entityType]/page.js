@@ -297,7 +297,7 @@ export default async function EntityListPage({ params, searchParams }) {
           <section className={styles.panel}>
             <PageRegistryClient
               initialRecords={pageRecords}
-              metadataSaveUrlBuilder={(pageId) => `/api/admin/entities/page/${pageId}/workspace`}
+              metadataSaveBasePath="/api/admin/entities/page"
               initialCreateOpen={createState.open}
               initialCreateTitle={createState.title}
               initialCreateType={createState.pageType}
