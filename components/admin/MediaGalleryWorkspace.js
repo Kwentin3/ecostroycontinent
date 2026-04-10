@@ -219,7 +219,7 @@ function getWarningNote(item) {
   }
 
   if (item.publishedRevisionNumber) {
-    return `У карточки есть active published truth (ревизия #${item.publishedRevisionNumber}). Удаление и прямые правки теперь идут через отдельный preflight-сценарий.`;
+    return `У карточки есть действующая опубликованная версия (ревизия #${item.publishedRevisionNumber}). Удаление и прямые правки теперь идут через отдельную проверку перед действием.`;
   }
 
   if (item.missingAlt) {
@@ -393,7 +393,7 @@ function MediaInspector({
       </div>
 
       <div className={styles.badgeRow}>
-        {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть published truth</span> : null}
+        {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
         {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
         {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
