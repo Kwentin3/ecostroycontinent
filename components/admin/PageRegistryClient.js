@@ -48,6 +48,9 @@ export function PageRegistryClient({
   const [createTitle, setCreateTitle] = useState(initialCreateTitle);
   const [createType, setCreateType] = useState(initialCreateType);
   const [createError, setCreateError] = useState(initialCreateError);
+  const [actionMessage, setActionMessage] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [actionBusyId, setActionBusyId] = useState("");
   const metadataRecord = records.find((record) => record.id === metadataRecordId) || null;
 
   useEffect(() => {
@@ -119,6 +122,95 @@ export function PageRegistryClient({
     return result;
   };
 
+  const handleArchiveRecord = async (record) => {
+    if (!record?.lifecycle?.canArchive || actionBusyId) {
+      return;
+    }
+
+    if (!window.confirm("Снять страницу с live? История сохранится, а сама страница останется в админке.")) {
+      return;
+    }
+
+    setActionBusyId(record.id);
+    setActionMessage("");
+    setActionError("");
+    setMenuOpenId("");
+
+    try {
+      const formData = new FormData();
+      formData.set("responseMode", "json");
+      const response = await fetch(record.lifecycle.archiveUrl, {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Не удалось снять страницу с публикации.");
+      }
+
+      setRecords((current) => current.map((item) => (
+        item.id === record.id
+          ? normalizePageRegistryRecord({
+              ...item,
+              signalLabel: "Вне live",
+              signalTone: "warning",
+              signalState: "inactive",
+              signalReason: "Страница снята с публикации и остаётся доступной в админке как историческая truth.",
+              lifecycle: {
+                ...item.lifecycle,
+                canArchive: false,
+                hasLivePublishedRevision: false,
+                canDelete: false
+              }
+            })
+          : item
+      )));
+      setActionMessage(result.message || "Страница снята с публикации.");
+    } catch (lifecycleError) {
+      setActionError(lifecycleError.message);
+    } finally {
+      setActionBusyId("");
+    }
+  };
+
+  const handleDeleteRecord = async (record) => {
+    if (!record?.lifecycle?.canDelete || actionBusyId) {
+      return;
+    }
+
+    if (!window.confirm("Удалить страницу целиком? Это действие необратимо.")) {
+      return;
+    }
+
+    setActionBusyId(record.id);
+    setActionMessage("");
+    setActionError("");
+    setMenuOpenId("");
+
+    try {
+      const formData = new FormData();
+      formData.set("responseMode", "json");
+      formData.append("entityId", record.id);
+      const response = await fetch(record.lifecycle.deleteUrl, {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Не удалось удалить страницу.");
+      }
+
+      setRecords((current) => current.filter((item) => item.id !== record.id));
+      setActionMessage(result.message || "Страница удалена.");
+    } catch (lifecycleError) {
+      setActionError(lifecycleError.message);
+    } finally {
+      setActionBusyId("");
+    }
+  };
+
   return (
     <div className={styles.controls}>
       <div className={styles.toolbar}>
@@ -170,6 +262,9 @@ export function PageRegistryClient({
         </div>
       </div>
 
+      {actionMessage ? <div className={styles.feedbackInfo}>{actionMessage}</div> : null}
+      {actionError ? <div className={styles.feedbackError}>{actionError}</div> : null}
+
       {filteredRecords.length === 0 ? (
         <div className={styles.empty}>Под эти фильтры страницы не найдены. Снимите фильтр или создайте новую страницу.</div>
       ) : null}
@@ -202,6 +297,16 @@ export function PageRegistryClient({
                         Метаданные
                       </button>
                       <Link href={record.historyHref} className={styles.menuItem}>История</Link>
+                      {record.lifecycle?.canArchive ? (
+                        <button type="button" className={styles.menuItem} disabled={actionBusyId === record.id} onClick={() => handleArchiveRecord(record)}>
+                          {actionBusyId === record.id ? "Снимаем..." : "Снять с live"}
+                        </button>
+                      ) : null}
+                      {record.lifecycle?.canDelete ? (
+                        <button type="button" className={`${styles.menuItem} ${styles.menuItemDanger}`} disabled={actionBusyId === record.id} onClick={() => handleDeleteRecord(record)}>
+                          {actionBusyId === record.id ? "Удаляем..." : "Удалить"}
+                        </button>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -238,6 +343,16 @@ export function PageRegistryClient({
                       Метаданные
                     </button>
                     <Link href={record.historyHref} className={styles.menuItem}>История</Link>
+                    {record.lifecycle?.canArchive ? (
+                      <button type="button" className={styles.menuItem} disabled={actionBusyId === record.id} onClick={() => handleArchiveRecord(record)}>
+                        {actionBusyId === record.id ? "Снимаем..." : "Снять с live"}
+                      </button>
+                    ) : null}
+                    {record.lifecycle?.canDelete ? (
+                      <button type="button" className={`${styles.menuItem} ${styles.menuItemDanger}`} disabled={actionBusyId === record.id} onClick={() => handleDeleteRecord(record)}>
+                        {actionBusyId === record.id ? "Удаляем..." : "Удалить"}
+                      </button>
+                    ) : null}
                   </div>
                 ) : null}
               </div>

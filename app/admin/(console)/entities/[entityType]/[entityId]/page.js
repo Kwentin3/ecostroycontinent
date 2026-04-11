@@ -10,6 +10,7 @@ import { buildListRowProjection } from "../../../../../../lib/admin/list-visibil
 import {
   buildPageWorkspaceBaseValue,
   buildPageWorkspaceCompositionState,
+  buildPageWorkspaceLifecycleState,
   buildPageWorkspaceMetadataState
 } from "../../../../../../lib/admin/page-workspace.js";
 import { normalizeAdminReturnTo } from "../../../../../../lib/admin/relation-navigation.js";
@@ -17,6 +18,7 @@ import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
 import { buildPublishedLookups, getPublishedGlobalSettings } from "../../../../../../lib/read-side/public-content.js";
+import { userCanEditContent, userCanPublish } from "../../../../../../lib/auth/session.js";
 
 function serializeLookupMap(map) {
   return Object.fromEntries(Array.from(map?.entries?.() ?? []));
@@ -96,6 +98,13 @@ export default async function EntityEditorPage({ params, searchParams }) {
       getPublishedGlobalSettings()
     ]);
     const baseValue = buildPageWorkspaceBaseValue(workingRevision);
+    const lifecycle = buildPageWorkspaceLifecycleState({
+      aggregate: data.state,
+      permissions: {
+        canArchive: userCanPublish(user),
+        canDelete: userCanEditContent(user)
+      }
+    });
     const reviewHref = data.currentRevision ? `/admin/review/${data.currentRevision.id}` : "";
     const signal = row || {
       signalLabel: "Проверить",
@@ -142,6 +151,14 @@ export default async function EntityEditorPage({ params, searchParams }) {
             media: serializeLookupMap(publishedLookups.mediaMap)
           }}
           globalSettings={globalSettings}
+          lifecycle={{
+            ...lifecycle,
+            archiveUrl: `/api/admin/entities/page/${entityId}/live-deactivation`,
+            deleteUrl: "/api/admin/entities/page/delete",
+            registryHref: "/admin/entities/page"
+          }}
+          initialMessage={query?.message || ""}
+          initialError={query?.error || ""}
         />
       </AdminShell>
     );

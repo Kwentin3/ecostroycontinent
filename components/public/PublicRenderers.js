@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { DEFAULT_LANDING_PAGE_THEME_KEY, DEFAULT_LANDING_SURFACE_TONE, DEFAULT_LANDING_TEXT_EMPHASIS_PRESET } from "../../lib/landing-composition/visual-semantics.js";
+import { normalizeLegacyPageCopy } from "../../lib/content-core/page-copy.js";
 import styles from "./public-ui.module.css";
 
 function getThemeClassName(pageThemeKey) {
@@ -222,7 +223,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
                   data-preview-section={`page-${block.type}`}
                   className={`${styles.card} ${styles.previewSection} ${getStageASectionClassNames(block)}`}
                 >
-                  {block.title ? <h2>{block.title}</h2> : null}
+                  {block.title ? <h2>{normalizeLegacyPageCopy(block.title)}</h2> : null}
                   <p>{block.body}</p>
                 </section>
               );
@@ -264,7 +265,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
               return (
                 <GallerySection
                   key={`${block.type}-${block.order}`}
-                  title={block.title || PUBLIC_COPY.galleryHeading}
+                  title={normalizeLegacyPageCopy(block.title) || PUBLIC_COPY.galleryHeading}
                   galleries={block.galleryIds}
                   resolveGallery={galleries}
                   sectionId={`preview-page-${block.type}-${block.order}`}
@@ -279,7 +280,7 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
                   data-preview-section={`page-${block.type}`}
                   className={`${styles.card} ${styles.previewSection} ${getStageASectionClassNames(block)}`}
                 >
-                  <h2>{block.title}</h2>
+                  <h2>{normalizeLegacyPageCopy(block.title)}</h2>
                   <p>{block.body}</p>
                   <p>{globalSettings?.primaryPhone || PUBLIC_COPY.contactInfoFallback}</p>
                   <p>{globalSettings?.serviceArea || PUBLIC_COPY.serviceAreaFallback}</p>
@@ -293,9 +294,9 @@ export function StandalonePage({ page, globalSettings, services, cases, gallerie
                   data-preview-section={`page-${block.type}`}
                   className={`${styles.card} ${styles.previewSection} ${getStageASectionClassNames(block)}`}
                 >
-                  <h2>{block.title}</h2>
+                  <h2>{normalizeLegacyPageCopy(block.title)}</h2>
                   <p>{block.body}</p>
-                  <p>{block.ctaLabel || globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}</p>
+                  <p>{normalizeLegacyPageCopy(block.ctaLabel) || globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}</p>
                 </section>
               );
             default:

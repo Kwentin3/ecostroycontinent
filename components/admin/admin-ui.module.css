@@ -2059,16 +2059,15 @@
 }
 
 .previewViewportDesktop {
-  width: 100%;
-  max-width: 100%;
+  width: 1120px;
 }
 
 .previewViewportTablet {
-  width: min(100%, 760px);
+  width: 834px;
 }
 
 .previewViewportMobile {
-  width: min(100%, 390px);
+  width: 390px;
 }
 
 @media (max-width: 1040px) {

@@ -7,6 +7,8 @@ import { StandalonePage } from "../public/PublicRenderers";
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import { PAGE_TYPES } from "../../lib/content-core/content-types.js";
 import {
+  buildPageWorkspaceAiActionModel,
+  buildPageWorkspaceEmptyState,
   buildPageWorkspaceFullInput,
   buildPageWorkspaceLookupResolvers,
   buildPageWorkspacePreviewPayload
@@ -46,6 +48,22 @@ function arrayMove(list = [], fromIndex, toIndex) {
 
 function listKey(list = []) {
   return JSON.stringify(list);
+}
+
+function getTargetLabel(target, pageType) {
+  if (target === "connective_copy") {
+    return "Связочный текст";
+  }
+
+  if (target === "cta") {
+    return pageType === PAGE_TYPES.CONTACTS ? "Контактный блок" : "Финальный CTA";
+  }
+
+  if (target === "page_copy") {
+    return "Вся видимая копия";
+  }
+
+  return "Hero";
 }
 
 function MediaPickerModal({
@@ -193,6 +211,9 @@ function EntityPickerModal({
   title,
   marker,
   items,
+  emptyHint,
+  emptyHref,
+  emptyHrefLabel,
   selectedIds,
   onClose,
   onApply
@@ -244,7 +265,7 @@ function EntityPickerModal({
         </div>
         <div className={styles.pickerBody}>
           <div className={styles.pickerList}>
-            {filteredItems.map((item) => (
+            {filteredItems.length > 0 ? filteredItems.map((item) => (
               <article key={item.id} className={styles.pickerItem}>
                 <div className={styles.pickerMarker}>{marker}</div>
                 <div className={styles.pickerMain}>
@@ -266,7 +287,17 @@ function EntityPickerModal({
                   <span>{draftIds.includes(item.id) ? "Выбрано" : "Добавить"}</span>
                 </label>
               </article>
-            ))}
+            )) : (
+              <div className={styles.pickerEmpty}>
+                <strong>{query.trim() ? "По этому запросу ничего не найдено." : `${title} пока не заведены.`}</strong>
+                <p className={styles.inlineHint}>
+                  {query.trim()
+                    ? "Снимите или уточните поиск, чтобы снова увидеть доступные записи."
+                    : emptyHint}
+                </p>
+                {!query.trim() && emptyHref ? <Link href={emptyHref} className={styles.inlineLink}>{emptyHrefLabel}</Link> : null}
+              </div>
+            )}
           </div>
         </div>
         <footer className={styles.pickerFoot}>
@@ -316,7 +347,10 @@ export function PageWorkspaceScreen({
   mediaOptions,
   relationOptions,
   publishedLookupRecords,
-  globalSettings
+  globalSettings,
+  lifecycle = null,
+  initialMessage = "",
+  initialError = ""
 }) {
   const [baseValue, setBaseValue] = useState(initialBaseValue);
   const [composition, setComposition] = useState(initialComposition);
@@ -326,15 +360,24 @@ export function PageWorkspaceScreen({
   const [revision, setRevision] = useState(initialRevision);
   const [currentReviewHref, setCurrentReviewHref] = useState(reviewHref);
   const [saveBusy, setSaveBusy] = useState(false);
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
+  const [status, setStatus] = useState(initialMessage);
+  const [error, setError] = useState(initialError);
   const [metadataOpen, setMetadataOpen] = useState(false);
   const [pickerFamily, setPickerFamily] = useState("");
   const [selectedTarget, setSelectedTarget] = useState("hero");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiIntent, setAiIntent] = useState("");
   const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [aiProgressLabel, setAiProgressLabel] = useState("");
   const [previewDevice, setPreviewDevice] = useState("desktop");
+  const [currentSignal, setCurrentSignal] = useState({
+    label: signalLabel,
+    tone: signalTone,
+    reason: signalReason
+  });
+  const [lifecycleState, setLifecycleState] = useState(lifecycle);
+  const [lifecycleBusy, setLifecycleBusy] = useState("");
+  const [lifecycleMenuOpen, setLifecycleMenuOpen] = useState(false);
   const lookupResolvers = useMemo(
     () => buildPageWorkspaceLookupResolvers(publishedLookupRecords),
     [publishedLookupRecords]
@@ -342,6 +385,10 @@ export function PageWorkspaceScreen({
   const previewPayload = useMemo(
     () => buildPageWorkspacePreviewPayload({ baseValue, composition, metadata }),
     [baseValue, composition, metadata]
+  );
+  const emptyState = useMemo(
+    () => buildPageWorkspaceEmptyState(composition),
+    [composition]
   );
   const compositionDirty = listKey(composition.serviceIds) !== listKey(savedComposition.serviceIds)
     || listKey(composition.caseIds) !== listKey(savedComposition.caseIds)
@@ -357,10 +404,18 @@ export function PageWorkspaceScreen({
     || composition.primaryMediaAssetId !== savedComposition.primaryMediaAssetId;
   const metadataDirty = JSON.stringify(metadata) !== JSON.stringify(savedMetadata);
   const pageThemeLabel = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey]?.label || metadata.pageThemeKey;
+  const activeTargetLabel = getTargetLabel(selectedTarget, metadata.pageType);
   const mediaSelections = composition.galleryIds.map((id) => relationOptions.galleries.find((item) => item.id === id)).filter(Boolean);
   const serviceSelections = composition.serviceIds.map((id) => relationOptions.services.find((item) => item.id === id)).filter(Boolean);
   const caseSelections = composition.caseIds.map((id) => relationOptions.cases.find((item) => item.id === id)).filter(Boolean);
   const heroMedia = mediaOptions.find((item) => item.id === composition.primaryMediaAssetId) || null;
+  const canSaveFirstDraft = Boolean(composition.title.trim()) && Boolean(composition.h1.trim());
+  const aiActionModels = [
+    buildPageWorkspaceAiActionModel({ aiAction: "rewrite_selected", selectedTarget, pageType: metadata.pageType }),
+    buildPageWorkspaceAiActionModel({ aiAction: "suggest_connective_copy", selectedTarget, pageType: metadata.pageType }),
+    buildPageWorkspaceAiActionModel({ aiAction: "strengthen_cta", selectedTarget, pageType: metadata.pageType }),
+    buildPageWorkspaceAiActionModel({ aiAction: "compact_wording", selectedTarget, pageType: metadata.pageType })
+  ];
 
   const applyComposition = (patch) => {
     setComposition((current) => ({
@@ -418,6 +473,89 @@ export function PageWorkspaceScreen({
     }
   };
 
+  const handleArchivePage = async () => {
+    if (!lifecycleState?.canArchive || lifecycleBusy) {
+      return;
+    }
+
+    if (!window.confirm("Снять страницу с live? История и сама сущность останутся в админке.")) {
+      return;
+    }
+
+    setLifecycleBusy("archive");
+    setLifecycleMenuOpen(false);
+    setError("");
+    setStatus("");
+
+    try {
+      const formData = new FormData();
+      formData.set("responseMode", "json");
+      const response = await fetch(lifecycleState.archiveUrl, {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Не удалось снять страницу с публикации.");
+      }
+
+      setLifecycleState((current) => current ? {
+        ...current,
+        canArchive: false,
+        hasLivePublishedRevision: false,
+        canDelete: false
+      } : current);
+      setCurrentSignal({
+        label: "Вне live",
+        tone: "warning",
+        reason: "Страница снята с публикации и остаётся доступной в админке как историческая truth."
+      });
+      setStatus(result.message || "Страница снята с публикации.");
+    } catch (lifecycleError) {
+      setError(lifecycleError.message);
+    } finally {
+      setLifecycleBusy("");
+    }
+  };
+
+  const handleDeletePage = async () => {
+    if (!lifecycleState?.canDelete || lifecycleBusy) {
+      return;
+    }
+
+    if (!window.confirm("Удалить страницу целиком? Это действие необратимо.")) {
+      return;
+    }
+
+    setLifecycleBusy("delete");
+    setLifecycleMenuOpen(false);
+    setError("");
+    setStatus("");
+
+    try {
+      const formData = new FormData();
+      formData.set("responseMode", "json");
+      formData.append("entityId", pageId);
+      const response = await fetch(lifecycleState.deleteUrl, {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Не удалось удалить страницу.");
+      }
+
+      const location = new URL(lifecycleState.registryHref, window.location.origin);
+      location.searchParams.set("message", result.message || "Страница удалена.");
+      window.location.assign(location.toString());
+    } catch (lifecycleError) {
+      setError(lifecycleError.message);
+      setLifecycleBusy("");
+    }
+  };
+
   const handleSaveMetadata = async (nextMetadata) => {
     const result = await handleJsonAction({
       action: "save_metadata",
@@ -458,23 +596,38 @@ export function PageWorkspaceScreen({
   };
 
   const handleAiAction = async (aiAction) => {
+    const actionModel = buildPageWorkspaceAiActionModel({
+      aiAction,
+      selectedTarget,
+      pageType: metadata.pageType
+    });
+
     setAiBusy(true);
     setError("");
+    setAiSuggestion(null);
+    setAiProgressLabel(actionModel.progressLabel);
+    setStatus("");
 
     try {
       const result = await handleJsonAction({
         action: "suggest_patch",
-        aiAction,
-        target: selectedTarget,
+        aiAction: actionModel.aiAction,
+        target: actionModel.target,
         changeIntent: aiIntent,
         composition,
         metadata
       });
-      setAiSuggestion(result.suggestion);
-      setStatus("AI-предложение подготовлено. Оно ещё не записано в truth, пока вы его явно не применили.");
+      setAiSuggestion({
+        ...result.suggestion,
+        actionLabel: actionModel.label,
+        actionHint: actionModel.hint,
+        targetLabel: getTargetLabel(actionModel.target, metadata.pageType)
+      });
+      setStatus(`AI подготовил patch для зоны «${getTargetLabel(actionModel.target, metadata.pageType)}». Он попадёт в truth только после явного применения и сохранения.`);
     } catch (aiError) {
       setError(aiError.message);
     } finally {
+      setAiProgressLabel("");
       setAiBusy(false);
     }
   };
@@ -486,17 +639,19 @@ export function PageWorkspaceScreen({
           <p className={styles.eyebrow}>Страницы · единый рабочий экран</p>
           <h1 className={styles.title}>{pageLabel}</h1>
           <p className={styles.meta}>
-            Канонический owner этой страницы остаётся у `Page`. Метаданные и publish живут отдельно, а мольберт редактирует только page-owned composition.
+            {emptyState.isEmptyWorkspace
+              ? "У страницы пока нет сохранённой версии. Заполните базовый текст, при необходимости подберите источники и сохраните первый draft."
+              : "В центре остаётся page-owned composition. Метаданные, review и publish по-прежнему живут отдельными управленческими действиями."}
           </p>
           <div className={styles.statusRow}>
-            <span className={`${styles.badge} ${toneClassName(signalTone)}`}>{signalLabel}</span>
+            <span className={`${styles.badge} ${toneClassName(currentSignal.tone)}`}>{currentSignal.label}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{revision ? `Версия №${revision.revisionNumber} · ${revision.state}` : "Черновика пока нет"}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{metadata.pageType === PAGE_TYPES.CONTACTS ? "Контакты" : "О нас"}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{pageThemeLabel}</span>
             {compositionDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Есть несохранённые изменения</span> : null}
             {metadataDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Metadata changed</span> : null}
           </div>
-          <p className={styles.meta}>{signalReason}</p>
+          <p className={styles.metaCompact}>{currentSignal.reason}</p>
         </div>
         <div className={styles.headerActions}>
           <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)}>
@@ -504,10 +659,41 @@ export function PageWorkspaceScreen({
           </button>
           {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
           {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Открыть проверку</Link> : null}
-          <button type="button" className={adminStyles.primaryButton} onClick={handleSaveComposition} disabled={saveBusy || aiBusy}>
+          {lifecycleState?.canArchive || lifecycleState?.canDelete ? (
+            <div className={styles.lifecycleWrap}>
+              <button
+                type="button"
+                className={adminStyles.secondaryButton}
+                onClick={() => setLifecycleMenuOpen((current) => !current)}
+                disabled={Boolean(lifecycleBusy)}
+              >
+                Управление
+              </button>
+              {lifecycleMenuOpen ? (
+                <div className={styles.lifecycleMenu}>
+                  {lifecycleState?.canArchive ? (
+                    <button type="button" className={styles.lifecycleAction} onClick={handleArchivePage} disabled={Boolean(lifecycleBusy)}>
+                      Снять с live
+                    </button>
+                  ) : null}
+                  {lifecycleState?.canDelete ? (
+                    <button type="button" className={styles.lifecycleDanger} onClick={handleDeletePage} disabled={Boolean(lifecycleBusy)}>
+                      Удалить страницу
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          <button
+            type="button"
+            className={adminStyles.primaryButton}
+            onClick={handleSaveComposition}
+            disabled={saveBusy || aiBusy || (emptyState.isEmptyWorkspace && !canSaveFirstDraft)}
+          >
             {saveBusy ? "Сохраняем..." : "Сохранить страницу"}
           </button>
-          <button type="button" className={adminStyles.secondaryButton} onClick={handleSendToReview} disabled={saveBusy || aiBusy || !revision}>
+          <button type="button" className={adminStyles.secondaryButton} onClick={handleSendToReview} disabled={saveBusy || aiBusy || Boolean(lifecycleBusy) || !revision}>
             Передать на проверку
           </button>
         </div>
@@ -541,11 +727,28 @@ export function PageWorkspaceScreen({
             <div className={styles.canvasTitleWrap}>
               <p className={styles.eyebrow}>Мольберт</p>
               <h2 className={styles.canvasTitle}>Сборка страницы</h2>
-              <p className={styles.canvasLegend}>Частая работа остаётся в центре. Редкое и служебное скрыто в metadata layer, чтобы экран не превращался в ЦУП.</p>
+              <p className={styles.canvasLegend}>Частая работа остаётся в центре, а редкое и служебное скрыто в metadata layer.</p>
             </div>
           </div>
 
           <div className={styles.canvas}>
+            {emptyState.isEmptyWorkspace ? (
+              <section className={`${styles.sectionCard} ${styles.emptyWorkspaceCard}`}>
+                <div className={styles.sectionHead}>
+                  <div>
+                    <h3 className={styles.sectionTitle}>Версии пока нет</h3>
+                    <p className={styles.sectionMeta}>Это честный пустой state: страница уже заведена в реестре, но её first draft ещё не сохранён.</p>
+                  </div>
+                </div>
+                <ul className={styles.emptyChecklist}>
+                  <li>{emptyState.titleReady ? "Название страницы задано" : "Добавьте название страницы"}</li>
+                  <li>{emptyState.h1Ready ? "H1 задан" : "Добавьте H1 для первого экрана"}</li>
+                  <li>{emptyState.introReady ? "Интро уже есть" : "При желании добавьте краткое интро"}</li>
+                  <li>{emptyState.mediaReady || emptyState.sourceCount > 0 ? "Источники уже подобраны" : "При необходимости подберите медиа, кейсы или услуги через launcher-слева"}</li>
+                </ul>
+                <p className={styles.inlineHint}>Первый draft появится только после явного сохранения. Простое открытие страницы ничего не создаёт.</p>
+              </section>
+            ) : null}
             <section className={`${styles.sectionCard} ${selectedTarget === "hero" ? styles.sectionCardActive : ""}`} onClick={() => setSelectedTarget("hero")}>
               <div className={styles.sectionHead}>
                 <div>
@@ -668,21 +871,33 @@ export function PageWorkspaceScreen({
           </div>
 
           <section className={styles.previewCard}>
-            <PreviewViewport
-              title="Предпросмотр"
-              hint="Viewport-переключатель меняет только рамку устройства. Сам preview остаётся на canonical renderer `StandalonePage`."
-              device={previewDevice}
-              onDeviceChange={setPreviewDevice}
-            >
-              <StandalonePage
-                page={previewPayload}
-                globalSettings={globalSettings}
-                services={lookupResolvers.services}
-                cases={lookupResolvers.cases}
-                galleries={lookupResolvers.galleries}
-                resolveMedia={lookupResolvers.media}
-              />
-            </PreviewViewport>
+            {previewPayload ? (
+              <PreviewViewport
+                title="Предпросмотр"
+                hint="Viewport-переключатель меняет только рамку устройства. Сам preview остаётся на canonical renderer `StandalonePage`."
+                device={previewDevice}
+                onDeviceChange={setPreviewDevice}
+              >
+                <StandalonePage
+                  page={previewPayload}
+                  globalSettings={globalSettings}
+                  services={lookupResolvers.services}
+                  cases={lookupResolvers.cases}
+                  galleries={lookupResolvers.galleries}
+                  resolveMedia={lookupResolvers.media}
+                />
+              </PreviewViewport>
+            ) : (
+              <div className={styles.previewEmpty}>
+                <p className={styles.eyebrow}>Предпросмотр</p>
+                <h3 className={styles.previewTitle}>Предпросмотр появится после базового заполнения</h3>
+                <p className={styles.previewLegend}>Чтобы canonical preview стал доступен, задайте название страницы и H1. После этого можно сохранять первый draft и продолжать сборку.</p>
+                <div className={styles.previewChecklist}>
+                  <span className={`${styles.badge} ${emptyState.titleReady ? styles.tonehealthy : styles.tonewarning}`}>Название: {emptyState.titleReady ? "готово" : "нужно"}</span>
+                  <span className={`${styles.badge} ${emptyState.h1Ready ? styles.tonehealthy : styles.tonewarning}`}>H1: {emptyState.h1Ready ? "готово" : "нужно"}</span>
+                </div>
+              </div>
+            )}
           </section>
         </div>
 
@@ -690,11 +905,12 @@ export function PageWorkspaceScreen({
           <div className={styles.panelSection}>
             <p className={styles.eyebrow}>AI-панель</p>
             <h2 className={styles.panelTitle}>Встроенный помощник</h2>
-            <p className={styles.supportCopy}>AI встроен в страницу как assistive tool. Он не владеет маршрутом, publish и не пишет truth молча.</p>
+            <p className={styles.supportCopy}>AI встроен как assistive tool: он предлагает bounded patch, но не сохраняет truth молча и не перехватывает ownership страницы.</p>
           </div>
 
           <div className={styles.panelSection}>
-            <strong>Выбранная зона</strong>
+            <strong>Текущая зона редактирования</strong>
+            <p className={styles.inlineHint}>Сейчас выделено: <strong>{activeTargetLabel}</strong>. Часть AI-действий всегда работают по собственной узкой зоне и явно показывают это ниже.</p>
             <div className={styles.targetPills}>
               {[
                 ["hero", "Hero"],
@@ -727,16 +943,28 @@ export function PageWorkspaceScreen({
           <div className={styles.panelSection}>
             <strong>Разрешённые действия</strong>
             <div className={styles.actionGrid}>
-              <button type="button" className={styles.actionButton} disabled={aiBusy} onClick={() => handleAiAction("rewrite_selected")}>Переписать выбранное</button>
-              <button type="button" className={styles.actionButton} disabled={aiBusy} onClick={() => handleAiAction("suggest_connective_copy")}>Предложить связку</button>
-              <button type="button" className={styles.actionButton} disabled={aiBusy} onClick={() => handleAiAction("strengthen_cta")}>Усилить CTA</button>
-              <button type="button" className={styles.actionButton} disabled={aiBusy} onClick={() => handleAiAction("compact_wording")}>Сжать формулировки</button>
+              {aiActionModels.map((actionModel) => (
+                <button
+                  key={actionModel.aiAction}
+                  type="button"
+                  className={styles.actionButton}
+                  disabled={aiBusy || (emptyState.isEmptyWorkspace && !canSaveFirstDraft)}
+                  onClick={() => handleAiAction(actionModel.aiAction)}
+                >
+                  <span>{actionModel.label}</span>
+                  <small>{getTargetLabel(actionModel.target, metadata.pageType)}</small>
+                </button>
+              ))}
             </div>
+            {emptyState.isEmptyWorkspace && !canSaveFirstDraft ? <p className={styles.inlineHint}>Сначала задайте название страницы и H1, чтобы AI работал с понятным page context.</p> : null}
           </div>
+
+          {aiBusy ? <div className={styles.aiProgress}>{aiProgressLabel || "AI готовит предложение..."}</div> : null}
 
           {aiSuggestion ? (
             <section className={styles.suggestion}>
-              <strong>Предложение AI</strong>
+              <strong>Предложение для зоны «{aiSuggestion.targetLabel}»</strong>
+              <p className={styles.inlineHint}>{aiSuggestion.actionHint}</p>
               <p className={styles.inlineHint}>{aiSuggestion.label}</p>
               <div className={styles.suggestionList}>
                 {Object.entries(aiSuggestion.patch || {}).map(([field, value]) => (
@@ -754,7 +982,7 @@ export function PageWorkspaceScreen({
                   onClick={() => {
                     applyComposition(aiSuggestion.patch || {});
                     setAiSuggestion(null);
-                    setStatus("AI-патч применён локально. Страница станет truth только после явного сохранения.");
+                    setStatus(`AI-патч для зоны «${aiSuggestion.targetLabel}» применён локально. Страница станет truth только после явного сохранения.`);
                   }}
                 >
                   Применить патч
@@ -793,6 +1021,9 @@ export function PageWorkspaceScreen({
         title="Услуги"
         marker="У"
         items={relationOptions.services}
+        emptyHint="В реестре услуг пока нет записей для подбора. Сначала заведите услугу, затем вернитесь к странице."
+        emptyHref="/admin/entities/service"
+        emptyHrefLabel="Открыть реестр услуг"
         selectedIds={composition.serviceIds}
         onClose={() => setPickerFamily("")}
         onApply={(serviceIds) => {
@@ -806,6 +1037,9 @@ export function PageWorkspaceScreen({
         title="Кейсы"
         marker="К"
         items={relationOptions.cases}
+        emptyHint="В реестре кейсов пока нет записей для подбора. Сначала заведите кейс, затем вернитесь к странице."
+        emptyHref="/admin/entities/case"
+        emptyHrefLabel="Открыть реестр кейсов"
         selectedIds={composition.caseIds}
         onClose={() => setPickerFamily("")}
         onApply={(caseIds) => {

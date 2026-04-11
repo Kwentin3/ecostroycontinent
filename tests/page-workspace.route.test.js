@@ -255,3 +255,106 @@ test("page workspace send_to_review reuses the canonical draft revision", async 
   assert.equal(result.reviewHref, "/admin/review/rev_draft");
   assert.equal(captured.saveDraftInput, undefined);
 });
+
+test("page workspace save_composition creates the first draft only after explicit save", async () => {
+  const captured = {};
+  const entity = {
+    id: "page_1",
+    entityType: ENTITY_TYPES.PAGE
+  };
+  const response = await POST(
+    buildRequest({
+      action: "save_composition",
+      composition: {
+        title: "Новая страница",
+        h1: "Новая страница",
+        intro: "Первый интро-текст"
+      }
+    }),
+    { params: { pageId: "page_1" } },
+    {
+      requireRouteUser: async () => ({
+        user: {
+          id: "user_1",
+          role: "seo_manager"
+        },
+        response: null
+      }),
+      userCanEditContent: () => true,
+      getEntityAggregate: async () => ({
+        entity,
+        activePublishedRevision: null,
+        revisions: []
+      }),
+      findEntityById: async () => entity,
+      saveDraft: async (input) => {
+        captured.saveDraftInput = input;
+
+        return {
+          entity,
+          revision: {
+            id: "rev_first",
+            revisionNumber: 1,
+            state: "draft",
+            previewStatus: "preview_renderable",
+            payload: makeCanonicalPagePayload({
+              title: input.payload.title,
+              h1: input.payload.h1,
+              intro: input.payload.intro
+            })
+          }
+        };
+      },
+      submitRevisionForReview: async () => {
+        throw new Error("should not review");
+      },
+      requestLandingWorkspaceCandidate: async () => {
+        throw new Error("should not call AI");
+      }
+    }
+  );
+  const result = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(result.ok, true);
+  assert.equal(captured.saveDraftInput.payload.title, "Новая страница");
+  assert.equal(captured.saveDraftInput.payload.h1, "Новая страница");
+  assert.equal(captured.saveDraftInput.payload.intro, "Первый интро-текст");
+  assert.equal(result.revision.revisionNumber, 1);
+});
+
+test("page workspace save_composition returns operator-friendly validation error instead of crashing", async () => {
+  const validationError = new Error(JSON.stringify([
+    {
+      code: "too_small",
+      origin: "string",
+      minimum: 1,
+      inclusive: true,
+      path: ["h1"],
+      message: "Too small: expected string to have >=1 characters"
+    }
+  ]));
+  validationError.name = "ZodError";
+
+  const response = await POST(
+    buildRequest({
+      action: "save_composition",
+      composition: {
+        title: "Новая страница",
+        h1: ""
+      }
+    }),
+    { params: { pageId: "page_1" } },
+    {
+      ...buildRouteDeps(),
+      saveDraft: async () => {
+        throw validationError;
+      }
+    }
+  );
+  const result = await response.json();
+
+  assert.equal(response.status, 400);
+  assert.equal(result.ok, false);
+  assert.match(result.error, /поле обязательно/i);
+});

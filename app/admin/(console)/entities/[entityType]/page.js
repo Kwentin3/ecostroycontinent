@@ -13,6 +13,7 @@ import { listCollectionLibraryCards, listMediaLibraryCards } from "../../../../.
 import { buildRegistryCreateState } from "../../../../../lib/admin/page-registry-create.js";
 import {
   buildPageWorkspaceBaseValue,
+  buildPageWorkspaceLifecycleState,
   buildPageWorkspaceMetadataState,
   getPageCardPreviewUrl
 } from "../../../../../lib/admin/page-workspace.js";
@@ -20,10 +21,11 @@ import { normalizeAdminReturnTo } from "../../../../../lib/admin/relation-naviga
 import { requireEditorUser } from "../../../../../lib/admin/page-helpers.js";
 import { getEntityListLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../lib/content-core/content-types.js";
-import { findEntityByTypeSingleton, findRevisionById, listPublishObligations } from "../../../../../lib/content-core/repository.js";
+import { findEntityByTypeSingleton, findRevisionById, getEntityAggregate, listPublishObligations } from "../../../../../lib/content-core/repository.js";
 import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service.js";
 import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
 import { ADMIN_COPY, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
+import { userCanEditContent, userCanPublish } from "../../../../../lib/auth/session.js";
 
 function supportsDeleteTool(entityType) {
   return entityType === ENTITY_TYPES.MEDIA_ASSET
@@ -54,13 +56,18 @@ function formatUpdatedAtLabel(timestamp) {
   }
 }
 
-function buildPageRegistryRecords(cards, rows) {
+function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
   const cardsById = new Map(cards.map((card) => [card.entity.id, card]));
 
   return rows.map((row) => {
     const card = cardsById.get(row.entityId);
     const pageValue = buildPageWorkspaceBaseValue(card?.latestRevision ?? null);
     const metadata = buildPageWorkspaceMetadataState(pageValue);
+    const lifecycle = lifecycleById.get(row.entityId) || {
+      canArchive: false,
+      canDelete: false,
+      hasLivePublishedRevision: false
+    };
 
     return {
       id: row.entityId,
@@ -77,7 +84,12 @@ function buildPageRegistryRecords(cards, rows) {
       versionState: card?.latestRevision?.state || "missing",
       versionStateLabel: row.versionStateLabel,
       metadata,
-      updatedAtLabel: formatUpdatedAtLabel(row.updatedAtTs)
+      updatedAtLabel: formatUpdatedAtLabel(row.updatedAtTs),
+      lifecycle: {
+        ...lifecycle,
+        archiveUrl: `/api/admin/entities/page/${row.entityId}/live-deactivation`,
+        deleteUrl: "/api/admin/entities/page/delete"
+      }
     };
   });
 }
@@ -266,7 +278,21 @@ export default async function EntityListPage({ params, searchParams }) {
   const currentListPath = `/admin/entities/${normalizedType}${deleteToolEnabled && testOnly ? "?testOnly=1" : ""}`;
 
   if (normalizedType === ENTITY_TYPES.PAGE) {
-    const pageRecords = buildPageRegistryRecords(cards, viewModel.rows);
+    const lifecyclePairs = await Promise.all(cards.map(async (card) => {
+      const aggregate = await getEntityAggregate(card.entity.id);
+
+      return [
+        card.entity.id,
+        buildPageWorkspaceLifecycleState({
+          aggregate,
+          permissions: {
+            canArchive: userCanPublish(user),
+            canDelete: userCanEditContent(user)
+          }
+        })
+      ];
+    }));
+    const pageRecords = buildPageRegistryRecords(cards, viewModel.rows, new Map(lifecyclePairs));
     const createState = buildRegistryCreateState(query);
 
     return (

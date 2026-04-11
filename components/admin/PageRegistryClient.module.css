@@ -210,6 +210,11 @@
   text-decoration: none;
 }
 
+.menuItemDanger {
+  background: #fff6f4;
+  color: #a03d2f;
+}
+
 .list {
   display: grid;
   gap: 12px;
@@ -237,6 +242,25 @@
   border: 1px dashed rgba(38, 76, 59, 0.2);
   color: #667267;
   background: #fffdf8;
+}
+
+.feedbackInfo,
+.feedbackError {
+  padding: 14px 16px;
+  border-radius: 18px;
+  line-height: 1.45;
+}
+
+.feedbackInfo {
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  background: #f7fbf8;
+  color: #234535;
+}
+
+.feedbackError {
+  border: 1px solid rgba(160, 61, 47, 0.18);
+  background: #fff6f4;
+  color: #8c3a2b;
 }
 
 .overlay {
