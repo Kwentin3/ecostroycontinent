@@ -282,6 +282,7 @@ export function PageRegistryClient({
                   <h3 className={styles.title}>{record.title}</h3>
                   <p className={styles.meta}>{PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType} · /{record.slug}</p>
                   {record.updatedAtLabel ? <p className={styles.metaMinor}>Обновлено {record.updatedAtLabel}</p> : null}
+                  {record.lifecycle?.hasLivePublishedRevision ? <p className={styles.metaMinor}>Сейчас в live</p> : null}
                 </div>
                 <div className={styles.menuWrap}>
                   <button type="button" className={styles.menuButton} onClick={() => setMenuOpenId((current) => current === record.id ? "" : record.id)}>
@@ -325,6 +326,7 @@ export function PageRegistryClient({
                     <h3 className={styles.title}>{record.title}</h3>
                     <p className={styles.meta}>{PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType} · /{record.slug}</p>
                     {record.updatedAtLabel ? <p className={styles.metaMinor}>Обновлено {record.updatedAtLabel}</p> : null}
+                    {record.lifecycle?.hasLivePublishedRevision ? <p className={styles.metaMinor}>Сейчас в live</p> : null}
                   </div>
                   <span className={`${styles.badge} ${toneClassName(record.signalTone)}`}>{record.signalLabel}</span>
                 </div>

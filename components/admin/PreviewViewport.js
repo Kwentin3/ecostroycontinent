@@ -1,12 +1,11 @@
 import Link from "next/link";
 
+import {
+  formatPreviewViewportWidth,
+  getPreviewViewportOption,
+  PREVIEW_VIEWPORT_OPTIONS
+} from "../../lib/admin/preview-viewport.js";
 import styles from "./admin-ui.module.css";
-
-const DEVICE_OPTIONS = [
-  { value: "desktop", label: "Компьютер", widthClass: styles.previewViewportDesktop },
-  { value: "tablet", label: "Планшет", widthClass: styles.previewViewportTablet },
-  { value: "mobile", label: "Телефон", widthClass: styles.previewViewportMobile }
-];
 
 function buildPreviewHref(hrefBase, searchParams, device) {
   const query = new URLSearchParams();
@@ -32,7 +31,7 @@ export function PreviewViewport({
   onDeviceChange,
   children
 }) {
-  const activeOption = DEVICE_OPTIONS.find((option) => option.value === device) || DEVICE_OPTIONS[0];
+  const activeOption = getPreviewViewportOption(device);
 
   return (
     <section className={styles.previewViewport}>
@@ -40,10 +39,16 @@ export function PreviewViewport({
         <div className={styles.previewViewportCopy}>
           <p className={styles.eyebrow}>{title}</p>
           <p className={styles.previewViewportHint}>{hint}</p>
+          <div className={styles.previewViewportStatus} aria-live="polite">
+            <strong>{activeOption.label}</strong>
+            <span>{formatPreviewViewportWidth(activeOption.width)} · {activeOption.hint}</span>
+          </div>
         </div>
         <div className={styles.previewViewportControls}>
-          {DEVICE_OPTIONS.map((option) => {
-            const className = option.value === device ? styles.primaryButton : styles.secondaryButton;
+          {PREVIEW_VIEWPORT_OPTIONS.map((option) => {
+            const className = option.value === device
+              ? `${styles.previewViewportButton} ${styles.previewViewportButtonActive}`
+              : styles.previewViewportButton;
 
             if (typeof onDeviceChange === "function") {
               return (
@@ -54,7 +59,8 @@ export function PreviewViewport({
                   aria-pressed={option.value === device}
                   onClick={() => onDeviceChange(option.value)}
                 >
-                  {option.label}
+                  <span className={styles.previewViewportButtonLabel}>{option.label}</span>
+                  <span className={styles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>
                 </button>
               );
             }
@@ -66,15 +72,22 @@ export function PreviewViewport({
                 className={className}
                 aria-pressed={option.value === device}
               >
-                {option.label}
+                <span className={styles.previewViewportButtonLabel}>{option.label}</span>
+                <span className={styles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>
               </Link>
             );
           })}
         </div>
       </div>
-      <div className={styles.previewViewportFrame}>
-        <div className={`${styles.previewViewportCanvas} ${activeOption.widthClass}`}>
-          {children}
+      <div className={`${styles.previewViewportFrame} ${styles[activeOption.frameToneClassName]}`}>
+        <div className={styles.previewViewportFrameTop}>
+          <span className={styles.previewViewportFramePill}>{activeOption.label}</span>
+          <span className={styles.previewViewportFrameMeta}>{formatPreviewViewportWidth(activeOption.width)}</span>
+        </div>
+        <div className={`${styles.previewViewportCanvas} ${styles[activeOption.widthClassName]}`}>
+          <div className={styles.previewViewportSurface}>
+            {children}
+          </div>
         </div>
       </div>
     </section>

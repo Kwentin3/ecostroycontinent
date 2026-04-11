@@ -2038,10 +2038,66 @@
   font-size: 0.875rem;
 }
 
+.previewViewportStatus {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(38, 76, 59, 0.06);
+  color: var(--text);
+}
+
+.previewViewportStatus strong {
+  font-size: 0.92rem;
+}
+
+.previewViewportStatus span {
+  color: var(--subtle);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 .previewViewportControls {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+}
+
+.previewViewportButton {
+  display: inline-grid;
+  gap: 2px;
+  min-width: 112px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.previewViewportButton[aria-pressed="true"],
+.previewViewportButtonActive {
+  border-color: #264c3b;
+  background: rgba(38, 76, 59, 0.08);
+  box-shadow: 0 10px 24px rgba(38, 76, 59, 0.08);
+}
+
+.previewViewportButtonLabel {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.previewViewportButtonMeta {
+  color: var(--subtle);
+  font-size: 0.78rem;
+}
+
+.previewViewportButton:focus-visible {
+  outline: 3px solid rgba(38, 76, 59, 0.28);
+  outline-offset: 2px;
 }
 
 .previewViewportFrame {
@@ -2052,10 +2108,56 @@
   overflow: auto;
 }
 
+.previewViewportFrameDesktop {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 244, 234, 0.96));
+}
+
+.previewViewportFrameTablet {
+  background:
+    linear-gradient(180deg, rgba(243, 247, 255, 0.96), rgba(234, 241, 250, 0.98));
+}
+
+.previewViewportFrameMobile {
+  background:
+    linear-gradient(180deg, rgba(247, 244, 255, 0.96), rgba(239, 234, 250, 0.98));
+}
+
+.previewViewportFrameTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.previewViewportFramePill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(38, 76, 59, 0.1);
+  color: #234535;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.previewViewportFrameMeta {
+  color: var(--subtle);
+  font-size: 0.82rem;
+}
+
 .previewViewportCanvas {
   margin: 0 auto;
   display: grid;
   gap: 24px;
+}
+
+.previewViewportSurface {
+  border-radius: 22px;
+  overflow: clip;
+  box-shadow: 0 16px 40px rgba(20, 26, 22, 0.12);
+  background: #fff;
 }
 
 .previewViewportDesktop {

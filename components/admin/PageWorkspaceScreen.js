@@ -647,6 +647,9 @@ export function PageWorkspaceScreen({
             <span className={`${styles.badge} ${toneClassName(currentSignal.tone)}`}>{currentSignal.label}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{revision ? `Версия №${revision.revisionNumber} · ${revision.state}` : "Черновика пока нет"}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{metadata.pageType === PAGE_TYPES.CONTACTS ? "Контакты" : "О нас"}</span>
+            {lifecycleState?.hasLivePublishedRevision ? (
+              <span className={`${styles.badge} ${styles.tonehealthy}`}>В live</span>
+            ) : null}
             <span className={`${styles.badge} ${styles.toneunknown}`}>{pageThemeLabel}</span>
             {compositionDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Есть несохранённые изменения</span> : null}
             {metadataDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Metadata changed</span> : null}

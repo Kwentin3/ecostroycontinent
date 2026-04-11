@@ -28,10 +28,10 @@ test("page workspace preview payload stays empty-safe for pages without basics",
 test("page default CTA copy is generated in readable Russian", () => {
   const payload = normalizeEntityInput(ENTITY_TYPES.PAGE, {
     pageType: "about",
-    title: "О компании",
-    h1: "О компании",
-    intro: "Интро",
-    body: "Основной текст",
+    title: "\u041e \u043a\u043e\u043c\u043f\u0430\u043d\u0438\u0438",
+    h1: "\u041e \u043a\u043e\u043c\u043f\u0430\u043d\u0438\u0438",
+    intro: "\u0418\u043d\u0442\u0440\u043e",
+    body: "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u0442\u0435\u043a\u0441\u0442",
     ctaTitle: "",
     ctaBody: "",
     defaultBlockCtaLabel: "",
@@ -52,7 +52,10 @@ test("page default CTA copy is generated in readable Russian", () => {
 
   assert.equal(ctaBlock.title, "Свяжитесь с нами");
   assert.equal(ctaBlock.ctaLabel, "Связаться с нами");
-  assert.equal(normalizeLegacyPageCopy("РЎРІСЏР·Р°С‚СЊСЃСЏ СЃ РЅР°РјРё"), "Связаться с нами");
+  assert.equal(
+    normalizeLegacyPageCopy("Р РЋР Р†РЎРЏР В·Р В°РЎвЂљРЎРЉРЎРѓРЎРЏ РЎРѓ Р Р…Р В°Р СР С‘"),
+    "Связаться с нами"
+  );
 });
 
 test("page lifecycle stays bounded: archive for live, delete for never-published only", () => {
