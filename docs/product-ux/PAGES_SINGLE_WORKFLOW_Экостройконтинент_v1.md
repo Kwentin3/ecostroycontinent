@@ -178,3 +178,33 @@ AI не должен:
 - engineer-dashboard posture как целевой UX,
 
 то такой документ должен считаться устаревшим и подлежит выравниванию под этот single-workflow model.
+
+## 11. Test Data Naming Rule
+
+Для page/workspace flows действует отдельный operational canon:
+
+- любой временный объект, который агент или разработчик создаёт для smoke / audit / remediation / archive verification / preview check, должен быть явно test-marked;
+- обязательный минимальный инвариант: имя начинается с `test__`;
+- рекомендуемый формат: `test__<domain>__<purpose>__<suffix>`.
+
+Примеры:
+
+- `test__page__smoke`
+- `test__page__archive-fixture__20260411`
+- `test__service__picker-fixture__01`
+
+Это правило нужно не ради косметики, а чтобы:
+
+- не смешивать реальную ценность и disposable инженерный мусор;
+- удешевлять будущий cleanup;
+- делать test artifacts легко заметными для следующего агента даже в empty-context чате.
+
+Отдельная осторожность нужна для `media domain`:
+
+- реальных media в проекте мало и они ценны;
+- test media нельзя создавать без крайней необходимости;
+- если test media всё же создаётся, он тоже обязан быть test-marked.
+
+Подробный canon зафиксирован в:
+
+- [TEST_DATA_CANON_Экостройконтинент_v1.md](d:/Users/Roman/Desktop/Проекты/сайт%20Армен/docs/engineering/TEST_DATA_CANON_Экостройконтинент_v1.md)

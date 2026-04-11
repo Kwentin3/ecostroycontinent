@@ -55,6 +55,25 @@ test("cleanup matcher recognizes proof/demo style payloads and intents", () => {
   assert.ok(signals.some((signal) => signal.value.includes("Create proof service")));
 });
 
+test("cleanup matcher recognizes explicit test__ naming without extra heuristics", () => {
+  const matchers = createCleanupMatchers();
+  const aggregate = createAggregate({
+    entityId: "entity_test_page",
+    entityType: "page",
+    payload: {
+      title: "test__page__smoke",
+      slug: "test__page__smoke"
+    },
+    changeIntent: "Create temporary fixture"
+  });
+
+  assert.equal(matchesCleanupCandidate(aggregate, matchers), true);
+
+  const signals = findEntityCleanupSignals(aggregate, matchers);
+
+  assert.ok(signals.some((signal) => signal.value.includes("test__page__smoke")));
+});
+
 test("cleanup matcher does not classify normal content as proof data", () => {
   const matchers = createCleanupMatchers();
   const aggregate = createAggregate({

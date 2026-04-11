@@ -32,6 +32,9 @@ export async function POST(request, { params }, deps = {}) {
   const redirectMode = getString(formData, "redirectMode");
   const successRedirectTo = getString(formData, "redirectTo");
   const failureRedirectTo = getString(formData, "failureRedirectTo");
+  // If this route is used to create temporary smoke/audit/remediation entities,
+  // their human-visible title must start with `test__...` so cleanup can classify
+  // them as disposable artifacts later. Do not introduce unmarked test objects here.
 
   try {
     const result = await routeDeps.saveDraft({

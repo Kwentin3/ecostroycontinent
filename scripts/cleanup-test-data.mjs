@@ -5,6 +5,8 @@
 // When removing one specific smoke/demo entity, prefer
 // `--entity-id ... --exact-entity-ids` so default proof matchers do not widen
 // the target set unexpectedly.
+// Canon rule: future disposable entities should be created as `test__...` up front.
+// This tool exists for bounded cleanup, not as permission to create unmarked junk.
 import {
   buildEntityAggregates,
   collectMediaStorageKeys,

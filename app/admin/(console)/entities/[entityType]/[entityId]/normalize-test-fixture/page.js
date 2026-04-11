@@ -46,6 +46,9 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
 
   const sourceHref = `/admin/entities/${normalizedType}/${entityId}`;
   const failureRedirectTo = `/admin/entities/${normalizedType}/${entityId}/normalize-test-fixture`;
+  // This bridge is only for already-existing legacy fixtures that were created before
+  // the explicit `test__...` naming canon. New temporary entities must be test-marked
+  // at creation time instead of relying on post-hoc normalization.
 
   return (
     <AdminShell

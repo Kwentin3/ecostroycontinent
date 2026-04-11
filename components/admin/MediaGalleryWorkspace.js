@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 
+// Media is value-sensitive in this project. Avoid creating test media here unless
+// it is strictly necessary for verification, and always prefix disposable assets
+// with `test__...` so they stay safely classifiable for later cleanup.
 import {
   COLLECTION_FILTER_ALL,
   COLLECTION_FILTER_ORPHAN,

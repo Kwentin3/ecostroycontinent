@@ -122,6 +122,36 @@ Safety posture of this concrete tool:
 - media binary deletion is limited to `media_asset` records only;
 - the tool checks its own narrow DB schema contract and fails closed on drift.
 
+## Test data naming canon
+
+Before this cleanup tool is needed, temporary entities should already be classifiable as test artifacts.
+
+Required rule:
+
+- any agent/developer-created smoke / audit / fixture / remediation / archive-verification object must be named with a `test__` prefix;
+- recommended format: `test__<domain>__<purpose>__<suffix>`;
+- `test__*` is removable by policy once no longer needed, unless it is explicitly reclassified as valuable.
+
+This applies not only to `page`, but also to other disposable admin/content entities where it is relevant:
+
+- `service`
+- `case`
+- `gallery`
+- other temporary fixtures
+
+Media caution:
+
+- real media are value-sensitive and should not be polluted casually;
+- if test media must be created, it also needs the `test__` prefix.
+
+Historical lesson:
+
+- lack of a clear test prefix created unnecessary cleanup ambiguity and made historical junk harder to separate from real value.
+
+Cross-link:
+
+- [TEST_DATA_CANON_Экостройконтинент_v1.md](d:/Users/Roman/Desktop/Проекты/сайт%20Армен/docs/engineering/TEST_DATA_CANON_Экостройконтинент_v1.md)
+
 Operational reminder for future chats:
 
 - if the request is “clean test/proof/demo content from the database”, prefer this tool first;

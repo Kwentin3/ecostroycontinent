@@ -386,6 +386,8 @@ export function PageRegistryClient({
               </button>
             </header>
             <form action="/api/admin/entities/page/save" method="post" className={styles.createForm}>
+              {/* Temporary smoke/audit/remediation pages created from this modal must use a `test__...` title.
+                  Do not create unmarked disposable pages here; the prefix is the cleanup boundary. */}
               <input type="hidden" name="redirectMode" value="page_workspace" />
               <input type="hidden" name="failureRedirectTo" value="/admin/entities/page?create=1" />
               <input type="hidden" name="changeIntent" value="Черновик страницы создан из реестра страниц." />
