@@ -6,6 +6,7 @@
 // `--entity-id ... --exact-entity-ids` so default proof matchers do not widen
 // the target set unexpectedly.
 import {
+  buildEntityAggregates,
   collectMediaStorageKeys,
   createCleanupMatchers,
   findEntityCleanupSignals,
@@ -168,41 +169,13 @@ async function loadEntityAggregates(entityTypes) {
        r.created_at AS revision_created_at,
        r.updated_at AS revision_updated_at
      FROM content_entities e
-     JOIN content_revisions r ON r.entity_id = e.id
+     LEFT JOIN content_revisions r ON r.entity_id = e.id
      ${whereClause}
-     ORDER BY e.entity_type ASC, e.id ASC, r.revision_number DESC`,
+     ORDER BY e.entity_type ASC, e.id ASC, r.revision_number DESC NULLS LAST`,
     params
   );
 
-  const aggregates = new Map();
-
-  for (const row of result.rows) {
-    if (!aggregates.has(row.entity_id)) {
-      aggregates.set(row.entity_id, {
-        entity: {
-          id: row.entity_id,
-          entityType: row.entity_type,
-          activePublishedRevisionId: row.active_published_revision_id,
-          createdAt: row.entity_created_at,
-          updatedAt: row.entity_updated_at
-        },
-        revisions: []
-      });
-    }
-
-    aggregates.get(row.entity_id).revisions.push({
-      id: row.revision_id,
-      revisionNumber: row.revision_number,
-      state: row.state,
-      payload: row.payload,
-      changeIntent: row.change_intent,
-      reviewComment: row.review_comment,
-      createdAt: row.revision_created_at,
-      updatedAt: row.revision_updated_at
-    });
-  }
-
-  return [...aggregates.values()];
+  return buildEntityAggregates(result.rows);
 }
 
 async function assertCleanupSchemaContract() {

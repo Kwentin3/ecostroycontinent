@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 
 import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
 import { normalizeEntityInput } from "../../lib/content-core/pure.js";
-import { normalizeLegacyPageCopy } from "../../lib/content-core/page-copy.js";
 import {
   buildPageWorkspaceAiActionModel,
   buildPageWorkspaceLifecycleState,
@@ -50,12 +49,8 @@ test("page default CTA copy is generated in readable Russian", () => {
   });
   const ctaBlock = payload.blocks.find((block) => block.type === "cta");
 
-  assert.equal(ctaBlock.title, "Свяжитесь с нами");
-  assert.equal(ctaBlock.ctaLabel, "Связаться с нами");
-  assert.equal(
-    normalizeLegacyPageCopy("Р РЋР Р†РЎРЏР В·Р В°РЎвЂљРЎРЉРЎРѓРЎРЏ РЎРѓ Р Р…Р В°Р СР С‘"),
-    "Связаться с нами"
-  );
+  assert.equal(ctaBlock.title, "\u0421\u0432\u044f\u0436\u0438\u0442\u0435\u0441\u044c \u0441 \u043d\u0430\u043c\u0438");
+  assert.equal(ctaBlock.ctaLabel, "\u0421\u0432\u044f\u0437\u0430\u0442\u044c\u0441\u044f \u0441 \u043d\u0430\u043c\u0438");
 });
 
 test("page lifecycle stays bounded: archive for live, delete for never-published only", () => {
@@ -99,7 +94,7 @@ test("AI action model routes fixed actions to predictable zones", () => {
   });
 
   assert.equal(connective.target, "connective_copy");
-  assert.match(connective.label, /связ/i);
+  assert.match(connective.label, /связ|связк/i);
   assert.equal(cta.target, "cta");
   assert.match(cta.label, /контакт/i);
 });

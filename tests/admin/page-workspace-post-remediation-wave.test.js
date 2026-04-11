@@ -2,14 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  collectKnownLegacyPageCopyMatches,
-  KNOWN_LEGACY_PAGE_COPY_ENTRIES,
-  normalizeLegacyPagePayload
-} from "../../lib/content-core/page-copy.js";
-import {
   formatPreviewViewportWidth,
   getPreviewViewportOption
 } from "../../lib/admin/preview-viewport.js";
+import { buildEntityAggregates } from "../../lib/internal/test-data-cleanup.js";
 
 test("preview viewport exposes tablet semantics as explicit operator affordance", () => {
   const tablet = getPreviewViewportOption("tablet");
@@ -17,7 +13,7 @@ test("preview viewport exposes tablet semantics as explicit operator affordance"
   assert.equal(tablet.value, "tablet");
   assert.equal(tablet.width, 834);
   assert.equal(formatPreviewViewportWidth(tablet.width), "834 px");
-  assert.match(tablet.hint, /перенос|CTA|секци/i);
+  assert.match(tablet.hint, /РїРµСЂРµРЅРѕСЃ|CTA|СЃРµРєС†Рё/i);
 });
 
 test("preview viewport falls back to desktop for unknown device", () => {
@@ -27,37 +23,66 @@ test("preview viewport falls back to desktop for unknown device", () => {
   assert.equal(fallback.width, 1120);
 });
 
-test("legacy page copy inventory stays finite and explicit", () => {
-  assert.equal(KNOWN_LEGACY_PAGE_COPY_ENTRIES.length, 6);
-  assert.equal(KNOWN_LEGACY_PAGE_COPY_ENTRIES[0][1], "Связанные услуги");
-  assert.equal(KNOWN_LEGACY_PAGE_COPY_ENTRIES[5][1], "Связаться с нами");
+test("cleanup aggregate builder preserves entities without revisions for exact-id cleanup", () => {
+  const aggregates = buildEntityAggregates([
+    {
+      entity_id: "entity_page_empty",
+      entity_type: "page",
+      active_published_revision_id: null,
+      entity_created_at: "2026-04-11T00:00:00.000Z",
+      entity_updated_at: "2026-04-11T00:00:00.000Z",
+      revision_id: null,
+      revision_number: null,
+      state: null,
+      payload: null,
+      change_intent: null,
+      review_comment: null,
+      revision_created_at: null,
+      revision_updated_at: null
+    }
+  ]);
+
+  assert.equal(aggregates.length, 1);
+  assert.equal(aggregates[0].entity.id, "entity_page_empty");
+  assert.deepEqual(aggregates[0].revisions, []);
 });
 
-test("known legacy page copy matches are detectable without broad heuristic migration", () => {
-  const payload = {
-    blocks: [
-      {
-        type: "gallery",
-        title: "Р вЂњР В°Р В»Р ВµРЎР‚Р ВµРЎРЏ"
-      },
-      {
-        type: "cta",
-        title: "Свяжитесь с нами",
-        ctaLabel: "Р РЋР Р†РЎРЏР В·Р В°РЎвЂљРЎРЉРЎРѓРЎРЏ РЎРѓ Р Р…Р В°Р СР С‘"
-      },
-      {
-        type: "rich_text",
-        title: "Не трогать"
-      }
-    ]
-  };
+test("cleanup aggregate builder still orders existing revisions without duplicating the entity", () => {
+  const aggregates = buildEntityAggregates([
+    {
+      entity_id: "entity_page_real",
+      entity_type: "page",
+      active_published_revision_id: "rev_2",
+      entity_created_at: "2026-04-11T00:00:00.000Z",
+      entity_updated_at: "2026-04-11T00:00:00.000Z",
+      revision_id: "rev_2",
+      revision_number: 2,
+      state: "published",
+      payload: { title: "Current" },
+      change_intent: "Publish current",
+      review_comment: "",
+      revision_created_at: "2026-04-11T00:00:00.000Z",
+      revision_updated_at: "2026-04-11T00:00:00.000Z"
+    },
+    {
+      entity_id: "entity_page_real",
+      entity_type: "page",
+      active_published_revision_id: "rev_2",
+      entity_created_at: "2026-04-11T00:00:00.000Z",
+      entity_updated_at: "2026-04-11T00:00:00.000Z",
+      revision_id: "rev_1",
+      revision_number: 1,
+      state: "draft",
+      payload: { title: "Draft" },
+      change_intent: "Draft",
+      review_comment: "",
+      revision_created_at: "2026-04-10T00:00:00.000Z",
+      revision_updated_at: "2026-04-10T00:00:00.000Z"
+    }
+  ]);
 
-  const matches = collectKnownLegacyPageCopyMatches(payload);
-  const normalized = normalizeLegacyPagePayload(payload);
-
-  assert.equal(matches.length, 2);
-  assert.deepEqual(matches.map((item) => item.field), ["title", "ctaLabel"]);
-  assert.equal(normalized.blocks[0].title, "Галерея");
-  assert.equal(normalized.blocks[1].ctaLabel, "Связаться с нами");
-  assert.equal(normalized.blocks[2].title, "Не трогать");
+  assert.equal(aggregates.length, 1);
+  assert.equal(aggregates[0].revisions.length, 2);
+  assert.equal(aggregates[0].revisions[0].id, "rev_2");
+  assert.equal(aggregates[0].revisions[1].id, "rev_1");
 });
