@@ -131,6 +131,7 @@
   color: #a03d2f;
 }
 
+/* Guardrail: left column is a full source/operator zone for commercial pages, not a micro-rail. */
 .shell {
   display: grid;
   grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) minmax(300px, 380px);

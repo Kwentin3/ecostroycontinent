@@ -514,7 +514,7 @@ export function PageWorkspaceScreen({
       {status ? <div className={adminStyles.statusPanelInfo}>{normalizeLegacyCopy(status)}</div> : null}
 
       <div className={styles.shell}>
-        <aside className={styles.rail}>
+        <aside className={styles.rail} data-layout-zone="sources">
           <h2 className={styles.railTitle}>Источники</h2>
           {(metadata.pageType === PAGE_TYPES.SERVICE_LANDING) ? (
             <label className={styles.field}>
@@ -602,7 +602,7 @@ export function PageWorkspaceScreen({
           ) : null}
         </aside>
 
-        <div className={styles.canvasColumn}>
+        <div className={styles.canvasColumn} data-layout-zone="canvas">
           <div className={styles.canvasTop}>
             <div className={styles.canvasTitleWrap}>
               <p className={styles.eyebrow}>Рабочее полотно</p>
@@ -691,7 +691,7 @@ export function PageWorkspaceScreen({
           </div>
         </div>
 
-        <section className={`${styles.previewCard} ${adminStyles.stickyPanel}`}>
+        <section className={`${styles.previewCard} ${adminStyles.stickyPanel}`} data-layout-zone="preview">
           <div className={styles.sectionCard}>
             <div className={styles.sectionHead}>
               <div>
