@@ -12,6 +12,7 @@ const baseNavItems = [
   { href: "/admin/entities/global_settings", label: "Настройки" },
   { href: "/admin/entities/media_asset", label: "Медиа" },
   { href: "/admin/entities/service", label: "Услуги" },
+  { href: "/admin/entities/equipment", label: "Техника" },
   { href: "/admin/entities/case", label: "Кейсы" },
   { href: "/admin/entities/page", label: "Страницы" },
   { href: "/admin/users", label: "Пользователи" }

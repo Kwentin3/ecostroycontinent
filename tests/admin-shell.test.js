@@ -17,6 +17,10 @@ test("admin shell exposes a single Pages domain and no top-level AI workspace en
   assert.equal(hrefs(businessOwnerNav).includes("/admin/entities/page"), true);
   assert.equal(hrefs(superadminNav).includes("/admin/entities/page"), true);
   assert.equal(hrefs(guestNav).includes("/admin/entities/page"), true);
+  assert.equal(hrefs(seoManagerNav).includes("/admin/entities/equipment"), true);
+  assert.equal(hrefs(businessOwnerNav).includes("/admin/entities/equipment"), true);
+  assert.equal(hrefs(superadminNav).includes("/admin/entities/equipment"), true);
+  assert.equal(hrefs(guestNav).includes("/admin/entities/equipment"), true);
   assert.equal(hrefs(seoManagerNav).includes("/admin/workspace/landing"), false);
   assert.equal(hrefs(businessOwnerNav).includes("/admin/workspace/landing"), false);
   assert.equal(hrefs(superadminNav).includes("/admin/workspace/landing"), false);
