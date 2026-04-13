@@ -4,6 +4,11 @@
 Дата: 2026-04-10  
 Основание: canonical PRD, refined single-workflow docs, audit `ADMIN.ANAMNESIS.AI_LAYOUT_VS_PAGES_AUDIT.v1`
 
+> Alignment note, 2026-04-13:
+> Этот документ нужно читать как переходный refactor plan до принятия unified multi-type canon.
+> Актуальное направление теперь фиксирует `Page` как owner multi-type page instances внутри одного editor surface.
+> Любая standalone-only трактовка `Page` ниже считается исторической и ограниченной рамкой этого старого плана.
+
 ## 1. Goal and Constraints
 
 Цель этого плана - безопасно перевести админку из legacy dual-screen narrative `Страницы + AI-верстка` в один пользовательский домен `Страницы`, не ломая канон `Page` as owner и не затрагивая explicit review/publish/history semantics.
@@ -12,7 +17,7 @@
 
 ### Hard constraints
 
-- `Page` остаётся canonical owner standalone pages и page-level composition.
+- `Page` остаётся canonical owner page instances и page-level composition внутри одного editor surface.
 - AI остаётся assistive only и не получает отдельный top-level owner flow.
 - Publish / review / history остаются существующими explicit downstream operations.
 - `Content Core` и revision model не заменяются новым truth store.
@@ -27,7 +32,7 @@
 - Generic `saveDraft()` / revision lifecycle in `lib/content-core/service.js`.
 - Explicit review submission and publish path in `lib/content-ops/workflow.js`.
 - Public/read-side rendering contract via `components/public/PublicRenderers.js` and review preview in `app/admin/(console)/review/[revisionId]/page.js`.
-- Route ownership canon from PRD: `Page` owns only standalone pages and page-level composition; `Service` / `Case` / `Article` stay route owners for their domains.
+- Accepted ownership canon to preserve semantically: `Page` owns multi-type page instances and publication flow inside unified page workspace; `service`, `equipment`, `case`, `media_asset`, and `gallery` remain first-class source domains and do not become a second editor.
 
 ### Preserve semantically, but reorganize in UX
 

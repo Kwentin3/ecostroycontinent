@@ -8,6 +8,10 @@ import {
   PAGE_CREATE_MODE_LABELS,
   PAGE_TYPE_LABELS
 } from "../../lib/admin/page-workspace.js";
+import {
+  getEntityQuestionHint,
+  getPageCreateModeQuestionHint
+} from "../../lib/admin/question-model.js";
 import { PageMetadataModal } from "./PageMetadataModal";
 import styles from "./PageRegistryClient.module.css";
 
@@ -465,6 +469,7 @@ export function PageRegistryClient({
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
+                <p className={styles.fieldHint}>{getPageCreateModeQuestionHint(createMode)}</p>
               </div>
 
               {createMode === "standalone" ? (
@@ -489,6 +494,7 @@ export function PageRegistryClient({
                       <option key={item.id} value={item.id}>{item.label}</option>
                     ))}
                   </select>
+                  <p className={styles.fieldHint}>{getEntityQuestionHint("service")}</p>
                 </div>
               ) : null}
 
@@ -501,6 +507,7 @@ export function PageRegistryClient({
                       <option key={item.id} value={item.id}>{item.label}</option>
                     ))}
                   </select>
+                  <p className={styles.fieldHint}>{getEntityQuestionHint("equipment")}</p>
                 </div>
               ) : null}
 
@@ -513,6 +520,7 @@ export function PageRegistryClient({
                       <option key={item.id} value={item.id}>{item.label} · {PAGE_TYPE_LABELS[item.pageType] || item.pageType}</option>
                     ))}
                   </select>
+                  <p className={styles.fieldHint}>Отвечает на вопрос: какую готовую страницу проще адаптировать, а не собирать заново?</p>
                 </div>
               ) : null}
 

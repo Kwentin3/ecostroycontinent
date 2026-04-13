@@ -18,6 +18,7 @@ import {
   PAGE_SECTION_TYPES,
   PAGE_TYPES
 } from "../../lib/content-core/content-types.js";
+import { getWorkspaceQuestionHint } from "../../lib/admin/question-model.js";
 import { normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { PageMetadataModal } from "./PageMetadataModal";
 import { PreviewViewport } from "./PreviewViewport";
@@ -516,6 +517,7 @@ export function PageWorkspaceScreen({
       <div className={styles.shell}>
         <aside className={styles.rail} data-layout-zone="sources">
           <h2 className={styles.railTitle}>Источники</h2>
+          <p className={styles.inlineHint}>{getWorkspaceQuestionHint("sources")}</p>
           {(metadata.pageType === PAGE_TYPES.SERVICE_LANDING) ? (
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Основная услуга</span>
@@ -616,7 +618,7 @@ export function PageWorkspaceScreen({
               <div className={styles.sectionHead}>
                 <div>
                   <h3 className={styles.sectionTitle}>Основа страницы</h3>
-                  <p className={styles.sectionMeta}>Название, H1 и подводка остаются page-owned для всех типов.</p>
+                  <p className={styles.sectionMeta}>Название, H1 и подводка задаются прямо на странице для всех типов.</p>
                 </div>
               </div>
               <div className={styles.fieldGrid}>
@@ -640,7 +642,7 @@ export function PageWorkspaceScreen({
                 <div className={styles.sectionHead}>
                   <div>
                     <h3 className={styles.sectionTitle}>Гео и зона работы</h3>
-                    <p className={styles.sectionMeta}>Гео остается page-owned и не требует отдельного типа страницы.</p>
+                    <p className={styles.sectionMeta}>Гео задаётся прямо на странице и не требует отдельного типа.</p>
                   </div>
                 </div>
                 <div className={styles.fieldGrid}>
@@ -696,7 +698,7 @@ export function PageWorkspaceScreen({
             <div className={styles.sectionHead}>
               <div>
                 <h3 className={styles.sectionTitle}>Готовность</h3>
-                <p className={styles.sectionMeta}>Подсказки остаются компактными и не превращают экран в диагностическую кабину.</p>
+                <p className={styles.sectionMeta}>{getWorkspaceQuestionHint("readiness")}</p>
               </div>
             </div>
             <ul className={styles.emptyChecklist}>
@@ -709,7 +711,7 @@ export function PageWorkspaceScreen({
 
           <PreviewViewport
             title="Предпросмотр"
-            hint="Экран показывает страницу вместе с шапкой и подвалом, чтобы оператор видел не фрагмент, а реальную публикацию."
+            hint={`${getWorkspaceQuestionHint("preview")} Экран показывает страницу вместе с шапкой и подвалом.`}
             device={previewDevice}
             onDeviceChange={setPreviewDevice}
           >

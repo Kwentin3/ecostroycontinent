@@ -299,10 +299,15 @@
 }
 
 .createLegend,
-.createHint {
+.createHint,
+.fieldHint {
   margin: 6px 0 0;
   color: #667267;
   line-height: 1.5;
+}
+
+.fieldHint {
+  font-size: 0.86rem;
 }
 
 .createForm {

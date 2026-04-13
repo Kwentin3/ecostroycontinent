@@ -98,11 +98,11 @@ Contract posture for phase 1:
 
 Route ownership canon:
 
-- `Service` owns canonical slug, SEO intent and core content truth for `/services/[slug]`.
-- `Case` owns canonical slug, proof narrative and core content truth for `/cases/[slug]`.
-- `Article` owns canonical slug and core content truth for `/blog/[slug]`.
-- `Page` owns standalone pages such as `/about` and `/contacts`, plus page-level composition.
-- If a route-owning entity is rendered through a page shell, that shell is a projection/container, not a second owner of route truth.
+- `Service` owns reusable service truth, commercial offer facts and source fields used by service-oriented pages.
+- `Case` owns reusable proof truth and source facts used by proof narratives and case pages.
+- `Article` owns canonical article truth for `/blog/[slug]`.
+- `Page` owns page instances assembled in unified multi-type page workspace, including standalone pages such as `/about` and `/contacts`, а также service/equipment landing pages when the route is page-managed.
+- If a public route is rendered through page shell and source entities together, the shell remains projection/container, source entities stay first-class truth, and a second competing editor is not introduced.
 
 Калькулятор / estimate tool, публичный AI-чат и продвинутая фильтрация портфолио не считаются обязательной частью phase 1 и выносятся в future separate specs. Public AI chat и calculator не поднимаются до появления первых реальных данных по индексируемости, спросу и лидам.
 
