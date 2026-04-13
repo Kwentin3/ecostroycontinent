@@ -1,10 +1,11 @@
 ﻿# IMPLEMENTATION.EXECUTION.PAGE_WORKSPACE_REMEDIATION_PLAN.V1.report
 
 ## 1. Executive Summary
+- Historical alignment note: этот отчёт описывает remediation-wave по состоянию на `2026-04-11`. Его формулировки про AI-панель и richer source-picker empty states нельзя читать как гарантию того, что те же affordances одинаково видимы в более позднем unified multi-type workspace.
 - Полностью реализован bounded remediation/refactor epic для page workspace поверх уже принятой single-workflow model.
 - Закрыты все шесть фаз плана: P0 opening fix для страниц без версии, content/encoding integrity, lifecycle management path, source picker clarity, AI interaction clarity и workspace UX polish.
 - Код доведён до локально зелёного состояния, закоммичен, запушен в `main`, собран в GHCR и доставлен на сервер.
-- На живом контуре подтверждены ключевые operator flows: registry open, no-revision page open без `500`, readable CTA copy, metadata modal, empty source pickers, AI bounded patch flow, review handoff и lifecycle discoverability.
+- На живом контуре подтверждены ключевые operator flows для той remediation-wave: registry open, no-revision page open без `500`, readable CTA copy, metadata modal, empty source pickers, bounded AI patch flow в тогдашнем workspace, review handoff и lifecycle discoverability.
 
 ## 2. Source Docs Used
 ### Product / canon
@@ -81,12 +82,12 @@
 - Live-deactivation route получил JSON mode для in-place UI actions без redirect-only semantics.
 
 ### Phase D — Source picker clarity
-- `Кейсы` и `Услуги` pickers теперь показывают содержательные empty states.
+- `Кейсы` и `Услуги` pickers в той remediation-wave показывают содержательные empty states.
 - Empty states объясняют, почему список пуст, и дают bounded next step link обратно в canonical registries.
 - Launcher model остался компактным и не превратился в новый source-management product.
 
 ### Phase E — AI interaction clarity
-- AI action model перестал зависеть от случайно оставшегося selected target там, где действие должно иметь фиксированную domain zone.
+- AI action model в той remediation-wave перестал зависеть от случайно оставшегося selected target там, где действие должно иметь фиксированную domain zone.
 - В панели виден текущий target, разрешённые действия и их effective zone.
 - Во время запроса есть progress feedback, после ответа — explicit patch/result card.
 - AI по-прежнему patch-only и не сохраняет truth автоматически.

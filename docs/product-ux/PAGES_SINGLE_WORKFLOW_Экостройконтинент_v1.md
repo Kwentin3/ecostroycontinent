@@ -8,7 +8,7 @@
 
 Пользовательский домен один: `Страницы`.
 
-Unified `page workspace` остаётся одним canonical operator surface для домена `Страницы`. AI не становится отдельным продуктовым surface первого уровня и не перехватывает ownership истины. Он встроен в основной рабочий экран страницы как assistive panel/tool.
+Unified `page workspace` остаётся одним canonical operator surface для домена `Страницы`. AI не становится отдельным продуктовым surface первого уровня и не перехватывает ownership истины. Он может появляться только как встроенная assistive-возможность внутри этого же экрана и не считается отдельным обязательным visual surface для каждой implementation wave.
 
 Эта модель нужна, чтобы убрать:
 - ownership drift;
@@ -88,7 +88,8 @@ Unified `page workspace` остаётся одним canonical operator surface 
 
 - центр = мольберт / canvas / story rail страницы;
 - слева = компактная панель источников;
-- справа = закреплённая AI-панель.
+- справа = rail предпросмотра и готовности;
+- assistive AI, если он surfaced в текущей wave, живёт внутри этого же workspace и не образует отдельный экран.
 
 ### UX posture
 
@@ -147,7 +148,7 @@ Connective copy - часть page composition workflow.
 
 ## 7. AI posture
 
-AI встроен в page workspace как assistive panel.
+AI остаётся встроенной assistive-возможностью внутри page workspace.
 
 AI может:
 - помогать с draft copy;
@@ -169,7 +170,7 @@ AI не должен:
 
 - саму страницу и её композицию;
 - понятные источники;
-- понятные AI-подсказки;
+- понятные операторские подсказки и, если текущая wave это поддерживает, bounded AI-действия;
 - быстрый handoff к метаданным по требованию.
 
 ### Во второй слой уводим
@@ -186,7 +187,7 @@ AI не должен:
 - Не превращать центр в свободный page builder canvas.
 - Не вытаскивать служебные metadata-поля в основной первый слой без веской причины.
 - Не делать левый rail бесконечной библиотекой карточек.
-- Не превращать AI-панель в prompt lab.
+- Не превращать встроенную AI-помощь в prompt lab.
 
 ## 10. Practical documentation rule
 

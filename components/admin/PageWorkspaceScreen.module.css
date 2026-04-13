@@ -91,6 +91,12 @@
   gap: 10px;
 }
 
+.headerActions .supportCopy {
+  flex-basis: 100%;
+  margin-top: 2px;
+  text-align: right;
+}
+
 .lifecycleWrap {
   position: relative;
 }

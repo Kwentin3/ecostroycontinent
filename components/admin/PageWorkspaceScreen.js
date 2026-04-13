@@ -15,6 +15,12 @@ import {
   PAGE_TYPE_LABELS
 } from "../../lib/admin/page-workspace.js";
 import {
+  getPageThemeFieldHint,
+  getPageWorkspaceVisualSettingsHint,
+  getPrimarySourceEmptyState,
+  getSourceChecklistEmptyState
+} from "../../lib/admin/page-workspace-copy.js";
+import {
   PAGE_SECTION_TYPES,
   PAGE_TYPES
 } from "../../lib/content-core/content-types.js";
@@ -96,11 +102,42 @@ function moveSection(sections = [], type, direction) {
   }));
 }
 
-function SourceChecklist({ title, items, selectedIds, onToggle }) {
+function SourceChecklist({ title, items, selectedIds, onToggle, emptyState = null }) {
   return (
     <div className={styles.selectedStack}>
       <h3 className={styles.sectionTitle}>{title}</h3>
       {items.length === 0 ? <p className={styles.inlineHint}>Пока нет доступных записей.</p> : null}
+      {items.map((item) => (
+        <label key={item.id} className={styles.selectedItem}>
+          <div className={styles.selectedMain}>
+            <strong>{item.label}</strong>
+            <p className={styles.selectedMeta}>{item.meta || item.subtitle || ""}</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={selectedIds.includes(item.id)}
+            onChange={() => onToggle(item.id)}
+          />
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function RichSourceChecklist({ title, items, selectedIds, onToggle, emptyState = null }) {
+  return (
+    <div className={styles.selectedStack}>
+      <h3 className={styles.sectionTitle}>{title}</h3>
+      {items.length === 0 ? (
+        <p className={styles.inlineHint}>
+          {emptyState?.text || "Пока нет доступных записей."}{" "}
+          {emptyState?.href ? (
+            <Link href={emptyState.href} className={styles.inlineLink}>
+              {emptyState.linkLabel}
+            </Link>
+          ) : null}
+        </p>
+      ) : null}
       {items.map((item) => (
         <label key={item.id} className={styles.selectedItem}>
           <div className={styles.selectedMain}>
@@ -244,6 +281,11 @@ export function PageWorkspaceScreen({
   const heroMedia = mediaOptions.find((item) => item.id === composition.primaryMediaAssetId) || null;
   const canSaveFirstDraft = Boolean(composition.title.trim()) && Boolean(composition.h1.trim());
   const requiredSectionTypes = getRequiredSectionTypes(metadata.pageType);
+  const serviceEmptyState = getPrimarySourceEmptyState("service");
+  const equipmentEmptyState = getPrimarySourceEmptyState("equipment");
+  const mediaEmptyState = getPrimarySourceEmptyState("media");
+  const caseEmptyState = getSourceChecklistEmptyState("cases");
+  const galleryEmptyState = getSourceChecklistEmptyState("galleries");
 
   const handleJsonAction = async (payload) => {
     const response = await fetch(saveUrl, {
@@ -508,6 +550,7 @@ export function PageWorkspaceScreen({
           <button type="button" className={adminStyles.secondaryButton} onClick={handleSendToReview} disabled={saveBusy || Boolean(lifecycleBusy) || !revision}>
             Передать на проверку
           </button>
+          <p className={styles.supportCopy}>{getPageWorkspaceVisualSettingsHint()}</p>
         </div>
       </section>
 
@@ -519,7 +562,7 @@ export function PageWorkspaceScreen({
           <h2 className={styles.railTitle}>Источники</h2>
           <p className={styles.inlineHint}>{getWorkspaceQuestionHint("sources")}</p>
           {(metadata.pageType === PAGE_TYPES.SERVICE_LANDING) ? (
-            <label className={styles.field}>
+            <div className={styles.field}>
               <span className={styles.fieldLabel}>Основная услуга</span>
               <select
                 className={styles.select}
@@ -537,11 +580,19 @@ export function PageWorkspaceScreen({
                   <option key={item.id} value={item.id}>{item.label}</option>
                 ))}
               </select>
-            </label>
+              {relationOptions.services.length === 0 ? (
+                <p className={styles.inlineHint}>
+                  {serviceEmptyState.text}{" "}
+                  <Link href={serviceEmptyState.href} className={styles.inlineLink}>
+                    {serviceEmptyState.linkLabel}
+                  </Link>
+                </p>
+              ) : null}
+            </div>
           ) : null}
 
           {(metadata.pageType === PAGE_TYPES.EQUIPMENT_LANDING) ? (
-            <label className={styles.field}>
+            <div className={styles.field}>
               <span className={styles.fieldLabel}>Основная техника</span>
               <select
                 className={styles.select}
@@ -559,7 +610,15 @@ export function PageWorkspaceScreen({
                   <option key={item.id} value={item.id}>{item.label}</option>
                 ))}
               </select>
-            </label>
+              {(relationOptions.equipment || []).length === 0 ? (
+                <p className={styles.inlineHint}>
+                  {equipmentEmptyState.text}{" "}
+                  <Link href={equipmentEmptyState.href} className={styles.inlineLink}>
+                    {equipmentEmptyState.linkLabel}
+                  </Link>
+                </p>
+              ) : null}
+            </div>
           ) : null}
 
           <label className={styles.field}>
@@ -577,20 +636,30 @@ export function PageWorkspaceScreen({
                 <option key={item.id} value={item.id}>{item.title || item.id}</option>
               ))}
             </select>
+            {mediaOptions.length === 0 ? (
+              <p className={styles.inlineHint}>
+                {mediaEmptyState.text}{" "}
+                <Link href={mediaEmptyState.href} className={styles.inlineLink}>
+                  {mediaEmptyState.linkLabel}
+                </Link>
+              </p>
+            ) : null}
           </label>
 
-          <SourceChecklist
+          <RichSourceChecklist
             title="Кейсы"
             items={relationOptions.cases}
             selectedIds={composition.sourceRefs.caseIds || []}
             onToggle={(id) => toggleRelation("caseIds", id)}
+            emptyState={caseEmptyState}
           />
 
-          <SourceChecklist
+          <RichSourceChecklist
             title="Галереи"
             items={relationOptions.galleries}
             selectedIds={composition.sourceRefs.galleryIds || []}
             onToggle={(id) => toggleRelation("galleryIds", id)}
+            emptyState={galleryEmptyState}
           />
 
           {heroMedia ? (
@@ -711,7 +780,7 @@ export function PageWorkspaceScreen({
 
           <PreviewViewport
             title="Предпросмотр"
-            hint={`${getWorkspaceQuestionHint("preview")} Экран показывает страницу вместе с шапкой и подвалом.`}
+            hint={`${getWorkspaceQuestionHint("preview")} Экран показывает страницу вместе с шапкой и подвалом. ${getPageThemeFieldHint()}`}
             device={previewDevice}
             onDeviceChange={setPreviewDevice}
           >

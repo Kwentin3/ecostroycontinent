@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { normalizePageMetadata } from "../../lib/admin/page-metadata-state.js";
+import {
+  getPageThemeFieldHint,
+  getPageWorkspaceVisualSettingsHint
+} from "../../lib/admin/page-workspace-copy.js";
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import styles from "./PageMetadataModal.module.css";
 
@@ -19,6 +23,7 @@ export function PageMetadataModal({
   onClose,
   onSave
 }) {
+  const dialogRef = useRef(null);
   const [activeTab, setActiveTab] = useState("main");
   const [draft, setDraft] = useState(() => normalizePageMetadata(metadata));
   const [busy, setBusy] = useState(false);
@@ -37,6 +42,13 @@ export function PageMetadataModal({
     setStatus("");
     setIsError(false);
     setActiveTab("main");
+    const focusDialog = window.requestAnimationFrame(() => {
+      dialogRef.current?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(focusDialog);
+    };
   }, [open, normalizedMetadata]);
 
   useEffect(() => {
@@ -67,6 +79,25 @@ export function PageMetadataModal({
       window.removeEventListener("pointerup", handleUp);
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && !busy) {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [busy, onClose, open]);
 
   if (!open) {
     return null;
@@ -103,11 +134,19 @@ export function PageMetadataModal({
     <>
       <button type="button" className={styles.overlay} aria-label="Закрыть модалку метаданных" onClick={onClose} />
       <section
+        ref={dialogRef}
         className={styles.dialog}
         role="dialog"
         aria-modal="true"
         aria-labelledby="page-metadata-title"
+        tabIndex={-1}
         style={{ left: position.x, top: position.y }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && !busy) {
+            event.preventDefault();
+            onClose();
+          }
+        }}
       >
         <header
           className={styles.header}
@@ -127,7 +166,7 @@ export function PageMetadataModal({
           <div className={styles.titleWrap}>
             <p className={styles.eyebrow}>Метаданные страницы</p>
             <h2 id="page-metadata-title" className={styles.title}>{pageLabel}</h2>
-            <p className={styles.summary}>Служебные поля живут отдельно от рабочего полотна и не мешают ежедневной сборке страницы.</p>
+            <p className={styles.summary}>Служебные поля живут отдельно от рабочего полотна и не мешают ежедневной сборке страницы. {getPageWorkspaceVisualSettingsHint()}</p>
           </div>
           <div className={styles.headerActions}>
             <button type="button" className={styles.ghostButton} onClick={() => setPosition({ x: 48, y: 72 })}>
@@ -166,6 +205,7 @@ export function PageMetadataModal({
                     <option key={key} value={key}>{theme.label}</option>
                   ))}
                 </select>
+                <p className={styles.hint}>{getPageThemeFieldHint()}</p>
               </div>
               <div className={styles.field}>
                 <span>Медиа для соцсетей</span>
