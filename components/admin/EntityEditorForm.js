@@ -6,8 +6,6 @@ import { EntityTruthSections } from "./EntityTruthSections";
 import { FilterableChecklist } from "./FilterableChecklist";
 import { EvidenceRegisterPanel } from "./EvidenceRegisterPanel";
 import { MediaPicker } from "./MediaPicker";
-import { ServiceLandingFactoryPanel } from "./ServiceLandingFactoryPanel";
-import { ServiceLandingWorkspacePanel } from "./ServiceLandingWorkspacePanel";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
 import { SurfacePacket } from "./SurfacePacket";
@@ -114,7 +112,6 @@ export function EntityEditorForm({
   relationOptions,
   mediaOptions,
   caseProjectTypeOptions = [],
-  workspaceMemoryCard = null,
   user,
   message,
   error
@@ -572,7 +569,7 @@ export function EntityEditorForm({
 
             <div className={styles.inlineActions}>
               <button type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
-              {entityType === ENTITY_TYPES.SERVICE && canSubmit ? (
+              {false && entityType === ENTITY_TYPES.SERVICE && canSubmit ? (
                 <button
                   type="submit"
                   formAction="/api/admin/entities/service/landing-factory/generate"
@@ -627,10 +624,6 @@ export function EntityEditorForm({
           fallbackLabel="Общий раздел исправления"
           defaultOpen={Boolean(readiness?.hasBlocking)}
         />
-        <ServiceLandingWorkspacePanel
-          entityType={entityType}
-          memoryCard={workspaceMemoryCard}
-        />
         <EvidenceRegisterPanel
           entityType={entityType}
           entityId={entityId}
@@ -638,12 +631,6 @@ export function EntityEditorForm({
           readiness={readiness}
           obligations={obligations}
           scope="editor"
-        />
-        <ServiceLandingFactoryPanel
-          entityType={entityType}
-          revision={currentRevision}
-          readiness={readiness}
-          auditItems={auditItems}
         />
         {activePublishedRevision ? (
           <section className={styles.panel}>

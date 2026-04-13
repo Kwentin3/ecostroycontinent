@@ -14,6 +14,41 @@
   background: var(--page-bg);
 }
 
+.publicShell {
+  display: grid;
+  gap: 24px;
+}
+
+.publicShellHeader,
+.publicShellFooter {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: calc(100% - 48px);
+  padding: 18px 24px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(31, 42, 34, 0.12);
+  box-shadow: 0 14px 32px rgba(31, 42, 34, 0.08);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  color: #1f2a22;
+}
+
+.publicShellEyebrow {
+  margin: 0 0 4px;
+  color: #617066;
+  font-size: 0.84rem;
+}
+
+.publicShellMeta {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+  color: #617066;
+}
+
 .themeEarthSand {
   --page-bg: linear-gradient(180deg, #faf6ef 0%, #f5eee1 100%);
   --page-ink: #1f2a22;
@@ -308,6 +343,13 @@
   width: 100%;
   height: 180px;
   object-fit: cover;
+}
+
+.listing {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
 }
 
 .note {

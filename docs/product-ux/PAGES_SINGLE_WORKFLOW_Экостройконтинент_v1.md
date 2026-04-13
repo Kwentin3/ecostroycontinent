@@ -8,13 +8,26 @@
 
 Пользовательский домен один: `Страницы`.
 
-`Page` остаётся canonical owner standalone pages и page-level composition. AI не становится отдельным продуктовым surface первого уровня и не перехватывает ownership истины. Он встроен в основной рабочий экран страницы как assistive panel/tool.
+Unified `page workspace` остаётся одним canonical operator surface для домена `Страницы`. AI не становится отдельным продуктовым surface первого уровня и не перехватывает ownership истины. Он встроен в основной рабочий экран страницы как assistive panel/tool.
 
 Эта модель нужна, чтобы убрать:
 - ownership drift;
 - двойной вход в один page workflow;
 - ощущение второго редактора страницы;
 - engineer-dashboard posture на основном рабочем экране.
+
+### Scope update for multi-type evolution
+
+Этот документ нужно читать не только как канон для standalone static pages, но и как канон для multi-type page workspace.
+
+Это означает:
+
+- один editor surface остаётся правилом;
+- расширение идёт через `page types`, а не через новые top-level editors;
+- `about` и `contacts` остаются valid page types, но не исчерпывают весь домен;
+- landing-like page types могут добавляться внутрь этого же workspace;
+- source domains остаются first-class и не растворяются в page text;
+- если для landing-а появляется второй competing editor, это считается нарушением этого канона.
 
 ## 2. First-level screen: реестр страниц
 
@@ -97,6 +110,12 @@
 
 По клику открываются специализированные модалки / галереи выбора.
 
+Сами launcher families могут эволюционировать по мере появления новых page types и новых source domains. Но правило остаётся тем же:
+
+- left rail stays compact;
+- source domains stay first-class;
+- page workspace не превращается в scrolling warehouse.
+
 ### Source selection rule
 
 Пользователь не должен просматривать длинный список всех сущностей прямо в левом rail. Он должен:
@@ -175,6 +194,7 @@ AI не должен:
 - `AI-верстка` как отдельный top-level surface;
 - chooser как обязательный первый вход в работу со страницей;
 - page workflow как два равноправных соседних сценария;
+- landing workflow как отдельный competing editor рядом с `Страницы`;
 - engineer-dashboard posture как целевой UX,
 
 то такой документ должен считаться устаревшим и подлежит выравниванию под этот single-workflow model.

@@ -154,20 +154,20 @@ export function LandingWorkspaceVerificationPanel({
         </section>
 
         <section className={styles.panelMuted}>
-          <h4>Shell Regions</h4>
+          <h4>Области оболочки</h4>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Region</th>
-                <th>Status</th>
-                <th>Ref</th>
+                <th>Область</th>
+                <th>Статус</th>
+                <th>Ссылка</th>
               </tr>
             </thead>
             <tbody>
               {shellRegions.map((region) => (
                 <tr key={region.id}>
                   <td>{region.label}</td>
-                  <td><span className={styles.badge}>{region.status || "fixed"}</span></td>
+                  <td><span className={styles.badge}>{region.status || "фиксировано"}</span></td>
                   <td>{region.ref || region.id}</td>
                 </tr>
               ))}

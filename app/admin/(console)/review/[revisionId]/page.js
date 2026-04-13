@@ -5,7 +5,6 @@ import { PreviewViewport } from "../../../../../components/admin/PreviewViewport
 import { ReadinessPanel } from "../../../../../components/admin/ReadinessPanel";
 import { LandingWorkspaceVerificationPanel } from "../../../../../components/admin/LandingWorkspaceVerificationPanel";
 import { RevisionDiffPanel } from "../../../../../components/admin/RevisionDiffPanel";
-import { ServiceLandingFactoryPanel as LegacyServiceLandingFactoryPanel } from "../../../../../components/admin/ServiceLandingFactoryPanel";
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../../lib/admin/page-helpers";
@@ -54,6 +53,7 @@ function renderPreview(entityType, payload, lookups, globalSettings) {
         page={payload}
         globalSettings={globalSettings}
         services={(id) => lookups.serviceMap.get(id) || null}
+        equipment={(id) => lookups.equipmentMap.get(id) || null}
         cases={(id) => lookups.caseMap.get(id) || null}
         galleries={(id) => lookups.galleryMap.get(id) || null}
         resolveMedia={(id) => lookups.mediaMap.get(id) || null}
@@ -126,13 +126,6 @@ export default async function ReviewDetailPage({ params, searchParams }) {
               auditItems={auditItems}
               readiness={readiness}
               revision={revision}
-            />
-            {/* Legacy service-prefixed panel stays only for older service revisions; the landing-neutral panel above is the primary verification slice. */}
-            <LegacyServiceLandingFactoryPanel
-              entityType={entity.entityType}
-              revision={revision}
-              readiness={readiness}
-              auditItems={auditItems}
             />
             <SurfacePacket
               eyebrow="Карточка решения"

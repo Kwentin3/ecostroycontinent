@@ -13,7 +13,11 @@ test("registry create state reopens the create modal and preserves echoed fields
 
   assert.deepEqual(state, {
     open: true,
+    mode: "standalone",
     pageType: "contacts",
+    primaryServiceId: "",
+    primaryEquipmentId: "",
+    cloneFromPageId: "",
     title: "Contact center",
     error: "page type collision"
   });
@@ -26,7 +30,11 @@ test("registry create state stays closed and falls back to safe defaults when ec
 
   assert.deepEqual(state, {
     open: false,
+    mode: "standalone",
     pageType: "about",
+    primaryServiceId: "",
+    primaryEquipmentId: "",
+    cloneFromPageId: "",
     title: "",
     error: ""
   });

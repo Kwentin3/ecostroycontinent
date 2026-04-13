@@ -231,6 +231,103 @@ export function EntityTruthSections({
     );
   }
 
+  if (entityType === "equipment") {
+    return (
+      <>
+        <TruthGroup id="equipment-seo-truth" title="Данные техники" note="Это базовая карточка техники, которая потом может стать источником для страницы.">
+          <div className={styles.gridTwo}>
+            <label className={styles.label}>
+              <span>Slug</span>
+              <input name="slug" defaultValue={value.slug || ""} required />
+            </label>
+            <label className={styles.label}>
+              <span>Локаль</span>
+              <input name="locale" defaultValue={value.locale || "ru-RU"} required />
+            </label>
+            <label className={styles.label}>
+              <span>Название</span>
+              <input name="title" defaultValue={value.title || ""} required />
+            </label>
+            <label className={styles.label}>
+              <span>Тип техники</span>
+              <input name="equipmentType" defaultValue={value.equipmentType || ""} required />
+            </label>
+          </div>
+        </TruthGroup>
+
+        <TruthGroup id="equipment-core" title="Коммерческое описание" note="Карточка должна объяснять, что это за техника и для каких задач она подходит.">
+          <label className={styles.label}>
+            <span>Краткое описание</span>
+            <textarea name="shortSummary" defaultValue={value.shortSummary || ""} required />
+          </label>
+          <label className={styles.label}>
+            <span>Что техника умеет</span>
+            <textarea name="capabilitySummary" defaultValue={value.capabilitySummary || ""} required />
+          </label>
+          <label className={styles.label}>
+            <span>Режим работы</span>
+            <input name="operatorMode" defaultValue={value.operatorMode || ""} placeholder="Например, с оператором" />
+          </label>
+        </TruthGroup>
+
+        <TruthGroup id="equipment-specs" title="Характеристики и сценарии" note="Это базовый доказательный слой для посадок по технике.">
+          <label className={styles.label}>
+            <span>Характеристики</span>
+            <textarea name="keySpecs" defaultValue={(value.keySpecs || []).join("\n")} placeholder="Каждая характеристика с новой строки" />
+            <p className={styles.helpText}>Каждая строка станет отдельной характеристикой.</p>
+          </label>
+          <label className={styles.label}>
+            <span>Сценарии применения</span>
+            <textarea name="usageScenarios" defaultValue={(value.usageScenarios || []).join("\n")} placeholder="Каждый сценарий с новой строки" />
+            <p className={styles.helpText}>Каждая строка станет отдельным сценарием применения.</p>
+          </label>
+        </TruthGroup>
+
+        <TruthGroup id="equipment-relations" title="Связи" note="Техника может быть связана с услугами, кейсами и коллекциями без копирования truth в текст страницы.">
+          <FilterableChecklist
+            legend="Связанные услуги"
+            name="serviceIds"
+            options={relationOptions.services}
+            selectedIds={value.serviceIds || []}
+            entityType="service"
+            sourceHref={sourceHref}
+          />
+          <FilterableChecklist
+            legend="Связанные кейсы"
+            name="relatedCaseIds"
+            options={relationOptions.cases}
+            selectedIds={value.relatedCaseIds || []}
+            entityType="case"
+            sourceHref={sourceHref}
+          />
+          <FilterableChecklist
+            legend="Коллекции"
+            name="galleryIds"
+            options={relationOptions.galleries}
+            selectedIds={value.galleryIds || []}
+            entityType="gallery"
+            sourceHref={sourceHref}
+          />
+        </TruthGroup>
+
+        <TruthGroup id="equipment-media" title="Медиа" note="Основной кадр используется в карточке техники и в посадках, если его не переопределили на странице.">
+          <MediaPicker
+            legend="Основное медиа"
+            name="primaryMediaAssetId"
+            assets={mediaOptions}
+            selectedIds={value.primaryMediaAssetId ? [value.primaryMediaAssetId] : []}
+            hint={FIELD_HINTS.primaryMedia}
+            sourceHref={sourceHref}
+          />
+        </TruthGroup>
+
+        <TruthGroup id="equipment-seo-meta" title="Поисковая оптимизация / метаданные" note="Метаданные карточки техники живут отдельно от страницы.">
+          <SeoMetaFields value={value} />
+        </TruthGroup>
+      </>
+    );
+  }
+
   if (entityType === "case") {
     return (
       <>

@@ -30,6 +30,7 @@ import { userCanEditContent, userCanPublish } from "../../../../../lib/auth/sess
 function supportsDeleteTool(entityType) {
   return entityType === ENTITY_TYPES.MEDIA_ASSET
     || entityType === ENTITY_TYPES.SERVICE
+    || entityType === ENTITY_TYPES.EQUIPMENT
     || entityType === ENTITY_TYPES.CASE;
 }
 
@@ -278,6 +279,10 @@ export default async function EntityListPage({ params, searchParams }) {
   const currentListPath = `/admin/entities/${normalizedType}${deleteToolEnabled && testOnly ? "?testOnly=1" : ""}`;
 
   if (normalizedType === ENTITY_TYPES.PAGE) {
+    const [serviceCards, equipmentCards] = await Promise.all([
+      listEntityCards(ENTITY_TYPES.SERVICE),
+      listEntityCards(ENTITY_TYPES.EQUIPMENT)
+    ]);
     const lifecyclePairs = await Promise.all(cards.map(async (card) => {
       const aggregate = await getEntityAggregate(card.entity.id);
 
@@ -327,7 +332,19 @@ export default async function EntityListPage({ params, searchParams }) {
               initialCreateOpen={createState.open}
               initialCreateTitle={createState.title}
               initialCreateType={createState.pageType}
+              initialCreateMode={createState.mode}
+              initialPrimaryServiceId={createState.primaryServiceId}
+              initialPrimaryEquipmentId={createState.primaryEquipmentId}
+              initialCloneFromPageId={createState.cloneFromPageId}
               initialCreateError={createState.error}
+              serviceOptions={serviceCards.map((card) => ({
+                id: card.entity.id,
+                label: getPayloadLabel(card.latestRevision?.payload) || card.entity.id
+              }))}
+              equipmentOptions={equipmentCards.map((card) => ({
+                id: card.entity.id,
+                label: getPayloadLabel(card.latestRevision?.payload) || card.entity.id
+              }))}
             />
           </section>
         </div>

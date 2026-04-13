@@ -4,13 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { normalizePageRegistryRecord, normalizePageRegistryRecords } from "../../lib/admin/page-registry-records.js";
+import {
+  PAGE_CREATE_MODE_LABELS,
+  PAGE_TYPE_LABELS
+} from "../../lib/admin/page-workspace.js";
 import { PageMetadataModal } from "./PageMetadataModal";
 import styles from "./PageRegistryClient.module.css";
-
-const PAGE_TYPE_LABELS = {
-  about: "О нас",
-  contacts: "Контакты"
-};
 
 function toneClassName(tone = "") {
   if (tone === "healthy") {
@@ -28,6 +27,23 @@ function toneClassName(tone = "") {
   return styles.toneunknown;
 }
 
+function buildHiddenValue(pageType, createMode, formState) {
+  if (createMode === "from_service") {
+    return "service_landing";
+  }
+
+  if (createMode === "from_equipment") {
+    return "equipment_landing";
+  }
+
+  if (createMode === "clone_adapt" && formState.cloneFromPageId) {
+    const source = formState.cloneOptions.find((item) => item.id === formState.cloneFromPageId);
+    return source?.pageType || pageType;
+  }
+
+  return pageType;
+}
+
 export function PageRegistryClient({
   initialRecords,
   metadataSaveBasePath = "/api/admin/entities/page",
@@ -35,7 +51,13 @@ export function PageRegistryClient({
   initialCreateOpen = false,
   initialCreateTitle = "",
   initialCreateType = "about",
-  initialCreateError = ""
+  initialCreateMode = "standalone",
+  initialCreateError = "",
+  initialPrimaryServiceId = "",
+  initialPrimaryEquipmentId = "",
+  initialCloneFromPageId = "",
+  serviceOptions = [],
+  equipmentOptions = []
 }) {
   const [records, setRecords] = useState(() => normalizePageRegistryRecords(initialRecords));
   const [viewMode, setViewMode] = useState("cards");
@@ -47,11 +69,28 @@ export function PageRegistryClient({
   const [createOpen, setCreateOpen] = useState(initialCreateOpen);
   const [createTitle, setCreateTitle] = useState(initialCreateTitle);
   const [createType, setCreateType] = useState(initialCreateType);
+  const [createMode, setCreateMode] = useState(initialCreateMode);
+  const [createPrimaryServiceId, setCreatePrimaryServiceId] = useState(initialPrimaryServiceId);
+  const [createPrimaryEquipmentId, setCreatePrimaryEquipmentId] = useState(initialPrimaryEquipmentId);
+  const [createCloneFromPageId, setCreateCloneFromPageId] = useState(initialCloneFromPageId);
+  const [createGeoLabel, setCreateGeoLabel] = useState("");
+  const [createCity, setCreateCity] = useState("");
+  const [createDistrict, setCreateDistrict] = useState("");
+  const [createServiceArea, setCreateServiceArea] = useState("");
   const [createError, setCreateError] = useState(initialCreateError);
   const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
   const [actionBusyId, setActionBusyId] = useState("");
   const metadataRecord = records.find((record) => record.id === metadataRecordId) || null;
+  const cloneOptions = useMemo(
+    () => records.map((record) => ({
+      id: record.id,
+      label: record.title,
+      pageType: record.metadata.pageType,
+      meta: `/${record.slug}`
+    })),
+    [records]
+  );
 
   useEffect(() => {
     setRecords(normalizePageRegistryRecords(initialRecords));
@@ -61,8 +100,21 @@ export function PageRegistryClient({
     setCreateOpen(initialCreateOpen);
     setCreateTitle(initialCreateTitle);
     setCreateType(initialCreateType);
+    setCreateMode(initialCreateMode);
+    setCreatePrimaryServiceId(initialPrimaryServiceId);
+    setCreatePrimaryEquipmentId(initialPrimaryEquipmentId);
+    setCreateCloneFromPageId(initialCloneFromPageId);
     setCreateError(initialCreateError);
-  }, [initialCreateError, initialCreateOpen, initialCreateTitle, initialCreateType]);
+  }, [
+    initialCloneFromPageId,
+    initialCreateError,
+    initialCreateMode,
+    initialCreateOpen,
+    initialCreateTitle,
+    initialCreateType,
+    initialPrimaryEquipmentId,
+    initialPrimaryServiceId
+  ]);
 
   const filteredRecords = useMemo(() => {
     const loweredQuery = query.trim().toLowerCase();
@@ -127,7 +179,7 @@ export function PageRegistryClient({
       return;
     }
 
-    if (!window.confirm("Снять страницу с live? История сохранится, а сама страница останется в админке.")) {
+    if (!window.confirm("Снять страницу с публикации? История сохранится.")) {
       return;
     }
 
@@ -153,10 +205,10 @@ export function PageRegistryClient({
         item.id === record.id
           ? normalizePageRegistryRecord({
               ...item,
-              signalLabel: "Вне live",
+              signalLabel: "Вне публикации",
               signalTone: "warning",
               signalState: "inactive",
-              signalReason: "Страница снята с публикации и остаётся доступной в админке как историческая truth.",
+              signalReason: "Страница снята с публикации.",
               lifecycle: {
                 ...item.lifecycle,
                 canArchive: false,
@@ -211,6 +263,15 @@ export function PageRegistryClient({
     }
   };
 
+  const effectivePageType = buildHiddenValue(createType, createMode, {
+    cloneFromPageId: createCloneFromPageId,
+    cloneOptions
+  });
+  const createDisabled = !createTitle.trim()
+    || (createMode === "from_service" && !createPrimaryServiceId)
+    || (createMode === "from_equipment" && !createPrimaryEquipmentId)
+    || (createMode === "clone_adapt" && !createCloneFromPageId);
+
   return (
     <div className={styles.controls}>
       <div className={styles.toolbar}>
@@ -228,18 +289,19 @@ export function PageRegistryClient({
               <option value="partial">Частично</option>
               <option value="ready">Готово</option>
               <option value="missing">Нет версии</option>
-              <option value="inactive">Вне live</option>
-              <option value="draft">Draft</option>
-              <option value="review">Review</option>
-              <option value="published">Published</option>
+              <option value="inactive">Вне публикации</option>
+              <option value="draft">Черновик</option>
+              <option value="review">На проверке</option>
+              <option value="published">Опубликовано</option>
             </select>
           </div>
           <div className={styles.field}>
             <span className={styles.fieldLabel}>Тип страницы</span>
             <select className={styles.select} value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
               <option value="all">Все</option>
-              <option value="about">О нас</option>
-              <option value="contacts">Контакты</option>
+              {Object.entries(PAGE_TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -282,7 +344,7 @@ export function PageRegistryClient({
                   <h3 className={styles.title}>{record.title}</h3>
                   <p className={styles.meta}>{PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType} · /{record.slug}</p>
                   {record.updatedAtLabel ? <p className={styles.metaMinor}>Обновлено {record.updatedAtLabel}</p> : null}
-                  {record.lifecycle?.hasLivePublishedRevision ? <p className={styles.metaMinor}>Сейчас в live</p> : null}
+                  {record.lifecycle?.hasLivePublishedRevision ? <p className={styles.metaMinor}>Сейчас в публикации</p> : null}
                 </div>
                 <div className={styles.menuWrap}>
                   <button type="button" className={styles.menuButton} onClick={() => setMenuOpenId((current) => current === record.id ? "" : record.id)}>
@@ -300,7 +362,7 @@ export function PageRegistryClient({
                       <Link href={record.historyHref} className={styles.menuItem}>История</Link>
                       {record.lifecycle?.canArchive ? (
                         <button type="button" className={styles.menuItem} disabled={actionBusyId === record.id} onClick={() => handleArchiveRecord(record)}>
-                          {actionBusyId === record.id ? "Снимаем..." : "Снять с live"}
+                          {actionBusyId === record.id ? "Снимаем..." : "Снять с публикации"}
                         </button>
                       ) : null}
                       {record.lifecycle?.canDelete ? (
@@ -326,7 +388,6 @@ export function PageRegistryClient({
                     <h3 className={styles.title}>{record.title}</h3>
                     <p className={styles.meta}>{PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType} · /{record.slug}</p>
                     {record.updatedAtLabel ? <p className={styles.metaMinor}>Обновлено {record.updatedAtLabel}</p> : null}
-                    {record.lifecycle?.hasLivePublishedRevision ? <p className={styles.metaMinor}>Сейчас в live</p> : null}
                   </div>
                   <span className={`${styles.badge} ${toneClassName(record.signalTone)}`}>{record.signalLabel}</span>
                 </div>
@@ -347,7 +408,7 @@ export function PageRegistryClient({
                     <Link href={record.historyHref} className={styles.menuItem}>История</Link>
                     {record.lifecycle?.canArchive ? (
                       <button type="button" className={styles.menuItem} disabled={actionBusyId === record.id} onClick={() => handleArchiveRecord(record)}>
-                        {actionBusyId === record.id ? "Снимаем..." : "Снять с live"}
+                        {actionBusyId === record.id ? "Снимаем..." : "Снять с публикации"}
                       </button>
                     ) : null}
                     {record.lifecycle?.canDelete ? (
@@ -379,35 +440,82 @@ export function PageRegistryClient({
               <div>
                 <p className={styles.fieldLabel}>Создание страницы</p>
                 <h2 id="page-create-title" className={styles.createTitle}>Новая страница</h2>
-                <p className={styles.createLegend}>Страница создаётся прямо из реестра и сразу открывается в основном рабочем экране без второго create-domain.</p>
+                <p className={styles.createLegend}>Создание остается внутри единого редактора страниц. Режим старта задает только начальный контекст, а не отдельный экран.</p>
               </div>
               <button type="button" className={styles.menuButton} onClick={() => setCreateOpen(false)}>
                 ×
               </button>
             </header>
             <form action="/api/admin/entities/page/save" method="post" className={styles.createForm}>
-              {/* Temporary smoke/audit/remediation pages created from this modal must use a `test__...` title.
-                  Do not create unmarked disposable pages here; the prefix is the cleanup boundary. */}
               <input type="hidden" name="redirectMode" value="page_workspace" />
               <input type="hidden" name="failureRedirectTo" value="/admin/entities/page?create=1" />
               <input type="hidden" name="changeIntent" value="Черновик страницы создан из реестра страниц." />
               <input type="hidden" name="h1" value={createTitle.trim()} />
+              <input type="hidden" name="createMode" value={createMode} />
+              <input type="hidden" name="pageType" value={effectivePageType} />
               {createError ? <div className={styles.createError}>{createError}</div> : null}
+
               <div className={styles.field}>
-                <span className={styles.fieldLabel}>Тип страницы</span>
-                <select
-                  className={styles.select}
-                  name="pageType"
-                  value={createType}
-                  onChange={(event) => {
-                    setCreateType(event.target.value);
-                    setCreateError("");
-                  }}
-                >
-                  <option value="about">О нас</option>
-                  <option value="contacts">Контакты</option>
+                <span className={styles.fieldLabel}>Режим старта</span>
+                <select className={styles.select} value={createMode} onChange={(event) => {
+                  setCreateMode(event.target.value);
+                  setCreateError("");
+                }}>
+                  {Object.entries(PAGE_CREATE_MODE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
               </div>
+
+              {createMode === "standalone" ? (
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>Тип страницы</span>
+                  <select className={styles.select} value={createType} onChange={(event) => {
+                    setCreateType(event.target.value);
+                    setCreateError("");
+                  }}>
+                    <option value="about">О нас</option>
+                    <option value="contacts">Контакты</option>
+                  </select>
+                </div>
+              ) : null}
+
+              {createMode === "from_service" ? (
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>Источник «Услуга»</span>
+                  <select className={styles.select} name="primaryServiceId" value={createPrimaryServiceId} onChange={(event) => setCreatePrimaryServiceId(event.target.value)}>
+                    <option value="">Выберите услугу</option>
+                    {serviceOptions.map((item) => (
+                      <option key={item.id} value={item.id}>{item.label}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+
+              {createMode === "from_equipment" ? (
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>Источник «Техника»</span>
+                  <select className={styles.select} name="primaryEquipmentId" value={createPrimaryEquipmentId} onChange={(event) => setCreatePrimaryEquipmentId(event.target.value)}>
+                    <option value="">Выберите технику</option>
+                    {equipmentOptions.map((item) => (
+                      <option key={item.id} value={item.id}>{item.label}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+
+              {createMode === "clone_adapt" ? (
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>Какая страница берется за основу</span>
+                  <select className={styles.select} name="cloneFromPageId" value={createCloneFromPageId} onChange={(event) => setCreateCloneFromPageId(event.target.value)}>
+                    <option value="">Выберите страницу</option>
+                    {cloneOptions.map((item) => (
+                      <option key={item.id} value={item.id}>{item.label} · {PAGE_TYPE_LABELS[item.pageType] || item.pageType}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+
               <div className={styles.field}>
                 <span className={styles.fieldLabel}>Название</span>
                 <input
@@ -418,11 +526,40 @@ export function PageRegistryClient({
                     setCreateTitle(event.target.value);
                     setCreateError("");
                   }}
-                  placeholder="Например, О компании"
+                  placeholder="Например, Аренда экскаватора"
                   required
                 />
               </div>
-              <p className={styles.createHint}>H1 на старте берётся из названия. Route, SEO и редкие поля остаются в metadata layer, чтобы create-flow оставался лёгким.</p>
+
+              {createMode !== "standalone" ? (
+                <>
+                  <div className={styles.field}>
+                    <span className={styles.fieldLabel}>Гео-метка</span>
+                    <input className={styles.input} name="geoLabel" value={createGeoLabel} onChange={(event) => setCreateGeoLabel(event.target.value)} placeholder="Например, Сочи и Адлер" />
+                  </div>
+                  <div className={styles.field}>
+                    <span className={styles.fieldLabel}>Город</span>
+                    <input className={styles.input} name="city" value={createCity} onChange={(event) => setCreateCity(event.target.value)} />
+                  </div>
+                  <div className={styles.field}>
+                    <span className={styles.fieldLabel}>Район</span>
+                    <input className={styles.input} name="district" value={createDistrict} onChange={(event) => setCreateDistrict(event.target.value)} />
+                  </div>
+                  <div className={styles.field}>
+                    <span className={styles.fieldLabel}>Зона выезда</span>
+                    <input className={styles.input} name="serviceArea" value={createServiceArea} onChange={(event) => setCreateServiceArea(event.target.value)} />
+                  </div>
+                </>
+              ) : null}
+
+              <p className={styles.createHint}>
+                {createMode === "standalone"
+                  ? "Для отдельных страниц на старте достаточно типа и названия. Маршрут и SEO остаются в слое метаданных."
+                  : createMode === "clone_adapt"
+                    ? "Копия создается как новая страница и сразу открывается в том же рабочем экране."
+                    : "Для коммерческой страницы источник привязывается сразу, чтобы редактор открылся уже с доменным контекстом."}
+              </p>
+
               <div className={styles.createActions}>
                 <Link href={createFallbackHref} className={styles.ghostLink}>
                   Полный fallback-маршрут
@@ -431,7 +568,7 @@ export function PageRegistryClient({
                   <button type="button" className={styles.toggle} onClick={() => setCreateOpen(false)}>
                     Отмена
                   </button>
-                  <button type="submit" className={styles.primaryButton} disabled={!createTitle.trim()}>
+                  <button type="submit" className={styles.primaryButton} disabled={createDisabled}>
                     Создать и открыть
                   </button>
                 </div>

@@ -127,7 +127,7 @@ export function PageMetadataModal({
           <div className={styles.titleWrap}>
             <p className={styles.eyebrow}>Метаданные страницы</p>
             <h2 id="page-metadata-title" className={styles.title}>{pageLabel}</h2>
-            <p className={styles.summary}>Редкие и служебные поля живут отдельно от основного мольберта и не мешают ежедневной сборке страницы.</p>
+            <p className={styles.summary}>Служебные поля живут отдельно от рабочего полотна и не мешают ежедневной сборке страницы.</p>
           </div>
           <div className={styles.headerActions}>
             <button type="button" className={styles.ghostButton} onClick={() => setPosition({ x: 48, y: 72 })}>
@@ -168,7 +168,7 @@ export function PageMetadataModal({
                 </select>
               </div>
               <div className={styles.field}>
-                <span>Open Graph image asset id</span>
+                <span>Медиа для соцсетей</span>
                 <input
                   className={styles.input}
                   value={draft.seo.openGraphImageAssetId}
@@ -176,7 +176,7 @@ export function PageMetadataModal({
                 />
               </div>
               <div className={`${styles.field} ${styles.fieldWide}`}>
-                <span>Meta title</span>
+                <span>Заголовок для поиска</span>
                 <input
                   className={styles.input}
                   value={draft.seo.metaTitle}
@@ -184,7 +184,7 @@ export function PageMetadataModal({
                 />
               </div>
               <div className={`${styles.field} ${styles.fieldWide}`}>
-                <span>Meta description</span>
+                <span>Описание для поиска</span>
                 <textarea
                   className={styles.textarea}
                   value={draft.seo.metaDescription}
@@ -203,7 +203,7 @@ export function PageMetadataModal({
                   value={draft.slug}
                   onChange={(event) => setDraft((current) => ({ ...current, slug: event.target.value }))}
                 />
-                <p className={styles.hint}>Route ownership остаётся у `Page`, но редактируется явно, без hidden carry-through через canvas.</p>
+                <p className={styles.hint}>Маршрут редактируется явно и не прячется в рабочем полотне.</p>
               </div>
               <div className={styles.field}>
                 <span>Тип страницы</span>
@@ -214,10 +214,12 @@ export function PageMetadataModal({
                 >
                   <option value="about">О нас</option>
                   <option value="contacts">Контакты</option>
+                  <option value="service_landing">Страница услуги</option>
+                  <option value="equipment_landing">Страница техники</option>
                 </select>
               </div>
               <div className={`${styles.field} ${styles.fieldWide}`}>
-                <span>Canonical intent</span>
+                <span>Канонический интент</span>
                 <input
                   className={styles.input}
                   value={draft.seo.canonicalIntent}
@@ -230,18 +232,18 @@ export function PageMetadataModal({
           {activeTab === "seo" ? (
             <div className={styles.grid}>
               <div className={styles.field}>
-                <span>Indexation</span>
+                <span>Индексация</span>
                 <select
                   className={styles.select}
                   value={draft.seo.indexationFlag}
                   onChange={(event) => updateSeoField("indexationFlag", event.target.value)}
                 >
-                  <option value="index">Index</option>
-                  <option value="noindex">Noindex</option>
+                  <option value="index">Индексировать</option>
+                  <option value="noindex">Не индексировать</option>
                 </select>
               </div>
               <div className={styles.field}>
-                <span>Open Graph title</span>
+                <span>Заголовок для соцсетей</span>
                 <input
                   className={styles.input}
                   value={draft.seo.openGraphTitle}
@@ -249,7 +251,7 @@ export function PageMetadataModal({
                 />
               </div>
               <div className={`${styles.field} ${styles.fieldWide}`}>
-                <span>Open Graph description</span>
+                <span>Описание для соцсетей</span>
                 <textarea
                   className={styles.textarea}
                   value={draft.seo.openGraphDescription}

@@ -139,6 +139,6 @@ test("entity save route returns registry-native fallback when page creation fail
   assert.equal(response.status, 303);
   assert.equal(
     response.headers.get("location"),
-    "http://localhost:3000/admin/entities/page?create=1&error=page+type+collision&createPageType=contacts&createTitle=Contact+center"
+    "http://localhost:3000/admin/entities/page?create=1&error=page+type+collision&createPageType=contacts&createMode=standalone&createTitle=Contact+center"
   );
 });

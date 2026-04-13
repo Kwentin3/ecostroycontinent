@@ -146,6 +146,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
           relationOptions={data.relationOptions}
           publishedLookupRecords={{
             services: serializeLookupMap(publishedLookups.serviceMap),
+            equipment: serializeLookupMap(publishedLookups.equipmentMap),
             cases: serializeLookupMap(publishedLookups.caseMap),
             galleries: serializeLookupMap(publishedLookups.galleryMap),
             media: serializeLookupMap(publishedLookups.mediaMap)
