@@ -173,8 +173,8 @@ Tree posture at report drafting time:
 Functional delivery commit:
 - `c9101e6` — `feat: add question-model UI hints and align page canon`
 
-Closing report commit:
-- `3acb42b`
+Docs-only delivery commit already present in the chain:
+- `097408b` — `docs: add delivery hygiene closing report`
 
 ## 8. Push Status
 
