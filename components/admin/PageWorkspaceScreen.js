@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { StandalonePage } from "../public/PublicRenderers";
 import {
@@ -21,9 +21,14 @@ import {
   getSourceChecklistEmptyState
 } from "../../lib/admin/page-workspace-copy.js";
 import {
+  PREVIEW_VIEWPORT_OPTIONS,
+  getPreviewViewportOption
+} from "../../lib/admin/preview-viewport.js";
+import {
   PAGE_SECTION_TYPES,
   PAGE_TYPES
 } from "../../lib/content-core/content-types.js";
+import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import { getWorkspaceQuestionHint } from "../../lib/admin/question-model.js";
 import { normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { PageMetadataModal } from "./PageMetadataModal";
@@ -45,6 +50,48 @@ function toneClassName(tone = "") {
   }
 
   return styles.toneunknown;
+}
+
+function buildPresenceAudit(label, isReady, readyText, missingText, fallbackTone = "warning") {
+  return {
+    label,
+    tone: isReady ? "healthy" : fallbackTone,
+    detail: isReady ? readyText : missingText
+  };
+}
+
+function buildLengthAudit(label, value, { min = 1, max = Infinity, emptyText, shortText, longText }) {
+  const normalized = typeof value === "string" ? value.trim() : "";
+
+  if (!normalized) {
+    return {
+      label,
+      tone: "warning",
+      detail: emptyText
+    };
+  }
+
+  if (normalized.length < min) {
+    return {
+      label,
+      tone: "warning",
+      detail: `${shortText} · ${normalized.length} симв.`
+    };
+  }
+
+  if (normalized.length > max) {
+    return {
+      label,
+      tone: "warning",
+      detail: `${longText} · ${normalized.length} симв.`
+    };
+  }
+
+  return {
+    label,
+    tone: "healthy",
+    detail: `${normalized.length} симв.`
+  };
 }
 
 function cloneSections(sections = []) {
@@ -247,6 +294,8 @@ export function PageWorkspaceScreen({
   const [status, setStatus] = useState(initialMessage);
   const [error, setError] = useState(initialError);
   const [metadataOpen, setMetadataOpen] = useState(false);
+  const [metadataBusy, setMetadataBusy] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const [currentSignal, setCurrentSignal] = useState({
     label: signalLabel,
@@ -256,6 +305,7 @@ export function PageWorkspaceScreen({
   const [lifecycleState, setLifecycleState] = useState(lifecycle);
   const [lifecycleBusy, setLifecycleBusy] = useState("");
   const [lifecycleMenuOpen, setLifecycleMenuOpen] = useState(false);
+  const previewDialogRef = useRef(null);
   const lookupResolvers = useMemo(
     () => buildPageWorkspaceLookupResolvers(publishedLookupRecords),
     [publishedLookupRecords]
@@ -267,6 +317,30 @@ export function PageWorkspaceScreen({
       sections: normalizeSectionsForType(metadata.pageType, current.sections)
     }));
   }, [metadata.pageType]);
+
+  useEffect(() => {
+    if (!previewOpen) {
+      return undefined;
+    }
+
+    const focusDialog = window.requestAnimationFrame(() => {
+      previewDialogRef.current?.focus();
+    });
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setPreviewOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(focusDialog);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [previewOpen]);
 
   const previewPayload = useMemo(
     () => buildPageWorkspacePreviewPayload({ baseValue, composition, metadata }),
@@ -286,6 +360,89 @@ export function PageWorkspaceScreen({
   const mediaEmptyState = getPrimarySourceEmptyState("media");
   const caseEmptyState = getSourceChecklistEmptyState("cases");
   const galleryEmptyState = getSourceChecklistEmptyState("galleries");
+  const previewOption = useMemo(() => getPreviewViewportOption(previewDevice), [previewDevice]);
+  const themeDefinition = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey] || LANDING_PAGE_THEME_REGISTRY.earth_sand;
+  const themeDirty = metadata.pageThemeKey !== savedMetadata.pageThemeKey;
+  const pageStatusItems = useMemo(() => ([
+    {
+      label: "Состояние",
+      tone: currentSignal.tone || "unknown",
+      detail: currentSignal.label || "Статус пока не определён"
+    },
+    {
+      label: "Версия",
+      tone: revision ? "healthy" : "warning",
+      detail: revision ? `Версия №${revision.revisionNumber} · ${revision.state}` : "Черновик ещё не сохранён"
+    },
+    {
+      label: "Тип страницы",
+      tone: "unknown",
+      detail: PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType
+    },
+    {
+      label: "Изменения",
+      tone: compositionDirty || metadataDirty ? "warning" : "healthy",
+      detail: compositionDirty || metadataDirty ? "Есть несохранённые правки" : "Все изменения сохранены"
+    },
+    {
+      label: "Публикация",
+      tone: lifecycleState?.hasLivePublishedRevision ? "healthy" : "unknown",
+      detail: lifecycleState?.hasLivePublishedRevision ? "Страница опубликована" : "Живой версии пока нет"
+    }
+  ]), [compositionDirty, currentSignal.label, currentSignal.tone, lifecycleState?.hasLivePublishedRevision, metadata.pageType, metadataDirty, revision]);
+  const seoAuditItems = useMemo(() => ([
+    buildPresenceAudit(
+      "Slug",
+      Boolean(metadata.slug.trim()),
+      `/${metadata.slug.trim()}`,
+      "Маршрут не задан"
+    ),
+    buildLengthAudit("H1", composition.h1, {
+      min: 10,
+      max: 90,
+      emptyText: "H1 не заполнен",
+      shortText: "H1 слишком короткий",
+      longText: "H1 слишком длинный"
+    }),
+    buildLengthAudit("Meta title", metadata.seo?.metaTitle || "", {
+      min: 35,
+      max: 65,
+      emptyText: "Meta title не заполнен",
+      shortText: "Meta title короткий",
+      longText: "Meta title длинный"
+    }),
+    buildLengthAudit("Meta description", metadata.seo?.metaDescription || "", {
+      min: 80,
+      max: 170,
+      emptyText: "Meta description не заполнен",
+      shortText: "Meta description короткий",
+      longText: "Meta description длинный"
+    }),
+    buildPresenceAudit(
+      "Главное медиа",
+      Boolean(heroMedia),
+      heroMedia?.title || "Выбрано",
+      "Главное медиа не выбрано"
+    )
+  ]), [composition.h1, heroMedia, metadata.seo?.metaDescription, metadata.seo?.metaTitle, metadata.slug]);
+  const contentAuditItems = useMemo(() => ([
+    buildPresenceAudit("Название страницы", emptyState.titleReady, "Название заполнено", "Добавьте название страницы"),
+    buildPresenceAudit("Подводка", Boolean(composition.intro.trim()), "Подводка заполнена", "Добавьте подводку"),
+    buildPresenceAudit("Главное медиа", emptyState.mediaReady, "Главное медиа выбрано", "Выберите главное медиа"),
+    buildPresenceAudit(
+      "Источники",
+      emptyState.sourceCount > 0,
+      `Подключено источников: ${emptyState.sourceCount}`,
+      "Источники пока не подключены",
+      "unknown"
+    ),
+    buildPresenceAudit(
+      "Секции",
+      composition.sections.length >= requiredSectionTypes.length,
+      `Секции собраны: ${composition.sections.length}`,
+      "Нужно собрать обязательные секции"
+    )
+  ]), [composition.intro, composition.sections.length, emptyState.mediaReady, emptyState.sourceCount, emptyState.titleReady, requiredSectionTypes.length]);
 
   const handleJsonAction = async (payload) => {
     const response = await fetch(saveUrl, {
@@ -364,6 +521,37 @@ export function PageWorkspaceScreen({
     setRevision(result.revision || revision);
 
     return result;
+  };
+
+  const handleOpenPreview = (device) => {
+    setPreviewDevice(device);
+    setPreviewOpen(true);
+  };
+
+  const handleThemeChange = (nextThemeKey) => {
+    setMetadata((current) => ({
+      ...current,
+      pageThemeKey: nextThemeKey
+    }));
+  };
+
+  const handleSaveTheme = async () => {
+    if (!themeDirty) {
+      return;
+    }
+
+    setMetadataBusy(true);
+    setError("");
+    setStatus("");
+
+    try {
+      const result = await handleSaveMetadata(metadata);
+      setStatus(result?.message || "Тема страницы сохранена.");
+    } catch (saveError) {
+      setError(saveError.message);
+    } finally {
+      setMetadataBusy(false);
+    }
   };
 
   const handleSendToReview = async () => {
@@ -508,11 +696,6 @@ export function PageWorkspaceScreen({
           <p className={styles.metaCompact}>{currentSignal.reason}</p>
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)}>
-            Метаданные
-          </button>
-          {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
-          {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Открыть проверку</Link> : null}
           {lifecycleState?.canArchive || lifecycleState?.canDelete ? (
             <div className={styles.lifecycleWrap}>
               <button
@@ -550,7 +733,6 @@ export function PageWorkspaceScreen({
           <button type="button" className={adminStyles.secondaryButton} onClick={handleSendToReview} disabled={saveBusy || Boolean(lifecycleBusy) || !revision}>
             Передать на проверку
           </button>
-          <p className={styles.supportCopy}>{getPageWorkspaceVisualSettingsHint()}</p>
         </div>
       </section>
 
@@ -763,44 +945,109 @@ export function PageWorkspaceScreen({
         </div>
 
         <section className={`${styles.previewCard} ${adminStyles.stickyPanel}`} data-layout-zone="preview">
-          <div className={styles.sectionCard}>
+          <div className={styles.operatorCard}>
             <div className={styles.sectionHead}>
               <div>
-                <h3 className={styles.sectionTitle}>Готовность</h3>
+                <h3 className={styles.sectionTitle}>Статус страницы</h3>
+                <p className={styles.sectionMeta}>Короткая сводка по публикации, версии и сохранённости изменений.</p>
+              </div>
+            </div>
+            <dl className={styles.auditList}>
+              {pageStatusItems.map((item) => (
+                <div key={item.label} className={styles.auditRow}>
+                  <dt className={styles.auditLabel}>{item.label}</dt>
+                  <dd className={styles.auditValue}>
+                    <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className={styles.operatorNote}>{currentSignal.reason}</p>
+            <div className={styles.quickActions}>
+              <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
+                Метаданные
+              </button>
+              {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
+              {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
+            </div>
+          </div>
+
+          <div className={styles.operatorCard}>
+            <div className={styles.sectionHead}>
+              <div>
+                <h3 className={styles.sectionTitle}>Вид и предпросмотр</h3>
+                <p className={styles.sectionMeta}>Открывайте страницу в отдельном окне предпросмотра и там же подбирайте тему.</p>
+              </div>
+            </div>
+            <div className={styles.previewLaunchGrid}>
+              {PREVIEW_VIEWPORT_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={styles.previewLaunchButton}
+                  onClick={() => handleOpenPreview(option.value)}
+                >
+                  <span className={styles.previewLaunchLabel}>{option.label}</span>
+                  <span className={styles.previewLaunchMeta}>{option.width} px</span>
+                </button>
+              ))}
+            </div>
+            <div className={styles.operatorInlineMeta}>
+              <span className={`${styles.auditTonePill} ${toneClassName(themeDirty ? "warning" : "healthy")}`}>
+                {themeDirty ? "Тема не сохранена" : "Тема активна"}
+              </span>
+              <p className={styles.operatorNote}>Сейчас выбрана тема: {themeDefinition.label}.</p>
+              <p className={styles.operatorNote}>{getPageWorkspaceVisualSettingsHint()}</p>
+            </div>
+            {themeDirty ? (
+              <button
+                type="button"
+                className={adminStyles.secondaryButton}
+                onClick={handleSaveTheme}
+                disabled={metadataBusy}
+              >
+                {metadataBusy ? "Сохраняем тему..." : "Сохранить тему"}
+              </button>
+            ) : null}
+          </div>
+
+          <div className={styles.operatorCard}>
+            <div className={styles.sectionHead}>
+              <div>
+                <h3 className={styles.sectionTitle}>SEO-контроль</h3>
+                <p className={styles.sectionMeta}>Быстрый аудит без открытия полной формы метаданных.</p>
+              </div>
+            </div>
+            <dl className={styles.auditList}>
+              {seoAuditItems.map((item) => (
+                <div key={item.label} className={styles.auditRow}>
+                  <dt className={styles.auditLabel}>{item.label}</dt>
+                  <dd className={styles.auditValue}>
+                    <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className={styles.operatorCard}>
+            <div className={styles.sectionHead}>
+              <div>
+                <h3 className={styles.sectionTitle}>Контентная готовность</h3>
                 <p className={styles.sectionMeta}>{getWorkspaceQuestionHint("readiness")}</p>
               </div>
             </div>
-            <ul className={styles.emptyChecklist}>
-              <li>{emptyState.titleReady ? "Название заполнено" : "Добавьте название страницы"}</li>
-              <li>{emptyState.h1Ready ? "H1 заполнен" : "Добавьте H1"}</li>
-              <li>{emptyState.mediaReady ? "Главное медиа выбрано" : "Выберите главное медиа"}</li>
-              <li>{emptyState.sourceCount > 0 ? "Источники подключены" : "При необходимости подключите источники"}</li>
-            </ul>
+            <dl className={styles.auditList}>
+              {contentAuditItems.map((item) => (
+                <div key={item.label} className={styles.auditRow}>
+                  <dt className={styles.auditLabel}>{item.label}</dt>
+                  <dd className={styles.auditValue}>
+                    <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
-
-          <PreviewViewport
-            title="Предпросмотр"
-            hint={`${getWorkspaceQuestionHint("preview")} Экран показывает страницу вместе с шапкой и подвалом. ${getPageThemeFieldHint()}`}
-            device={previewDevice}
-            onDeviceChange={setPreviewDevice}
-          >
-            {previewPayload ? (
-              <StandalonePage
-                page={previewPayload}
-                globalSettings={globalSettings}
-                services={lookupResolvers.services}
-                equipment={lookupResolvers.equipment}
-                cases={lookupResolvers.cases}
-                galleries={lookupResolvers.galleries}
-                resolveMedia={lookupResolvers.media}
-              />
-            ) : (
-              <div className={styles.emptyWorkspaceCard}>
-                <h3 className={styles.sectionTitle}>Предпросмотр появится после заполнения основы</h3>
-                <p className={styles.sectionMeta}>Нужны хотя бы название и H1.</p>
-              </div>
-            )}
-          </PreviewViewport>
         </section>
       </div>
 
@@ -811,6 +1058,81 @@ export function PageWorkspaceScreen({
         onClose={() => setMetadataOpen(false)}
         onSave={handleSaveMetadata}
       />
+      {previewOpen ? (
+        <>
+          <button type="button" className={styles.previewModalOverlay} aria-label="Закрыть предпросмотр" onClick={() => setPreviewOpen(false)} />
+          <section
+            ref={previewDialogRef}
+            className={styles.previewModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="page-preview-title"
+            tabIndex={-1}
+          >
+            <header className={styles.previewModalHeader}>
+              <div className={styles.previewModalCopy}>
+                <p className={styles.eyebrow}>Визуальная проверка</p>
+                <h2 id="page-preview-title" className={styles.previewModalTitle}>Предпросмотр страницы</h2>
+                <p className={styles.previewModalMeta}>
+                  Сейчас открыт режим: {previewOption.label}. {previewOption.hint}
+                </p>
+              </div>
+              <div className={styles.previewModalControls}>
+                <label className={styles.previewThemeField}>
+                  <span className={styles.previewThemeLabel}>Тема страницы</span>
+                  <select
+                    className={styles.previewThemeSelect}
+                    value={metadata.pageThemeKey}
+                    onChange={(event) => handleThemeChange(event.target.value)}
+                  >
+                    {Object.entries(LANDING_PAGE_THEME_REGISTRY).map(([key, theme]) => (
+                      <option key={key} value={key}>{theme.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <div className={styles.previewModalActions}>
+                  <button
+                    type="button"
+                    className={adminStyles.secondaryButton}
+                    onClick={handleSaveTheme}
+                    disabled={metadataBusy || !themeDirty}
+                  >
+                    {metadataBusy ? "Сохраняем тему..." : "Сохранить тему"}
+                  </button>
+                  <button type="button" className={adminStyles.secondaryButton} onClick={() => setPreviewOpen(false)}>
+                    Закрыть
+                  </button>
+                </div>
+              </div>
+            </header>
+            <div className={styles.previewModalBody}>
+              <PreviewViewport
+                title="Предпросмотр"
+                hint={`Экран показывает страницу вместе с шапкой и подвалом. ${getPageThemeFieldHint()}`}
+                device={previewDevice}
+                onDeviceChange={setPreviewDevice}
+              >
+                {previewPayload ? (
+                  <StandalonePage
+                    page={previewPayload}
+                    globalSettings={globalSettings}
+                    services={lookupResolvers.services}
+                    equipment={lookupResolvers.equipment}
+                    cases={lookupResolvers.cases}
+                    galleries={lookupResolvers.galleries}
+                    resolveMedia={lookupResolvers.media}
+                  />
+                ) : (
+                  <div className={styles.emptyWorkspaceCard}>
+                    <h3 className={styles.sectionTitle}>Предпросмотр появится после заполнения основы</h3>
+                    <p className={styles.sectionMeta}>Нужны хотя бы название страницы и H1.</p>
+                  </div>
+                )}
+              </PreviewViewport>
+            </div>
+          </section>
+        </>
+      ) : null}
     </div>
   );
 }

@@ -523,6 +523,108 @@
   padding: 18px;
 }
 
+.operatorCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(38, 76, 59, 0.1);
+  background: #fffdf8;
+}
+
+.auditList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.auditRow {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(38, 76, 59, 0.08);
+  background: #fff;
+}
+
+.auditLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #667267;
+}
+
+.auditValue {
+  margin: 0;
+}
+
+.auditTonePill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.operatorNote {
+  margin: 0;
+  color: #647165;
+  line-height: 1.45;
+}
+
+.operatorInlineMeta {
+  display: grid;
+  gap: 8px;
+}
+
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.previewLaunchGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.previewLaunchButton {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(38, 76, 59, 0.14);
+  background: #fff;
+  color: #234535;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.previewLaunchButton:hover,
+.previewLaunchButton:focus-visible {
+  border-color: #264c3b;
+  box-shadow: 0 10px 22px rgba(38, 76, 59, 0.08);
+  outline: none;
+}
+
+.previewLaunchLabel {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.previewLaunchMeta {
+  color: #667267;
+  font-size: 0.78rem;
+}
+
 .title,
 .meta,
 .metaCompact,
@@ -550,6 +652,93 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.previewModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(24, 34, 28, 0.36);
+}
+
+.previewModal {
+  position: fixed;
+  z-index: 61;
+  inset: 24px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border-radius: 24px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(20, 26, 22, 0.18);
+  overflow: hidden;
+}
+
+.previewModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(38, 76, 59, 0.08);
+  background: linear-gradient(140deg, #fffaf1 0%, #f6f1e7 100%);
+}
+
+.previewModalCopy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.previewModalTitle {
+  margin: 0;
+  color: #21352a;
+  font-size: 1.3rem;
+}
+
+.previewModalMeta {
+  margin: 0;
+  color: #647165;
+  line-height: 1.5;
+}
+
+.previewModalControls {
+  display: grid;
+  gap: 12px;
+  min-width: min(100%, 320px);
+}
+
+.previewThemeField {
+  display: grid;
+  gap: 6px;
+}
+
+.previewThemeLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2d4035;
+}
+
+.previewThemeSelect {
+  width: 100%;
+  border: 1px solid rgba(38, 76, 59, 0.16);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font: inherit;
+  background: #fff;
+}
+
+.previewModalActions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.previewModalBody {
+  overflow: auto;
+  padding: 18px 20px 20px;
+  background: #f3efe6;
 }
 
 .pickerOverlay {
@@ -700,5 +889,28 @@
 
   .selectedActions {
     justify-content: flex-start;
+  }
+
+  .previewLaunchGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .previewModal {
+    inset: 12px;
+  }
+
+  .previewModalHeader {
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .previewModalControls,
+  .previewModalActions {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .previewModalBody {
+    padding: 14px;
   }
 }
