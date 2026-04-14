@@ -44,6 +44,7 @@ jobs:
 
           docker run --rm \
             -e IMAGE_REF="$image_ref" \
+            -e RUNNER_GID="$(id -g)" \
             -v /opt/ecostroycontinent/runtime:/runtime \
             busybox:1.36 sh -s <<'EOF'
           set -eu
@@ -65,9 +66,16 @@ jobs:
             }
           ' "$env_file" > "$temp_file"
 
-          chmod 600 "$temp_file"
+          # Keep root as owner, but make the file readable by the host runner
+          # group so docker compose --env-file can read the runtime env without
+          # widening it to world-readable secrets.
+          chgrp "$RUNNER_GID" "$temp_file"
+          chmod 640 "$temp_file"
           mv "$temp_file" "$env_file"
           EOF
+
+      - name: Verify refreshed env file is runner-readable
+        run: test -r /opt/ecostroycontinent/runtime/.env
 
       - name: Pull and refresh app runtime
         run: |
