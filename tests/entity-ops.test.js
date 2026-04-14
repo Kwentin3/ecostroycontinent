@@ -79,6 +79,20 @@ test("entity ops builds multipart form data for save route", () => {
   assert.equal(formData.get("contactTruthConfirmed"), "true");
 });
 
+test("entity ops serializes multiline list fields as newline-delimited values", () => {
+  const formData = buildEntitySaveFormData({
+    changeIntent: "",
+    creationOrigin: "",
+    fields: {
+      keySpecs: ["Spec 1", "Spec 2"],
+      usageScenarios: ["Scenario 1", "Scenario 2"]
+    }
+  });
+
+  assert.equal(formData.get("keySpecs"), "Spec 1\nSpec 2");
+  assert.equal(formData.get("usageScenarios"), "Scenario 1\nScenario 2");
+});
+
 test("entity ops builds multipart form data for delete route", () => {
   const formData = buildEntityDeleteFormData({
     match: {
@@ -105,6 +119,21 @@ test("entity ops preview diff tracks only changed supplied fields", () => {
   assert.deepEqual(Object.keys(diff), ["title"]);
   assert.equal(diff.title.before, "Old title");
   assert.equal(diff.title.after, "New title");
+});
+
+test("entity ops preview diff reads SEO values from nested payload shape", () => {
+  const diff = buildFieldPreviewDiff(
+    {
+      seo: {
+        metaTitle: "Existing meta"
+      }
+    },
+    {
+      metaTitle: "Existing meta"
+    }
+  );
+
+  assert.deepEqual(diff, {});
 });
 
 test("entity ops config falls back to seed superadmin credentials", () => {

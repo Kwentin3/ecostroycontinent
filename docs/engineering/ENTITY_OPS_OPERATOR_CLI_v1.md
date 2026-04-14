@@ -108,6 +108,7 @@ Notes:
 - When `fields` is omitted, all non-reserved top-level keys are treated as save fields.
 - Field names must match the existing admin save route contract.
 - `delete` resolves the target through lookup first and then calls the bounded admin delete route in `responseMode=json`.
+- Multiline list fields such as `keySpecs` and `usageScenarios` may be expressed as JSON arrays; the CLI serializes them into the newline form expected by the admin route.
 
 ## Output
 
