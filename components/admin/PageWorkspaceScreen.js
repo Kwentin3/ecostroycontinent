@@ -21,6 +21,7 @@ import {
   getSourceChecklistEmptyState
 } from "../../lib/admin/page-workspace-copy.js";
 import {
+  formatPreviewViewportWidth,
   PREVIEW_VIEWPORT_OPTIONS,
   getPreviewViewportOption
 } from "../../lib/admin/preview-viewport.js";
