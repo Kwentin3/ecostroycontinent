@@ -148,6 +148,53 @@ test("entity save route returns JSON payload for operator mode", async () => {
   assert.equal(payload.redirectTo, "/admin/entities/service/entity_json_1");
 });
 
+test("entity save route preserves media-asset technical fields in operator mode", async () => {
+  let captured = null;
+  const response = await POST(
+    buildRequest({
+      title: "Экскаватор ZAUBERG E370-C на объекте",
+      storageKey: "media/e370.webp",
+      mimeType: "image/webp",
+      originalFilename: "Экскаватор2.webp",
+      alt: "Гусеничный экскаватор ZAUBERG E370-C на строительной площадке",
+      caption: "Крупный гусеничный экскаватор для разработки грунта и погрузки материалов.",
+      ownershipNote: "",
+      sourceNote: "Характеристики уточнены по официальной карточке.",
+      uploadedBy: "Ksenia",
+      uploadedAt: "2026-04-04T10:55:31.108Z",
+      sizeBytes: "36694",
+      status: "ready",
+      lifecycleState: "active",
+      responseMode: "json"
+    }),
+    { params: { entityType: "media_asset" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      saveDraft: async (input) => {
+        captured = input;
+        return {
+          entity: { id: "media_1", entityType: "media_asset" },
+          revision: { id: "rev_media_1", state: "draft" },
+          changedFields: ["title", "alt", "caption", "sourceNote"]
+        };
+      }
+    }
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.ok, true);
+  assert.equal(captured.payload.storageKey, "media/e370.webp");
+  assert.equal(captured.payload.mimeType, "image/webp");
+  assert.equal(captured.payload.originalFilename, "Экскаватор2.webp");
+  assert.equal(captured.payload.alt, "Гусеничный экскаватор ZAUBERG E370-C на строительной площадке");
+  assert.equal(captured.payload.uploadedBy, "Ksenia");
+  assert.equal(captured.payload.status, "ready");
+  assert.equal(captured.payload.lifecycleState, "active");
+  assert.equal(captured.payload.sizeBytes, "36694");
+});
+
 test("entity save route returns JSON errors for operator mode", async () => {
   const response = await POST(
     buildRequest({

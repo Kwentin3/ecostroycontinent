@@ -13,7 +13,7 @@ function printHelp() {
 Options:
   --input <file>           JSON or JSONL batch file
   --entity-type <type>     Default entity type for entries without entityType
-  --mode <mode>            Default mode: create | update | upsert
+  --mode <mode>            Default mode: create | update | upsert | delete
   --base-url <url>         Override APP_BASE_URL / ENTITY_OPS_BASE_URL
   --username <name>        Override ENTITY_OPS_USERNAME
   --password <value>       Override ENTITY_OPS_PASSWORD
@@ -83,6 +83,10 @@ function printReport(report) {
 
     if (Array.isArray(item.changedFields) && item.changedFields.length > 0) {
       console.log(`  saved: ${item.changedFields.join(", ")}`);
+    }
+
+    if (Array.isArray(item.deletedIds) && item.deletedIds.length > 0) {
+      console.log(`  deleted: ${item.deletedIds.join(", ")}`);
     }
   }
 }

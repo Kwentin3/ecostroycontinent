@@ -9,6 +9,7 @@ It intentionally uses:
 - `/api/admin/login`
 - `/api/admin/entities/[entityType]/lookup`
 - `/api/admin/entities/[entityType]/save`
+- `/api/admin/entities/[entityType]/delete`
 
 It intentionally does **not** use raw SQL, direct draft mutation, or publish shortcuts.
 
@@ -102,10 +103,11 @@ The simplest `JSON` batch:
 Notes:
 
 - `entityType` supports the current admin first-slice entity families.
-- `mode` supports `create`, `update`, `upsert`.
+- `mode` supports `create`, `update`, `upsert`, `delete`.
 - `match` may contain `entityId`, `slug`, or `pageType`.
 - When `fields` is omitted, all non-reserved top-level keys are treated as save fields.
 - Field names must match the existing admin save route contract.
+- `delete` resolves the target through lookup first and then calls the bounded admin delete route in `responseMode=json`.
 
 ## Output
 

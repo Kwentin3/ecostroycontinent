@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  buildEntityDeleteFormData,
   buildEntitySaveFormData,
   buildFieldPreviewDiff,
   normalizeEntityOperations,
@@ -43,6 +44,22 @@ test("entity ops normalizes flexible entries into explicit operations", () => {
   assert.equal(operations[1].match.pageType, "about");
 });
 
+test("entity ops normalizes delete mode with slug match", () => {
+  const [operation] = normalizeEntityOperations([
+    {
+      entityType: "page",
+      mode: "delete",
+      match: {
+        slug: "test-foundation-equipment"
+      }
+    }
+  ]);
+
+  assert.equal(operation.mode, "delete");
+  assert.equal(operation.match.slug, "test-foundation-equipment");
+  assert.deepEqual(operation.fields, {});
+});
+
 test("entity ops builds multipart form data for save route", () => {
   const formData = buildEntitySaveFormData({
     changeIntent: "Operator sync",
@@ -60,6 +77,17 @@ test("entity ops builds multipart form data for save route", () => {
   assert.equal(formData.get("changeIntent"), "Operator sync");
   assert.deepEqual(formData.getAll("galleryIds"), ["gallery_1", "gallery_2"]);
   assert.equal(formData.get("contactTruthConfirmed"), "true");
+});
+
+test("entity ops builds multipart form data for delete route", () => {
+  const formData = buildEntityDeleteFormData({
+    match: {
+      entityId: "entity_1"
+    }
+  });
+
+  assert.equal(formData.get("responseMode"), "json");
+  assert.deepEqual(formData.getAll("entityId"), ["entity_1"]);
 });
 
 test("entity ops preview diff tracks only changed supplied fields", () => {
@@ -118,4 +146,26 @@ test("entity ops planner skips unchanged upserts", () => {
   assert.equal(plan.ok, true);
   assert.equal(plan.action, "skip");
   assert.equal(plan.entityId, "entity_1");
+});
+
+test("entity ops planner resolves matched delete into delete action", () => {
+  const plan = planEntityOperation(
+    {
+      mode: "delete",
+      fields: {}
+    },
+    {
+      matched: true,
+      entity: { id: "entity_page_1" },
+      latestRevision: {
+        payload: {
+          slug: "test-foundation-equipment"
+        }
+      }
+    }
+  );
+
+  assert.equal(plan.ok, true);
+  assert.equal(plan.action, "delete");
+  assert.equal(plan.entityId, "entity_page_1");
 });
