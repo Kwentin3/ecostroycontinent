@@ -1,4 +1,4 @@
-.page {
+.publicShell {
   --page-bg: transparent;
   --page-ink: #1f2a22;
   --section-plain-bg: #ffffff;
@@ -11,6 +11,11 @@
   --surface-border: #ddd4c4;
   --surface-shadow: 0 12px 28px rgba(31, 42, 34, 0.06);
   --note-ink: #617066;
+  display: grid;
+  gap: 24px;
+}
+
+.page {
   max-width: 1080px;
   margin: 0 auto;
   padding: 48px 24px 72px;
@@ -18,11 +23,6 @@
   gap: 24px;
   color: var(--page-ink);
   background: var(--page-bg);
-}
-
-.publicShell {
-  display: grid;
-  gap: 24px;
 }
 
 .publicShellHeader,
