@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server.js";
+
 import { buildEntityPayload } from "../../../../../../lib/admin/entity-form-data.js";
 import { normalizeEntityCreationOrigin } from "../../../../../../lib/admin/entity-origin.js";
 import { getString } from "../../../../../../lib/admin/form-data.js";
@@ -155,6 +157,7 @@ export async function POST(request, { params }, deps = {}) {
   const redirectMode = getString(formData, "redirectMode");
   const successRedirectTo = getString(formData, "redirectTo");
   const failureRedirectTo = getString(formData, "failureRedirectTo");
+  const responseMode = getString(formData, "responseMode");
   // If this route is used to create temporary smoke/audit/remediation entities,
   // their human-visible title must start with `test__...` so cleanup can classify
   // them as disposable artifacts later. Do not introduce unmarked test objects here.
@@ -176,10 +179,28 @@ export async function POST(request, { params }, deps = {}) {
       ? `/admin/entities/page/${result.entity.id}`
       : (successRedirectTo || `/admin/entities/${entityType}/${result.entity.id}`);
 
+    if (responseMode === "json") {
+      return NextResponse.json({
+        ok: true,
+        message: FEEDBACK_COPY.draftSaved,
+        redirectTo: successPath,
+        entity: result.entity,
+        revision: result.revision,
+        changedFields: result.changedFields
+      });
+    }
+
     return redirectWithQuery(request, successPath, {
       message: FEEDBACK_COPY.draftSaved
     });
   } catch (error) {
+    if (responseMode === "json") {
+      return NextResponse.json({
+        ok: false,
+        error: toOperatorMessage(error)
+      }, { status: 400 });
+    }
+
     if (redirectMode === "page_workspace" && entityType === "page" && !entityId && failureRedirectTo) {
       return redirectWithQuery(request, failureRedirectTo, {
         error: toOperatorMessage(error),
