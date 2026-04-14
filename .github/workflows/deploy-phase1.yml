@@ -28,9 +28,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify host env file
-        run: test -f /opt/ecostroycontinent/runtime/.env
+        run: |
+          test -f /opt/ecostroycontinent/runtime/.env
+          test -r /opt/ecostroycontinent/runtime/.env
+          test -f /opt/ecostroycontinent/runtime/app-image.env
+          test -w /opt/ecostroycontinent/runtime/app-image.env
 
-      - name: Refresh host image pin from dispatched image ref
+      - name: Refresh runner-managed image pin from dispatched image ref
         run: |
           image_ref='${{ inputs.image_ref }}'
           case "$image_ref" in
@@ -42,40 +46,7 @@ jobs:
               ;;
           esac
 
-          docker run --rm \
-            -e IMAGE_REF="$image_ref" \
-            -e RUNNER_GID="$(id -g)" \
-            -v /opt/ecostroycontinent/runtime:/runtime \
-            busybox:1.36 sh -s <<'EOF'
-          set -eu
-          env_file=/runtime/.env
-          temp_file="$(mktemp /runtime/.env.tmp.XXXXXX)"
-
-          awk -v image_ref="$IMAGE_REF" '
-            BEGIN { updated = 0 }
-            /^APP_IMAGE=/ {
-              print "APP_IMAGE=" image_ref
-              updated = 1
-              next
-            }
-            { print }
-            END {
-              if (!updated) {
-                print "APP_IMAGE=" image_ref
-              }
-            }
-          ' "$env_file" > "$temp_file"
-
-          # Keep root as owner, but make the file readable by the host runner
-          # group so docker compose --env-file can read the runtime env without
-          # widening it to world-readable secrets.
-          chgrp "$RUNNER_GID" "$temp_file"
-          chmod 640 "$temp_file"
-          mv "$temp_file" "$env_file"
-          EOF
-
-      - name: Verify refreshed env file is runner-readable
-        run: test -r /opt/ecostroycontinent/runtime/.env
+          printf 'APP_IMAGE=%s\n' "$image_ref" > /opt/ecostroycontinent/runtime/app-image.env
 
       - name: Pull and refresh app runtime
         run: |
@@ -83,11 +54,13 @@ jobs:
           export APP_IMAGE="$image_ref"
           docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
+            --env-file /opt/ecostroycontinent/runtime/app-image.env \
             --project-name repo \
             -f compose.yaml \
             pull app
           docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
+            --env-file /opt/ecostroycontinent/runtime/app-image.env \
             --project-name repo \
             -f compose.yaml \
             up -d --remove-orphans
@@ -96,13 +69,14 @@ jobs:
         run: |
           image_ref='${{ inputs.image_ref }}'
           export APP_IMAGE="$image_ref"
-          echo "Resolved APP_IMAGE from runtime env:"
-          grep '^APP_IMAGE=' /opt/ecostroycontinent/runtime/.env
+          echo "Resolved APP_IMAGE from runner-managed pin file:"
+          grep '^APP_IMAGE=' /opt/ecostroycontinent/runtime/app-image.env
           echo "Shell APP_IMAGE override:"
           printf '%s\n' "$APP_IMAGE"
           echo "Compose-resolved images:"
           docker compose \
             --env-file /opt/ecostroycontinent/runtime/.env \
+            --env-file /opt/ecostroycontinent/runtime/app-image.env \
             --project-name repo \
             -f compose.yaml \
             config --images
