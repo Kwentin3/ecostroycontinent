@@ -2203,7 +2203,9 @@
 .previewViewportDeviceViewport {
   position: relative;
   width: 100%;
-  overflow: hidden;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .previewViewportScaler {
@@ -2213,8 +2215,8 @@
 }
 
 .previewViewportDeviceDesktop {
-  padding: 18px 18px 74px;
-  border-radius: 28px;
+  padding: 14px 14px 78px;
+  border-radius: 22px 22px 18px 18px;
   background: linear-gradient(180deg, #2d3238 0%, #1f242b 100%);
   box-shadow: 0 28px 56px rgba(20, 26, 22, 0.18);
 }
@@ -2234,18 +2236,20 @@
 .previewViewportDeviceDesktop::after {
   content: "";
   position: absolute;
-  bottom: 18px;
+  bottom: 12px;
   left: 50%;
-  width: 180px;
-  height: 28px;
-  border-radius: 18px 18px 12px 12px;
+  width: 220px;
+  height: 42px;
+  border-radius: 10px 10px 22px 22px;
   transform: translateX(-50%);
-  background: linear-gradient(180deg, #d5d9de 0%, #a9b0b8 100%);
+  background:
+    linear-gradient(180deg, rgba(208, 214, 220, 0.98) 0%, rgba(164, 172, 181, 0.98) 100%);
   box-shadow: 0 10px 24px rgba(20, 26, 22, 0.18);
 }
 
 .previewViewportDeviceDesktop .previewViewportDeviceViewport {
-  border-radius: 18px;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
   background: #fff;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
@@ -2270,6 +2274,7 @@
 }
 
 .previewViewportDeviceTablet .previewViewportDeviceViewport {
+  aspect-ratio: 4 / 3;
   border-radius: 22px;
   background: #fff;
 }
@@ -2307,11 +2312,13 @@
 }
 
 .previewViewportDeviceMobile .previewViewportDeviceViewport {
+  aspect-ratio: 390 / 844;
   border-radius: 28px;
   background: #fff;
 }
 
 .previewViewportSurface {
+  min-height: 100%;
   border-radius: 22px;
   overflow: clip;
   box-shadow: 0 16px 40px rgba(20, 26, 22, 0.12);
