@@ -31,6 +31,15 @@ test("standalone page keeps theme styling on the outer preview shell", () => {
   assert.match(source, /<PublicPageShell globalSettings=\{globalSettings\} themeClassName=\{pageThemeClassName\}>/);
 });
 
+test("page workspace preview modal uses a single control center and renders viewport as a clean canvas", () => {
+  const source = readFileSync(new URL("../../components/admin/PageWorkspaceScreen.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+
+  assert.match(source, /showToolbar=\{false\}/);
+  assert.match(source, /showFrameTop=\{false\}/);
+  assert.match(source, /previewModalControlRow/);
+  assert.match(source, /adminStyles\.previewViewportControls/);
+});
+
 test("cleanup aggregate builder preserves entities without revisions for exact-id cleanup", () => {
   const aggregates = buildEntityAggregates([
     {

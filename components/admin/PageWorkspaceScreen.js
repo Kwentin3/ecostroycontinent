@@ -1088,15 +1088,52 @@ export function PageWorkspaceScreen({
           >
             <header className={styles.previewModalHeader}>
               <div className={styles.previewModalCopy}>
-                <p className={styles.eyebrow}>Визуальная проверка</p>
-                <h2 id="page-preview-title" className={styles.previewModalTitle}>Предпросмотр страницы</h2>
+                <p className={styles.eyebrow}>{"\u0412\u0438\u0437\u0443\u0430\u043b\u044c\u043d\u0430\u044f \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430"}</p>
+                <h2 id="page-preview-title" className={styles.previewModalTitle}>{"\u041f\u0440\u0435\u0434\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u044b"}</h2>
                 <p className={styles.previewModalMeta}>
-                  Сейчас открыт режим: {previewOption.label}. {previewOption.hint}
+                  {"\u0421\u0435\u0439\u0447\u0430\u0441 \u043e\u0442\u043a\u0440\u044b\u0442 \u0440\u0435\u0436\u0438\u043c:"} {previewOption.label}. {formatPreviewViewportWidth(previewOption.width)} {"\u00b7 \u043c\u0430\u0441\u0448\u0442\u0430\u0431"} {Math.round(previewZoom * 100)}%. {previewOption.hint}
                 </p>
               </div>
               <div className={styles.previewModalControls}>
+                <div className={styles.previewModalControlRow}>
+                  <div className={adminStyles.previewViewportControls} role="group" aria-label={"\u0420\u0435\u0436\u0438\u043c \u043f\u0440\u0435\u0434\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u0430"}>
+                    {PREVIEW_VIEWPORT_OPTIONS.map((option) => {
+                      const className = option.value === previewDevice
+                        ? `${adminStyles.previewViewportButton} ${adminStyles.previewViewportButtonActive}`
+                        : adminStyles.previewViewportButton;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          className={className}
+                          aria-pressed={option.value === previewDevice}
+                          onClick={() => setPreviewDevice(option.value)}
+                        >
+                          <span className={adminStyles.previewViewportButtonLabel}>{option.label}</span>
+                          <span className={adminStyles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <label className={`${adminStyles.previewViewportZoom} ${styles.previewModalZoom}`}>
+                    <span className={adminStyles.previewViewportZoomLabel}>{"\u041c\u0430\u0441\u0448\u0442\u0430\u0431"}</span>
+                    <div className={adminStyles.previewViewportZoomControls}>
+                      <input
+                        className={adminStyles.previewViewportZoomSlider}
+                        type="range"
+                        min={previewDevice === "desktop" ? 0.45 : 0.55}
+                        max={1}
+                        step={0.05}
+                        value={previewZoom}
+                        onChange={(event) => handlePreviewZoomChange(Number(event.target.value))}
+                      />
+                      <span className={adminStyles.previewViewportZoomValue}>{Math.round(previewZoom * 100)}%</span>
+                    </div>
+                  </label>
+                </div>
                 <label className={styles.previewThemeField}>
-                  <span className={styles.previewThemeLabel}>Тема страницы</span>
+                  <span className={styles.previewThemeLabel}>{"\u0422\u0435\u043c\u0430 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u044b"}</span>
                   <select
                     className={styles.previewThemeSelect}
                     value={metadata.pageThemeKey}
@@ -1114,18 +1151,16 @@ export function PageWorkspaceScreen({
                     onClick={handleSaveTheme}
                     disabled={metadataBusy || !themeDirty}
                   >
-                    {metadataBusy ? "Сохраняем тему..." : "Сохранить тему"}
+                    {metadataBusy ? "\u0421\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u043c \u0442\u0435\u043c\u0443..." : "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0442\u0435\u043c\u0443"}
                   </button>
                   <button type="button" className={adminStyles.secondaryButton} onClick={() => setPreviewOpen(false)}>
-                    Закрыть
+                    {"\u0417\u0430\u043a\u0440\u044b\u0442\u044c"}
                   </button>
                 </div>
               </div>
             </header>
             <div className={styles.previewModalBody}>
               <PreviewViewport
-                title="Предпросмотр"
-                hint={`Экран показывает страницу вместе с шапкой и подвалом. ${getPageThemeFieldHint()}`}
                 device={previewDevice}
                 zoom={previewZoom}
                 minZoom={previewDevice === "desktop" ? 0.45 : 0.55}
@@ -1133,6 +1168,8 @@ export function PageWorkspaceScreen({
                 zoomStep={0.05}
                 onDeviceChange={setPreviewDevice}
                 onZoomChange={handlePreviewZoomChange}
+                showToolbar={false}
+                showFrameTop={false}
               >
                 {previewPayload ? (
                   <StandalonePage

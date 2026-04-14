@@ -34,6 +34,8 @@ export function PreviewViewport({
   searchParams,
   onDeviceChange,
   onZoomChange,
+  showToolbar = true,
+  showFrameTop = true,
   children
 }) {
   const activeOption = getPreviewViewportOption(device);
@@ -42,76 +44,80 @@ export function PreviewViewport({
 
   return (
     <section className={styles.previewViewport}>
-      <div className={styles.previewViewportToolbar}>
-        <div className={styles.previewViewportCopy}>
-          <p className={styles.eyebrow}>{title}</p>
-          <p className={styles.previewViewportHint}>{hint}</p>
-          <div className={styles.previewViewportStatus} aria-live="polite">
-            <strong>{activeOption.label}</strong>
-            <span>{formatPreviewViewportWidth(activeOption.width)} · {activeOption.hint}</span>
+      {showToolbar ? (
+        <div className={styles.previewViewportToolbar}>
+          <div className={styles.previewViewportCopy}>
+            <p className={styles.eyebrow}>{title}</p>
+            <p className={styles.previewViewportHint}>{hint}</p>
+            <div className={styles.previewViewportStatus} aria-live="polite">
+              <strong>{activeOption.label}</strong>
+              <span>{formatPreviewViewportWidth(activeOption.width)} · {activeOption.hint}</span>
+            </div>
           </div>
-        </div>
-        <div className={styles.previewViewportAside}>
-          <div className={styles.previewViewportControls}>
-            {PREVIEW_VIEWPORT_OPTIONS.map((option) => {
-              const className = option.value === device
-                ? `${styles.previewViewportButton} ${styles.previewViewportButtonActive}`
-                : styles.previewViewportButton;
+          <div className={styles.previewViewportAside}>
+            <div className={styles.previewViewportControls}>
+              {PREVIEW_VIEWPORT_OPTIONS.map((option) => {
+                const className = option.value === device
+                  ? `${styles.previewViewportButton} ${styles.previewViewportButtonActive}`
+                  : styles.previewViewportButton;
 
-              if (typeof onDeviceChange === "function") {
+                if (typeof onDeviceChange === "function") {
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={className}
+                      aria-pressed={option.value === device}
+                      onClick={() => onDeviceChange(option.value)}
+                    >
+                      <span className={styles.previewViewportButtonLabel}>{option.label}</span>
+                      <span className={styles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>
+                    </button>
+                  );
+                }
+
                 return (
-                  <button
+                  <Link
                     key={option.value}
-                    type="button"
+                    href={hrefBase ? buildPreviewHref(hrefBase, searchParams, option.value) : "#"}
                     className={className}
                     aria-pressed={option.value === device}
-                    onClick={() => onDeviceChange(option.value)}
                   >
                     <span className={styles.previewViewportButtonLabel}>{option.label}</span>
                     <span className={styles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>
-                  </button>
+                  </Link>
                 );
-              }
-
-              return (
-                <Link
-                  key={option.value}
-                  href={hrefBase ? buildPreviewHref(hrefBase, searchParams, option.value) : "#"}
-                  className={className}
-                  aria-pressed={option.value === device}
-                >
-                  <span className={styles.previewViewportButtonLabel}>{option.label}</span>
-                  <span className={styles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>
-                </Link>
-              );
-            })}
+              })}
+            </div>
+            {typeof onZoomChange === "function" ? (
+              <label className={styles.previewViewportZoom}>
+                <span className={styles.previewViewportZoomLabel}>Масштаб</span>
+                <div className={styles.previewViewportZoomControls}>
+                  <input
+                    className={styles.previewViewportZoomSlider}
+                    type="range"
+                    min={minZoom}
+                    max={maxZoom}
+                    step={zoomStep}
+                    value={safeZoom}
+                    onChange={(event) => onZoomChange(Number(event.target.value))}
+                  />
+                  <span className={styles.previewViewportZoomValue}>{Math.round(safeZoom * 100)}%</span>
+                </div>
+              </label>
+            ) : null}
           </div>
-          {typeof onZoomChange === "function" ? (
-            <label className={styles.previewViewportZoom}>
-              <span className={styles.previewViewportZoomLabel}>Масштаб</span>
-              <div className={styles.previewViewportZoomControls}>
-                <input
-                  className={styles.previewViewportZoomSlider}
-                  type="range"
-                  min={minZoom}
-                  max={maxZoom}
-                  step={zoomStep}
-                  value={safeZoom}
-                  onChange={(event) => onZoomChange(Number(event.target.value))}
-                />
-                <span className={styles.previewViewportZoomValue}>{Math.round(safeZoom * 100)}%</span>
-              </div>
-            </label>
-          ) : null}
         </div>
-      </div>
+      ) : null}
       <div className={`${styles.previewViewportFrame} ${styles[activeOption.frameToneClassName]}`}>
-        <div className={styles.previewViewportFrameTop}>
-          <span className={styles.previewViewportFramePill}>{activeOption.label}</span>
-          <span className={styles.previewViewportFrameMeta}>
-            {formatPreviewViewportWidth(activeOption.width)} · масштаб {Math.round(safeZoom * 100)}%
-          </span>
-        </div>
+        {showFrameTop ? (
+          <div className={styles.previewViewportFrameTop}>
+            <span className={styles.previewViewportFramePill}>{activeOption.label}</span>
+            <span className={styles.previewViewportFrameMeta}>
+              {formatPreviewViewportWidth(activeOption.width)} · масштаб {Math.round(safeZoom * 100)}%
+            </span>
+          </div>
+        ) : null}
         <div className={styles.previewViewportCanvas}>
           <div
             className={`${styles.previewViewportDeviceShell} ${styles[activeOption.deviceShellClassName]}`}

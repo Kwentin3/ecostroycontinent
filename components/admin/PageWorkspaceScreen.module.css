@@ -705,7 +705,18 @@
 .previewModalControls {
   display: grid;
   gap: 12px;
-  min-width: min(100%, 320px);
+  min-width: min(100%, 620px);
+}
+
+.previewModalControlRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 12px;
+  align-items: end;
+}
+
+.previewModalZoom {
+  min-width: 0;
 }
 
 .previewThemeField {
@@ -902,6 +913,10 @@
   .previewModalHeader {
     padding: 16px;
     flex-direction: column;
+  }
+
+  .previewModalControlRow {
+    grid-template-columns: 1fr;
   }
 
   .previewModalControls,
