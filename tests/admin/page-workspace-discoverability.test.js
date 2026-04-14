@@ -18,14 +18,20 @@ function readUtf8(url) {
 }
 
 test("page theme labels stay Russian and operator-friendly", () => {
+  const themeKeys = Object.keys(LANDING_PAGE_THEME_REGISTRY);
   const labels = Object.values(LANDING_PAGE_THEME_REGISTRY).map((theme) => theme.label);
 
-  assert.deepEqual(labels, [
-    "Песочный тон",
-    "Лесной контраст",
-    "Сланцевый тон"
+  assert.deepEqual(themeKeys, [
+    "earth_sand",
+    "forest_contrast",
+    "slate_editorial",
+    "graphite_industrial",
+    "night_signal",
+    "concrete_blueprint"
   ]);
+  assert.equal(labels.length, 6);
   assert.ok(labels.every((label) => !/[A-Za-z]{3,}/.test(label)));
+  assert.ok(labels.every((label) => label.trim().length >= 8));
 });
 
 test("discoverability copy points operators to metadata and clearer source next steps", () => {
