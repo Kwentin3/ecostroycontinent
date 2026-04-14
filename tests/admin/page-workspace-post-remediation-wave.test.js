@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   formatPreviewViewportWidth,
@@ -12,6 +13,7 @@ test("preview viewport exposes tablet semantics as explicit operator affordance"
 
   assert.equal(tablet.value, "tablet");
   assert.equal(tablet.width, 834);
+  assert.equal(tablet.deviceShellClassName, "previewViewportDeviceTablet");
   assert.equal(formatPreviewViewportWidth(tablet.width), "834 px");
   assert.match(tablet.hint, /РїРµСЂРµРЅРѕСЃ|CTA|СЃРµРєС†Рё/i);
 });
@@ -21,6 +23,12 @@ test("preview viewport falls back to desktop for unknown device", () => {
 
   assert.equal(fallback.value, "desktop");
   assert.equal(fallback.width, 1120);
+});
+
+test("standalone page keeps theme styling on the outer preview shell", () => {
+  const source = readFileSync(new URL("../../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+
+  assert.match(source, /<PublicPageShell globalSettings=\{globalSettings\} themeClassName=\{pageThemeClassName\}>/);
 });
 
 test("cleanup aggregate builder preserves entities without revisions for exact-id cleanup", () => {

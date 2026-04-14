@@ -94,6 +94,12 @@ function buildLengthAudit(label, value, { min = 1, max = Infinity, emptyText, sh
   };
 }
 
+const DEFAULT_PREVIEW_ZOOM_BY_DEVICE = Object.freeze({
+  desktop: 0.7,
+  tablet: 0.82,
+  mobile: 1
+});
+
 function cloneSections(sections = []) {
   return sections.map((section) => ({ ...section }));
 }
@@ -297,6 +303,9 @@ export function PageWorkspaceScreen({
   const [metadataBusy, setMetadataBusy] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState("desktop");
+  const [previewZoomByDevice, setPreviewZoomByDevice] = useState(() => ({
+    ...DEFAULT_PREVIEW_ZOOM_BY_DEVICE
+  }));
   const [currentSignal, setCurrentSignal] = useState({
     label: signalLabel,
     tone: signalTone,
@@ -361,6 +370,7 @@ export function PageWorkspaceScreen({
   const caseEmptyState = getSourceChecklistEmptyState("cases");
   const galleryEmptyState = getSourceChecklistEmptyState("galleries");
   const previewOption = useMemo(() => getPreviewViewportOption(previewDevice), [previewDevice]);
+  const previewZoom = previewZoomByDevice[previewDevice] || DEFAULT_PREVIEW_ZOOM_BY_DEVICE[previewDevice] || 1;
   const themeDefinition = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey] || LANDING_PAGE_THEME_REGISTRY.earth_sand;
   const themeDirty = metadata.pageThemeKey !== savedMetadata.pageThemeKey;
   const pageStatusItems = useMemo(() => ([
@@ -526,6 +536,13 @@ export function PageWorkspaceScreen({
   const handleOpenPreview = (device) => {
     setPreviewDevice(device);
     setPreviewOpen(true);
+  };
+
+  const handlePreviewZoomChange = (nextZoom) => {
+    setPreviewZoomByDevice((current) => ({
+      ...current,
+      [previewDevice]: nextZoom
+    }));
   };
 
   const handleThemeChange = (nextThemeKey) => {
@@ -1110,7 +1127,12 @@ export function PageWorkspaceScreen({
                 title="Предпросмотр"
                 hint={`Экран показывает страницу вместе с шапкой и подвалом. ${getPageThemeFieldHint()}`}
                 device={previewDevice}
+                zoom={previewZoom}
+                minZoom={previewDevice === "desktop" ? 0.45 : 0.55}
+                maxZoom={1}
+                zoomStep={0.05}
                 onDeviceChange={setPreviewDevice}
+                onZoomChange={handlePreviewZoomChange}
               >
                 {previewPayload ? (
                   <StandalonePage

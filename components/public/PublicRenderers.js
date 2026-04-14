@@ -56,9 +56,9 @@ function GallerySection({ title, galleries, resolveGallery, sectionId = "preview
   );
 }
 
-function PublicPageShell({ globalSettings, children }) {
+function PublicPageShell({ globalSettings, themeClassName = "", children }) {
   return (
-    <div className={styles.publicShell}>
+    <div className={`${styles.publicShell} ${themeClassName}`}>
       <header className={styles.publicShellHeader}>
         <div>
           <p className={styles.publicShellEyebrow}>Публичная страница</p>
@@ -324,8 +324,8 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
   const primaryEquipment = sourceRefs.primaryEquipmentId ? equipment?.(sourceRefs.primaryEquipmentId) : null;
 
   return (
-    <PublicPageShell globalSettings={globalSettings}>
-      <main className={`${styles.page} ${pageThemeClassName}`}>
+    <PublicPageShell globalSettings={globalSettings} themeClassName={pageThemeClassName}>
+      <main className={styles.page}>
         <section id="preview-page-hero" data-preview-section="hero" className={`${styles.hero} ${styles.previewSection}`}>
           <p className={styles.eyebrow}>
             {page.pageType === PAGE_TYPES.SERVICE_LANDING
