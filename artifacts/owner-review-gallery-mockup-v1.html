@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Owner Review Gallery Mockup</title>
+  <style>
+    :root {
+      --bg: #f6f0e2;
+      --surface: rgba(255, 252, 245, 0.88);
+      --surface-strong: #fffdf8;
+      --line: rgba(94, 73, 38, 0.15);
+      --line-strong: rgba(94, 73, 38, 0.28);
+      --text: #173524;
+      --muted: #5f6c62;
+      --accent: #214f39;
+      --accent-soft: rgba(33, 79, 57, 0.12);
+      --warn: #c95b13;
+      --warn-soft: rgba(201, 91, 19, 0.14);
+      --ok: #3d6b48;
+      --ok-soft: rgba(61, 107, 72, 0.14);
+      --shadow: 0 22px 40px rgba(47, 35, 16, 0.08);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --font: "Segoe UI", "Inter", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.8), transparent 24%),
+        linear-gradient(180deg, #f8f3e8 0%, #f1ead9 100%);
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .app-shell {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 28px 24px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 44px);
+      line-height: 0.98;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .summary-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 252, 245, 0.82);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 24px rgba(47, 35, 16, 0.04);
+    }
+
+    .pill strong {
+      font-size: 14px;
+    }
+
+    .surface {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .filters {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: minmax(220px, 1.2fr) repeat(3, minmax(180px, 0.8fr));
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid rgba(91, 75, 48, 0.16);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.82);
+      padding: 13px 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: rgba(33, 79, 57, 0.45);
+      box-shadow: 0 0 0 4px rgba(33, 79, 57, 0.1);
+    }
+
+    .quick-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.78);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .chip.is-active {
+      border-color: rgba(33, 79, 57, 0.3);
+      background: rgba(33, 79, 57, 0.13);
+      color: var(--accent);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 14px;
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      background: var(--surface-strong);
+      border: 1px solid rgba(90, 73, 44, 0.12);
+      box-shadow: 0 18px 34px rgba(47, 35, 16, 0.05);
+      min-height: 320px;
+    }
+
+    .card.is-attention {
+      border-color: rgba(201, 91, 19, 0.34);
+      box-shadow: 0 18px 36px rgba(201, 91, 19, 0.09);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .kind {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(33, 79, 57, 0.1);
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .kind.is-page {
+      background: rgba(53, 92, 162, 0.1);
+      color: #355ca2;
+    }
+
+    .kind.is-media {
+      background: rgba(116, 73, 177, 0.1);
+      color: #7449b1;
+    }
+
+    .attention {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--warn-soft);
+      color: var(--warn);
+      font-weight: 900;
+      font-size: 17px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status.pending {
+      color: var(--warn);
+      background: var(--warn-soft);
+    }
+
+    .status.returned {
+      color: #7e541f;
+      background: rgba(178, 120, 48, 0.12);
+    }
+
+    .status.approved {
+      color: var(--ok);
+      background: var(--ok-soft);
+    }
+
+    .visual {
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #efe6d4 0%, #f8f3ea 100%);
+      border: 1px solid rgba(84, 67, 37, 0.08);
+      min-height: 156px;
+      position: relative;
+    }
+
+    .visual.media-photo,
+    .visual.content-photo {
+      background-size: cover;
+      background-position: center;
+    }
+
+    .card-body {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.12;
+    }
+
+    .summary {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .facts {
+      display: grid;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .fact {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(247, 242, 233, 0.8);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .fact strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .action {
+      border: none;
+      border-radius: 999px;
+      background: var(--accent);
+      color: white;
+      padding: 11px 15px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(33, 79, 57, 0.22);
+    }
+
+    .page-frame {
+      height: 100%;
+      padding: 14px;
+      display: grid;
+      align-content: center;
+      background: linear-gradient(180deg, #dfe8f2 0%, #edf2f7 100%);
+    }
+
+    .desktop-shell {
+      width: 100%;
+      max-width: 228px;
+      margin: 0 auto;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+    }
+
+    .desktop-screen {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 12px;
+      padding: 8px;
+      background: #203244;
+      box-shadow: 0 12px 20px rgba(30, 46, 60, 0.22);
+    }
+
+    .desktop-stand {
+      width: 60px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(32, 50, 68, 0.28);
+    }
+
+    .desktop-page {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fcfaf6;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    .desktop-toolbar {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 7px 8px;
+      background: #eef2f4;
+      border-bottom: 1px solid rgba(30, 46, 60, 0.08);
+    }
+
+    .desktop-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(49, 72, 92, 0.25);
+    }
+
+    .desktop-hero {
+      display: grid;
+      gap: 6px;
+      padding: 9px;
+      background: linear-gradient(180deg, #f9f5ea 0%, #f3ebd7 100%);
+    }
+
+    .desktop-hero .line {
+      border-radius: 999px;
+      background: rgba(27, 53, 36, 0.13);
+    }
+
+    .desktop-hero .line.kicker {
+      width: 28%;
+      height: 4px;
+    }
+
+    .desktop-hero .line.title {
+      width: 76%;
+      height: 8px;
+    }
+
+    .desktop-hero .line.copy {
+      width: 86%;
+      height: 5px;
+    }
+
+    .desktop-preview-media {
+      margin: 0 9px 9px;
+      border-radius: 8px;
+      background-size: cover;
+      background-position: center;
+      min-height: 72px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .desktop-preview-media::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 40%;
+      background: linear-gradient(180deg, transparent 0%, rgba(10, 22, 18, 0.28) 100%);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      background: rgba(18, 22, 20, 0.52);
+      backdrop-filter: blur(10px);
+      z-index: 20;
+    }
+
+    .modal-backdrop.is-open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(1120px, 100%);
+      max-height: min(92vh, 920px);
+      overflow: auto;
+      padding: 24px;
+      border-radius: 30px;
+      background: rgba(255, 251, 243, 0.97);
+      box-shadow: 0 36px 70px rgba(22, 19, 12, 0.22);
+      border: 1px solid rgba(84, 67, 37, 0.12);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      margin: 8px 0 0;
+      font-size: clamp(26px, 4vw, 34px);
+      line-height: 1;
+    }
+
+    .modal-subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 700px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .close-button {
+      border: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: rgba(33, 79, 57, 0.1);
+      color: var(--accent);
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+      gap: 18px;
+    }
+
+    .panel {
+      border-radius: 24px;
+      border: 1px solid rgba(84, 67, 37, 0.12);
+      background: rgba(255, 254, 250, 0.92);
+      padding: 18px;
+    }
+
+    .panel h4 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .page-preview-stage {
+      background: linear-gradient(180deg, #f3ecdc 0%, #efe6d2 100%);
+      border-radius: 20px;
+      padding: 16px;
+      min-height: 430px;
+    }
+
+    .device-switches {
+      display: inline-flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 6px;
+      border-radius: 999px;
+      background: rgba(33, 79, 57, 0.08);
+    }
+
+    .device-switches button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 13px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .device-switches button.is-active {
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--accent);
+      box-shadow: 0 10px 18px rgba(33, 79, 57, 0.08);
+    }
+
+    .page-preview-frame {
+      margin: 0 auto;
+      border-radius: 22px;
+      background: #1f3443;
+      padding: 10px;
+      box-shadow: 0 20px 36px rgba(31, 52, 67, 0.18);
+      transition: width 0.2s ease;
+    }
+
+    .page-preview-frame.desktop {
+      width: min(100%, 640px);
+    }
+
+    .page-preview-frame.tablet {
+      width: min(100%, 500px);
+    }
+
+    .page-preview-frame.mobile {
+      width: min(100%, 330px);
+    }
+
+    .page-preview-canvas {
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fcfaf5;
+      min-height: 360px;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    .page-preview-browser {
+      height: 34px;
+      background: #eef1f5;
+      border-bottom: 1px solid rgba(31, 52, 67, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+    }
+
+    .page-preview-browser span {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(31, 52, 67, 0.22);
+    }
+
+    .page-preview-hero {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      background: linear-gradient(180deg, #f8f4ea 0%, #efe6d4 100%);
+    }
+
+    .page-preview-hero h5 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.04;
+      max-width: 88%;
+    }
+
+    .page-preview-hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.52;
+      max-width: 90%;
+    }
+
+    .page-preview-hero-media {
+      margin: 0 18px 18px;
+      min-height: 180px;
+      border-radius: 18px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .essence-layout {
+      display: grid;
+      gap: 18px;
+    }
+
+    .essence-hero {
+      display: grid;
+      grid-template-columns: minmax(240px, 0.86fr) minmax(0, 1.14fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .essence-photo {
+      min-height: 220px;
+      border-radius: 20px;
+      background-size: cover;
+      background-position: center;
+      background-color: #ece3d1;
+    }
+
+    .essence-copy {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .essence-copy h5 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.06;
+    }
+
+    .essence-copy p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.58;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .remarks textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    .decision-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .decision-row .secondary {
+      border: 1px solid rgba(33, 79, 57, 0.14);
+      background: rgba(33, 79, 57, 0.07);
+      color: var(--accent);
+      box-shadow: none;
+    }
+
+    .decision-row .danger {
+      border: 1px solid rgba(170, 71, 58, 0.12);
+      background: rgba(170, 71, 58, 0.08);
+      color: #a53e32;
+      box-shadow: none;
+    }
+
+    @media (max-width: 1080px) {
+      .filters,
+      .modal-grid,
+      .essence-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-row {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app-shell {
+        padding: 20px 16px 28px;
+      }
+
+      .topbar,
+      .modal-header,
+      .card-footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-backdrop {
+        padding: 12px;
+      }
+
+      .modal {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Проверка материалов</p>
+        <h1>Галерея согласования</h1>
+        <p class="subtitle">
+          Собственник видит только компактные карточки материалов. Услуги, кейсы и техника
+          читаются по сути. Страницы распознаются по desktop-preview. Медиа проверяются по фото и подписи.
+        </p>
+      </div>
+      <div class="summary-row">
+        <div class="pill"><strong>12</strong> всего материалов</div>
+        <div class="pill"><strong>5</strong> требуют решения</div>
+        <div class="pill"><strong>3</strong> возвращены</div>
+        <div class="pill"><strong>4</strong> одобрены</div>
+      </div>
+    </header>
+
+    <section class="filters surface">
+      <div class="field">
+        <label for="search">Поиск</label>
+        <input id="search" type="text" placeholder="Название, объект, описание" />
+      </div>
+      <div class="field">
+        <label for="type">Тип</label>
+        <select id="type">
+          <option>Все типы</option>
+          <option>Страницы</option>
+          <option>Услуги</option>
+          <option>Кейсы</option>
+          <option>Техника</option>
+          <option>Медиа</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="status">Статус</label>
+        <select id="status">
+          <option>Все статусы</option>
+          <option>Требуют решения</option>
+          <option>Возвращены</option>
+          <option>Одобрены</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sort">Сортировка</label>
+        <select id="sort">
+          <option>Сначала требуют внимания</option>
+          <option>Сначала новые</option>
+          <option>Сначала страницы</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="quick-filters">
+      <button class="chip is-active">Все</button>
+      <button class="chip is-active">Требуют моего решения</button>
+      <button class="chip">Возвращены</button>
+      <button class="chip">Одобрены</button>
+      <button class="chip">Только страницы</button>
+    </div>
+
+    <main class="gallery">
+      <article class="card is-attention">
+        <div class="card-top">
+          <div class="kind">Услуга</div>
+          <div class="attention">!</div>
+        </div>
+        <div class="visual content-photo" style="background-image:url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="card-body">
+          <div class="status pending">Требует решения</div>
+          <h2>Устройство ленточного фундамента</h2>
+          <p class="summary">
+            Четкое описание услуги без SEO-слоев: где применяем, как организуем этапы работ и что получает клиент на выходе.
+          </p>
+          <div class="facts">
+            <div class="fact"><span>Что входит</span><strong>Разметка, земляные работы, армирование</strong></div>
+            <div class="fact"><span>Результат</span><strong>Готовый фундамент под дом и баню</strong></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="meta">Обновил SEO: Алина Григорьева<br />Сегодня, 11:20</div>
+          <button class="action" data-modal-target="service-modal">Открыть</button>
+        </div>
+      </article>
+
+      <article class="card is-attention">
+        <div class="card-top">
+          <div class="kind is-page">Страница</div>
+          <div class="attention">!</div>
+        </div>
+        <div class="visual">
+          <div class="page-frame">
+            <div class="desktop-shell">
+              <div class="desktop-screen">
+                <div class="desktop-page">
+                  <div class="desktop-toolbar">
+                    <span class="desktop-dot"></span>
+                    <span class="desktop-dot"></span>
+                    <span class="desktop-dot"></span>
+                  </div>
+                  <div class="desktop-hero">
+                    <div class="line kicker"></div>
+                    <div class="line title"></div>
+                    <div class="line copy"></div>
+                    <div class="line copy" style="width: 62%;"></div>
+                  </div>
+                  <div class="desktop-preview-media" style="background-image:url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80');"></div>
+                </div>
+              </div>
+              <div class="desktop-stand"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="status pending">Требует решения</div>
+          <h2>Страница услуги foundation</h2>
+          <p class="summary">
+            Здесь собственник оценивает уже не только факты, но и визуальную подачу страницы.
+          </p>
+        </div>
+        <div class="card-footer">
+          <div class="meta">Сервисная посадочная<br />slug: `foundation-page`</div>
+          <button class="action" data-modal-target="page-modal">Открыть</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="kind">Кейс</div>
+          <div class="status returned">Вернуть замечания</div>
+        </div>
+        <div class="visual content-photo" style="background-image:url('https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="card-body">
+          <h2>Кейс: фундамент под дом в Истре</h2>
+          <p class="summary">
+            В карточке собрана суть объекта, объем работ и результат без SEO-обвязки.
+          </p>
+          <div class="facts">
+            <div class="fact"><span>Объект</span><strong>Частный дом 180 м²</strong></div>
+            <div class="fact"><span>Что сделали</span><strong>Лента + подбетонка + гидроизоляция</strong></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="meta">Есть замечания по формулировке результата</div>
+          <button class="action" data-modal-target="case-modal">Открыть</button>
+        </div>
+      </article>
+
+      <article class="card is-attention">
+        <div class="card-top">
+          <div class="kind">Техника</div>
+          <div class="attention">!</div>
+        </div>
+        <div class="visual content-photo" style="background-image:url('https://images.unsplash.com/photo-1623068658048-5f4c8a2fa2a1?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="card-body">
+          <div class="status pending">Требует решения</div>
+          <h2>Гусеничный экскаватор CAT 320</h2>
+          <p class="summary">
+            Собственник быстро проверяет: та ли техника, корректно ли описаны возможности и соответствует ли фото.
+          </p>
+          <div class="facts">
+            <div class="fact"><span>Назначение</span><strong>Котлованы, планировка, выемка грунта</strong></div>
+            <div class="fact"><span>Особенность</span><strong>Работа на плотном и влажном грунте</strong></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="meta">Нужно подтвердить характеристики и подпись</div>
+          <button class="action" data-modal-target="equipment-modal">Открыть</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="kind is-media">Медиа</div>
+          <div class="status approved">Одобрено</div>
+        </div>
+        <div class="visual media-photo" style="background-image:url('https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="card-body">
+          <h2>Фото бетонных работ</h2>
+          <p class="summary">
+            Здесь owner смотрит на сам кадр и подпись: подходит ли фото для публикации и отражает ли реальный объект.
+          </p>
+        </div>
+        <div class="card-footer">
+          <div class="meta">Привязано к услуге: Монолитные работы</div>
+          <button class="action" data-modal-target="media-modal">Открыть</button>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow" id="modal-kind">Согласование</p>
+          <h3 id="modal-title">Карточка материала</h3>
+          <p class="modal-subtitle" id="modal-subtitle">
+            Откройте материал, спокойно проверьте суть и оставьте замечание для SEO-специалиста.
+          </p>
+        </div>
+        <button class="close-button" id="modal-close" aria-label="Закрыть">&times;</button>
+      </div>
+
+      <div class="modal-grid">
+        <section class="panel" id="modal-main-panel"></section>
+        <aside class="panel remarks">
+          <h4>Замечания для SEO</h4>
+          <div class="field">
+            <label for="owner-remarks">Комментарий</label>
+            <textarea id="owner-remarks" placeholder="Например: уточнить состав услуги, исправить формулировку результата или заменить фото."></textarea>
+          </div>
+          <p class="note">
+            Для собственника здесь главное: удобно посмотреть материал и спокойно написать, что исправить.
+          </p>
+          <div class="decision-row">
+            <button class="action">Одобрить</button>
+            <button class="action secondary">Вернуть с замечанием</button>
+            <button class="action danger">Отклонить</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+  <script>
+    const modalBackdrop = document.getElementById("modal-backdrop");
+    const modalMainPanel = document.getElementById("modal-main-panel");
+    const modalKind = document.getElementById("modal-kind");
+    const modalTitle = document.getElementById("modal-title");
+    const modalSubtitle = document.getElementById("modal-subtitle");
+    const closeButton = document.getElementById("modal-close");
+
+    const templates = {
+      "service-modal": () => `
+        <div class="essence-layout">
+          <h4>Услуга</h4>
+          <div class="essence-hero">
+            <div class="essence-photo" style="background-image:url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80');"></div>
+            <div class="essence-copy">
+              <h5>Устройство ленточного фундамента</h5>
+              <p>
+                Услуга описана простым языком: под какие задачи подходит, как идет процесс,
+                что входит в стоимость и какой результат получает клиент.
+              </p>
+              <div class="facts">
+                <div class="fact"><span>Подходит для</span><strong>Дома, бани, гаражи, пристройки</strong></div>
+                <div class="fact"><span>Что входит</span><strong>Разметка, выемка грунта, опалубка, армирование, заливка</strong></div>
+                <div class="fact"><span>На что обратить внимание</span><strong>Корректно ли отражен реальный состав услуги</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      "case-modal": () => `
+        <div class="essence-layout">
+          <h4>Кейс</h4>
+          <div class="essence-hero">
+            <div class="essence-photo" style="background-image:url('https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80');"></div>
+            <div class="essence-copy">
+              <h5>Фундамент под дом в Истре</h5>
+              <p>
+                Карточка кейса показывает сам объект, краткое описание работ и результат,
+                чтобы собственник быстро узнал реальный проект.
+              </p>
+              <div class="facts">
+                <div class="fact"><span>Объект</span><strong>Частный дом 180 м²</strong></div>
+                <div class="fact"><span>Работы</span><strong>Подбетонка, лента, гидроизоляция, армирование</strong></div>
+                <div class="fact"><span>Проверить</span><strong>Соответствует ли кейс фактическому объекту и ходу работ</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      "equipment-modal": () => `
+        <div class="essence-layout">
+          <h4>Техника</h4>
+          <div class="essence-hero">
+            <div class="essence-photo" style="background-image:url('https://images.unsplash.com/photo-1623068658048-5f4c8a2fa2a1?auto=format&fit=crop&w=1200&q=80');"></div>
+            <div class="essence-copy">
+              <h5>Гусеничный экскаватор CAT 320</h5>
+              <p>
+                Техника раскрыта как отдельная сущность: фото, назначение, особенности и
+                краткое описание того, в каких работах она реально используется.
+              </p>
+              <div class="facts">
+                <div class="fact"><span>Назначение</span><strong>Котлованы, планировка участка, выемка грунта</strong></div>
+                <div class="fact"><span>Особенность</span><strong>Устойчивая работа на плотном и влажном грунте</strong></div>
+                <div class="fact"><span>Проверить</span><strong>Правильность фото, названия и фактов по технике</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      "media-modal": () => `
+        <div class="essence-layout">
+          <h4>Медиа</h4>
+          <div class="essence-hero">
+            <div class="essence-photo" style="background-image:url('https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=1200&q=80'); min-height: 320px;"></div>
+            <div class="essence-copy">
+              <h5>Фото бетонных работ</h5>
+              <p>
+                Владелец видит сам кадр, подпись и контекст использования. Здесь не нужна сложная
+                аналитика, только решение: подходит фото или нет.
+              </p>
+              <div class="facts">
+                <div class="fact"><span>Подпись</span><strong>Заливка бетонной ленты на объекте в Истре</strong></div>
+                <div class="fact"><span>Привязка</span><strong>Страница услуги и кейс по фундаменту</strong></div>
+                <div class="fact"><span>Проверить</span><strong>Реальный ли это объект и корректно ли описан кадр</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      "page-modal": () => `
+        <div class="essence-layout">
+          <h4>Страница</h4>
+          <div class="page-preview-stage">
+            <div class="device-switches">
+              <button class="is-active" data-device="desktop">Компьютер</button>
+              <button data-device="tablet">Планшет</button>
+              <button data-device="mobile">Телефон</button>
+            </div>
+            <div class="page-preview-frame desktop" id="preview-frame">
+              <div class="page-preview-canvas">
+                <div class="page-preview-browser">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="page-preview-hero">
+                  <div class="kind is-page" style="width:max-content;">Страница услуги</div>
+                  <h5>Устройство ленточного фундамента</h5>
+                  <p>
+                    Компактное модальное превью сохраняет суть верстки, но не раздувает типографику.
+                    Здесь собственник уже оценивает и факты, и визуальную подачу.
+                  </p>
+                </div>
+                <div class="page-preview-hero-media" style="background-image:url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80');"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    const modalMeta = {
+      "service-modal": {
+        kind: "Согласование услуги",
+        title: "Устройство ленточного фундамента",
+        subtitle: "Собственник проверяет содержание услуги: что именно входит, как это сформулировано и соответствует ли реальной работе."
+      },
+      "case-modal": {
+        kind: "Согласование кейса",
+        title: "Кейс: фундамент под дом в Истре",
+        subtitle: "Собственник должен быстро узнать объект, понять состав работ и убедиться, что кейс отражает реальный проект."
+      },
+      "equipment-modal": {
+        kind: "Согласование техники",
+        title: "Гусеничный экскаватор CAT 320",
+        subtitle: "В карточке техники важно проверить корректность фото, названия и фактов о применении."
+      },
+      "media-modal": {
+        kind: "Согласование медиа",
+        title: "Фото бетонных работ",
+        subtitle: "Здесь основной объект проверки — сам кадр и его подпись, без лишней технической информации."
+      },
+      "page-modal": {
+        kind: "Согласование страницы",
+        title: "Страница услуги foundation",
+        subtitle: "В модалке страницы собственник уже оценивает визуальную подачу, переключая режимы превью по устройствам."
+      }
+    };
+
+    function attachPagePreviewInteractions() {
+      const frame = document.getElementById("preview-frame");
+      const switches = modalMainPanel.querySelectorAll("[data-device]");
+      switches.forEach((button) => {
+        button.addEventListener("click", () => {
+          switches.forEach((item) => item.classList.remove("is-active"));
+          button.classList.add("is-active");
+          frame.classList.remove("desktop", "tablet", "mobile");
+          frame.classList.add(button.dataset.device);
+        });
+      });
+    }
+
+    function openModal(key) {
+      const meta = modalMeta[key];
+      modalKind.textContent = meta.kind;
+      modalTitle.textContent = meta.title;
+      modalSubtitle.textContent = meta.subtitle;
+      modalMainPanel.innerHTML = templates[key]();
+      modalBackdrop.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+      if (key === "page-modal") {
+        attachPagePreviewInteractions();
+      }
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("is-open");
+      document.body.style.overflow = "";
+    }
+
+    document.querySelectorAll("[data-modal-target]").forEach((button) => {
+      button.addEventListener("click", () => openModal(button.dataset.modalTarget));
+    });
+
+    closeButton.addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", (event) => {
+      if (event.target === modalBackdrop) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && modalBackdrop.classList.contains("is-open")) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

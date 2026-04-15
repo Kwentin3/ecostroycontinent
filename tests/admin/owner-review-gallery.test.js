@@ -96,22 +96,53 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
         location: "Армавир",
         task: "Сделать фундамент под коммерческое здание."
       }
+    }),
+    buildQueueItem({
+      entityId: "equipment_1",
+      entityType: ENTITY_TYPES.EQUIPMENT,
+      ownerReviewRequired: true,
+      ownerApprovalStatus: "pending",
+      payload: {
+        slug: "cat-320",
+        locale: "ru-RU",
+        status: "draft",
+        title: "Экскаватор CAT 320",
+        equipmentType: "Гусеничный экскаватор",
+        shortSummary: "Техника для разработки котлованов и планировки участка.",
+        capabilitySummary: "Работает на плотном и влажном грунте, подходит для тяжелых земляных работ.",
+        keySpecs: ["Масса 21 т", "Глубина копания 6,7 м"],
+        usageScenarios: ["Котлованы", "Планировка участка"],
+        operatorMode: "С экипажем",
+        primaryMediaAssetId: "media_equipment"
+      }
     })
   ]);
 
   assert.equal(cards[0].status.key, "needs_owner");
-  assert.equal(cards[0].title, "Устройство фундаментов");
-  assert.equal(cards[0].mediaUrl, "/api/admin/media/media_service/preview");
-  assert.equal(cards[1].status.key, "returned");
-  assert.equal(cards[1].mediaUrl, "/api/admin/media/media_1/preview");
-  assert.equal(cards[2].status.key, "approved");
-  assert.equal(cards[3].status.key, "in_review");
-  assert.match(cards[2].summary, /Объект сдан в срок/);
-  assert.match(cards[3].summary, /Свяжитесь с нами/);
-  assert.equal(cards[3].previewTitle, "Контакты");
-  assert.equal(cards[3].previewThemeKey, "forest_contrast");
-  assert.equal(cards[3].previewHeroLayout, "split");
-  assert.equal(cards[3].pageType, "contacts");
+  assert.equal(cards[1].status.key, "needs_owner");
+  assert.equal(cards[2].status.key, "returned");
+  assert.equal(cards[2].mediaUrl, "/api/admin/media/media_1/preview");
+  assert.equal(cards[3].status.key, "approved");
+  assert.equal(cards[4].status.key, "in_review");
+  assert.match(cards[3].summary, /Объект сдан в срок/);
+  assert.match(cards[4].summary, /Свяжитесь с нами/);
+  assert.equal(cards[4].previewTitle, "Контакты");
+  assert.equal(cards[4].previewThemeKey, "forest_contrast");
+  assert.equal(cards[4].previewHeroLayout, "split");
+  assert.equal(cards[4].pageType, "contacts");
+
+  const equipmentCard = cards.find((card) => card.entityType === ENTITY_TYPES.EQUIPMENT);
+  const serviceCard = cards.find((card) => card.entityType === ENTITY_TYPES.SERVICE);
+
+  assert.ok(equipmentCard);
+  assert.ok(serviceCard);
+  assert.equal(equipmentCard.status.key, "needs_owner");
+  assert.equal(equipmentCard.title, "Экскаватор CAT 320");
+  assert.equal(equipmentCard.mediaUrl, "/api/admin/media/media_equipment/preview");
+  assert.match(equipmentCard.summary, /котлованов/i);
+  assert.equal(serviceCard.status.key, "needs_owner");
+  assert.equal(serviceCard.title, "Устройство фундаментов");
+  assert.equal(serviceCard.mediaUrl, "/api/admin/media/media_service/preview");
 });
 
 test("owner review gallery filters by status, type, and compact text content", () => {
@@ -185,6 +216,30 @@ test("owner review modal model keeps owner-facing essence without seo noise", ()
   assert.equal(serviceModel.sections[0].label, "Что входит");
   assert.match(serviceModel.sections[0].value, /Разметка/);
   assert.match(serviceModel.commentPlaceholder, /услуга/i);
+
+  const equipmentModel = buildOwnerReviewModalModel(buildQueueItem({
+    entityId: "equipment_essence",
+    entityType: ENTITY_TYPES.EQUIPMENT,
+    payload: {
+      slug: "cat-320",
+      locale: "ru-RU",
+      status: "draft",
+      title: "Экскаватор CAT 320",
+      equipmentType: "Гусеничный экскаватор",
+      shortSummary: "Техника для котлованов и тяжелых земляных работ.",
+      capabilitySummary: "Подходит для плотного и влажного грунта.",
+      keySpecs: ["Масса 21 т", "Глубина копания 6,7 м"],
+      usageScenarios: ["Котлованы", "Планировка участка"],
+      operatorMode: "С экипажем",
+      primaryMediaAssetId: "media_equipment"
+    }
+  }));
+
+  assert.equal(equipmentModel.title, "Экскаватор CAT 320");
+  assert.equal(equipmentModel.mediaUrl, "/api/admin/media/media_equipment/preview");
+  assert.equal(equipmentModel.sections[0].label, "Тип техники");
+  assert.match(equipmentModel.sections[1].value, /плотного и влажного грунта/i);
+  assert.match(equipmentModel.commentPlaceholder, /техника/i);
 
   const pageModel = buildOwnerReviewModalModel(buildQueueItem({
     entityId: "page_essence",

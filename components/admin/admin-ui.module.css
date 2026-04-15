@@ -561,8 +561,8 @@
 
 .reviewGalleryCard {
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 13px;
   border-radius: 22px;
   border: 1px solid rgba(38, 76, 59, 0.12);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 244, 237, 0.95));
@@ -643,7 +643,7 @@
 }
 
 .reviewGalleryCardPreview {
-  min-height: 156px;
+  min-height: 138px;
   display: grid;
   place-items: center;
   border-radius: 18px;
@@ -655,7 +655,7 @@
 .reviewGalleryImage {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   background: #fff;
 }
 
@@ -667,6 +667,186 @@
   color: rgba(33, 53, 42, 0.38);
   font-size: 2.2rem;
   font-weight: 800;
+}
+
+.reviewPageThumb {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 10px 12px 8px;
+  background: linear-gradient(180deg, rgba(228, 236, 242, 0.92), rgba(243, 246, 248, 0.96));
+}
+
+.reviewPageThumbShell {
+  width: min(100%, 228px);
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.reviewPageThumbScreen {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 13px;
+  padding: 7px;
+  background: #223748;
+  box-shadow: 0 14px 22px rgba(34, 55, 72, 0.2);
+}
+
+.reviewPageThumbBrowser {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 14px;
+  padding: 0 5px;
+  border-radius: 7px 7px 0 0;
+  background: rgba(232, 239, 244, 0.96);
+}
+
+.reviewPageThumbDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(34, 55, 72, 0.28);
+}
+
+.reviewPageThumbCanvas {
+  height: calc(100% - 14px);
+  display: grid;
+  gap: 6px;
+  padding: 7px;
+  border-radius: 0 0 9px 9px;
+  background: linear-gradient(180deg, #fbf8f2 0%, #f2ead7 100%);
+}
+
+.reviewPageThumbHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  align-items: center;
+}
+
+.reviewPageThumbEyebrow,
+.reviewPageThumbLive {
+  display: inline-flex;
+  align-items: center;
+  min-height: 16px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.44rem;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.reviewPageThumbEyebrow {
+  background: rgba(33, 79, 57, 0.1);
+  color: #244838;
+}
+
+.reviewPageThumbLive {
+  background: rgba(45, 96, 168, 0.12);
+  color: #355ca2;
+}
+
+.reviewPageThumbCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reviewPageThumbTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.58rem;
+  line-height: 1.18;
+  color: #1e3428;
+}
+
+.reviewPageThumbText {
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  color: #5f6a61;
+  font-size: 0.48rem;
+  line-height: 1.32;
+}
+
+.reviewPageThumbMediaWrap {
+  min-height: 58px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(34, 55, 72, 0.08);
+}
+
+.reviewPageThumbMedia,
+.reviewPageThumbMediaFallback {
+  width: 100%;
+  height: 100%;
+  min-height: 58px;
+}
+
+.reviewPageThumbMedia {
+  display: block;
+  object-fit: contain;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 241, 233, 0.9));
+}
+
+.reviewPageThumbMediaFallback {
+  display: grid;
+  place-items: center;
+  color: rgba(33, 53, 42, 0.34);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.reviewPageThumbStand {
+  width: 60px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(34, 55, 72, 0.24);
+}
+
+.reviewPageThumbStacked {
+  grid-template-rows: auto auto 1fr;
+}
+
+.reviewPageThumbSplit {
+  grid-template-columns: minmax(0, 1.05fr) minmax(74px, 0.95fr);
+  grid-template-rows: auto 1fr;
+  align-items: stretch;
+}
+
+.reviewPageThumbSplit .reviewPageThumbHeader {
+  grid-column: 1 / -1;
+}
+
+.reviewPageThumbSplit .reviewPageThumbCopy {
+  align-content: start;
+}
+
+.reviewPageThumbSplit .reviewPageThumbMediaWrap {
+  min-height: 100%;
+}
+
+.reviewPageThumbCinematic {
+  grid-template-rows: auto 1fr auto;
+}
+
+.reviewPageThumbCinematic .reviewPageThumbMediaWrap {
+  order: 2;
+  min-height: 72px;
+}
+
+.reviewPageThumbCinematic .reviewPageThumbCopy {
+  order: 3;
 }
 
 .reviewGalleryCardBody {
@@ -723,7 +903,7 @@
 
 .reviewModalLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
   gap: var(--space-3);
   align-items: start;
 }
@@ -745,7 +925,7 @@
 
 .reviewModalEntityHero {
   display: grid;
-  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
   gap: var(--space-3);
   align-items: start;
 }

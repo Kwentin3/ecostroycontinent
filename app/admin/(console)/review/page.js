@@ -4,7 +4,6 @@ import { AdminShell } from "../../../../components/admin/AdminShell";
 import { OwnerReviewDialog } from "../../../../components/admin/OwnerReviewDialog";
 import { PreviewViewport } from "../../../../components/admin/PreviewViewport";
 import styles from "../../../../components/admin/admin-ui.module.css";
-import pagePreviewStyles from "../../../../components/admin/PageRegistryClient.module.css";
 import { StandalonePage } from "../../../../components/public/PublicRenderers";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
 import { userCanPublishRevision } from "../../../../lib/auth/session.js";
@@ -31,51 +30,16 @@ const TYPE_OPTIONS = [
   { value: "all", label: "Все материалы" },
   { value: ENTITY_TYPES.SERVICE, label: "Услуги" },
   { value: ENTITY_TYPES.CASE, label: "Кейсы" },
+  { value: ENTITY_TYPES.EQUIPMENT, label: "Техника" },
   { value: ENTITY_TYPES.PAGE, label: "Страницы" },
   { value: ENTITY_TYPES.MEDIA_ASSET, label: "Медиа" }
 ];
 
 const MODAL_PAGE_PREVIEW_ZOOM = Object.freeze({
-  desktop: 0.38,
-  tablet: 0.48,
-  mobile: 0.72
+  desktop: 0.32,
+  tablet: 0.4,
+  mobile: 0.58
 });
-
-function pagePreviewThemeClassName(themeKey = "") {
-  if (themeKey === "forest_contrast") {
-    return pagePreviewStyles.previewThemeForest;
-  }
-
-  if (themeKey === "slate_editorial") {
-    return pagePreviewStyles.previewThemeSlate;
-  }
-
-  if (themeKey === "graphite_industrial") {
-    return pagePreviewStyles.previewThemeGraphite;
-  }
-
-  if (themeKey === "night_signal") {
-    return pagePreviewStyles.previewThemeNight;
-  }
-
-  if (themeKey === "concrete_blueprint") {
-    return pagePreviewStyles.previewThemeBlueprint;
-  }
-
-  return pagePreviewStyles.previewThemeSand;
-}
-
-function previewHeroLayoutClassName(layout = "") {
-  if (layout === "split") {
-    return pagePreviewStyles.previewLayoutSplit;
-  }
-
-  if (layout === "cinematic") {
-    return pagePreviewStyles.previewLayoutCinematic;
-  }
-
-  return pagePreviewStyles.previewLayoutStacked;
-}
 
 function buildReviewUrl({
   query = "",
@@ -176,54 +140,45 @@ function renderPageGalleryCardPreview(card) {
   const previewTitle = card.previewTitle || card.title;
   const previewIntro =
     card.previewIntro || "Карточка страницы показывает первый экран так, как его увидит посетитель.";
+  const pageTypeLabel = PAGE_TYPE_LABELS[card.pageType] || card.pageType;
+  const layoutClassName = card.previewHeroLayout === "split"
+    ? styles.reviewPageThumbSplit
+    : (card.previewHeroLayout === "cinematic" ? styles.reviewPageThumbCinematic : styles.reviewPageThumbStacked);
 
   return (
-    <div
-      className={`${pagePreviewStyles.preview} ${pagePreviewThemeClassName(card.previewThemeKey)} ${previewHeroLayoutClassName(card.previewHeroLayout)}`}
-      title={previewIntro}
-    >
-      <div className={pagePreviewStyles.pagePreviewViewport}>
-        <div className={pagePreviewStyles.pagePreviewSurface}>
-          <div className={pagePreviewStyles.pagePreviewFrame}>
-            <div className={pagePreviewStyles.pagePreviewTop}>
-              <span className={pagePreviewStyles.pagePreviewEyebrow}>
-                {PAGE_TYPE_LABELS[card.pageType] || card.pageType}
-              </span>
-              {card.hasLivePublishedRevision ? (
-                <span className={pagePreviewStyles.pagePreviewLive}>Live</span>
-              ) : null}
+    <div className={styles.reviewPageThumb} title={previewIntro}>
+      <div className={styles.reviewPageThumbShell}>
+        <div className={styles.reviewPageThumbScreen}>
+          <div className={styles.reviewPageThumbBrowser}>
+            <span className={styles.reviewPageThumbDot} />
+            <span className={styles.reviewPageThumbDot} />
+            <span className={styles.reviewPageThumbDot} />
+          </div>
+          <div className={`${styles.reviewPageThumbCanvas} ${layoutClassName}`}>
+            <div className={styles.reviewPageThumbHeader}>
+              <span className={styles.reviewPageThumbEyebrow}>{pageTypeLabel}</span>
+              {card.hasLivePublishedRevision ? <span className={styles.reviewPageThumbLive}>Live</span> : null}
             </div>
-            {card.mediaUrl ? (
-              <div className={pagePreviewStyles.pagePreviewMedia}>
-                <div className={pagePreviewStyles.pagePreviewMediaViewport}>
-                  <img
-                    src={card.mediaUrl}
-                    alt={`Превью страницы: ${previewTitle}`}
-                    className={pagePreviewStyles.pagePreviewImage}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className={pagePreviewStyles.pagePreviewMediaFallback} aria-hidden="true">
-                <div className={pagePreviewStyles.pagePreviewMediaViewport}>
-                  <span className={pagePreviewStyles.pagePreviewMediaMark}>
-                    {(previewTitle || "С").trim().slice(0, 1)}
-                  </span>
-                </div>
-              </div>
-            )}
-            <div className={pagePreviewStyles.pagePreviewBody}>
-              <strong className={pagePreviewStyles.pagePreviewTitle}>{previewTitle}</strong>
-              <p className={pagePreviewStyles.pagePreviewText}>{previewIntro}</p>
+            <div className={styles.reviewPageThumbCopy}>
+              <strong className={styles.reviewPageThumbTitle}>{previewTitle}</strong>
+              <p className={styles.reviewPageThumbText}>{previewIntro}</p>
             </div>
-            <div className={pagePreviewStyles.pagePreviewFooter}>
-              <span className={pagePreviewStyles.pagePreviewMetaLine}>
-                {PAGE_TYPE_LABELS[card.pageType] || card.pageType}
-              </span>
-              <span className={pagePreviewStyles.pagePreviewMetaLine}>/{card.slug}</span>
+            <div className={styles.reviewPageThumbMediaWrap}>
+              {card.mediaUrl ? (
+                <img
+                  src={card.mediaUrl}
+                  alt={`Превью страницы: ${previewTitle}`}
+                  className={styles.reviewPageThumbMedia}
+                />
+              ) : (
+                <div className={styles.reviewPageThumbMediaFallback} aria-hidden="true">
+                  {(previewTitle || "С").trim().slice(0, 1)}
+                </div>
+              )}
             </div>
           </div>
         </div>
+        <div className={styles.reviewPageThumbStand} aria-hidden="true" />
       </div>
     </div>
   );
