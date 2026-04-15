@@ -27,6 +27,9 @@
   - `SEO Manager` теперь может открывать publish readiness и публиковать `Page` revision после обязательного owner approval,
   - review screen показывает `Проверить перед публикацией`,
   - page workspace показывает `К публикации` или понятное ожидание согласования.
+- Снят сопутствующий техдолг сборки и доставки:
+  - runtime config больше не тянет Turbopack в tracing whole-project warning через `MEDIA_STORAGE_DIR`,
+  - GitHub Actions переведены на принудительный Node 24 runtime для JavaScript actions, чтобы убрать deprecation warning по Node 20.
 
 ## Файлы
 
