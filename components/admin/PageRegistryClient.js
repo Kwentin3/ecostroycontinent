@@ -85,11 +85,18 @@ function buildHiddenValue(pageType, createMode, formState) {
 }
 
 function renderPageCardPreview(record) {
+  const previewTitle = record.previewTitle || record.title;
+  const previewIntro =
+    record.previewIntro || "Page preview keeps the first-screen composition intact instead of cropping to a media tile.";
+
   return (
     <div
       className={`${styles.preview} ${pagePreviewThemeClassName(record.previewThemeKey)} ${previewHeroLayoutClassName(record.previewHeroLayout)}`}
+      title={previewIntro}
     >
-      <div className={styles.pagePreviewFrame}>
+      <div className={styles.pagePreviewViewport}>
+        <div className={styles.pagePreviewSurface}>
+          <div className={styles.pagePreviewFrame}>
         <div className={styles.pagePreviewTop}>
           <span className={styles.pagePreviewEyebrow}>
             {PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
@@ -100,21 +107,25 @@ function renderPageCardPreview(record) {
         </div>
         {record.previewMediaUrl ? (
           <div className={styles.pagePreviewMedia}>
+            <div className={styles.pagePreviewMediaViewport}>
             <img
               src={record.previewMediaUrl}
               alt={`Превью страницы: ${record.previewTitle || record.title}`}
               className={styles.pagePreviewImage}
             />
+            </div>
           </div>
         ) : (
           <div className={styles.pagePreviewMediaFallback} aria-hidden="true">
+            <div className={styles.pagePreviewMediaViewport}>
             <span className={styles.pagePreviewMediaMark}>
               {(record.previewTitle || record.title || "С").trim().slice(0, 1)}
             </span>
+            </div>
           </div>
         )}
         <div className={styles.pagePreviewBody}>
-          <strong className={styles.pagePreviewTitle}>{record.previewTitle || record.title}</strong>
+          <strong className={styles.pagePreviewTitle}>{previewTitle}</strong>
           <p className={styles.pagePreviewText}>
             {record.previewIntro || "Карточка показывает собственный page preview, а не фотографию прикрепленного медиа."}
           </p>
@@ -124,6 +135,8 @@ function renderPageCardPreview(record) {
             {PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
           </span>
           <span className={styles.pagePreviewMetaLine}>/{record.slug}</span>
+        </div>
+          </div>
         </div>
       </div>
     </div>
