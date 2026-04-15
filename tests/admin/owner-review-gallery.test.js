@@ -44,7 +44,7 @@ test("owner review status model prioritizes materials that still need owner deci
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "in_review");
 });
 
-test("owner review gallery cards sort attention-first and project compact service/case/media/page summaries", () => {
+test("owner review gallery cards sort attention-first and keep page-specific preview fields", () => {
   const cards = buildOwnerReviewGalleryCards([
     buildQueueItem({
       entityId: "page_1",
@@ -56,6 +56,8 @@ test("owner review gallery cards sort attention-first and project compact servic
         h1: "Контакты",
         intro: "Свяжитесь с нами удобным способом.",
         pageType: "contacts",
+        pageThemeKey: "forest_contrast",
+        mediaSettings: { heroLayout: "split" },
         sections: [{ type: "contact_details", body: "Телефон и почта" }]
       }
     }),
@@ -106,6 +108,10 @@ test("owner review gallery cards sort attention-first and project compact servic
   assert.equal(cards[3].status.key, "in_review");
   assert.match(cards[2].summary, /Объект сдан в срок/);
   assert.match(cards[3].summary, /Свяжитесь с нами/);
+  assert.equal(cards[3].previewTitle, "Контакты");
+  assert.equal(cards[3].previewThemeKey, "forest_contrast");
+  assert.equal(cards[3].previewHeroLayout, "split");
+  assert.equal(cards[3].pageType, "contacts");
 });
 
 test("owner review gallery filters by status, type, and compact text content", () => {

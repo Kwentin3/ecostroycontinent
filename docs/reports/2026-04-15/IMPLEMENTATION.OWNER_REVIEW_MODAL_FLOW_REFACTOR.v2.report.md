@@ -94,3 +94,4 @@ Result:
 
 - publish discoverability remains available from review modal for eligible roles, but it is now secondary to the owner decision flow
 - the old route `/admin/review/[revisionId]` remains valid as an entry point, but now redirects into modal state to preserve one consistent interaction model
+- follow-up adjustment: page cards in the gallery now use the same mini-page preview principle as the page registry, while service/case cards remain compact essence cards built around text, facts, and attached media

@@ -23,6 +23,8 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(source, /styles\.reviewGalleryStatusFilters/);
   assert.match(source, /styles\.reviewModalLayout/);
   assert.match(source, /renderPagePreview/);
+  assert.match(source, /renderPageGalleryCardPreview/);
+  assert.match(source, /pagePreviewStyles\.preview/);
   assert.doesNotMatch(source, /RevisionDiffPanel/);
   assert.doesNotMatch(source, /styles\.reviewGalleryHeader/);
   assert.doesNotMatch(source, /<table className=\{styles\.table\}/);
