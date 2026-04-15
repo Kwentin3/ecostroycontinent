@@ -47,6 +47,9 @@ test("page workspace keeps representative source states and launcher modal flow 
   assert.match(source, /launcherModels\.map/);
   assert.match(source, /SourcePickerModal/);
   assert.match(source, /setActivePicker/);
+  assert.match(source, /mediaSettings/);
+  assert.match(source, /PAGE_MEDIA_HERO_LAYOUTS\.map/);
+  assert.match(source, /PAGE_MEDIA_GALLERY_LAYOUTS\.map/);
   assert.match(source, /metadata\.pageType === PAGE_TYPES\.SERVICE_LANDING[\s\S]*primaryServiceId/);
   assert.match(source, /metadata\.pageType === PAGE_TYPES\.EQUIPMENT_LANDING[\s\S]*primaryEquipmentId/);
 

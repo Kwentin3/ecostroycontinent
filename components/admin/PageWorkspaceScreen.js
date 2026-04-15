@@ -29,6 +29,16 @@ import {
   PAGE_SECTION_TYPES,
   PAGE_TYPES
 } from "../../lib/content-core/content-types.js";
+import {
+  PAGE_MEDIA_GALLERY_ASPECT_RATIO_LABELS,
+  PAGE_MEDIA_GALLERY_ASPECT_RATIOS,
+  PAGE_MEDIA_GALLERY_GROUPING_LABELS,
+  PAGE_MEDIA_GALLERY_GROUPINGS,
+  PAGE_MEDIA_GALLERY_LAYOUT_LABELS,
+  PAGE_MEDIA_GALLERY_LAYOUTS,
+  PAGE_MEDIA_HERO_LAYOUT_LABELS,
+  PAGE_MEDIA_HERO_LAYOUTS
+} from "../../lib/content-core/page-media.js";
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import { getWorkspaceQuestionHint } from "../../lib/admin/question-model.js";
 import { normalizeLegacyCopy } from "../../lib/ui-copy.js";
@@ -1310,6 +1320,108 @@ export function PageWorkspaceScreen({
                 </div>
               </section>
             ) : null}
+
+            <section className={styles.sectionCard}>
+              <div className={styles.sectionHead}>
+                <div>
+                  <h3 className={styles.sectionTitle}>Медиа-подача</h3>
+                  <p className={styles.sectionMeta}>Страница сама задает, насколько крупно показывать главное изображение и как группировать несколько фотографий в галерее.</p>
+                </div>
+              </div>
+              <div className={styles.fieldGrid}>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>Главное изображение</span>
+                  <select
+                    className={styles.select}
+                    value={composition.mediaSettings.heroLayout}
+                    onChange={(event) => setComposition((current) => ({
+                      ...current,
+                      mediaSettings: {
+                        ...current.mediaSettings,
+                        heroLayout: event.target.value
+                      }
+                    }))}
+                  >
+                    {PAGE_MEDIA_HERO_LAYOUTS.map((option) => (
+                      <option key={option} value={option}>{PAGE_MEDIA_HERO_LAYOUT_LABELS[option]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>Группировка галерей</span>
+                  <select
+                    className={styles.select}
+                    value={composition.mediaSettings.galleryGrouping}
+                    onChange={(event) => setComposition((current) => ({
+                      ...current,
+                      mediaSettings: {
+                        ...current.mediaSettings,
+                        galleryGrouping: event.target.value
+                      }
+                    }))}
+                  >
+                    {PAGE_MEDIA_GALLERY_GROUPINGS.map((option) => (
+                      <option key={option} value={option}>{PAGE_MEDIA_GALLERY_GROUPING_LABELS[option]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>Раскладка галереи</span>
+                  <select
+                    className={styles.select}
+                    value={composition.mediaSettings.galleryLayout}
+                    onChange={(event) => setComposition((current) => ({
+                      ...current,
+                      mediaSettings: {
+                        ...current.mediaSettings,
+                        galleryLayout: event.target.value
+                      }
+                    }))}
+                  >
+                    {PAGE_MEDIA_GALLERY_LAYOUTS.map((option) => (
+                      <option key={option} value={option}>{PAGE_MEDIA_GALLERY_LAYOUT_LABELS[option]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>Формат карточек</span>
+                  <select
+                    className={styles.select}
+                    value={composition.mediaSettings.galleryAspectRatio}
+                    onChange={(event) => setComposition((current) => ({
+                      ...current,
+                      mediaSettings: {
+                        ...current.mediaSettings,
+                        galleryAspectRatio: event.target.value
+                      }
+                    }))}
+                  >
+                    {PAGE_MEDIA_GALLERY_ASPECT_RATIOS.map((option) => (
+                      <option key={option} value={option}>{PAGE_MEDIA_GALLERY_ASPECT_RATIO_LABELS[option]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className={`${styles.field} ${styles.fieldWide}`}>
+                  <span className={styles.fieldLabel}>Подписи под фото</span>
+                  <button
+                    type="button"
+                    className={`${styles.booleanToggle} ${composition.mediaSettings.showGalleryCaptions ? styles.booleanToggleActive : ""}`}
+                    aria-pressed={composition.mediaSettings.showGalleryCaptions}
+                    onClick={() => setComposition((current) => ({
+                      ...current,
+                      mediaSettings: {
+                        ...current.mediaSettings,
+                        showGalleryCaptions: !current.mediaSettings.showGalleryCaptions
+                      }
+                    }))}
+                  >
+                    {composition.mediaSettings.showGalleryCaptions
+                      ? "Подписи включены и помогают раскрывать смысл фотографий"
+                      : "Подписи скрыты, галерея работает как чистый визуальный ряд"}
+                  </button>
+                </label>
+              </div>
+            </section>
 
             {composition.sections.map((section, index) => (
               <section key={section.type} className={styles.sectionCard}>

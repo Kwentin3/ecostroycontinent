@@ -334,6 +334,25 @@
   resize: vertical;
 }
 
+.booleanToggle {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  border-radius: 16px;
+  border: 1px solid rgba(38, 76, 59, 0.14);
+  background: #f8f4ea;
+  color: #234535;
+  padding: 12px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.booleanToggleActive {
+  background: #264c3b;
+  border-color: #264c3b;
+  color: #fff;
+}
+
 .selectedStack {
   display: grid;
   gap: 10px;

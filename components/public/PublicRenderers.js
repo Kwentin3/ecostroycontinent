@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { PAGE_SECTION_TYPES, PAGE_TYPES } from "../../lib/content-core/content-types.js";
+import { normalizePageMediaSettings } from "../../lib/content-core/page-media.js";
 import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { DEFAULT_LANDING_PAGE_THEME_KEY } from "../../lib/landing-composition/visual-semantics.js";
 import styles from "./public-ui.module.css";
@@ -26,6 +27,24 @@ const TEXT_EMPHASIS_CLASS_NAMES = Object.freeze({
   strong: styles.textEmphasisStrong
 });
 
+const HERO_MEDIA_LAYOUT_CLASS_NAMES = Object.freeze({
+  stacked: styles.mediaHeroLayoutStacked,
+  split: styles.mediaHeroLayoutSplit,
+  cinematic: styles.mediaHeroLayoutCinematic
+});
+
+const GALLERY_LAYOUT_CLASS_NAMES = Object.freeze({
+  grid: styles.galleryLayoutGrid,
+  featured: styles.galleryLayoutFeatured,
+  strip: styles.galleryLayoutStrip
+});
+
+const GALLERY_ASPECT_RATIO_CLASS_NAMES = Object.freeze({
+  landscape: styles.galleryAspectLandscape,
+  square: styles.galleryAspectSquare,
+  portrait: styles.galleryAspectPortrait
+});
+
 function getThemeClassName(pageThemeKey) {
   return THEME_CLASS_NAMES[pageThemeKey || DEFAULT_LANDING_PAGE_THEME_KEY] ?? styles.themeEarthSand;
 }
@@ -48,12 +67,25 @@ function getSectionClassName(baseClassNames, sectionLike = {}) {
   ].filter(Boolean).join(" ");
 }
 
+function getHeroMediaLayoutClassName(layout = "stacked") {
+  return HERO_MEDIA_LAYOUT_CLASS_NAMES[layout] || HERO_MEDIA_LAYOUT_CLASS_NAMES.stacked;
+}
+
+function getGalleryLayoutClassName(layout = "grid") {
+  return GALLERY_LAYOUT_CLASS_NAMES[layout] || GALLERY_LAYOUT_CLASS_NAMES.grid;
+}
+
+function getGalleryAspectRatioClassName(aspectRatio = "landscape") {
+  return GALLERY_ASPECT_RATIO_CLASS_NAMES[aspectRatio] || GALLERY_ASPECT_RATIO_CLASS_NAMES.landscape;
+}
+
 function MediaHero({
   asset,
   label = PUBLIC_COPY.mediaLabel,
   sectionId = "preview-media",
   sectionName = "media",
-  sectionLike = {}
+  sectionLike = {},
+  heroLayout = "stacked"
 }) {
   if (!asset) {
     return null;
@@ -63,7 +95,7 @@ function MediaHero({
     <section
       id={sectionId}
       data-preview-section={sectionName}
-      className={getSectionClassName([styles.mediaHero, styles.previewSection], sectionLike)}
+      className={getSectionClassName([styles.mediaHero, styles.previewSection, getHeroMediaLayoutClassName(heroLayout)], sectionLike)}
     >
       <p className={styles.eyebrow}>{label}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -79,12 +111,32 @@ function GallerySection({
   resolveGallery,
   sectionId = "preview-gallery",
   sectionName = "gallery",
-  sectionLike = {}
+  sectionLike = {},
+  mediaSettings = {}
 }) {
-  const items = galleries
+  const normalizedMediaSettings = normalizePageMediaSettings(mediaSettings);
+  const galleryRecords = galleries
     .map((galleryId) => resolveGallery(galleryId))
-    .filter(Boolean)
-    .flatMap((gallery) => gallery.assets ?? []);
+    .filter(Boolean);
+
+  const groupedCollections = normalizedMediaSettings.galleryGrouping === "by_collection"
+    ? galleryRecords
+      .map((gallery, index) => ({
+        key: gallery.entityId || gallery.id || `gallery-${index}`,
+        title: gallery.title || title || PUBLIC_COPY.galleryHeading,
+        caption: gallery.caption || "",
+        items: gallery.assets ?? []
+      }))
+      .filter((group) => group.items.length > 0)
+    : [{
+      key: "flat",
+      title: title || PUBLIC_COPY.galleryHeading,
+      caption: "",
+      items: galleryRecords.flatMap((gallery) => gallery.assets ?? [])
+    }];
+
+  const hasGroupedCollections = groupedCollections.length > 1;
+  const items = groupedCollections.flatMap((group) => group.items);
 
   if (items.length === 0) {
     return null;
@@ -97,13 +149,27 @@ function GallerySection({
       className={getSectionClassName([styles.gallerySection, styles.previewSection], sectionLike)}
     >
       {title ? <h3>{title}</h3> : null}
-      <div className={styles.gallery}>
-        {items.map((asset) => (
-          <figure key={asset.entityId}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
-            <figcaption className={styles.mediaCaption}>{asset.caption || asset.title || PUBLIC_COPY.mediaFallback}</figcaption>
-          </figure>
+      <div className={styles.galleryGroups}>
+        {groupedCollections.map((group) => (
+          <div key={group.key} className={styles.galleryGroup}>
+            {hasGroupedCollections ? (
+              <div className={styles.galleryGroupHead}>
+                <h4>{group.title}</h4>
+                {group.caption ? <p className={styles.note}>{group.caption}</p> : null}
+              </div>
+            ) : null}
+            <div className={`${styles.gallery} ${getGalleryLayoutClassName(normalizedMediaSettings.galleryLayout)} ${getGalleryAspectRatioClassName(normalizedMediaSettings.galleryAspectRatio)}`}>
+              {group.items.map((asset, index) => (
+                <figure key={`${group.key}-${asset.entityId || asset.id || index}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
+                  {normalizedMediaSettings.showGalleryCaptions ? (
+                    <figcaption className={styles.mediaCaption}>{asset.caption || asset.title || PUBLIC_COPY.mediaFallback}</figcaption>
+                  ) : null}
+                </figure>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </section>
@@ -139,6 +205,7 @@ function getSection(page, type) {
 function renderPageSections({ page, globalSettings, services, equipment, cases, galleries }) {
   const sourceRefs = page.sourceRefs || {};
   const targeting = page.targeting || {};
+  const mediaSettings = normalizePageMediaSettings(page.mediaSettings);
   const primaryService = sourceRefs.primaryServiceId ? services(sourceRefs.primaryServiceId) : null;
   const primaryEquipment = sourceRefs.primaryEquipmentId ? equipment(sourceRefs.primaryEquipmentId) : null;
 
@@ -276,6 +343,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
               sectionId={`preview-page-${section.type}-${section.order}-gallery`}
               sectionName={`${section.type}-gallery`}
               sectionLike={section}
+              mediaSettings={mediaSettings}
             />
           </section>
         );
@@ -434,10 +502,12 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia, globa
 export function StandalonePage({ page, globalSettings, services, equipment, cases, galleries, resolveMedia }) {
   const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
   const pageThemeClassName = getThemeClassName(page.pageThemeKey);
+  const mediaSettings = normalizePageMediaSettings(page.mediaSettings);
   const heroSection = getSection(page, PAGE_SECTION_TYPES.HERO_OFFER);
   const sourceRefs = page.sourceRefs || {};
   const primaryService = sourceRefs.primaryServiceId ? services(sourceRefs.primaryServiceId) : null;
   const primaryEquipment = sourceRefs.primaryEquipmentId ? equipment?.(sourceRefs.primaryEquipmentId) : null;
+  const showSplitHeroMedia = mediaSettings.heroLayout === "split" && primaryMedia;
 
   return (
     <PublicPageShell globalSettings={globalSettings} themeClassName={pageThemeClassName}>
@@ -445,7 +515,10 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
         <section
           id="preview-page-hero"
           data-preview-section="hero"
-          className={getSectionClassName([styles.hero, styles.previewSection], heroSection || { surfaceTone: "tinted", textEmphasisPreset: "strong" })}
+          className={getSectionClassName(
+            [styles.hero, styles.previewSection, showSplitHeroMedia ? styles.heroSplit : ""],
+            heroSection || { surfaceTone: "tinted", textEmphasisPreset: "strong" }
+          )}
         >
           <p className={styles.eyebrow}>
             {page.pageType === PAGE_TYPES.SERVICE_LANDING
@@ -459,8 +532,23 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
           {heroSection?.trustText ? <p className={styles.note}>{heroSection.trustText}</p> : null}
           {page.pageType === PAGE_TYPES.SERVICE_LANDING && primaryService?.summary ? <p className={styles.note}>{primaryService.summary}</p> : null}
           {page.pageType === PAGE_TYPES.EQUIPMENT_LANDING && primaryEquipment?.shortSummary ? <p className={styles.note}>{primaryEquipment.shortSummary}</p> : null}
+          {showSplitHeroMedia ? (
+            <div className={styles.heroSplitMedia}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={primaryMedia.previewUrl} alt={primaryMedia.alt || primaryMedia.title || PUBLIC_COPY.imageFallback} />
+              <p className={styles.mediaCaption}>{primaryMedia.caption || primaryMedia.title || primaryMedia.originalFilename || PUBLIC_COPY.mediaFallback}</p>
+            </div>
+          ) : null}
         </section>
-        <MediaHero asset={primaryMedia} label={PUBLIC_COPY.mediaLabel} sectionId="preview-page-media" sectionName="media" />
+        {showSplitHeroMedia ? null : (
+          <MediaHero
+            asset={primaryMedia}
+            label={PUBLIC_COPY.mediaLabel}
+            sectionId="preview-page-media"
+            sectionName="media"
+            heroLayout={mediaSettings.heroLayout}
+          />
+        )}
         <section id="preview-page-blocks" data-preview-section="page-blocks" className={`${styles.stack} ${styles.previewSection}`}>
           {renderPageSections({
             page,

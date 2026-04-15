@@ -16,6 +16,10 @@
 - Preview-резолвер страницы больше не ограничен только published media map:
   - draft-selected hero media теперь подмешивается в resolver через `mediaOptions`,
   - это закрывает кейс, когда в preview не появлялось только что выбранное изображение.
+- Медиа-контракт страницы расширен до управляемой модели подачи:
+  - страница хранит `mediaSettings`,
+  - настраиваются режим главного изображения, раскладка галереи, aspect ratio карточек, группировка по коллекциям и показ подписей,
+  - preview и публичный renderer читают один и тот же bounded contract.
 - Дублирование page title между shell header и внутренним workspace смягчено:
   - shell заголовок для страницы возвращен к доменному уровню `Страницы`,
   - локальный workspace остается рабочей шапкой для самой страницы.
@@ -28,7 +32,16 @@
 - `components/admin/PageRegistryClient.module.css`
 - `components/admin/PageWorkspaceScreen.js`
 - `components/admin/PageWorkspaceScreen.module.css`
+- `components/public/PublicRenderers.js`
+- `components/public/public-ui.module.css`
+- `lib/content-core/page-media.js`
+- `lib/content-core/pure.js`
+- `lib/content-core/schemas.js`
+- `lib/admin/page-workspace.js`
 - `tests/admin/page-workspace-layout-guardrails.test.js`
+- `tests/admin/page-workspace-remediation.test.js`
+- `tests/content-core.service.test.js`
+- `tests/public-page-media-layouts.test.js`
 
 ## Проверка
 

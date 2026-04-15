@@ -53,6 +53,64 @@ test("page default CTA copy is generated in readable Russian", () => {
   assert.equal(ctaBlock.ctaLabel, "\u0421\u0432\u044f\u0437\u0430\u0442\u044c\u0441\u044f \u0441 \u043d\u0430\u043c\u0438");
 });
 
+test("page workspace preview payload carries media presentation settings into the normalized page contract", () => {
+  const preview = buildPageWorkspacePreviewPayload({
+    baseValue: {
+      pageType: "about",
+      slug: "about",
+      pageThemeKey: "earth_sand",
+      title: "О компании",
+      h1: "О компании",
+      intro: "Коротко о нас",
+      primaryMediaAssetId: "media_1",
+      mediaSettings: {
+        heroLayout: "stacked",
+        galleryLayout: "grid",
+        galleryAspectRatio: "landscape",
+        galleryGrouping: "flat",
+        showGalleryCaptions: true
+      },
+      sourceRefs: {
+        primaryServiceId: "",
+        primaryEquipmentId: "",
+        caseIds: [],
+        galleryIds: ["gallery_1"]
+      },
+      sections: [],
+      seo: {}
+    },
+    composition: {
+      title: "О компании",
+      h1: "О компании",
+      intro: "Коротко о нас",
+      primaryMediaAssetId: "media_1",
+      mediaSettings: {
+        heroLayout: "split",
+        galleryLayout: "strip",
+        galleryAspectRatio: "portrait",
+        galleryGrouping: "by_collection",
+        showGalleryCaptions: false
+      },
+      sourceRefs: {
+        primaryServiceId: "",
+        primaryEquipmentId: "",
+        caseIds: [],
+        galleryIds: ["gallery_1"]
+      },
+      sections: []
+    },
+    metadata: {}
+  });
+
+  assert.deepEqual(preview.mediaSettings, {
+    heroLayout: "split",
+    galleryLayout: "strip",
+    galleryAspectRatio: "portrait",
+    galleryGrouping: "by_collection",
+    showGalleryCaptions: false
+  });
+});
+
 test("page lifecycle stays bounded: archive for live, delete for never-published only", () => {
   const liveLifecycle = buildPageWorkspaceLifecycleState({
     aggregate: {

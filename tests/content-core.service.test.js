@@ -98,6 +98,45 @@ test("normalizeEntityInput persists bounded landing visual semantics without ope
   assert.equal("pagePaletteOverride" in page, false);
 });
 
+test("normalizeEntityInput preserves bounded page media settings and projects them into hero/gallery blocks", () => {
+  const page = normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    pageType: PAGE_TYPES.ABOUT,
+    pageThemeKey: "earth_sand",
+    title: "About",
+    h1: "About company",
+    intro: "Company intro",
+    body: "Body text",
+    caseIds: [],
+    galleryIds: ["gallery-1", "gallery-2"],
+    primaryMediaAssetId: "media-1",
+    mediaSettings: {
+      heroLayout: "split",
+      galleryLayout: "featured",
+      galleryAspectRatio: "square",
+      galleryGrouping: "by_collection",
+      showGalleryCaptions: false
+    },
+    ctaTitle: "Need a quote?",
+    ctaBody: "Send us details",
+    defaultBlockCtaLabel: "Request quote"
+  });
+  const heroBlock = page.blocks.find((block) => block.type === "hero");
+  const galleryBlock = page.blocks.find((block) => block.type === "gallery");
+
+  assert.deepEqual(page.mediaSettings, {
+    heroLayout: "split",
+    galleryLayout: "featured",
+    galleryAspectRatio: "square",
+    galleryGrouping: "by_collection",
+    showGalleryCaptions: false
+  });
+  assert.equal(heroBlock.mediaLayout, "split");
+  assert.equal(galleryBlock.layoutPreset, "featured");
+  assert.equal(galleryBlock.aspectRatioPreset, "square");
+  assert.equal(galleryBlock.groupingMode, "by_collection");
+  assert.equal(galleryBlock.showCaptions, false);
+});
+
 test("normalizeEntityInput reads page seo from either top-level fields or nested seo payload", () => {
   const page = normalizeEntityInput(ENTITY_TYPES.PAGE, {
     pageType: PAGE_TYPES.ABOUT,
