@@ -125,6 +125,18 @@
   border-radius: 22px;
 }
 
+.preview,
+.cardHead,
+.badge {
+  pointer-events: none;
+}
+
+.menuWrap {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
 .preview {
   height: 146px;
   border-radius: 18px;

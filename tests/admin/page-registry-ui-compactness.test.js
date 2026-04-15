@@ -30,3 +30,11 @@ test("page registry preview copy no longer depends on raw media thumbnails alone
   assert.match(source, /previewIntro/);
   assert.doesNotMatch(source, /<img[^>]+record\.previewMediaUrl/);
 });
+
+test("page registry card overlay does not block opening the page card", () => {
+  const css = readUtf8(cssPath);
+
+  assert.match(css, /\.cardLink\s*\{[\s\S]*position:\s*absolute;[\s\S]*inset:\s*0;/);
+  assert.match(css, /\.preview,\s*\.cardHead,\s*\.badge\s*\{[\s\S]*pointer-events:\s*none;/);
+  assert.match(css, /\.menuWrap\s*\{[\s\S]*z-index:\s*1;[\s\S]*pointer-events:\s*auto;/);
+});
