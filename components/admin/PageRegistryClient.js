@@ -55,6 +55,18 @@ function pagePreviewThemeClassName(themeKey = "") {
   return styles.previewThemeSand;
 }
 
+function previewHeroLayoutClassName(layout = "") {
+  if (layout === "split") {
+    return styles.previewLayoutSplit;
+  }
+
+  if (layout === "cinematic") {
+    return styles.previewLayoutCinematic;
+  }
+
+  return styles.previewLayoutStacked;
+}
+
 function buildHiddenValue(pageType, createMode, formState) {
   if (createMode === "from_service") {
     return "service_landing";
@@ -74,14 +86,33 @@ function buildHiddenValue(pageType, createMode, formState) {
 
 function renderPageCardPreview(record) {
   return (
-    <div className={`${styles.preview} ${pagePreviewThemeClassName(record.previewThemeKey)}`}>
+    <div
+      className={`${styles.preview} ${pagePreviewThemeClassName(record.previewThemeKey)} ${previewHeroLayoutClassName(record.previewHeroLayout)}`}
+    >
       <div className={styles.pagePreviewFrame}>
         <div className={styles.pagePreviewTop}>
           <span className={styles.pagePreviewEyebrow}>
             {PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
           </span>
-          <span className={styles.pagePreviewSlug}>/{record.slug}</span>
+          {record.lifecycle?.hasLivePublishedRevision ? (
+            <span className={styles.pagePreviewLive}>Live</span>
+          ) : null}
         </div>
+        {record.previewMediaUrl ? (
+          <div className={styles.pagePreviewMedia}>
+            <img
+              src={record.previewMediaUrl}
+              alt={`Превью страницы: ${record.previewTitle || record.title}`}
+              className={styles.pagePreviewImage}
+            />
+          </div>
+        ) : (
+          <div className={styles.pagePreviewMediaFallback} aria-hidden="true">
+            <span className={styles.pagePreviewMediaMark}>
+              {(record.previewTitle || record.title || "С").trim().slice(0, 1)}
+            </span>
+          </div>
+        )}
         <div className={styles.pagePreviewBody}>
           <strong className={styles.pagePreviewTitle}>{record.previewTitle || record.title}</strong>
           <p className={styles.pagePreviewText}>
@@ -89,10 +120,10 @@ function renderPageCardPreview(record) {
           </p>
         </div>
         <div className={styles.pagePreviewFooter}>
-          <span className={styles.pagePreviewSignal}>{record.signalLabel}</span>
-          {record.lifecycle?.hasLivePublishedRevision ? (
-            <span className={styles.pagePreviewLive}>Live</span>
-          ) : null}
+          <span className={styles.pagePreviewMetaLine}>
+            {PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
+          </span>
+          <span className={styles.pagePreviewMetaLine}>/{record.slug}</span>
         </div>
       </div>
     </div>

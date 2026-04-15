@@ -79,6 +79,7 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
       previewTitle: pageValue.h1 || pageValue.title || row.entityLabel || row.entityId,
       previewIntro: pageValue.intro || "",
       previewThemeKey: metadata.pageThemeKey,
+      previewHeroLayout: pageValue.mediaSettings?.heroLayout || "stacked",
       previewMediaUrl: getPageCardPreviewUrl(pageValue.primaryMediaAssetId),
       signalLabel: row.signalLabel,
       signalTone: row.signalTone,

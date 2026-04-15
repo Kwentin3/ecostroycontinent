@@ -138,18 +138,13 @@
 }
 
 .preview {
-  height: 146px;
+  min-height: 196px;
+  aspect-ratio: 4 / 3;
   border-radius: 18px;
   overflow: hidden;
   background: linear-gradient(135deg, #efe7d8 0%, #f7f3ea 100%);
   position: relative;
   display: grid;
-}
-
-.preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .previewFallback {
@@ -159,10 +154,15 @@
 
 .pagePreviewFrame {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 14px;
+  grid-template-areas:
+    "top"
+    "media"
+    "body"
+    "footer";
+  grid-template-rows: auto minmax(72px, 1fr) auto auto;
+  gap: 10px;
   height: 100%;
-  padding: 16px;
+  padding: 14px;
 }
 
 .pagePreviewTop,
@@ -173,68 +173,129 @@
   gap: 10px;
 }
 
+.pagePreviewTop {
+  grid-area: top;
+}
+
+.pagePreviewFooter {
+  grid-area: footer;
+}
+
 .pagePreviewEyebrow,
-.pagePreviewSlug {
+.pagePreviewMetaLine {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  padding: 6px 10px;
+  padding: 5px 9px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.66);
   color: rgba(30, 43, 35, 0.8);
-  font-size: 0.73rem;
+  font-size: 0.71rem;
   font-weight: 700;
   backdrop-filter: blur(6px);
 }
 
-.pagePreviewSlug {
-  max-width: 48%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  justify-content: flex-end;
-}
-
 .pagePreviewBody {
+  grid-area: body;
   display: grid;
-  align-content: center;
-  gap: 10px;
+  align-content: start;
+  gap: 8px;
   min-width: 0;
 }
 
 .pagePreviewTitle {
-  font-size: 1.1rem;
-  line-height: 1.15;
+  font-size: 1rem;
+  line-height: 1.08;
   color: #21352a;
 }
 
 .pagePreviewText {
   margin: 0;
   color: rgba(34, 56, 45, 0.78);
-  font-size: 0.84rem;
-  line-height: 1.45;
+  font-size: 0.79rem;
+  line-height: 1.35;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.pagePreviewSignal,
 .pagePreviewLive {
   display: inline-flex;
   align-items: center;
-  padding: 6px 10px;
+  padding: 5px 9px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.62);
-  color: rgba(30, 43, 35, 0.8);
-  font-size: 0.75rem;
+  background: rgba(38, 76, 59, 0.9);
+  color: #fff;
+  font-size: 0.71rem;
   font-weight: 700;
   backdrop-filter: blur(6px);
 }
 
-.pagePreviewLive {
-  background: rgba(38, 76, 59, 0.9);
-  color: #fff;
+.pagePreviewMedia,
+.pagePreviewMediaFallback {
+  grid-area: media;
+  min-width: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(38, 76, 59, 0.1);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.pagePreviewImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pagePreviewMediaFallback {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.72), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(243, 236, 223, 0.9));
+}
+
+.pagePreviewMediaMark {
+  font-size: 2rem;
+  font-weight: 800;
+  color: rgba(33, 53, 42, 0.34);
+}
+
+.previewLayoutStacked .pagePreviewFrame {
+  grid-template-rows: auto minmax(82px, 1fr) auto auto;
+}
+
+.previewLayoutCinematic .pagePreviewFrame {
+  grid-template-rows: auto minmax(104px, 1.25fr) auto auto;
+}
+
+.previewLayoutSplit .pagePreviewFrame {
+  grid-template-areas:
+    "top top"
+    "body media"
+    "footer footer";
+  grid-template-columns: minmax(0, 1.1fr) minmax(96px, 0.9fr);
+  grid-template-rows: auto 1fr auto;
+  column-gap: 12px;
+}
+
+.previewLayoutSplit .pagePreviewBody {
+  align-content: center;
+}
+
+.previewLayoutSplit .pagePreviewMedia,
+.previewLayoutSplit .pagePreviewMediaFallback {
+  align-self: stretch;
+}
+
+.pagePreviewMetaLine:last-child {
+  max-width: 52%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  justify-content: flex-end;
 }
 
 .previewThemeSand {
@@ -270,14 +331,12 @@
 .previewThemeNight .pagePreviewTitle,
 .previewThemeNight .pagePreviewText,
 .previewThemeNight .pagePreviewEyebrow,
-.previewThemeNight .pagePreviewSlug,
-.previewThemeNight .pagePreviewSignal {
+.previewThemeNight .pagePreviewMetaLine {
   color: #f8fbff;
 }
 
 .previewThemeNight .pagePreviewEyebrow,
-.previewThemeNight .pagePreviewSlug,
-.previewThemeNight .pagePreviewSignal {
+.previewThemeNight .pagePreviewMetaLine {
   background: rgba(248, 251, 255, 0.14);
 }
 
