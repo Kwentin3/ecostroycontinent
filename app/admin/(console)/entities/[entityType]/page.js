@@ -446,7 +446,18 @@ export default async function EntityListPage({ params, searchParams }) {
                       </td>
                     ) : null}
                     <td>
-                      <div className={styles.cockpitCoverageSummary}>
+                      <div className={normalizedType === ENTITY_TYPES.EQUIPMENT ? styles.entityListCell : styles.cockpitCoverageSummary}>
+                        {normalizedType === ENTITY_TYPES.EQUIPMENT ? (
+                          row.previewMediaUrl ? (
+                            <img
+                              src={row.previewMediaUrl}
+                              alt={`Превью техники: ${row.entityLabel}`}
+                              className={styles.entityListThumb}
+                            />
+                          ) : (
+                            <div className={styles.entityListThumbFallback} aria-hidden="true">Т</div>
+                          )
+                        ) : null}
                         <strong>{row.entityLabel}</strong>
                         <span className={styles.mutedText}>{row.entityTypeLabel}</span>
                         {row.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}

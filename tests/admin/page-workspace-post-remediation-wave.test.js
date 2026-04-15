@@ -49,6 +49,20 @@ test("entity registry page keeps SurfacePacket imported for non-page entity list
   assert.match(source, /<SurfacePacket/);
 });
 
+test("equipment registry rows render compact media previews", () => {
+  const source = readFileSync(new URL("../../app/admin/(console)/entities/[entityType]/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const listVisibility = readFileSync(new URL("../../lib/admin/list-visibility.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const css = readFileSync(new URL("../../components/admin/admin-ui.module.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+
+  assert.match(source, /normalizedType === ENTITY_TYPES\.EQUIPMENT/);
+  assert.match(source, /row\.previewMediaUrl \?/);
+  assert.match(source, /styles\.entityListThumb/);
+  assert.match(listVisibility, /previewMediaUrl/);
+  assert.match(listVisibility, /\/api\/admin\/media\/\$\{mediaId\}\/preview/);
+  assert.match(css, /\.entityListCell\s*\{/);
+  assert.match(css, /\.entityListThumb\s*,\s*\.entityListThumbFallback\s*\{/);
+});
+
 test("cleanup aggregate builder preserves entities without revisions for exact-id cleanup", () => {
   const aggregates = buildEntityAggregates([
     {
