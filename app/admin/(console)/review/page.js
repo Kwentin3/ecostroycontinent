@@ -136,14 +136,30 @@ function renderCompactEntityCard(card, modalModel) {
   );
 }
 
-function renderPageGalleryCardPreview(card) {
-  const previewTitle = card.previewTitle || card.title;
-  const previewIntro =
-    card.previewIntro || "Карточка страницы показывает первый экран так, как его увидит посетитель.";
-  const pageTypeLabel = PAGE_TYPE_LABELS[card.pageType] || card.pageType;
-  const layoutClassName = card.previewHeroLayout === "split"
-    ? styles.reviewPageThumbSplit
-    : (card.previewHeroLayout === "cinematic" ? styles.reviewPageThumbCinematic : styles.reviewPageThumbStacked);
+function renderPageGalleryCardPreview(card, modalModel, lookups, globalSettings) {
+  const previewIntro = card.previewIntro || "Карточка страницы показывает первый экран так, как его увидит посетитель.";
+
+  if (!modalModel?.pageValue || !lookups || !globalSettings || card.revision.previewStatus !== PREVIEW_STATUS.RENDERABLE) {
+    return (
+      <div className={styles.reviewPageThumb} title={previewIntro}>
+        <div className={styles.reviewPageThumbShell}>
+          <div className={styles.reviewPageThumbScreen}>
+            <div className={styles.reviewPageThumbBrowser}>
+              <span className={styles.reviewPageThumbDot} />
+              <span className={styles.reviewPageThumbDot} />
+              <span className={styles.reviewPageThumbDot} />
+            </div>
+            <div className={styles.reviewPageThumbCanvasFallback}>
+              <span className={styles.reviewPageThumbEyebrow}>{PAGE_TYPE_LABELS[card.pageType] || card.pageType}</span>
+              <strong className={styles.reviewPageThumbTitle}>{card.previewTitle || card.title}</strong>
+              <p className={styles.reviewPageThumbText}>{previewIntro}</p>
+            </div>
+          </div>
+          <div className={styles.reviewPageThumbStand} aria-hidden="true" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.reviewPageThumb} title={previewIntro}>
@@ -154,27 +170,21 @@ function renderPageGalleryCardPreview(card) {
             <span className={styles.reviewPageThumbDot} />
             <span className={styles.reviewPageThumbDot} />
           </div>
-          <div className={`${styles.reviewPageThumbCanvas} ${layoutClassName}`}>
-            <div className={styles.reviewPageThumbHeader}>
-              <span className={styles.reviewPageThumbEyebrow}>{pageTypeLabel}</span>
-              {card.hasLivePublishedRevision ? <span className={styles.reviewPageThumbLive}>Live</span> : null}
-            </div>
-            <div className={styles.reviewPageThumbCopy}>
-              <strong className={styles.reviewPageThumbTitle}>{previewTitle}</strong>
-              <p className={styles.reviewPageThumbText}>{previewIntro}</p>
-            </div>
-            <div className={styles.reviewPageThumbMediaWrap}>
-              {card.mediaUrl ? (
-                <img
-                  src={card.mediaUrl}
-                  alt={`Превью страницы: ${previewTitle}`}
-                  className={styles.reviewPageThumbMedia}
-                />
-              ) : (
-                <div className={styles.reviewPageThumbMediaFallback} aria-hidden="true">
-                  {(previewTitle || "С").trim().slice(0, 1)}
+          <div className={styles.reviewPageThumbCanvas}>
+            <div className={styles.reviewPageThumbViewport}>
+              <div className={styles.reviewPageThumbScaler}>
+                <div className={styles.reviewPageThumbSurface}>
+                  <StandalonePage
+                    page={modalModel.pageValue}
+                    globalSettings={globalSettings}
+                    services={(id) => lookups.serviceMap.get(id) || null}
+                    equipment={(id) => lookups.equipmentMap.get(id) || null}
+                    cases={(id) => lookups.caseMap.get(id) || null}
+                    galleries={(id) => lookups.galleryMap.get(id) || null}
+                    resolveMedia={(id) => lookups.mediaMap.get(id) || null}
+                  />
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -259,6 +269,11 @@ export default async function ReviewQueuePage({ searchParams }) {
       preview: previewMode
     })
     : closeHref;
+  const pageModalModels = new Map(
+    queue
+      .filter((item) => item.entityType === ENTITY_TYPES.PAGE)
+      .map((item) => [item.revision.id, buildOwnerReviewModalModel(item)])
+  );
   let previewLookups = null;
   let globalSettings = null;
   const publishHref = selectedCard
@@ -271,7 +286,10 @@ export default async function ReviewQueuePage({ searchParams }) {
     && selectedCard.revision.ownerReviewRequired
     && selectedCard.revision.ownerApprovalStatus !== "approved";
 
-  if (selectedCard?.entityType === ENTITY_TYPES.PAGE && selectedModal?.pageValue) {
+  const shouldLoadPagePreviewContext = filteredCards.some((card) => card.entityType === ENTITY_TYPES.PAGE)
+    || (selectedCard?.entityType === ENTITY_TYPES.PAGE && selectedModal?.pageValue);
+
+  if (shouldLoadPagePreviewContext) {
     [previewLookups, globalSettings] = await Promise.all([
       buildPublishedLookups(),
       getPublishedGlobalSettings()
@@ -389,7 +407,7 @@ export default async function ReviewQueuePage({ searchParams }) {
 
                 <div className={styles.reviewGalleryCardPreview}>
                   {card.entityType === ENTITY_TYPES.PAGE
-                    ? renderPageGalleryCardPreview(card)
+                    ? renderPageGalleryCardPreview(card, pageModalModels.get(card.id) || null, previewLookups, globalSettings)
                     : (card.mediaUrl ? (
                       <img src={card.mediaUrl} alt={card.title} className={styles.reviewGalleryImage} />
                     ) : (

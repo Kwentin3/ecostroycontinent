@@ -26,6 +26,8 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(source, /renderPagePreview/);
   assert.match(source, /renderPageGalleryCardPreview/);
   assert.match(source, /styles\.reviewPageThumbScreen/);
+  assert.match(source, /styles\.reviewPageThumbSurface/);
+  assert.match(source, /<StandalonePage/);
   assert.doesNotMatch(source, /PageRegistryClient\.module\.css/);
   assert.doesNotMatch(source, /RevisionDiffPanel/);
   assert.doesNotMatch(source, /styles\.reviewGalleryHeader/);
@@ -34,7 +36,8 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(css, /\.reviewGalleryGrid\s*\{/);
   assert.match(css, /\.reviewGalleryAttentionMark\s*\{/);
   assert.match(css, /\.reviewPageThumbScreen\s*\{/);
-  assert.match(css, /\.reviewPageThumbSplit\s*\{/);
+  assert.match(css, /\.reviewPageThumbSurface\s*\{/);
+  assert.match(css, /\.reviewPageThumbScaler\s*\{/);
   assert.match(css, /\.reviewModalLayout\s*\{/);
   assert.match(css, /\.reviewModalEntityCard\s*\{/);
 });

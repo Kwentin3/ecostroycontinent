@@ -99,3 +99,6 @@ Result:
   - `Техника` added to the owner review gallery and modal essence model
   - page cards no longer reuse the larger registry-style preview surface and now render as a compact desktop-frame thumbnail
   - page preview inside the owner modal uses a quieter zoom so the remark field and decision actions stay comfortably visible
+- third follow-up adjustment:
+  - page card preview on `/admin/review` now renders the same real `StandalonePage` first-screen content as the page modal, inside a compact desktop frame
+  - this removes drift where the gallery card and the modal showed different page composition
