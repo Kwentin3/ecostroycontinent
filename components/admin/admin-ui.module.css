@@ -760,6 +760,10 @@
   background: #fcfaf5;
 }
 
+.reviewPageThumbSurface > * {
+  width: 100%;
+}
+
 .reviewPageThumbCanvasFallback {
   display: grid;
   gap: 6px;

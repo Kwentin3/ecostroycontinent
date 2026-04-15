@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { PagePreview } from "./PagePreview";
 import { normalizePageRegistryRecord, normalizePageRegistryRecords } from "../../lib/admin/page-registry-records.js";
 import {
   PAGE_CREATE_MODE_LABELS,
@@ -84,10 +85,11 @@ function buildHiddenValue(pageType, createMode, formState) {
   return pageType;
 }
 
-function renderPageCardPreview(record) {
+function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
   const previewTitle = record.previewTitle || record.title;
   const previewIntro =
     record.previewIntro || "Page preview keeps the first-screen composition intact instead of cropping to a media tile.";
+  const canRenderPreview = Boolean(record.previewPageValue && globalSettings);
 
   return (
     <div
@@ -105,14 +107,14 @@ function renderPageCardPreview(record) {
             <span className={styles.pagePreviewLive}>Live</span>
           ) : null}
         </div>
-        {record.previewMediaUrl ? (
+        {canRenderPreview ? (
           <div className={styles.pagePreviewMedia}>
             <div className={styles.pagePreviewMediaViewport}>
-            <img
-              src={record.previewMediaUrl}
-              alt={`Превью страницы: ${record.previewTitle || record.title}`}
-              className={styles.pagePreviewImage}
-            />
+              <PagePreview
+                page={record.previewPageValue}
+                globalSettings={globalSettings}
+                previewLookupRecords={previewLookupRecords}
+              />
             </div>
           </div>
         ) : (
@@ -146,6 +148,8 @@ function renderPageCardPreview(record) {
 export function PageRegistryClient({
   initialRecords,
   summary = null,
+  previewLookupRecords = null,
+  globalSettings = null,
   metadataSaveBasePath = "/api/admin/entities/page",
   createFallbackHref = "/admin/entities/page/new",
   initialCreateOpen = false,
@@ -460,7 +464,7 @@ export function PageRegistryClient({
           {filteredRecords.map((record) => (
             <article key={record.id} className={styles.card}>
               <Link href={record.href} className={styles.cardLink} aria-label={`Открыть страницу ${record.title}`} />
-              {renderPageCardPreview(record)}
+                        {renderPageCardPreview(record, previewLookupRecords, globalSettings)}
               <div className={styles.cardHead}>
                 <div>
                   <h3 className={styles.title}>{record.title}</h3>

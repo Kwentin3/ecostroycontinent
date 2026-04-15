@@ -102,3 +102,8 @@ Result:
 - third follow-up adjustment:
   - page card preview on `/admin/review` now renders the same real `StandalonePage` first-screen content as the page modal, inside a compact desktop frame
   - this removes drift where the gallery card and the modal showed different page composition
+- fourth follow-up adjustment:
+  - introduced a canonical page preview contract in `lib/admin/page-preview.js`
+  - introduced reusable `components/admin/PagePreview.js` so page preview rendering is no longer rebuilt ad hoc in review, registry, and workspace
+  - review preview now overlays latest admin media and related lookup records instead of relying on published-only lookups, which restores media visibility for owner page cards and page modals
+  - page registry now renders the same page preview component instead of a decorative synthetic media tile

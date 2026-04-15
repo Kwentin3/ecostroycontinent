@@ -278,6 +278,11 @@
     rgba(255, 255, 255, 0.22);
 }
 
+.pagePreviewMediaViewport > * {
+  width: 100%;
+  height: 100%;
+}
+
 .pagePreviewImage {
   display: block;
   width: 100%;

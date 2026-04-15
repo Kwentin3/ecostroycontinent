@@ -2,10 +2,11 @@ import Link from "next/link";
 
 import { AdminShell } from "../../../../components/admin/AdminShell";
 import { OwnerReviewDialog } from "../../../../components/admin/OwnerReviewDialog";
+import { PagePreview } from "../../../../components/admin/PagePreview";
 import { PreviewViewport } from "../../../../components/admin/PreviewViewport";
 import styles from "../../../../components/admin/admin-ui.module.css";
-import { StandalonePage } from "../../../../components/public/PublicRenderers";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
+import { loadAdminPagePreviewPayload } from "../../../../lib/admin/page-preview-loader.js";
 import { userCanPublishRevision } from "../../../../lib/auth/session.js";
 import {
   buildOwnerReviewGalleryCards,
@@ -15,7 +16,6 @@ import {
 } from "../../../../lib/admin/owner-review.js";
 import { getReviewQueue } from "../../../../lib/content-ops/workflow";
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../../../lib/content-core/content-types.js";
-import { buildPublishedLookups, getPublishedGlobalSettings } from "../../../../lib/read-side/public-content";
 import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
 
 const STATUS_OPTIONS = [
@@ -136,10 +136,10 @@ function renderCompactEntityCard(card, modalModel) {
   );
 }
 
-function renderPageGalleryCardPreview(card, modalModel, lookups, globalSettings) {
+function renderPageGalleryCardPreview(card, modalModel, previewPayload) {
   const previewIntro = card.previewIntro || "Карточка страницы показывает первый экран так, как его увидит посетитель.";
 
-  if (!modalModel?.pageValue || !lookups || !globalSettings || card.revision.previewStatus !== PREVIEW_STATUS.RENDERABLE) {
+  if (!modalModel?.pageValue || !previewPayload?.globalSettings || card.revision.previewStatus !== PREVIEW_STATUS.RENDERABLE) {
     return (
       <div className={styles.reviewPageThumb} title={previewIntro}>
         <div className={styles.reviewPageThumbShell}>
@@ -174,14 +174,10 @@ function renderPageGalleryCardPreview(card, modalModel, lookups, globalSettings)
             <div className={styles.reviewPageThumbViewport}>
               <div className={styles.reviewPageThumbScaler}>
                 <div className={styles.reviewPageThumbSurface}>
-                  <StandalonePage
+                  <PagePreview
                     page={modalModel.pageValue}
-                    globalSettings={globalSettings}
-                    services={(id) => lookups.serviceMap.get(id) || null}
-                    equipment={(id) => lookups.equipmentMap.get(id) || null}
-                    cases={(id) => lookups.caseMap.get(id) || null}
-                    galleries={(id) => lookups.galleryMap.get(id) || null}
-                    resolveMedia={(id) => lookups.mediaMap.get(id) || null}
+                    globalSettings={previewPayload.globalSettings}
+                    previewLookupRecords={previewPayload.previewLookupRecords}
                   />
                 </div>
               </div>
@@ -194,7 +190,7 @@ function renderPageGalleryCardPreview(card, modalModel, lookups, globalSettings)
   );
 }
 
-function renderPagePreview(card, modalModel, previewMode, search, status, type, message, error, lookups, globalSettings) {
+function renderPagePreview(card, modalModel, previewMode, search, status, type, message, error, previewPayload) {
   if (card.revision.previewStatus !== PREVIEW_STATUS.RENDERABLE) {
     return (
       <section className={styles.reviewModalPageFallback}>
@@ -225,14 +221,10 @@ function renderPagePreview(card, modalModel, previewMode, search, status, type, 
       showFrameTop={false}
       compact
     >
-      <StandalonePage
+      <PagePreview
         page={modalModel.pageValue}
-        globalSettings={globalSettings}
-        services={(id) => lookups.serviceMap.get(id) || null}
-        equipment={(id) => lookups.equipmentMap.get(id) || null}
-        cases={(id) => lookups.caseMap.get(id) || null}
-        galleries={(id) => lookups.galleryMap.get(id) || null}
-        resolveMedia={(id) => lookups.mediaMap.get(id) || null}
+        globalSettings={previewPayload.globalSettings}
+        previewLookupRecords={previewPayload.previewLookupRecords}
       />
     </PreviewViewport>
   );
@@ -274,8 +266,7 @@ export default async function ReviewQueuePage({ searchParams }) {
       .filter((item) => item.entityType === ENTITY_TYPES.PAGE)
       .map((item) => [item.revision.id, buildOwnerReviewModalModel(item)])
   );
-  let previewLookups = null;
-  let globalSettings = null;
+  let pagePreviewPayload = null;
   const publishHref = selectedCard
     && userCanPublishRevision(user, selectedCard.entityType, selectedCard.revision)
     && (!selectedCard.revision.ownerReviewRequired || selectedCard.revision.ownerApprovalStatus === "approved")
@@ -290,10 +281,7 @@ export default async function ReviewQueuePage({ searchParams }) {
     || (selectedCard?.entityType === ENTITY_TYPES.PAGE && selectedModal?.pageValue);
 
   if (shouldLoadPagePreviewContext) {
-    [previewLookups, globalSettings] = await Promise.all([
-      buildPublishedLookups(),
-      getPublishedGlobalSettings()
-    ]);
+    pagePreviewPayload = await loadAdminPagePreviewPayload();
   }
 
   return (
@@ -407,7 +395,7 @@ export default async function ReviewQueuePage({ searchParams }) {
 
                 <div className={styles.reviewGalleryCardPreview}>
                   {card.entityType === ENTITY_TYPES.PAGE
-                    ? renderPageGalleryCardPreview(card, pageModalModels.get(card.id) || null, previewLookups, globalSettings)
+                    ? renderPageGalleryCardPreview(card, pageModalModels.get(card.id) || null, pagePreviewPayload)
                     : (card.mediaUrl ? (
                       <img src={card.mediaUrl} alt={card.title} className={styles.reviewGalleryImage} />
                     ) : (
@@ -451,8 +439,8 @@ export default async function ReviewQueuePage({ searchParams }) {
           >
             <div className={styles.reviewModalLayout}>
               <div className={styles.reviewModalMain}>
-                {selectedCard.entityType === ENTITY_TYPES.PAGE && previewLookups && globalSettings
-                  ? renderPagePreview(selectedCard, selectedModal, previewMode, search, status, type, message, error, previewLookups, globalSettings)
+                {selectedCard.entityType === ENTITY_TYPES.PAGE && pagePreviewPayload?.globalSettings
+                  ? renderPagePreview(selectedCard, selectedModal, previewMode, search, status, type, message, error, pagePreviewPayload)
                   : renderCompactEntityCard(selectedCard, selectedModal)}
               </div>
 

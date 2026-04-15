@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { StandalonePage } from "../public/PublicRenderers";
+import { PagePreview } from "./PagePreview";
 import {
   buildDefaultSectionsForPageType,
   buildPageWorkspaceEmptyState,
   buildPageWorkspaceFullInput,
-  buildPageWorkspaceLookupResolvers,
   buildPageWorkspacePreviewPayload,
   getRequiredSectionTypes,
   PAGE_SECTION_LABELS,
@@ -25,6 +24,7 @@ import {
   PREVIEW_VIEWPORT_OPTIONS,
   getPreviewViewportOption
 } from "../../lib/admin/preview-viewport.js";
+import { serializePagePreviewLookupRecords } from "../../lib/admin/page-preview.js";
 import {
   PAGE_SECTION_TYPES,
   PAGE_TYPES
@@ -467,13 +467,10 @@ export function PageWorkspaceScreen({
     () => Object.fromEntries(mediaOptions.map((item) => [item.id, item])),
     [mediaOptions]
   );
-  const lookupResolvers = useMemo(
-    () => buildPageWorkspaceLookupResolvers({
-      ...publishedLookupRecords,
-      media: {
-        ...(publishedLookupRecords?.media || {}),
-        ...draftMediaRecords
-      }
+  const previewLookupRecords = useMemo(
+    () => serializePagePreviewLookupRecords({
+      publishedLookupRecords,
+      media: draftMediaRecords
     }),
     [draftMediaRecords, publishedLookupRecords]
   );
@@ -1750,14 +1747,10 @@ export function PageWorkspaceScreen({
                 showFrameTop={false}
               >
                 {previewPayload ? (
-                  <StandalonePage
+                  <PagePreview
                     page={previewPayload}
                     globalSettings={globalSettings}
-                    services={lookupResolvers.services}
-                    equipment={lookupResolvers.equipment}
-                    cases={lookupResolvers.cases}
-                    galleries={lookupResolvers.galleries}
-                    resolveMedia={lookupResolvers.media}
+                    previewLookupRecords={previewLookupRecords}
                   />
                 ) : (
                   <div className={styles.emptyWorkspaceCard}>

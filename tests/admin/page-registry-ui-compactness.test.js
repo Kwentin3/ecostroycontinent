@@ -17,10 +17,12 @@ test("page registry keeps compact stats and page-owned preview scaffolding", () 
   assert.match(source, /registryStats = useMemo/);
   assert.match(source, /styles\.statsRow/);
   assert.match(source, /renderPageCardPreview/);
+  assert.match(source, /<PagePreview/);
   assert.match(source, /styles\.pagePreviewViewport/);
   assert.match(source, /styles\.pagePreviewSurface/);
   assert.match(source, /styles\.pagePreviewFrame/);
   assert.match(source, /previewHeroLayoutClassName/);
+  assert.match(source, /previewPageValue/);
   assert.match(css, /\.statsRow\s*\{/);
   assert.match(css, /\.pagePreviewViewport\s*\{/);
   assert.match(css, /\.pagePreviewSurface\s*\{/);
@@ -35,15 +37,17 @@ test("page registry preview fits real hero media into a mini-page viewport inste
 
   assert.match(source, /previewTitle/);
   assert.match(source, /previewIntro/);
-  assert.match(source, /record\.previewMediaUrl \?/);
+  assert.match(source, /canRenderPreview/);
+  assert.match(source, /previewLookupRecords = null/);
+  assert.match(source, /globalSettings = null/);
   assert.match(source, /styles\.pagePreviewMediaViewport/);
-  assert.match(source, /className=\{styles\.pagePreviewImage\}/);
+  assert.match(source, /previewLookupRecords=\{previewLookupRecords\}/);
   assert.match(source, /styles\.pagePreviewMetaLine/);
   assert.doesNotMatch(source, /pagePreviewSignal/);
   assert.doesNotMatch(source, /pagePreviewSlug/);
   assert.match(css, /\.pagePreviewMedia\s*,\s*\.pagePreviewMediaFallback\s*\{/);
   assert.match(css, /\.pagePreviewMediaViewport\s*\{/);
-  assert.match(css, /object-fit:\s*contain/);
+  assert.match(css, /\.pagePreviewMediaViewport > \* \{/);
   assert.match(css, /\.pagePreviewMetaLine\s*\{/);
 });
 

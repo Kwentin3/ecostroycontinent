@@ -8,6 +8,7 @@ import { PageRegistryClient } from "../../../../../components/admin/PageRegistry
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { getPayloadLabel } from "../../../../../lib/admin/entity-ui.js";
+import { loadAdminPagePreviewPayload } from "../../../../../lib/admin/page-preview-loader.js";
 import { buildListRowProjection, buildListSurfaceViewModel } from "../../../../../lib/admin/list-visibility.js";
 import { listCollectionLibraryCards, listMediaLibraryCards } from "../../../../../lib/admin/media-gallery.js";
 import { buildRegistryCreateState } from "../../../../../lib/admin/page-registry-create.js";
@@ -76,6 +77,7 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
       slug: metadata.slug,
       href: `/admin/entities/page/${row.entityId}`,
       historyHref: `/admin/entities/page/${row.entityId}/history`,
+      previewPageValue: pageValue,
       previewTitle: pageValue.h1 || pageValue.title || row.entityLabel || row.entityId,
       previewIntro: pageValue.intro || "",
       previewThemeKey: metadata.pageThemeKey,
@@ -283,9 +285,10 @@ export default async function EntityListPage({ params, searchParams }) {
   const currentListPath = `/admin/entities/${normalizedType}${deleteToolEnabled && testOnly ? "?testOnly=1" : ""}`;
 
   if (normalizedType === ENTITY_TYPES.PAGE) {
-    const [serviceCards, equipmentCards] = await Promise.all([
+    const [serviceCards, equipmentCards, pagePreviewPayload] = await Promise.all([
       listEntityCards(ENTITY_TYPES.SERVICE),
-      listEntityCards(ENTITY_TYPES.EQUIPMENT)
+      listEntityCards(ENTITY_TYPES.EQUIPMENT),
+      loadAdminPagePreviewPayload()
     ]);
     const lifecyclePairs = await Promise.all(cards.map(async (card) => {
       const aggregate = await getEntityAggregate(card.entity.id);
@@ -335,6 +338,8 @@ export default async function EntityListPage({ params, searchParams }) {
             <PageRegistryClient
               initialRecords={pageRecords}
               summary={viewModel.summary}
+              previewLookupRecords={pagePreviewPayload.previewLookupRecords}
+              globalSettings={pagePreviewPayload.globalSettings}
               metadataSaveBasePath="/api/admin/entities/page"
               initialCreateOpen={createState.open}
               initialCreateTitle={createState.title}
