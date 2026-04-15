@@ -56,3 +56,16 @@
 
 - build и тесты подтверждают кодовую целостность рефакторинга;
 - живой визуальный smoke должен быть подтвержден уже на серверной среде после выката.
+
+## Follow-up
+
+- Для page media contract добавлены продуктовые defaults по типам страниц:
+  - `about` -> `split + featured + square + by_collection`
+  - `service_landing` -> `split + grid + landscape + by_collection`
+  - `equipment_landing` -> `cinematic + featured + landscape + by_collection`
+  - `contacts` -> `stacked + strip + landscape + flat`
+- Эти defaults теперь проходят через:
+  - content normalization,
+  - page workspace hydration,
+  - preview/public renderers.
+- В рабочем экране страницы добавлен явный `Рекомендованный пресет`, а при смене типа страницы workspace мягко подхватывает новый preset, если редактор еще не ушел от прежнего рекомендованного режима вручную.

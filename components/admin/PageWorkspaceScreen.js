@@ -30,6 +30,8 @@ import {
   PAGE_TYPES
 } from "../../lib/content-core/content-types.js";
 import {
+  arePageMediaSettingsEqual,
+  getDefaultPageMediaSettings,
   PAGE_MEDIA_GALLERY_ASPECT_RATIO_LABELS,
   PAGE_MEDIA_GALLERY_ASPECT_RATIOS,
   PAGE_MEDIA_GALLERY_GROUPING_LABELS,
@@ -164,6 +166,22 @@ function moveSection(sections = [], type, direction) {
     ...section,
     order: currentIndex
   }));
+}
+
+function getMediaRecommendationSummary(pageType) {
+  if (pageType === PAGE_TYPES.SERVICE_LANDING) {
+    return "Split-обложка, ровная доказательная галерея и группировка по коллекциям.";
+  }
+
+  if (pageType === PAGE_TYPES.EQUIPMENT_LANDING) {
+    return "Крупный hero-кадр, один ведущий фотоакцент и поддерживающие галереи по коллекциям.";
+  }
+
+  if (pageType === PAGE_TYPES.CONTACTS) {
+    return "Спокойная подача без визуального перегруза: базовый hero и вторичная лента фотографий.";
+  }
+
+  return "Баланс текста и визуала: split-обложка, акцентный первый кадр и галереи по коллекциям.";
 }
 
 function SourceChecklistLegacy({ title, items, selectedIds, onToggle, emptyState = null }) {
@@ -443,6 +461,7 @@ export function PageWorkspaceScreen({
   const [activePicker, setActivePicker] = useState("");
   const [pickerQuery, setPickerQuery] = useState("");
   const previewDialogRef = useRef(null);
+  const previousPageTypeRef = useRef(initialMetadata.pageType);
   const draftMediaRecords = useMemo(
     () => Object.fromEntries(mediaOptions.map((item) => [item.id, item])),
     [mediaOptions]
@@ -461,8 +480,13 @@ export function PageWorkspaceScreen({
   useEffect(() => {
     setComposition((current) => ({
       ...current,
-      sections: normalizeSectionsForType(metadata.pageType, current.sections)
+      sections: normalizeSectionsForType(metadata.pageType, current.sections),
+      mediaSettings: previousPageTypeRef.current !== metadata.pageType
+        && arePageMediaSettingsEqual(current.mediaSettings, getDefaultPageMediaSettings(previousPageTypeRef.current))
+        ? getDefaultPageMediaSettings(metadata.pageType)
+        : current.mediaSettings
     }));
+    previousPageTypeRef.current = metadata.pageType;
   }, [metadata.pageType]);
 
   useEffect(() => {
@@ -535,6 +559,12 @@ export function PageWorkspaceScreen({
   const previewZoom = previewZoomByDevice[previewDevice] || DEFAULT_PREVIEW_ZOOM_BY_DEVICE[previewDevice] || 1;
   const themeDefinition = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey] || LANDING_PAGE_THEME_REGISTRY.earth_sand;
   const themeDirty = metadata.pageThemeKey !== savedMetadata.pageThemeKey;
+  const recommendedMediaSettings = useMemo(() => getDefaultPageMediaSettings(metadata.pageType), [metadata.pageType]);
+  const usingRecommendedMediaSettings = useMemo(
+    () => arePageMediaSettingsEqual(composition.mediaSettings, recommendedMediaSettings),
+    [composition.mediaSettings, recommendedMediaSettings]
+  );
+  const mediaRecommendationSummary = useMemo(() => getMediaRecommendationSummary(metadata.pageType), [metadata.pageType]);
   const primaryService = serviceItems.find((item) => item.id === composition.sourceRefs.primaryServiceId) || null;
   const primaryEquipment = equipmentItems.find((item) => item.id === composition.sourceRefs.primaryEquipmentId) || null;
   const selectedCaseItems = caseItems.filter((item) => (composition.sourceRefs.caseIds || []).includes(item.id));
@@ -1326,6 +1356,20 @@ export function PageWorkspaceScreen({
                 <div>
                   <h3 className={styles.sectionTitle}>Медиа-подача</h3>
                   <p className={styles.sectionMeta}>Страница сама задает, насколько крупно показывать главное изображение и как группировать несколько фотографий в галерее.</p>
+                  <p className={styles.sectionMeta}>{mediaRecommendationSummary}</p>
+                </div>
+                <div className={styles.selectedActions}>
+                  <button
+                    type="button"
+                    className={styles.miniButton}
+                    onClick={() => setComposition((current) => ({
+                      ...current,
+                      mediaSettings: recommendedMediaSettings
+                    }))}
+                    disabled={usingRecommendedMediaSettings}
+                  >
+                    Рекомендованный пресет
+                  </button>
                 </div>
               </div>
               <div className={styles.fieldGrid}>

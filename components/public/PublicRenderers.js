@@ -112,9 +112,10 @@ function GallerySection({
   sectionId = "preview-gallery",
   sectionName = "gallery",
   sectionLike = {},
-  mediaSettings = {}
+  mediaSettings = {},
+  pageType = PAGE_TYPES.ABOUT
 }) {
-  const normalizedMediaSettings = normalizePageMediaSettings(mediaSettings);
+  const normalizedMediaSettings = normalizePageMediaSettings(mediaSettings, pageType);
   const galleryRecords = galleries
     .map((galleryId) => resolveGallery(galleryId))
     .filter(Boolean);
@@ -205,7 +206,7 @@ function getSection(page, type) {
 function renderPageSections({ page, globalSettings, services, equipment, cases, galleries }) {
   const sourceRefs = page.sourceRefs || {};
   const targeting = page.targeting || {};
-  const mediaSettings = normalizePageMediaSettings(page.mediaSettings);
+  const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
   const primaryService = sourceRefs.primaryServiceId ? services(sourceRefs.primaryServiceId) : null;
   const primaryEquipment = sourceRefs.primaryEquipmentId ? equipment(sourceRefs.primaryEquipmentId) : null;
 
@@ -344,6 +345,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
               sectionName={`${section.type}-gallery`}
               sectionLike={section}
               mediaSettings={mediaSettings}
+              pageType={page.pageType}
             />
           </section>
         );
@@ -502,7 +504,7 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia, globa
 export function StandalonePage({ page, globalSettings, services, equipment, cases, galleries, resolveMedia }) {
   const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
   const pageThemeClassName = getThemeClassName(page.pageThemeKey);
-  const mediaSettings = normalizePageMediaSettings(page.mediaSettings);
+  const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
   const heroSection = getSection(page, PAGE_SECTION_TYPES.HERO_OFFER);
   const sourceRefs = page.sourceRefs || {};
   const primaryService = sourceRefs.primaryServiceId ? services(sourceRefs.primaryServiceId) : null;

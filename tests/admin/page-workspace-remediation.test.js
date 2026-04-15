@@ -5,6 +5,7 @@ import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
 import { normalizeEntityInput } from "../../lib/content-core/pure.js";
 import {
   buildPageWorkspaceAiActionModel,
+  buildPageWorkspaceCompositionState,
   buildPageWorkspaceLifecycleState,
   buildPageWorkspacePreviewPayload
 } from "../../lib/admin/page-workspace.js";
@@ -108,6 +109,30 @@ test("page workspace preview payload carries media presentation settings into th
     galleryAspectRatio: "portrait",
     galleryGrouping: "by_collection",
     showGalleryCaptions: false
+  });
+});
+
+test("page workspace composition state seeds recommended media presentation for the selected page type", () => {
+  const aboutState = buildPageWorkspaceCompositionState({
+    pageType: "about"
+  });
+  const equipmentState = buildPageWorkspaceCompositionState({
+    pageType: "equipment_landing"
+  });
+
+  assert.deepEqual(aboutState.mediaSettings, {
+    heroLayout: "split",
+    galleryLayout: "featured",
+    galleryAspectRatio: "square",
+    galleryGrouping: "by_collection",
+    showGalleryCaptions: true
+  });
+  assert.deepEqual(equipmentState.mediaSettings, {
+    heroLayout: "cinematic",
+    galleryLayout: "featured",
+    galleryAspectRatio: "landscape",
+    galleryGrouping: "by_collection",
+    showGalleryCaptions: true
   });
 });
 

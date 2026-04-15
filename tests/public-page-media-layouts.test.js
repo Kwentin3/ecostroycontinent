@@ -12,10 +12,11 @@ function readUtf8(url) {
 test("public page renderers wire page media settings into hero and gallery presentation", () => {
   const source = readUtf8(rendererPath);
 
-  assert.match(source, /normalizePageMediaSettings\(page\.mediaSettings\)/);
+  assert.match(source, /normalizePageMediaSettings\(page\.mediaSettings,\s*page\.pageType\)/);
   assert.match(source, /showSplitHeroMedia/);
   assert.match(source, /galleryGrouping === "by_collection"/);
   assert.match(source, /heroLayout=\{mediaSettings\.heroLayout\}/);
+  assert.match(source, /pageType=\{page\.pageType\}/);
 });
 
 test("public page CSS exposes bounded hero and gallery layout presets", () => {

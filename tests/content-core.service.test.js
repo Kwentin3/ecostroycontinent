@@ -31,6 +31,55 @@ test("normalizeEntityInput keeps fixed page route truth for contacts pages", () 
   assert.equal(page.blocks.some((block) => block.type === "cta"), false);
 });
 
+test("normalizeEntityInput applies product media defaults for page type when editor left media presentation untouched", () => {
+  const servicePage = normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    pageType: PAGE_TYPES.SERVICE_LANDING,
+    slug: "foundation",
+    title: "Foundation works",
+    h1: "Foundation works",
+    intro: "Reliable groundwork",
+    primaryMediaAssetId: "media_1",
+    sourceRefs: {
+      primaryServiceId: "service_1",
+      primaryEquipmentId: "",
+      caseIds: [],
+      galleryIds: ["gallery_1"]
+    },
+    sections: [],
+    seo: {}
+  });
+  const contactsPage = normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    pageType: PAGE_TYPES.CONTACTS,
+    title: "Contacts",
+    h1: "Contacts",
+    intro: "Reach us",
+    contactNote: "Call before arrival",
+    sourceRefs: {
+      primaryServiceId: "",
+      primaryEquipmentId: "",
+      caseIds: [],
+      galleryIds: ["gallery_2"]
+    },
+    sections: [],
+    seo: {}
+  });
+
+  assert.deepEqual(servicePage.mediaSettings, {
+    heroLayout: "split",
+    galleryLayout: "grid",
+    galleryAspectRatio: "landscape",
+    galleryGrouping: "by_collection",
+    showGalleryCaptions: true
+  });
+  assert.deepEqual(contactsPage.mediaSettings, {
+    heroLayout: "stacked",
+    galleryLayout: "strip",
+    galleryAspectRatio: "landscape",
+    galleryGrouping: "flat",
+    showGalleryCaptions: false
+  });
+});
+
 test("normalizeEntityInput keeps service and case references inside page blocks only", () => {
   const page = normalizeEntityInput(ENTITY_TYPES.PAGE, {
     pageType: PAGE_TYPES.ABOUT,
