@@ -1,7 +1,8 @@
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
 import { FEEDBACK_COPY } from "../../../../../../lib/ui-copy.js";
 import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
-import { userCanPublish } from "../../../../../../lib/auth/session";
+import { userCanPublishRevision } from "../../../../../../lib/auth/session";
+import { findEntityById, findRevisionById } from "../../../../../../lib/content-core/repository.js";
 import { publishRevision } from "../../../../../../lib/content-ops/workflow";
 
 export async function POST(request, { params }) {
@@ -11,11 +12,19 @@ export async function POST(request, { params }) {
     return response;
   }
 
-  if (!userCanPublish(user)) {
+  const { revisionId } = await params;
+  const revision = await findRevisionById(revisionId);
+
+  if (!revision) {
+    return redirectWithError(request, `/admin/review/${revisionId}`, new Error("Версия не найдена."));
+  }
+
+  const entity = await findEntityById(revision.entityId);
+
+  if (!entity || !userCanPublishRevision(user, entity, revision)) {
     return redirectToAdmin("/admin/no-access");
   }
 
-  const { revisionId } = await params;
   try {
     const result = await publishRevision({
       revisionId,

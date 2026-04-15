@@ -64,6 +64,8 @@ function buildRouteDeps({ captured, withDraft = true } = {}) {
     revisionNumber: 1,
     state: "published",
     previewStatus: "preview_renderable",
+    ownerReviewRequired: false,
+    ownerApprovalStatus: "not_required",
     payload: makeCanonicalPagePayload()
   };
   const draftRevision = withDraft
@@ -72,6 +74,8 @@ function buildRouteDeps({ captured, withDraft = true } = {}) {
         revisionNumber: 2,
         state: "draft",
         previewStatus: "preview_renderable",
+        ownerReviewRequired: false,
+        ownerApprovalStatus: "not_required",
         payload: makeCanonicalPagePayload({
           title: "About draft",
           h1: "About draft",
@@ -107,6 +111,8 @@ function buildRouteDeps({ captured, withDraft = true } = {}) {
           revisionNumber: 3,
           state: "draft",
           previewStatus: "preview_renderable",
+          ownerReviewRequired: false,
+          ownerApprovalStatus: "not_required",
           payload: input.payload
         }
       };
@@ -119,7 +125,9 @@ function buildRouteDeps({ captured, withDraft = true } = {}) {
           id: input.revisionId,
           revisionNumber: 2,
           state: "review",
-          previewStatus: "preview_renderable"
+          previewStatus: "preview_renderable",
+          ownerReviewRequired: true,
+          ownerApprovalStatus: "pending"
         }
       };
     },
@@ -170,6 +178,8 @@ test("page workspace save_composition keeps metadata canonical and updates only 
   assert.equal(captured.saveDraftInput.payload.seo.metaTitle, "About meta");
   assert.equal(captured.saveDraftInput.payload.seo.openGraphImageAssetId, "media_2");
   assert.equal(result.metadata.slug, "about");
+  assert.equal(result.revision.ownerReviewRequired, false);
+  assert.equal(result.revision.ownerApprovalStatus, "not_required");
 });
 
 test("page workspace save_metadata keeps page composition intact and removes hidden carry-through", async () => {
@@ -253,6 +263,8 @@ test("page workspace send_to_review reuses the canonical draft revision", async 
   assert.equal(result.ok, true);
   assert.equal(captured.submitRevisionInput.revisionId, "rev_draft");
   assert.equal(result.reviewHref, "/admin/review/rev_draft");
+  assert.equal(result.revision.ownerReviewRequired, true);
+  assert.equal(result.revision.ownerApprovalStatus, "pending");
   assert.equal(captured.saveDraftInput, undefined);
 });
 
@@ -321,6 +333,8 @@ test("page workspace save_composition creates the first draft only after explici
   assert.equal(captured.saveDraftInput.payload.h1, "Новая страница");
   assert.equal(captured.saveDraftInput.payload.intro, "Первый интро-текст");
   assert.equal(result.revision.revisionNumber, 1);
+  assert.equal(result.revision.ownerReviewRequired, false);
+  assert.equal(result.revision.ownerApprovalStatus, "not_required");
 });
 
 test("page workspace save_composition returns operator-friendly validation error instead of crashing", async () => {

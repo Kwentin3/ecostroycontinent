@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminShell } from "../../../../../components/admin/AdminShell";
@@ -8,6 +9,7 @@ import { RevisionDiffPanel } from "../../../../../components/admin/RevisionDiffP
 import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../../lib/admin/page-helpers";
+import { userCanPublishRevision } from "../../../../../lib/auth/session.js";
 import { getPreviewTargetForField } from "../../../../../lib/admin/entity-ui";
 import { CHANGE_INTENT_LABEL, getScreenLegend } from "../../../../../lib/admin/screen-copy.js";
 import { ENTITY_TYPES } from "../../../../../lib/content-core/content-types.js";
@@ -92,6 +94,13 @@ export default async function ReviewDetailPage({ params, searchParams }) {
   const query = await searchParams;
   const previewMode = typeof query?.preview === "string" ? query.preview : "desktop";
   const title = revision.payload.title || revision.payload.h1 || getEntityTypeLabel(entity.entityType);
+  const publishHref = userCanPublishRevision(user, entity, revision)
+    && (!revision.ownerReviewRequired || revision.ownerApprovalStatus === "approved")
+    ? `/admin/revisions/${revision.id}/publish`
+    : "";
+  const publishWaitingForOwner = userCanPublishRevision(user, entity, revision)
+    && revision.ownerReviewRequired
+    && revision.ownerApprovalStatus !== "approved";
   const basisLabel = baseline
     ? `База предпросмотра: опубликованная версия №${baseline.revisionNumber}`
     : "База предпросмотра: опубликованной основы пока нет.";
@@ -158,6 +167,14 @@ export default async function ReviewDetailPage({ params, searchParams }) {
               ) : (
                 <p className={styles.mutedText}>Сначала проверьте готовность и предпросмотр, затем дождитесь решения владельца, если оно требуется.</p>
               )}
+              {publishHref ? (
+                <div className={styles.inlineActions}>
+                  <Link href={publishHref} className={styles.secondaryButton}>Проверить перед публикацией</Link>
+                </div>
+              ) : null}
+              {publishWaitingForOwner ? (
+                <p className={styles.mutedText}>Путь к публикации откроется после согласования владельца.</p>
+              ) : null}
             </SurfacePacket>
 
             <RevisionDiffPanel

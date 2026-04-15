@@ -43,7 +43,7 @@ import {
 } from "../../lib/content-core/page-media.js";
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import { getWorkspaceQuestionHint } from "../../lib/admin/question-model.js";
-import { normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { getOwnerApprovalStatusLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { PageMetadataModal } from "./PageMetadataModal";
 import { PreviewViewport } from "./PreviewViewport";
 import adminStyles from "./admin-ui.module.css";
@@ -414,6 +414,7 @@ export function PageWorkspaceScreen({
   initialMetadata,
   initialRevision,
   reviewHref,
+  publishHref,
   historyHref,
   saveUrl,
   signalLabel,
@@ -559,6 +560,19 @@ export function PageWorkspaceScreen({
   const previewZoom = previewZoomByDevice[previewDevice] || DEFAULT_PREVIEW_ZOOM_BY_DEVICE[previewDevice] || 1;
   const themeDefinition = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey] || LANDING_PAGE_THEME_REGISTRY.earth_sand;
   const themeDirty = metadata.pageThemeKey !== savedMetadata.pageThemeKey;
+  const revisionStateLabel = revision ? getRevisionStateLabel(revision.state) : "Черновика пока нет";
+  const ownerApprovalTone = revision?.ownerApprovalStatus === "approved"
+    ? "healthy"
+    : revision?.ownerApprovalStatus === "pending"
+      ? "warning"
+      : revision?.ownerApprovalStatus === "rejected"
+        ? "danger"
+        : "unknown";
+  const ownerApprovalLabel = revision?.ownerReviewRequired
+    ? getOwnerApprovalStatusLabel(revision.ownerApprovalStatus)
+    : "Согласование не требуется";
+  const ownerApprovalPending = Boolean(revision?.ownerReviewRequired && revision.ownerApprovalStatus === "pending");
+  const canOpenPublishReadiness = Boolean(publishHref && revision?.state === "review");
   const recommendedMediaSettings = useMemo(() => getDefaultPageMediaSettings(metadata.pageType), [metadata.pageType]);
   const usingRecommendedMediaSettings = useMemo(
     () => arePageMediaSettingsEqual(composition.mediaSettings, recommendedMediaSettings),
@@ -578,12 +592,17 @@ export function PageWorkspaceScreen({
     {
       label: "Версия",
       tone: revision ? "healthy" : "warning",
-      detail: revision ? `Версия №${revision.revisionNumber} · ${revision.state}` : "Черновик ещё не сохранён"
+      detail: revision ? `Версия №${revision.revisionNumber} · ${revisionStateLabel}` : "Черновик ещё не сохранён"
     },
     {
       label: "Тип страницы",
       tone: "unknown",
       detail: PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType
+    },
+    {
+      label: "Согласование",
+      tone: revision?.ownerReviewRequired ? ownerApprovalTone : "unknown",
+      detail: ownerApprovalLabel
     },
     {
       label: "Изменения",
@@ -595,7 +614,7 @@ export function PageWorkspaceScreen({
       tone: lifecycleState?.hasLivePublishedRevision ? "healthy" : "unknown",
       detail: lifecycleState?.hasLivePublishedRevision ? "Страница опубликована" : "Живой версии пока нет"
     }
-  ]), [compositionDirty, currentSignal.label, currentSignal.tone, lifecycleState?.hasLivePublishedRevision, metadata.pageType, metadataDirty, revision]);
+  ]), [compositionDirty, currentSignal.label, currentSignal.tone, lifecycleState?.hasLivePublishedRevision, metadata.pageType, metadataDirty, ownerApprovalLabel, ownerApprovalTone, revision, revisionStateLabel]);
   const seoAuditItems = useMemo(() => ([
     buildPresenceAudit(
       "Slug",
@@ -1042,8 +1061,11 @@ export function PageWorkspaceScreen({
           </p>
           <div className={styles.statusRow}>
             <span className={`${styles.badge} ${toneClassName(currentSignal.tone)}`}>{currentSignal.label}</span>
-            <span className={`${styles.badge} ${styles.toneunknown}`}>{revision ? `Версия №${revision.revisionNumber} · ${revision.state}` : "Черновика пока нет"}</span>
+            <span className={`${styles.badge} ${styles.toneunknown}`}>{revision ? `Версия №${revision.revisionNumber} · ${revisionStateLabel}` : "Черновика пока нет"}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType}</span>
+            {revision?.ownerReviewRequired ? (
+              <span className={`${styles.badge} ${toneClassName(ownerApprovalTone)}`}>{ownerApprovalLabel}</span>
+            ) : null}
             {lifecycleState?.hasLivePublishedRevision ? (
               <span className={`${styles.badge} ${styles.tonehealthy}`}>В публикации</span>
             ) : null}
@@ -1061,6 +1083,12 @@ export function PageWorkspaceScreen({
           </button>
           {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
           {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
+          {canOpenPublishReadiness ? <Link href={publishHref} className={adminStyles.secondaryButton}>К публикации</Link> : null}
+          {revision?.state === "review" && ownerApprovalPending ? (
+            <button type="button" className={adminStyles.secondaryButton} disabled>
+              Ждет согласования
+            </button>
+          ) : null}
           {lifecycleState?.canArchive || lifecycleState?.canDelete ? (
             <div className={styles.lifecycleWrap}>
               <button

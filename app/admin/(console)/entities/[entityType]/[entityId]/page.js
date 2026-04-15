@@ -18,7 +18,7 @@ import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
 import { buildPublishedLookups, getPublishedGlobalSettings } from "../../../../../../lib/read-side/public-content.js";
-import { userCanEditContent, userCanPublish } from "../../../../../../lib/auth/session.js";
+import { userCanEditContent, userCanPublish, userCanPublishRevision } from "../../../../../../lib/auth/session.js";
 
 function serializeLookupMap(map) {
   return Object.fromEntries(Array.from(map?.entries?.() ?? []));
@@ -106,6 +106,11 @@ export default async function EntityEditorPage({ params, searchParams }) {
       }
     });
     const reviewHref = data.currentRevision ? `/admin/review/${data.currentRevision.id}` : "";
+    const publishHref = data.currentRevision
+      && userCanPublishRevision(user, data.state.entity, data.currentRevision)
+      && (!data.currentRevision.ownerReviewRequired || data.currentRevision.ownerApprovalStatus === "approved")
+      ? `/admin/revisions/${data.currentRevision.id}/publish`
+      : "";
     const signal = row || {
       signalLabel: "Проверить",
       signalTone: "unknown",
@@ -134,9 +139,12 @@ export default async function EntityEditorPage({ params, searchParams }) {
             id: data.currentRevision.id,
             revisionNumber: data.currentRevision.revisionNumber,
             state: data.currentRevision.state,
-            previewStatus: data.currentRevision.previewStatus ?? null
+            previewStatus: data.currentRevision.previewStatus ?? null,
+            ownerReviewRequired: Boolean(data.currentRevision.ownerReviewRequired),
+            ownerApprovalStatus: data.currentRevision.ownerApprovalStatus ?? "not_required"
           } : null}
           reviewHref={reviewHref}
+          publishHref={publishHref}
           historyHref={`/admin/entities/page/${entityId}/history`}
           saveUrl={`/api/admin/entities/page/${entityId}/workspace`}
           signalLabel={signal.signalLabel}

@@ -19,6 +19,7 @@ import { isAgentTestCreationOrigin } from "../../lib/admin/entity-origin.js";
 import { getLegacyTestFixtureNormalizationHref } from "../../lib/admin/legacy-test-fixture-normalization.js";
 import { getTestGraphTeardownHref } from "../../lib/admin/test-graph-teardown.js";
 import { getLiveDeactivationHref } from "../../lib/admin/live-deactivation.js";
+import { userCanPublishRevision } from "../../lib/auth/session.js";
 import styles from "./admin-ui.module.css";
 
 const OBLIGATION_LABELS = {
@@ -138,6 +139,12 @@ export function EntityEditorForm({
     && canPublish
     && !isAgentTestCreationOrigin(entityCreationOrigin)
     && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+  );
+  const canOpenPublishReadiness = Boolean(
+    currentRevision
+    && currentRevision.state === "review"
+    && userCanPublishRevision(user, entityType, currentRevision)
+    && (!currentRevision.ownerReviewRequired || currentRevision.ownerApprovalStatus === "approved")
   );
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
   const showActionabilityPanel = [
@@ -587,7 +594,7 @@ export function EntityEditorForm({
                   {ADMIN_COPY.sendForReview}
                 </button>
               ) : null}
-              {canPublish && currentRevision?.state === "review" ? (
+              {canOpenPublishReadiness ? (
                 <Link href={`/admin/revisions/${currentRevision.id}/publish`} className={styles.secondaryButton}>Проверить перед публикацией</Link>
               ) : null}
               {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
