@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const workspacePath = new URL("../../components/admin/PageWorkspaceScreen.js", import.meta.url);
-const reviewDetailPath = new URL("../../app/admin/(console)/review/[revisionId]/page.js", import.meta.url);
+const reviewPagePath = new URL("../../app/admin/(console)/review/page.js", import.meta.url);
 const genericEditorPath = new URL("../../components/admin/EntityEditorForm.js", import.meta.url);
 
 function readUtf8(url) {
@@ -12,7 +12,7 @@ function readUtf8(url) {
 
 test("page publish CTAs stay discoverable in workspace, review, and fallback editor paths", () => {
   const workspaceSource = readUtf8(workspacePath);
-  const reviewSource = readUtf8(reviewDetailPath);
+  const reviewSource = readUtf8(reviewPagePath);
   const genericEditorSource = readUtf8(genericEditorPath);
 
   assert.match(workspaceSource, /К публикации/);

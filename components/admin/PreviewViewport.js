@@ -36,6 +36,7 @@ export function PreviewViewport({
   onZoomChange,
   showToolbar = true,
   showFrameTop = true,
+  compact = false,
   children
 }) {
   const activeOption = getPreviewViewportOption(device);
@@ -43,7 +44,7 @@ export function PreviewViewport({
   const scaledWidth = Math.round(activeOption.width * safeZoom);
 
   return (
-    <section className={styles.previewViewport}>
+    <section className={compact ? `${styles.previewViewport} ${styles.previewViewportCompact}` : styles.previewViewport}>
       {showToolbar ? (
         <div className={styles.previewViewportToolbar}>
           <div className={styles.previewViewportCopy}>
@@ -82,6 +83,7 @@ export function PreviewViewport({
                     href={hrefBase ? buildPreviewHref(hrefBase, searchParams, option.value) : "#"}
                     className={className}
                     aria-pressed={option.value === device}
+                    scroll={false}
                   >
                     <span className={styles.previewViewportButtonLabel}>{option.label}</span>
                     <span className={styles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>

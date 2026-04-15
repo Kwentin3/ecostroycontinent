@@ -467,6 +467,21 @@
   gap: var(--space-3);
 }
 
+.reviewScreenBar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.reviewScreenStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 .reviewGalleryHeader {
   display: flex;
   justify-content: space-between;
@@ -560,6 +575,10 @@
 .reviewGalleryCard:focus-visible {
   border-color: rgba(38, 76, 59, 0.24);
   outline: none;
+}
+
+.reviewGalleryCard:focus-visible {
+  box-shadow: 0 0 0 3px rgba(38, 76, 59, 0.16), 0 16px 34px rgba(23, 33, 27, 0.06);
 }
 
 .reviewGalleryCardAttention {
@@ -676,8 +695,10 @@
 }
 
 .reviewGalleryCardFooter {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
   margin-top: auto;
 }
 
@@ -687,10 +708,137 @@
   line-height: 1.4;
 }
 
+.reviewGalleryOpenHint {
+  color: #264c3b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .reviewGalleryWarning {
   justify-self: start;
   background: #fff0dc;
   color: #8a5a00;
+}
+
+.reviewModalLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.reviewModalMain,
+.reviewModalActionCard,
+.reviewModalEntityCard,
+.reviewModalPageFallback {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.reviewModalEntityCard {
+  padding: var(--space-3);
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 244, 237, 0.96));
+}
+
+.reviewModalEntityHero {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.reviewModalMedia,
+.reviewModalMediaFallback {
+  min-height: 220px;
+  border-radius: 18px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(241, 236, 226, 0.96));
+}
+
+.reviewModalMedia {
+  width: 100%;
+  height: 220px;
+  display: block;
+  object-fit: contain;
+}
+
+.reviewModalMediaFallback {
+  display: grid;
+  place-items: center;
+  color: rgba(33, 53, 42, 0.38);
+  font-size: 2.6rem;
+  font-weight: 800;
+}
+
+.reviewModalSummary {
+  margin: 0;
+  color: #31463a;
+  line-height: 1.55;
+}
+
+.reviewModalSections {
+  display: grid;
+  gap: 10px;
+}
+
+.reviewModalSection {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(38, 76, 59, 0.1);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.reviewModalSectionLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+}
+
+.reviewModalSectionValue {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.reviewModalActionCard {
+  padding: var(--space-3);
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.reviewModalActionLead {
+  margin: 0;
+  color: var(--subtle);
+  line-height: 1.5;
+}
+
+.reviewModalActionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reviewModalActionNote {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.reviewModalPageFallback {
+  padding: var(--space-3);
+  border: 1px solid rgba(166, 69, 55, 0.16);
+  border-radius: var(--radius);
+  background: rgba(253, 229, 226, 0.32);
 }
 
 .reviewMediaDetail {
@@ -2333,6 +2481,10 @@
   gap: var(--space-3);
 }
 
+.previewViewportCompact {
+  gap: var(--space-2);
+}
+
 .previewViewportToolbar {
   display: flex;
   justify-content: space-between;
@@ -2347,10 +2499,18 @@
   gap: 4px;
 }
 
+.previewViewportCompact .previewViewportCopy {
+  gap: 2px;
+}
+
 .previewViewportHint {
   margin: 0;
   color: var(--subtle);
   font-size: 0.875rem;
+}
+
+.previewViewportCompact .previewViewportHint {
+  font-size: 0.82rem;
 }
 
 .previewViewportStatus {
@@ -2360,6 +2520,10 @@
   border-radius: 16px;
   background: rgba(38, 76, 59, 0.06);
   color: var(--text);
+}
+
+.previewViewportCompact .previewViewportStatus {
+  padding: 8px 10px;
 }
 
 .previewViewportStatus strong {
@@ -2399,6 +2563,12 @@
   cursor: pointer;
 }
 
+.previewViewportCompact .previewViewportButton {
+  min-width: 92px;
+  padding: 8px 10px;
+  border-radius: 14px;
+}
+
 .previewViewportButton[aria-pressed="true"],
 .previewViewportButtonActive {
   border-color: #264c3b;
@@ -2411,9 +2581,17 @@
   font-weight: 700;
 }
 
+.previewViewportCompact .previewViewportButtonLabel {
+  font-size: 0.82rem;
+}
+
 .previewViewportButtonMeta {
   color: var(--subtle);
   font-size: 0.78rem;
+}
+
+.previewViewportCompact .previewViewportButtonMeta {
+  font-size: 0.72rem;
 }
 
 .previewViewportButton:focus-visible {
@@ -2463,6 +2641,10 @@
   overflow: auto;
 }
 
+.previewViewportCompact .previewViewportFrame {
+  padding: var(--space-2);
+}
+
 .previewViewportFrameDesktop {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 244, 234, 0.96));
@@ -2507,6 +2689,10 @@
   display: grid;
   gap: 24px;
   justify-items: center;
+}
+
+.previewViewportCompact .previewViewportCanvas {
+  gap: 18px;
 }
 
 .previewViewportDeviceShell {
@@ -2693,9 +2879,22 @@
     align-items: stretch;
   }
 
+  .reviewScreenBar,
+  .reviewModalLayout,
+  .reviewModalEntityHero {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .reviewGalleryCounters,
   .reviewGalleryToolbarActions,
   .reviewGalleryStatusFilters {
     justify-content: flex-start;
+  }
+
+  .reviewGalleryCardFooter {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

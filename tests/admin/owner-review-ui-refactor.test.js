@@ -10,29 +10,35 @@ function readUtf8(url) {
   return readFileSync(url, "utf8").replace(/\r\n/g, "\n");
 }
 
-test("review landing is gallery-first instead of queue-table-first", () => {
+test("review landing is gallery-first with modal detail instead of hero and diff-first flow", () => {
   const source = readUtf8(reviewPagePath);
   const css = readUtf8(cssPath);
 
   assert.match(source, /buildOwnerReviewGalleryCards/);
-  assert.match(source, /filterOwnerReviewGalleryCards/);
+  assert.match(source, /buildOwnerReviewModalModel/);
+  assert.match(source, /OwnerReviewDialog/);
+  assert.match(source, /selectedRevisionId/);
   assert.match(source, /styles\.reviewGalleryGrid/);
   assert.match(source, /styles\.reviewGalleryCard/);
   assert.match(source, /styles\.reviewGalleryStatusFilters/);
+  assert.match(source, /styles\.reviewModalLayout/);
+  assert.match(source, /renderPagePreview/);
+  assert.doesNotMatch(source, /RevisionDiffPanel/);
+  assert.doesNotMatch(source, /styles\.reviewGalleryHeader/);
   assert.doesNotMatch(source, /<table className=\{styles\.table\}/);
+
   assert.match(css, /\.reviewGalleryGrid\s*\{/);
-  assert.match(css, /\.reviewGalleryCard\s*\{/);
   assert.match(css, /\.reviewGalleryAttentionMark\s*\{/);
+  assert.match(css, /\.reviewModalLayout\s*\{/);
+  assert.match(css, /\.reviewModalEntityCard\s*\{/);
 });
 
-test("review detail keeps preview central and moves technical panels behind disclosure", () => {
+test("review detail route now redirects back into gallery modal state", () => {
   const source = readUtf8(reviewDetailPath);
 
-  assert.match(source, /<PreviewViewport/);
-  assert.match(source, /SurfacePacket\s*\n\s*eyebrow="Содержимое материала"/);
-  assert.match(source, /title="Что изменилось"/);
-  assert.match(source, /eyebrow="Решение собственника"/);
-  assert.match(source, /<details className=\{styles\.compactDisclosure\}>/);
-  assert.doesNotMatch(source, /styles\.split/);
-  assert.doesNotMatch(source, /styles\.stickyPanel/);
+  assert.match(source, /redirect\(buildReviewRedirectUrl\(revisionId, query\)\)/);
+  assert.match(source, /params\.set\("selected", revisionId\)/);
+  assert.match(source, /params\.set\("preview", query\.preview\)/);
+  assert.doesNotMatch(source, /PreviewViewport/);
+  assert.doesNotMatch(source, /RevisionDiffPanel/);
 });

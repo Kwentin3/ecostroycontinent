@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../lib/content-core/content-types.js";
 import {
   buildOwnerReviewGalleryCards,
+  buildOwnerReviewModalModel,
   filterOwnerReviewGalleryCards,
   getOwnerReviewStatusModel,
   summarizeOwnerReviewGallery
@@ -157,4 +158,41 @@ test("owner review gallery summary exposes compact counts for filters", () => {
   assert.equal(summary.byStatus.approved, 1);
   assert.equal(summary.byType[ENTITY_TYPES.SERVICE], 1);
   assert.equal(summary.byType[ENTITY_TYPES.CASE], 1);
+});
+
+test("owner review modal model keeps owner-facing essence without seo noise", () => {
+  const serviceModel = buildOwnerReviewModalModel(buildQueueItem({
+    entityId: "service_essence",
+    entityType: ENTITY_TYPES.SERVICE,
+    payload: {
+      title: "Устройство фундаментов",
+      summary: "Подготовка основания и устройство монолитного фундамента.",
+      serviceScope: "Разметка, армирование, опалубка, бетонирование.",
+      problemsSolved: "Берем на себя полный цикл работ.",
+      methods: "Работаем поэтапно с контролем каждой заливки.",
+      primaryMediaAssetId: "media_service"
+    }
+  }));
+
+  assert.equal(serviceModel.title, "Устройство фундаментов");
+  assert.equal(serviceModel.mediaUrl, "/api/admin/media/media_service/preview");
+  assert.equal(serviceModel.sections[0].label, "Что входит");
+  assert.match(serviceModel.sections[0].value, /Разметка/);
+  assert.match(serviceModel.commentPlaceholder, /услуга/i);
+
+  const pageModel = buildOwnerReviewModalModel(buildQueueItem({
+    entityId: "page_essence",
+    entityType: ENTITY_TYPES.PAGE,
+    payload: {
+      title: "Страница услуги foundation",
+      h1: "Страница услуги foundation",
+      intro: "Рассказываем, как выполняем устройство фундаментов под коммерческие объекты.",
+      pageType: "service_landing",
+      sections: [{ type: "service_scope", body: "Подготовка основания и бетонирование." }]
+    }
+  }));
+
+  assert.equal(pageModel.pageValue.pageType, "service_landing");
+  assert.equal(pageModel.sections[0].label, "Тип страницы");
+  assert.match(pageModel.sections[1].value, /Рассказываем/);
 });
