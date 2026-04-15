@@ -130,7 +130,7 @@ export function PreviewViewport({
                   zoom: safeZoom
                 }}
               >
-                <div className={styles.previewViewportSurface}>
+                <div className={styles.previewViewportSurface} data-preview-device={activeOption.value}>
                   {children}
                 </div>
               </div>

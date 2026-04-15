@@ -729,6 +729,41 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+:global([data-preview-device="tablet"]) .heroSplit,
+:global([data-preview-device="mobile"]) .heroSplit {
+  grid-template-columns: 1fr;
+}
+
+:global([data-preview-device="tablet"]) .heroSplitMedia,
+:global([data-preview-device="mobile"]) .heroSplitMedia {
+  grid-column: 1;
+  min-width: 0;
+}
+
+:global([data-preview-device="mobile"]) .page {
+  padding: 28px 16px 48px;
+}
+
+:global([data-preview-device="mobile"]) .publicShellHeader,
+:global([data-preview-device="mobile"]) .publicShellFooter {
+  width: calc(100% - 32px);
+  padding: 16px 18px;
+  border-radius: 18px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+:global([data-preview-device="mobile"]) .publicShellMeta {
+  text-align: left;
+}
+
+:global([data-preview-device="mobile"]) .hero,
+:global([data-preview-device="mobile"]) .mediaHero,
+:global([data-preview-device="mobile"]) .card,
+:global([data-preview-device="mobile"]) .gallerySection {
+  padding: 18px;
+}
+
 .hero,
 .mediaHero,
 .card,

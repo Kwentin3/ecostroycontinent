@@ -27,4 +27,6 @@ test("public page CSS exposes bounded hero and gallery layout presets", () => {
   assert.match(css, /\.galleryLayoutFeatured\s*\{/);
   assert.match(css, /\.galleryLayoutStrip\s*\{/);
   assert.match(css, /\.galleryAspectPortrait\s+img\s*\{/);
+  assert.match(css, /:global\(\[data-preview-device="mobile"\]\)\s+\.heroSplit/);
+  assert.match(css, /:global\(\[data-preview-device="mobile"\]\)\s+\.publicShellHeader/);
 });
