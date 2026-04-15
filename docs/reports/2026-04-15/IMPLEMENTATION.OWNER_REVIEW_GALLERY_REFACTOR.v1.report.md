@@ -56,9 +56,34 @@ Result:
 
 ## Delivery
 
-Pending at report creation:
-- git commit and push
-- deploy workflow run
-- production smoke verification
+### Git
 
-These delivery details are appended after rollout completes.
+- commit: `20ae713` `refactor owner review into gallery flow`
+- branch: `main`
+
+### Build
+
+- GitHub Actions build: `24455166894`
+- result: `success`
+- image: `ghcr.io/kwentin3/ecostroycontinent-app@sha256:1b3726277873447a298da1157aeffc9b2160a9765d77d38bb8ba4ea2eb98d89d`
+
+### Deploy
+
+- deploy workflow: `24455255502`
+- result: `success`
+
+### Production smoke
+
+- verified `https://ecostroycontinent.ru/admin/review`
+  - gallery-first owner review landing is live
+  - search, status, type filters are visible
+  - quick status chips are visible
+  - empty-state copy is visible because there are currently no live review items on production
+- verified `https://ecostroycontinent.ru/admin/entities/page`
+  - the co-delivered fit-preview page registry changes are live
+  - preview cards keep the `~4:3` frame
+  - service-page preview image uses `object-fit: contain` in the live admin shell
+
+Note:
+- production currently has no review items in `review` state, so live browser verification covered the landing state of the new owner gallery surface;
+- the simplified review detail path is covered by local source-structure tests and successful production build.
