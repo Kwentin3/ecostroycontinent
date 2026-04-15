@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AdminShell } from "../../../../components/admin/AdminShell";
 import { OwnerReviewDialog } from "../../../../components/admin/OwnerReviewDialog";
 import { PagePreview } from "../../../../components/admin/PagePreview";
+import { PagePreviewThumbnail } from "../../../../components/admin/PagePreviewThumbnail";
 import { PreviewViewport } from "../../../../components/admin/PreviewViewport";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
@@ -187,6 +188,22 @@ function renderPageGalleryCardPreview(card, modalModel, previewPayload) {
         <div className={styles.reviewPageThumbStand} aria-hidden="true" />
       </div>
     </div>
+  );
+}
+
+function renderCanonicalPageGalleryCardPreview(card, modalModel, previewPayload) {
+  const previewIntro = card.previewIntro || "РљР°СЂС‚РѕС‡РєР° СЃС‚СЂР°РЅРёС†С‹ РїРѕРєР°Р·С‹РІР°РµС‚ РїРµСЂРІС‹Р№ СЌРєСЂР°РЅ С‚Р°Рє, РєР°Рє РµРіРѕ СѓРІРёРґРёС‚ РїРѕСЃРµС‚РёС‚РµР»СЊ.";
+
+  return (
+    <PagePreviewThumbnail
+      page={card.revision.previewStatus === PREVIEW_STATUS.RENDERABLE ? modalModel?.pageValue || null : null}
+      globalSettings={previewPayload?.globalSettings || null}
+      previewLookupRecords={previewPayload?.previewLookupRecords || null}
+      pageTypeLabel={PAGE_TYPE_LABELS[card.pageType] || card.pageType}
+      title={card.previewTitle || card.title}
+      intro={previewIntro}
+      live={Boolean(card.hasLivePublishedRevision)}
+    />
   );
 }
 
@@ -395,7 +412,7 @@ export default async function ReviewQueuePage({ searchParams }) {
 
                 <div className={styles.reviewGalleryCardPreview}>
                   {card.entityType === ENTITY_TYPES.PAGE
-                    ? renderPageGalleryCardPreview(card, pageModalModels.get(card.id) || null, pagePreviewPayload)
+                    ? renderCanonicalPageGalleryCardPreview(card, pageModalModels.get(card.id) || null, pagePreviewPayload)
                     : (card.mediaUrl ? (
                       <img src={card.mediaUrl} alt={card.title} className={styles.reviewGalleryImage} />
                     ) : (

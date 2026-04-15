@@ -107,3 +107,6 @@ Result:
   - introduced reusable `components/admin/PagePreview.js` so page preview rendering is no longer rebuilt ad hoc in review, registry, and workspace
   - review preview now overlays latest admin media and related lookup records instead of relying on published-only lookups, which restores media visibility for owner page cards and page modals
   - page registry now renders the same page preview component instead of a decorative synthetic media tile
+- fifth follow-up adjustment:
+  - page registry preview was normalized further to the same compact desktop-frame thumbnail pattern used on `/admin/review`
+  - this removes the mixed “live page inside decorative card chrome” state and brings registry cards back to the shared page preview contract

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { PagePreview } from "./PagePreview";
+import { PagePreviewThumbnail } from "./PagePreviewThumbnail";
 import { normalizePageRegistryRecord, normalizePageRegistryRecords } from "../../lib/admin/page-registry-records.js";
 import {
   PAGE_CREATE_MODE_LABELS,
@@ -141,6 +142,22 @@ function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function renderCanonicalRegistryPageCardPreview(record, previewLookupRecords, globalSettings) {
+  return (
+    <div className={styles.preview} title={record.previewIntro || record.title}>
+      <PagePreviewThumbnail
+        page={record.previewPageValue || null}
+        globalSettings={globalSettings}
+        previewLookupRecords={previewLookupRecords}
+        pageTypeLabel={PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
+        title={record.previewTitle || record.title}
+        intro={record.previewIntro || ""}
+        live={Boolean(record.lifecycle?.hasLivePublishedRevision)}
+      />
     </div>
   );
 }
@@ -464,7 +481,7 @@ export function PageRegistryClient({
           {filteredRecords.map((record) => (
             <article key={record.id} className={styles.card}>
               <Link href={record.href} className={styles.cardLink} aria-label={`Открыть страницу ${record.title}`} />
-                        {renderPageCardPreview(record, previewLookupRecords, globalSettings)}
+                        {renderCanonicalRegistryPageCardPreview(record, previewLookupRecords, globalSettings)}
               <div className={styles.cardHead}>
                 <div>
                   <h3 className={styles.title}>{record.title}</h3>
