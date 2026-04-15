@@ -731,13 +731,22 @@
 
 :global([data-preview-device="tablet"]) .heroSplit,
 :global([data-preview-device="mobile"]) .heroSplit {
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 :global([data-preview-device="tablet"]) .heroSplitMedia,
 :global([data-preview-device="mobile"]) .heroSplitMedia {
   grid-column: 1;
   min-width: 0;
+  width: 100%;
+}
+
+:global([data-preview-device="tablet"]) .heroSplitMedia img,
+:global([data-preview-device="mobile"]) .heroSplitMedia img {
+  width: 100%;
+  max-width: 100%;
 }
 
 :global([data-preview-device="mobile"]) .page {
@@ -931,11 +940,19 @@
   }
 
   .heroSplit {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .heroSplitMedia {
     grid-column: 1;
+    width: 100%;
+  }
+
+  .heroSplitMedia img {
+    width: 100%;
+    max-width: 100%;
   }
 
   .galleryLayoutStrip {
