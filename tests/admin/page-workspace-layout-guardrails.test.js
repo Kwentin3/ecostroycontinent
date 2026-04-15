@@ -9,14 +9,15 @@ function readUtf8(url) {
   return readFileSync(url, "utf8").replace(/\r\n/g, "\n");
 }
 
-test("page workspace wide layout keeps the source column as a real operator zone", () => {
+test("page workspace wide layout keeps a compact launcher rail with bounded inputs", () => {
   const css = readUtf8(cssPath);
 
-  assert.match(css, /left column is a full source\/operator zone for commercial pages, not a micro-rail/i);
+  assert.match(css, /sources stay compact in the rail, while full selection moves into modal pickers/i);
   assert.match(
     css,
-    /\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(280px,\s*320px\)\s+minmax\(0,\s*1fr\)\s+minmax\(300px,\s*380px\);/
+    /\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(240px,\s*280px\)\s+minmax\(0,\s*1fr\)\s+minmax\(260px,\s*320px\);/
   );
+  assert.match(css, /\.launcherGrid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
   assert.match(css, /\.shell > \* \{[\s\S]*min-width:\s*0;/);
   assert.match(
     css,
@@ -24,25 +25,28 @@ test("page workspace wide layout keeps the source column as a real operator zone
   );
 });
 
-test("page workspace intermediate and narrow breakpoints keep preview fallback explicit", () => {
+test("page workspace intermediate and narrow breakpoints preserve compact rail behavior", () => {
   const css = readUtf8(cssPath);
 
   assert.match(
     css,
-    /@media \(max-width:\s*1480px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(260px,\s*320px\)\s+minmax\(0,\s*1fr\);[\s\S]*\.previewCard\s*\{[\s\S]*grid-column:\s*1 \/ -1;/
+    /@media \(max-width:\s*1480px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(240px,\s*280px\)\s+minmax\(0,\s*1fr\);[\s\S]*\.previewCard\s*\{[\s\S]*grid-column:\s*1 \/ -1;/
   );
   assert.match(
     css,
-    /@media \(max-width:\s*860px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*1fr;/
+    /@media \(max-width:\s*860px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*1fr;[\s\S]*\.launcherGrid\s*\{[\s\S]*grid-template-columns:\s*1fr;/
   );
 });
 
-test("page workspace keeps representative service and equipment source states inside the same screen", () => {
+test("page workspace keeps representative source states and launcher modal flow inside the same screen", () => {
   const source = readUtf8(componentPath);
 
   assert.match(source, /data-layout-zone="sources"/);
   assert.match(source, /data-layout-zone="canvas"/);
   assert.match(source, /data-layout-zone="preview"/);
+  assert.match(source, /launcherModels\.map/);
+  assert.match(source, /SourcePickerModal/);
+  assert.match(source, /setActivePicker/);
   assert.match(source, /metadata\.pageType === PAGE_TYPES\.SERVICE_LANDING[\s\S]*primaryServiceId/);
   assert.match(source, /metadata\.pageType === PAGE_TYPES\.EQUIPMENT_LANDING[\s\S]*primaryEquipmentId/);
 

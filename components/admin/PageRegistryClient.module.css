@@ -3,6 +3,38 @@
   gap: 16px;
 }
 
+.header {
+  display: grid;
+  gap: 14px;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 12px;
+}
+
+.statCard {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  background: linear-gradient(145deg, #fffaf1 0%, #f7f3ea 100%);
+}
+
+.statValue {
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  font-weight: 800;
+  color: #21352a;
+}
+
+.statLabel {
+  color: #667267;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -98,8 +130,8 @@
   border-radius: 18px;
   overflow: hidden;
   background: linear-gradient(135deg, #efe7d8 0%, #f7f3ea 100%);
+  position: relative;
   display: grid;
-  place-items: center;
 }
 
 .preview img {
@@ -111,6 +143,138 @@
 .previewFallback {
   color: #637064;
   font-weight: 700;
+}
+
+.pagePreviewFrame {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 14px;
+  height: 100%;
+  padding: 16px;
+}
+
+.pagePreviewTop,
+.pagePreviewFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pagePreviewEyebrow,
+.pagePreviewSlug {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  color: rgba(30, 43, 35, 0.8);
+  font-size: 0.73rem;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+}
+
+.pagePreviewSlug {
+  max-width: 48%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  justify-content: flex-end;
+}
+
+.pagePreviewBody {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pagePreviewTitle {
+  font-size: 1.1rem;
+  line-height: 1.15;
+  color: #21352a;
+}
+
+.pagePreviewText {
+  margin: 0;
+  color: rgba(34, 56, 45, 0.78);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pagePreviewSignal,
+.pagePreviewLive {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  color: rgba(30, 43, 35, 0.8);
+  font-size: 0.75rem;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+}
+
+.pagePreviewLive {
+  background: rgba(38, 76, 59, 0.9);
+  color: #fff;
+}
+
+.previewThemeSand {
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.68), transparent 32%),
+    linear-gradient(135deg, #efe2cb 0%, #f8f2e8 55%, #e4d4bb 100%);
+}
+
+.previewThemeForest {
+  background:
+    radial-gradient(circle at top right, rgba(244, 250, 246, 0.38), transparent 28%),
+    linear-gradient(140deg, #cfe1d2 0%, #edf5ef 45%, #9fb9a8 100%);
+}
+
+.previewThemeSlate {
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.2), transparent 30%),
+    linear-gradient(140deg, #d9dde5 0%, #f4f5f8 48%, #c0c8d6 100%);
+}
+
+.previewThemeGraphite {
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.15), transparent 28%),
+    linear-gradient(140deg, #d7d3ce 0%, #f4f0ea 44%, #b6aea4 100%);
+}
+
+.previewThemeNight {
+  background:
+    radial-gradient(circle at top right, rgba(101, 129, 170, 0.4), transparent 24%),
+    linear-gradient(140deg, #1d283a 0%, #29384f 45%, #43506b 100%);
+}
+
+.previewThemeNight .pagePreviewTitle,
+.previewThemeNight .pagePreviewText,
+.previewThemeNight .pagePreviewEyebrow,
+.previewThemeNight .pagePreviewSlug,
+.previewThemeNight .pagePreviewSignal {
+  color: #f8fbff;
+}
+
+.previewThemeNight .pagePreviewEyebrow,
+.previewThemeNight .pagePreviewSlug,
+.previewThemeNight .pagePreviewSignal {
+  background: rgba(248, 251, 255, 0.14);
+}
+
+.previewThemeBlueprint {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(140deg, #8db0c6 0%, #d8e8f1 50%, #5d89a5 100%);
+  background-size: 28px 28px, 28px 28px, cover;
 }
 
 .cardHead,

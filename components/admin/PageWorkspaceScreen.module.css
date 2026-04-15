@@ -3,12 +3,13 @@
   gap: 20px;
 }
 
+/* Guardrail: sources stay compact in the rail, while full selection moves into modal pickers. */
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 24px 28px;
+  gap: 16px;
+  padding: 18px 22px;
   border-radius: 24px;
   background: linear-gradient(140deg, #fffaf1 0%, #f3efe6 100%);
   border: 1px solid rgba(38, 76, 59, 0.12);
@@ -16,7 +17,7 @@
 
 .headerMain {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -30,14 +31,15 @@
 
 .title {
   margin: 0;
-  font-size: clamp(1.55rem, 2vw, 2.05rem);
+  font-size: clamp(1.35rem, 1.8vw, 1.75rem);
   color: #21352a;
 }
 
 .meta {
   margin: 0;
   color: #5e6a61;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 .metaCompact {
@@ -50,7 +52,7 @@
 .statusRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .badge {
@@ -88,7 +90,8 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
 }
 
 .headerActions .supportCopy {
@@ -137,11 +140,10 @@
   color: #a03d2f;
 }
 
-/* Guardrail: left column is a full source/operator zone for commercial pages, not a micro-rail. */
 .shell {
   display: grid;
-  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) minmax(300px, 380px);
-  gap: 20px;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr) minmax(260px, 320px);
+  gap: 18px;
   align-items: start;
 }
 
@@ -161,11 +163,17 @@
 
 .rail {
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  gap: 14px;
+  padding: 16px;
   position: sticky;
   top: 24px;
   min-width: 0;
+}
+
+.launcherGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .railTitle,
@@ -183,9 +191,9 @@
 
 .launcher {
   display: grid;
-  gap: 6px;
-  justify-items: center;
-  padding: 14px 10px;
+  gap: 5px;
+  justify-items: start;
+  padding: 12px;
   border-radius: 18px;
   border: 1px solid rgba(38, 76, 59, 0.12);
   background: #f8f4ea;
@@ -213,6 +221,7 @@
 .launcherMeta {
   font-size: 0.74rem;
   color: #667267;
+  text-align: left;
 }
 
 .canvasColumn {
@@ -519,8 +528,8 @@
 
 .previewCard {
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  gap: 12px;
+  padding: 16px;
 }
 
 .operatorCard {
@@ -814,6 +823,11 @@
   background: #fffdf8;
 }
 
+.pickerItemSelected {
+  border-color: #264c3b;
+  box-shadow: 0 10px 24px rgba(38, 76, 59, 0.08);
+}
+
 .pickerMarker {
   width: 46px;
   height: 46px;
@@ -868,7 +882,7 @@
 
 @media (max-width: 1480px) {
   .shell {
-    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
   }
 
   .previewCard {
@@ -895,6 +909,10 @@
 
   .selectedItem,
   .pickerItem {
+    grid-template-columns: 1fr;
+  }
+
+  .launcherGrid {
     grid-template-columns: 1fr;
   }
 

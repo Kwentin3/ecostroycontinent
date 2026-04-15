@@ -156,7 +156,7 @@ function moveSection(sections = [], type, direction) {
   }));
 }
 
-function SourceChecklist({ title, items, selectedIds, onToggle, emptyState = null }) {
+function SourceChecklistLegacy({ title, items, selectedIds, onToggle, emptyState = null }) {
   return (
     <div className={styles.selectedStack}>
       <h3 className={styles.sectionTitle}>{title}</h3>
@@ -206,6 +206,121 @@ function RichSourceChecklist({ title, items, selectedIds, onToggle, emptyState =
         </label>
       ))}
     </div>
+  );
+}
+
+function getPickerSearchValue(item) {
+  return [
+    item.label,
+    item.title,
+    item.meta,
+    item.subtitle,
+    item.alt,
+    item.slug
+  ].filter(Boolean).join(" ").toLowerCase();
+}
+
+function SourcePickerModal({
+  open,
+  title,
+  legend,
+  items,
+  query,
+  onQueryChange,
+  selectedIds,
+  onToggle,
+  onClose,
+  emptyState = null,
+  selectionMode = "single",
+  onClear = null,
+  clearLabel = "Очистить выбор"
+}) {
+  if (!open) {
+    return null;
+  }
+
+  const filteredItems = items.filter((item) => getPickerSearchValue(item).includes(query.trim().toLowerCase()));
+
+  return (
+    <>
+      <button type="button" className={styles.pickerOverlay} aria-label="Закрыть выбор источника" onClick={onClose} />
+      <section className={styles.pickerCard} role="dialog" aria-modal="true" aria-labelledby="workspace-picker-title">
+        <header className={styles.pickerHead}>
+          <div>
+            <p className={styles.eyebrow}>Подбор источника</p>
+            <h2 id="workspace-picker-title" className={styles.pickerTitle}>{title}</h2>
+            <p className={styles.pickerLegend}>{legend}</p>
+          </div>
+          <button type="button" className={adminStyles.secondaryButton} onClick={onClose}>
+            Закрыть
+          </button>
+        </header>
+
+        <div className={styles.pickerSearch}>
+          <label className={styles.field}>
+            <span className={styles.fieldLabel}>Поиск внутри выбора</span>
+            <input
+              className={styles.input}
+              value={query}
+              onChange={(event) => onQueryChange(event.target.value)}
+              placeholder="Название, slug, подпись"
+            />
+          </label>
+        </div>
+
+        <div className={styles.pickerBody}>
+          {filteredItems.length === 0 ? (
+            <div className={styles.pickerEmpty}>
+              <p className={styles.pickerLegend}>
+                {emptyState?.text || "Под эти условия ничего не найдено."}{" "}
+                {emptyState?.href ? (
+                  <Link href={emptyState.href} className={styles.inlineLink}>
+                    {emptyState.linkLabel}
+                  </Link>
+                ) : null}
+              </p>
+            </div>
+          ) : (
+            <div className={styles.pickerList}>
+              {filteredItems.map((item) => {
+                const selected = selectedIds.includes(item.id);
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`${styles.pickerItem} ${selected ? styles.pickerItemSelected : ""}`}
+                    onClick={() => onToggle(item.id)}
+                  >
+                    <div className={styles.pickerMarker}>
+                      {item.previewUrl ? <img src={item.previewUrl} alt={item.alt || item.label || item.title || "Предпросмотр"} className={styles.pickerThumb} /> : (item.marker || item.label || item.title || "?").slice(0, 1)}
+                    </div>
+                    <div className={styles.pickerMain}>
+                      <strong>{item.label || item.title || item.id}</strong>
+                      <p className={styles.selectedMeta}>{item.meta || item.subtitle || item.slug || ""}</p>
+                    </div>
+                    <span className={styles.pickerSelection}>
+                      {selectionMode === "single" ? (selected ? "Выбрано" : "Выбрать") : (selected ? "Подключено" : "Подключить")}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <footer className={styles.pickerFoot}>
+          {onClear ? (
+            <button type="button" className={styles.ghostButton} onClick={onClear}>
+              {clearLabel}
+            </button>
+          ) : <span className={styles.pickerLegend}>Выбор применяется сразу и остается в черновике до сохранения страницы.</span>}
+          <button type="button" className={adminStyles.secondaryButton} onClick={onClose}>
+            Готово
+          </button>
+        </footer>
+      </section>
+    </>
   );
 }
 
@@ -315,10 +430,22 @@ export function PageWorkspaceScreen({
   const [lifecycleState, setLifecycleState] = useState(lifecycle);
   const [lifecycleBusy, setLifecycleBusy] = useState("");
   const [lifecycleMenuOpen, setLifecycleMenuOpen] = useState(false);
+  const [activePicker, setActivePicker] = useState("");
+  const [pickerQuery, setPickerQuery] = useState("");
   const previewDialogRef = useRef(null);
+  const draftMediaRecords = useMemo(
+    () => Object.fromEntries(mediaOptions.map((item) => [item.id, item])),
+    [mediaOptions]
+  );
   const lookupResolvers = useMemo(
-    () => buildPageWorkspaceLookupResolvers(publishedLookupRecords),
-    [publishedLookupRecords]
+    () => buildPageWorkspaceLookupResolvers({
+      ...publishedLookupRecords,
+      media: {
+        ...(publishedLookupRecords?.media || {}),
+        ...draftMediaRecords
+      }
+    }),
+    [draftMediaRecords, publishedLookupRecords]
   );
 
   useEffect(() => {
@@ -352,6 +479,26 @@ export function PageWorkspaceScreen({
     };
   }, [previewOpen]);
 
+  useEffect(() => {
+    if (!activePicker) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setActivePicker("");
+      }
+    };
+
+    setPickerQuery("");
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activePicker]);
+
   const previewPayload = useMemo(
     () => buildPageWorkspacePreviewPayload({ baseValue, composition, metadata }),
     [baseValue, composition, metadata]
@@ -363,6 +510,10 @@ export function PageWorkspaceScreen({
   const compositionDirty = JSON.stringify(composition) !== JSON.stringify(savedComposition);
   const metadataDirty = JSON.stringify(metadata) !== JSON.stringify(savedMetadata);
   const heroMedia = mediaOptions.find((item) => item.id === composition.primaryMediaAssetId) || null;
+  const serviceItems = relationOptions.services || [];
+  const equipmentItems = relationOptions.equipment || [];
+  const caseItems = relationOptions.cases || [];
+  const galleryItems = relationOptions.galleries || [];
   const canSaveFirstDraft = Boolean(composition.title.trim()) && Boolean(composition.h1.trim());
   const requiredSectionTypes = getRequiredSectionTypes(metadata.pageType);
   const serviceEmptyState = getPrimarySourceEmptyState("service");
@@ -374,6 +525,10 @@ export function PageWorkspaceScreen({
   const previewZoom = previewZoomByDevice[previewDevice] || DEFAULT_PREVIEW_ZOOM_BY_DEVICE[previewDevice] || 1;
   const themeDefinition = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey] || LANDING_PAGE_THEME_REGISTRY.earth_sand;
   const themeDirty = metadata.pageThemeKey !== savedMetadata.pageThemeKey;
+  const primaryService = serviceItems.find((item) => item.id === composition.sourceRefs.primaryServiceId) || null;
+  const primaryEquipment = equipmentItems.find((item) => item.id === composition.sourceRefs.primaryEquipmentId) || null;
+  const selectedCaseItems = caseItems.filter((item) => (composition.sourceRefs.caseIds || []).includes(item.id));
+  const selectedGalleryItems = galleryItems.filter((item) => (composition.sourceRefs.galleryIds || []).includes(item.id));
   const pageStatusItems = useMemo(() => ([
     {
       label: "Состояние",
@@ -454,6 +609,150 @@ export function PageWorkspaceScreen({
       "Нужно собрать обязательные секции"
     )
   ]), [composition.intro, composition.sections.length, emptyState.mediaReady, emptyState.sourceCount, emptyState.titleReady, requiredSectionTypes.length]);
+
+  const launcherModels = useMemo(() => {
+    const items = [];
+
+    if (metadata.pageType === PAGE_TYPES.SERVICE_LANDING) {
+      items.push({
+        key: "service",
+        icon: "У",
+        label: "Услуга",
+        meta: primaryService ? primaryService.label : (serviceItems.length > 0 ? "Выбрать основу" : "Нет доступных")
+      });
+    }
+
+    if (metadata.pageType === PAGE_TYPES.EQUIPMENT_LANDING) {
+      items.push({
+        key: "equipment",
+        icon: "Т",
+        label: "Техника",
+        meta: primaryEquipment ? primaryEquipment.label : (equipmentItems.length > 0 ? "Выбрать основу" : "Нет доступных")
+      });
+    }
+
+    items.push({
+      key: "media",
+      icon: "М",
+      label: "Медиа",
+      meta: heroMedia ? "Обложка выбрана" : (mediaOptions.length > 0 ? "Выбрать обложку" : "Нет доступных")
+    });
+    items.push({
+      key: "cases",
+      icon: "К",
+      label: "Кейсы",
+      meta: selectedCaseItems.length > 0 ? `Подключено: ${selectedCaseItems.length}` : "Подобрать кейсы"
+    });
+    items.push({
+      key: "galleries",
+      icon: "Г",
+      label: "Галереи",
+      meta: selectedGalleryItems.length > 0 ? `Подключено: ${selectedGalleryItems.length}` : "Подобрать галереи"
+    });
+
+    return items;
+  }, [equipmentItems.length, heroMedia, mediaOptions.length, metadata.pageType, primaryEquipment, primaryService, selectedCaseItems.length, selectedGalleryItems.length, serviceItems.length]);
+  const pickerModel = useMemo(() => {
+    switch (activePicker) {
+      case "service":
+        return {
+          title: "Основная услуга",
+          legend: "Выберите одну услугу, которая будет основой этой страницы. Остальные связи остаются в кейсах и галереях.",
+          items: serviceItems.map((item) => ({ ...item, marker: "У" })),
+          selectedIds: composition.sourceRefs.primaryServiceId ? [composition.sourceRefs.primaryServiceId] : [],
+          selectionMode: "single",
+          emptyState: serviceEmptyState,
+          onToggle: (id) => {
+            setComposition((current) => ({
+              ...current,
+              sourceRefs: {
+                ...current.sourceRefs,
+                primaryServiceId: current.sourceRefs.primaryServiceId === id ? "" : id
+              }
+            }));
+          },
+          onClear: () => {
+            setComposition((current) => ({
+              ...current,
+              sourceRefs: {
+                ...current.sourceRefs,
+                primaryServiceId: ""
+              }
+            }));
+          }
+        };
+      case "equipment":
+        return {
+          title: "Основная техника",
+          legend: "Выберите одну карточку техники как основу страницы. Технические подробности и медиа потом дополняются в рабочем полотне.",
+          items: equipmentItems.map((item) => ({ ...item, marker: "Т" })),
+          selectedIds: composition.sourceRefs.primaryEquipmentId ? [composition.sourceRefs.primaryEquipmentId] : [],
+          selectionMode: "single",
+          emptyState: equipmentEmptyState,
+          onToggle: (id) => {
+            setComposition((current) => ({
+              ...current,
+              sourceRefs: {
+                ...current.sourceRefs,
+                primaryEquipmentId: current.sourceRefs.primaryEquipmentId === id ? "" : id
+              }
+            }));
+          },
+          onClear: () => {
+            setComposition((current) => ({
+              ...current,
+              sourceRefs: {
+                ...current.sourceRefs,
+                primaryEquipmentId: ""
+              }
+            }));
+          }
+        };
+      case "media":
+        return {
+          title: "Главное медиа",
+          legend: "Здесь выбирается обложка страницы и главное изображение для публичного превью.",
+          items: mediaOptions.map((item) => ({ ...item, label: item.title || item.id, meta: item.alt || "Без описания", marker: "М" })),
+          selectedIds: composition.primaryMediaAssetId ? [composition.primaryMediaAssetId] : [],
+          selectionMode: "single",
+          emptyState: mediaEmptyState,
+          onToggle: (id) => {
+            setComposition((current) => ({
+              ...current,
+              primaryMediaAssetId: current.primaryMediaAssetId === id ? "" : id
+            }));
+          },
+          onClear: () => {
+            setComposition((current) => ({
+              ...current,
+              primaryMediaAssetId: ""
+            }));
+          }
+        };
+      case "cases":
+        return {
+          title: "Кейсы",
+          legend: "Подключите доказательства и реальные сценарии работ. Они попадут в proof-блок страницы.",
+          items: caseItems.map((item) => ({ ...item, marker: "К" })),
+          selectedIds: composition.sourceRefs.caseIds || [],
+          selectionMode: "multiple",
+          emptyState: caseEmptyState,
+          onToggle: (id) => toggleRelation("caseIds", id)
+        };
+      case "galleries":
+        return {
+          title: "Галереи",
+          legend: "Подберите галереи с фотографиями и визуальным подтверждением. Они появятся в proof-блоке рядом с кейсами.",
+          items: galleryItems.map((item) => ({ ...item, marker: "Г" })),
+          selectedIds: composition.sourceRefs.galleryIds || [],
+          selectionMode: "multiple",
+          emptyState: galleryEmptyState,
+          onToggle: (id) => toggleRelation("galleryIds", id)
+        };
+      default:
+        return null;
+    }
+  }, [activePicker, caseEmptyState, caseItems, composition.primaryMediaAssetId, composition.sourceRefs.caseIds, composition.sourceRefs.galleryIds, composition.sourceRefs.primaryEquipmentId, composition.sourceRefs.primaryServiceId, equipmentEmptyState, equipmentItems, galleryEmptyState, galleryItems, mediaEmptyState, mediaOptions, serviceEmptyState, serviceItems]);
 
   const handleJsonAction = async (payload) => {
     const response = await fetch(saveUrl, {
@@ -714,6 +1013,14 @@ export function PageWorkspaceScreen({
           <p className={styles.metaCompact}>{currentSignal.reason}</p>
         </div>
         <div className={styles.headerActions}>
+          <button type="button" className={adminStyles.secondaryButton} onClick={() => handleOpenPreview(previewDevice)}>
+            Превью
+          </button>
+          <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
+            Метаданные
+          </button>
+          {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
+          {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
           {lifecycleState?.canArchive || lifecycleState?.canDelete ? (
             <div className={styles.lifecycleWrap}>
               <button
@@ -761,6 +1068,74 @@ export function PageWorkspaceScreen({
         <aside className={styles.rail} data-layout-zone="sources">
           <h2 className={styles.railTitle}>Источники</h2>
           <p className={styles.inlineHint}>{getWorkspaceQuestionHint("sources")}</p>
+          <div className={styles.launcherGrid}>
+            {launcherModels.map((launcher) => (
+              <button
+                key={launcher.key}
+                type="button"
+                className={styles.launcher}
+                onClick={() => setActivePicker(launcher.key)}
+              >
+                <span className={styles.launcherIcon}>{launcher.icon}</span>
+                <span className={styles.launcherLabel}>{launcher.label}</span>
+                <span className={styles.launcherMeta}>{launcher.meta}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.selectedStack}>
+            {primaryService ? (
+              <div className={styles.selectedItem}>
+                <div className={styles.selectedFallback}>У</div>
+                <div className={styles.selectedMain}>
+                  <strong>{primaryService.label}</strong>
+                  <p className={styles.selectedMeta}>{primaryService.meta || "Основная услуга страницы"}</p>
+                </div>
+              </div>
+            ) : null}
+            {primaryEquipment ? (
+              <div className={styles.selectedItem}>
+                <div className={styles.selectedFallback}>Т</div>
+                <div className={styles.selectedMain}>
+                  <strong>{primaryEquipment.label}</strong>
+                  <p className={styles.selectedMeta}>{primaryEquipment.meta || "Основная техника страницы"}</p>
+                </div>
+              </div>
+            ) : null}
+            {heroMedia ? (
+              <div className={styles.selectedItem}>
+                {heroMedia.previewUrl ? <img src={heroMedia.previewUrl} alt={heroMedia.title} className={styles.selectedThumb} /> : <div className={styles.selectedFallback}>М</div>}
+                <div className={styles.selectedMain}>
+                  <strong>{heroMedia.title || heroMedia.id}</strong>
+                  <p className={styles.selectedMeta}>{heroMedia.alt || "Главное медиа страницы"}</p>
+                </div>
+              </div>
+            ) : null}
+            {selectedCaseItems.length > 0 ? (
+              <div className={styles.selectedItem}>
+                <div className={styles.selectedFallback}>К</div>
+                <div className={styles.selectedMain}>
+                  <strong>Кейсы: {selectedCaseItems.length}</strong>
+                  <p className={styles.selectedMeta}>{selectedCaseItems.slice(0, 2).map((item) => item.label).join(" · ")}</p>
+                </div>
+              </div>
+            ) : null}
+            {selectedGalleryItems.length > 0 ? (
+              <div className={styles.selectedItem}>
+                <div className={styles.selectedFallback}>Г</div>
+                <div className={styles.selectedMain}>
+                  <strong>Галереи: {selectedGalleryItems.length}</strong>
+                  <p className={styles.selectedMeta}>{selectedGalleryItems.slice(0, 2).map((item) => item.label).join(" · ")}</p>
+                </div>
+              </div>
+            ) : null}
+            {!primaryService && !primaryEquipment && !heroMedia && selectedCaseItems.length === 0 && selectedGalleryItems.length === 0 ? (
+              <div className={styles.pickerEmpty}>
+                <p className={styles.pickerLegend}>Слева остаются только источники и быстрый контекст. Полный выбор открывается в крупных модалках.</p>
+              </div>
+            ) : null}
+          </div>
+          {false ? (<>
           {(metadata.pageType === PAGE_TYPES.SERVICE_LANDING) ? (
             <div className={styles.field}>
               <span className={styles.fieldLabel}>Основная услуга</span>
@@ -871,6 +1246,7 @@ export function PageWorkspaceScreen({
               </div>
             </div>
           ) : null}
+          </>) : null}
         </aside>
 
         <div className={styles.canvasColumn} data-layout-zone="canvas">
@@ -981,6 +1357,7 @@ export function PageWorkspaceScreen({
               ))}
             </dl>
             <p className={styles.operatorNote}>{currentSignal.reason}</p>
+            {false ? (
             <div className={styles.quickActions}>
               <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
                 Метаданные
@@ -988,8 +1365,8 @@ export function PageWorkspaceScreen({
               {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
               {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
             </div>
+            ) : null}
           </div>
-
           <div className={styles.operatorCard}>
             <div className={styles.sectionHead}>
               <div>
@@ -997,6 +1374,7 @@ export function PageWorkspaceScreen({
                 <p className={styles.sectionMeta}>Открывайте страницу в отдельном окне предпросмотра и там же подбирайте тему.</p>
               </div>
             </div>
+            {false ? (
             <div className={styles.previewLaunchGrid}>
               {PREVIEW_VIEWPORT_OPTIONS.map((option) => (
                 <button
@@ -1010,6 +1388,7 @@ export function PageWorkspaceScreen({
                 </button>
               ))}
             </div>
+            ) : null}
             <div className={styles.operatorInlineMeta}>
               <span className={`${styles.auditTonePill} ${toneClassName(themeDirty ? "warning" : "healthy")}`}>
                 {themeDirty ? "Тема не сохранена" : "Тема активна"}
@@ -1017,7 +1396,7 @@ export function PageWorkspaceScreen({
               <p className={styles.operatorNote}>Сейчас выбрана тема: {themeDefinition.label}.</p>
               <p className={styles.operatorNote}>{getPageWorkspaceVisualSettingsHint()}</p>
             </div>
-            {themeDirty ? (
+            {false && themeDirty ? (
               <button
                 type="button"
                 className={adminStyles.secondaryButton}
@@ -1069,6 +1448,20 @@ export function PageWorkspaceScreen({
         </section>
       </div>
 
+      <SourcePickerModal
+        open={Boolean(pickerModel)}
+        title={pickerModel?.title || ""}
+        legend={pickerModel?.legend || ""}
+        items={pickerModel?.items || []}
+        query={pickerQuery}
+        onQueryChange={setPickerQuery}
+        selectedIds={pickerModel?.selectedIds || []}
+        onToggle={pickerModel?.onToggle || (() => {})}
+        onClose={() => setActivePicker("")}
+        emptyState={pickerModel?.emptyState || null}
+        selectionMode={pickerModel?.selectionMode || "single"}
+        onClear={pickerModel?.onClear || null}
+      />
       <PageMetadataModal
         open={metadataOpen}
         pageLabel={pageLabel}

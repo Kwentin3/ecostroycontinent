@@ -31,6 +31,30 @@ function toneClassName(tone = "") {
   return styles.toneunknown;
 }
 
+function pagePreviewThemeClassName(themeKey = "") {
+  if (themeKey === "forest_contrast") {
+    return styles.previewThemeForest;
+  }
+
+  if (themeKey === "slate_editorial") {
+    return styles.previewThemeSlate;
+  }
+
+  if (themeKey === "graphite_industrial") {
+    return styles.previewThemeGraphite;
+  }
+
+  if (themeKey === "night_signal") {
+    return styles.previewThemeNight;
+  }
+
+  if (themeKey === "concrete_blueprint") {
+    return styles.previewThemeBlueprint;
+  }
+
+  return styles.previewThemeSand;
+}
+
 function buildHiddenValue(pageType, createMode, formState) {
   if (createMode === "from_service") {
     return "service_landing";
@@ -48,8 +72,36 @@ function buildHiddenValue(pageType, createMode, formState) {
   return pageType;
 }
 
+function renderPageCardPreview(record) {
+  return (
+    <div className={`${styles.preview} ${pagePreviewThemeClassName(record.previewThemeKey)}`}>
+      <div className={styles.pagePreviewFrame}>
+        <div className={styles.pagePreviewTop}>
+          <span className={styles.pagePreviewEyebrow}>
+            {PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
+          </span>
+          <span className={styles.pagePreviewSlug}>/{record.slug}</span>
+        </div>
+        <div className={styles.pagePreviewBody}>
+          <strong className={styles.pagePreviewTitle}>{record.previewTitle || record.title}</strong>
+          <p className={styles.pagePreviewText}>
+            {record.previewIntro || "Карточка показывает собственный page preview, а не фотографию прикрепленного медиа."}
+          </p>
+        </div>
+        <div className={styles.pagePreviewFooter}>
+          <span className={styles.pagePreviewSignal}>{record.signalLabel}</span>
+          {record.lifecycle?.hasLivePublishedRevision ? (
+            <span className={styles.pagePreviewLive}>Live</span>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PageRegistryClient({
   initialRecords,
+  summary = null,
   metadataSaveBasePath = "/api/admin/entities/page",
   createFallbackHref = "/admin/entities/page/new",
   initialCreateOpen = false,
@@ -143,6 +195,19 @@ export function PageRegistryClient({
       return true;
     });
   }, [query, records, statusFilter, typeFilter]);
+
+  const registryStats = useMemo(() => {
+    const stats = summary || {};
+
+    return [
+      { label: "Всего", value: stats.total ?? records.length },
+      { label: "Заблокировано", value: stats.blocked ?? 0 },
+      { label: "Частично", value: stats.partial ?? 0 },
+      { label: "Готово", value: stats.ready ?? 0 },
+      { label: "Нет версии", value: stats.missing ?? 0 },
+      { label: "Вне live", value: stats.inactive ?? 0 }
+    ];
+  }, [records.length, summary]);
 
   const handleMetadataSave = async (nextMetadata) => {
     if (!metadataRecord) {
@@ -278,6 +343,17 @@ export function PageRegistryClient({
 
   return (
     <div className={styles.controls}>
+      <div className={styles.header}>
+        <div className={styles.statsRow} aria-label="Статистика реестра страниц">
+          {registryStats.map((item) => (
+            <div key={item.label} className={styles.statCard}>
+              <span className={styles.statValue}>{item.value}</span>
+              <span className={styles.statLabel}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className={styles.toolbar}>
         <div className={styles.toolbarMain}>
           <div className={styles.field}>
@@ -340,9 +416,7 @@ export function PageRegistryClient({
           {filteredRecords.map((record) => (
             <article key={record.id} className={styles.card}>
               <Link href={record.href} className={styles.cardLink} aria-label={`Открыть страницу ${record.title}`} />
-              <div className={styles.preview}>
-                {record.previewUrl ? <img src={record.previewUrl} alt={record.title} /> : <span className={styles.previewFallback}>Нет preview</span>}
-              </div>
+              {renderPageCardPreview(record)}
               <div className={styles.cardHead}>
                 <div>
                   <h3 className={styles.title}>{record.title}</h3>

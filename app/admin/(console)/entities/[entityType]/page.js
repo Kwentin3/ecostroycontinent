@@ -5,7 +5,6 @@ import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { ConfirmActionForm } from "../../../../../components/admin/ConfirmActionForm";
 import { MediaGalleryWorkspace } from "../../../../../components/admin/MediaGalleryWorkspace";
 import { PageRegistryClient } from "../../../../../components/admin/PageRegistryClient";
-import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { getPayloadLabel } from "../../../../../lib/admin/entity-ui.js";
 import { buildListRowProjection, buildListSurfaceViewModel } from "../../../../../lib/admin/list-visibility.js";
@@ -76,7 +75,10 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
       slug: metadata.slug,
       href: `/admin/entities/page/${row.entityId}`,
       historyHref: `/admin/entities/page/${row.entityId}/history`,
-      previewUrl: getPageCardPreviewUrl(pageValue.primaryMediaAssetId),
+      previewTitle: pageValue.h1 || pageValue.title || row.entityLabel || row.entityId,
+      previewIntro: pageValue.intro || "",
+      previewThemeKey: metadata.pageThemeKey,
+      previewMediaUrl: getPageCardPreviewUrl(pageValue.primaryMediaAssetId),
       signalLabel: row.signalLabel,
       signalTone: row.signalTone,
       signalState: row.signalState,
@@ -314,7 +316,8 @@ export default async function EntityListPage({ params, searchParams }) {
         <div className={styles.stack}>
           {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
           {query?.error && !createState.open ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
-          <SurfacePacket
+          {false ? (
+            <SurfacePacket
             eyebrow="Реестр страниц"
             title="Страницы"
             summary="Это единый вход в page workflow: обзор страниц, поиск нужной и переход в основной рабочий экран без хопа в отдельную AI-поверхность."
@@ -324,10 +327,12 @@ export default async function EntityListPage({ params, searchParams }) {
               "Карточки являются режимом по умолчанию; список остаётся вторичным представлением.",
               "Метаданные открываются через меню карточки и не конкурируют с мольбертом страницы."
             ]}
-          />
+            />
+          ) : null}
           <section className={styles.panel}>
             <PageRegistryClient
               initialRecords={pageRecords}
+              summary={viewModel.summary}
               metadataSaveBasePath="/api/admin/entities/page"
               initialCreateOpen={createState.open}
               initialCreateTitle={createState.title}

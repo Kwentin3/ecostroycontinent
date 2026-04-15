@@ -115,7 +115,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
     return (
       <AdminShell
         user={user}
-        title={pageLabel}
+        title="Страницы"
         breadcrumbs={[
           { label: "Админка", href: "/admin" },
           { label: "Страницы", href: "/admin/entities/page" },
