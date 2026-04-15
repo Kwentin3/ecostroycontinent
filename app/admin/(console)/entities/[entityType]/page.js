@@ -5,6 +5,7 @@ import { AdminShell } from "../../../../../components/admin/AdminShell";
 import { ConfirmActionForm } from "../../../../../components/admin/ConfirmActionForm";
 import { MediaGalleryWorkspace } from "../../../../../components/admin/MediaGalleryWorkspace";
 import { PageRegistryClient } from "../../../../../components/admin/PageRegistryClient";
+import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { getPayloadLabel } from "../../../../../lib/admin/entity-ui.js";
 import { buildListRowProjection, buildListSurfaceViewModel } from "../../../../../lib/admin/list-visibility.js";

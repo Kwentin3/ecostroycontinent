@@ -42,6 +42,13 @@ test("page workspace preview modal uses a single control center and renders view
   assert.match(previewViewportSource, /data-preview-device=\{activeOption\.value\}/);
 });
 
+test("entity registry page keeps SurfacePacket imported for non-page entity lists", () => {
+  const source = readFileSync(new URL("../../app/admin/(console)/entities/[entityType]/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+
+  assert.match(source, /import\s+\{\s*SurfacePacket\s*\}\s+from\s+["']\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/components\/admin\/SurfacePacket["']/);
+  assert.match(source, /<SurfacePacket/);
+});
+
 test("cleanup aggregate builder preserves entities without revisions for exact-id cleanup", () => {
   const aggregates = buildEntityAggregates([
     {
