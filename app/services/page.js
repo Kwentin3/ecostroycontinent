@@ -1,4 +1,4 @@
-﻿import { PublicListPage } from "../../components/public/PublicRenderers";
+﻿import { PublicHoldingPage, PublicListPage } from "../../components/public/PublicRenderers";
 import {
   getPublishedGlobalSettings,
   getPublishedServices
@@ -11,14 +11,19 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
-  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled || runtimeDisplayMode.underConstruction;
   const globalSettings = await getPublishedGlobalSettings();
   const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+  const title = runtimeDisplayMode.underConstruction ? "Услуги — в режиме подготовки" : "Услуги";
+  const description = runtimeDisplayMode.underConstruction
+    ? "Раздел услуг временно показывает holding-поверхность."
+    : "Каталог услуг с переходом на отдельные service detail страницы.";
+
   return buildPublicRouteMetadata({
     pathname: "/services",
     placeholderMode,
-    title: "Услуги",
-    description: "Каталог услуг с переходом на отдельные service detail страницы.",
+    title,
+    description,
     siteName
   });
 }
@@ -27,6 +32,24 @@ export default async function ServicesPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
   const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
+
+  if (runtimeDisplayMode.underConstruction) {
+    const [globalSettings, services] = await Promise.all([
+      getPublishedGlobalSettings(),
+      getPublishedServices()
+    ]);
+
+    return (
+      <PublicHoldingPage
+        globalSettings={globalSettings || getPlaceholderGlobalSettings()}
+        currentPath="/services"
+        serviceLinks={services}
+        title="Раздел услуг в режиме подготовки"
+        description="Каталог услуг временно переведён в under construction режим."
+      />
+    );
+  }
+
   const [services, globalSettings] = await Promise.all([
     getPublishedServices(),
     getPublishedGlobalSettings()

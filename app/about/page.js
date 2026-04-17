@@ -1,10 +1,11 @@
 ﻿import { notFound } from "next/navigation";
 
-import { StandalonePage } from "../../components/public/PublicRenderers";
+import { PublicHoldingPage, StandalonePage } from "../../components/public/PublicRenderers";
 import {
   buildPublishedLookups,
   getPublishedAboutPage,
-  getPublishedGlobalSettings
+  getPublishedGlobalSettings,
+  getPublishedServices
 } from "../../lib/read-side/public-content";
 import {
   getPlaceholderAboutPage,
@@ -18,14 +19,24 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
-  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
-  const [publishedPage, globalSettings] = await Promise.all([
-    getPublishedAboutPage(),
-    getPublishedGlobalSettings()
-  ]);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled || runtimeDisplayMode.underConstruction;
+  const globalSettings = await getPublishedGlobalSettings();
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+
+  if (runtimeDisplayMode.underConstruction) {
+    return buildPublicRouteMetadata({
+      pathname: "/about",
+      placeholderMode,
+      title: "О компании — в режиме подготовки",
+      description: "Маршрут /about временно показывает holding-поверхность.",
+      siteName
+    });
+  }
+
+  const publishedPage = await getPublishedAboutPage();
   const placeholderPage = placeholderMode ? getPlaceholderAboutPage() : null;
   const page = publishedPage || placeholderPage;
-  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+
   return buildPublicRouteMetadata({
     pathname: "/about",
     placeholderMode,
@@ -40,6 +51,23 @@ export default async function AboutPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
   const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
+
+  if (runtimeDisplayMode.underConstruction) {
+    const [globalSettings, services] = await Promise.all([
+      getPublishedGlobalSettings(),
+      getPublishedServices()
+    ]);
+
+    return (
+      <PublicHoldingPage
+        globalSettings={globalSettings || getPlaceholderGlobalSettings()}
+        currentPath="/about"
+        serviceLinks={services}
+        title="Раздел о компании в режиме подготовки"
+        description="/about временно переведён в under construction режим."
+      />
+    );
+  }
 
   const [publishedPage, globalSettings, lookups] = await Promise.all([
     getPublishedAboutPage(),

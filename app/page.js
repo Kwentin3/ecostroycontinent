@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 
-import { PublicPageShell } from "../components/public/PublicRenderers";
+import { PublicHoldingPage, PublicPageShell } from "../components/public/PublicRenderers";
 import styles from "../components/public/public-ui.module.css";
 import {
   getPublishedCases,
@@ -21,14 +21,20 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
-  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled || runtimeDisplayMode.underConstruction;
   const globalSettings = await getPublishedGlobalSettings();
   const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+  const title = runtimeDisplayMode.underConstruction
+    ? `${siteName} — сайт в режиме подготовки`
+    : `${siteName} — услуги и кейсы`;
+  const description = runtimeDisplayMode.underConstruction
+    ? "Публичный контур временно переведён в under construction режим."
+    : "Главная как trust и navigation hub для услуг, кейсов и контактного действия.";
   return buildPublicRouteMetadata({
     pathname: "/",
     placeholderMode,
-    title: `${siteName} — услуги и кейсы`,
-    description: "Главная как trust и navigation hub для услуг, кейсов и контактного действия.",
+    title,
+    description,
     siteName
   });
 }
@@ -49,6 +55,23 @@ export default async function HomePage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
   const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
+
+  if (runtimeDisplayMode.underConstruction) {
+    const [globalSettings, services] = await Promise.all([
+      getPublishedGlobalSettings(),
+      getPublishedServices()
+    ]);
+
+    return (
+      <PublicHoldingPage
+        globalSettings={globalSettings || getPlaceholderGlobalSettings()}
+        currentPath="/"
+        serviceLinks={services}
+        title="Сайт в режиме подготовки"
+        description="Главная временно работает как holding-поверхность до следующего операционного переключения."
+      />
+    );
+  }
 
   const [globalSettings, services, cases] = await Promise.all([
     getPublishedGlobalSettings(),

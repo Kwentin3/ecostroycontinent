@@ -1,10 +1,11 @@
 ﻿import { notFound } from "next/navigation";
 
-import { CasePage } from "../../../components/public/PublicRenderers";
+import { CasePage, PublicHoldingPage } from "../../../components/public/PublicRenderers";
 import {
   buildPublishedLookups,
   getPublishedCaseBySlug,
-  getPublishedGlobalSettings
+  getPublishedGlobalSettings,
+  getPublishedServices
 } from "../../../lib/read-side/public-content";
 import {
   getPlaceholderCaseBySlug,
@@ -19,14 +20,24 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
-  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
-  const [publishedCase, globalSettings] = await Promise.all([
-    getPublishedCaseBySlug(slug),
-    getPublishedGlobalSettings()
-  ]);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled || runtimeDisplayMode.underConstruction;
+  const globalSettings = await getPublishedGlobalSettings();
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+
+  if (runtimeDisplayMode.underConstruction) {
+    return buildPublicRouteMetadata({
+      pathname: `/cases/${slug}`,
+      placeholderMode,
+      title: "Кейс — в режиме подготовки",
+      description: "Детальная страница кейса временно показывает holding-поверхность.",
+      siteName
+    });
+  }
+
+  const publishedCase = await getPublishedCaseBySlug(slug);
   const placeholderCase = placeholderMode ? getPlaceholderCaseBySlug(slug) : null;
   const item = publishedCase || placeholderCase;
-  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+
   return buildPublicRouteMetadata({
     pathname: `/cases/${slug}`,
     placeholderMode,
@@ -42,6 +53,23 @@ export default async function CaseDetailPage({ params, searchParams }) {
   const resolvedSearchParams = await searchParams;
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
   const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
+
+  if (runtimeDisplayMode.underConstruction) {
+    const [globalSettings, services] = await Promise.all([
+      getPublishedGlobalSettings(),
+      getPublishedServices()
+    ]);
+
+    return (
+      <PublicHoldingPage
+        globalSettings={globalSettings || getPlaceholderGlobalSettings()}
+        currentPath={`/cases/${slug}`}
+        serviceLinks={services}
+        title="Детальная страница кейса в режиме подготовки"
+        description="Case detail временно отключён в пользу единого holding-режима."
+      />
+    );
+  }
 
   const [publishedCase, lookups, globalSettings] = await Promise.all([
     getPublishedCaseBySlug(slug),

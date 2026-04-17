@@ -18,6 +18,18 @@ test("public robots spec exposes sitemap and blocks admin surfaces", () => {
   assert.deepEqual(robots.rules[0].disallow, ["/admin", "/admin/*", "/api/admin", "/api/admin/*"]);
 });
 
+test("public robots spec can hard-stop indexation for operational non-launch modes", () => {
+  const robots = buildPublicRobotsSpec({
+    baseUrl: "https://ecostroycontinent.ru/",
+    blockPublicIndexation: true
+  });
+
+  assert.equal(robots.sitemap, undefined);
+  assert.equal(Array.isArray(robots.rules), true);
+  assert.equal(robots.rules[0].userAgent, "*");
+  assert.deepEqual(robots.rules[0].disallow, ["/"]);
+});
+
 test("sitemap entries include launch-core routes and published detail routes only", () => {
   const entries = buildPublishedSitemapEntries({
     baseUrl: "https://ecostroycontinent.ru",

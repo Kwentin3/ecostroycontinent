@@ -1,9 +1,10 @@
 ﻿import { notFound } from "next/navigation";
 
-import { ServicePage } from "../../../components/public/PublicRenderers";
+import { PublicHoldingPage, ServicePage } from "../../../components/public/PublicRenderers";
 import {
   buildPublishedLookups,
   getPublishedGlobalSettings,
+  getPublishedServices,
   getPublishedServiceBySlug
 } from "../../../lib/read-side/public-content";
 import {
@@ -20,14 +21,23 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
-  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
-  const [publishedService, globalSettings] = await Promise.all([
-    getPublishedServiceBySlug(slug),
-    getPublishedGlobalSettings()
-  ]);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled || runtimeDisplayMode.underConstruction;
+  const globalSettings = await getPublishedGlobalSettings();
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+
+  if (runtimeDisplayMode.underConstruction) {
+    return buildPublicRouteMetadata({
+      pathname: `/services/${slug}`,
+      placeholderMode,
+      title: "Услуга — в режиме подготовки",
+      description: "Маршрут услуги временно показывает holding-поверхность.",
+      siteName
+    });
+  }
+
+  const publishedService = await getPublishedServiceBySlug(slug);
   const placeholderService = placeholderMode ? getPlaceholderServiceBySlug(slug) : null;
   const service = publishedService || placeholderService;
-  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   return buildPublicRouteMetadata({
     pathname: `/services/${slug}`,
     placeholderMode,
@@ -43,6 +53,23 @@ export default async function ServiceDetailPage({ params, searchParams }) {
   const resolvedSearchParams = await searchParams;
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
   const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
+
+  if (runtimeDisplayMode.underConstruction) {
+    const [globalSettings, services] = await Promise.all([
+      getPublishedGlobalSettings(),
+      getPublishedServices()
+    ]);
+
+    return (
+      <PublicHoldingPage
+        globalSettings={globalSettings || getPlaceholderGlobalSettings()}
+        currentPath={`/services/${slug}`}
+        serviceLinks={services}
+        title="Детальная страница услуги в режиме подготовки"
+        description="Детальная service-поверхность временно отключена в пользу единого holding-режима."
+      />
+    );
+  }
 
   const [publishedService, globalSettings, lookups] = await Promise.all([
     getPublishedServiceBySlug(slug),

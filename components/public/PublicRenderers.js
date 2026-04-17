@@ -631,6 +631,60 @@ export function PublicListPage({
   );
 }
 
+export function PublicHoldingPage({
+  globalSettings = null,
+  currentPath = "/",
+  serviceLinks = [],
+  title = "Сайт в режиме подготовки",
+  description = "Публичный контур временно переведён в режим under construction."
+}) {
+  const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: "В разработке" });
+
+  return (
+    <PublicPageShell
+      globalSettings={globalSettings}
+      currentPath={currentPath}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+      allowStructuredData={false}
+    >
+      <main className={styles.page}>
+        <section
+          id="preview-holding-hero"
+          data-preview-section="holding-hero"
+          className={getSectionClassName([styles.hero, styles.previewSection], { surfaceTone: "tinted", textEmphasisPreset: "strong" })}
+        >
+          <p className={styles.eyebrow}>Under construction mode</p>
+          <h1>{title}</h1>
+          <p>{description}</p>
+          <p className={styles.note}>
+            Режим управляется из админки как operational control и не меняет published truth сущностей.
+          </p>
+          <div className={styles.placeholderMarker} role="note">
+            UNDER CONSTRUCTION - NOT LAUNCH CONTENT
+          </div>
+        </section>
+
+        <section
+          id="preview-holding-status"
+          data-preview-section="holding-status"
+          className={getSectionClassName([styles.card, styles.previewSection], { surfaceTone: "plain", textEmphasisPreset: "standard" })}
+        >
+          <h2>Что это значит</h2>
+          <p className={styles.note}>
+            В режиме under construction публичные маршруты показывают единую holding-поверхность до следующего операционного переключения.
+          </p>
+          <div className={styles.linkRow}>
+            <Link className={styles.actionLink} href="/">Открыть главную</Link>
+            <Link className={styles.actionLinkSecondary} href="/services">Открыть услуги</Link>
+            <Link className={styles.actionLinkSecondary} href="/cases">Открыть кейсы</Link>
+          </div>
+        </section>
+      </main>
+    </PublicPageShell>
+  );
+}
+
 export function ServicePage({
   service,
   relatedCases,

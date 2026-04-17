@@ -1,10 +1,11 @@
 ﻿import { notFound } from "next/navigation";
 
-import { StandalonePage } from "../../components/public/PublicRenderers";
+import { PublicHoldingPage, StandalonePage } from "../../components/public/PublicRenderers";
 import {
   buildPublishedLookups,
   getPublishedContactsPage,
-  getPublishedGlobalSettings
+  getPublishedGlobalSettings,
+  getPublishedServices
 } from "../../lib/read-side/public-content";
 import {
   getPlaceholderContactsPage,
@@ -18,14 +19,24 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
-  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
-  const [publishedPage, globalSettings] = await Promise.all([
-    getPublishedContactsPage(),
-    getPublishedGlobalSettings()
-  ]);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled || runtimeDisplayMode.underConstruction;
+  const globalSettings = await getPublishedGlobalSettings();
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+
+  if (runtimeDisplayMode.underConstruction) {
+    return buildPublicRouteMetadata({
+      pathname: "/contacts",
+      placeholderMode,
+      title: "Контакты — в режиме подготовки",
+      description: "Маршрут /contacts временно показывает holding-поверхность.",
+      siteName
+    });
+  }
+
+  const publishedPage = await getPublishedContactsPage();
   const placeholderPage = placeholderMode ? getPlaceholderContactsPage() : null;
   const page = publishedPage || placeholderPage;
-  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
+
   return buildPublicRouteMetadata({
     pathname: "/contacts",
     placeholderMode,
@@ -40,6 +51,23 @@ export default async function ContactsPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
   const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
+
+  if (runtimeDisplayMode.underConstruction) {
+    const [globalSettings, services] = await Promise.all([
+      getPublishedGlobalSettings(),
+      getPublishedServices()
+    ]);
+
+    return (
+      <PublicHoldingPage
+        globalSettings={globalSettings || getPlaceholderGlobalSettings()}
+        currentPath="/contacts"
+        serviceLinks={services}
+        title="Контакты в режиме подготовки"
+        description="Контактная поверхность временно переведена в under construction режим."
+      />
+    );
+  }
 
   const [publishedPage, globalSettings, lookups] = await Promise.all([
     getPublishedContactsPage(),
