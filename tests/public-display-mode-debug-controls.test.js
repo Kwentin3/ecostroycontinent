@@ -16,7 +16,8 @@ test("display mode debug overrides are gated by config and stay subordinate to f
   assert.match(middlewareSource, /debugMode/);
   assert.match(middlewareSource, /resolvePersistedModeFromRuntimeProbe/);
   assert.match(middlewareSource, /X-Robots-Tag/);
-  assert.doesNotMatch(middlewareSource, /getDisplayModeState/);
+  assert.match(middlewareSource, /getDisplayModeState/);
+  assert.match(middlewareSource, /runtime = \"nodejs\"/);
   assert.doesNotMatch(middlewareSource, /cachedPersistedMode/);
   assert.doesNotMatch(middlewareSource, /PERSISTED_MODE_CACHE_TTL_MS/);
 
