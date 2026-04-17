@@ -17,6 +17,8 @@ test("contact projection uses direct channel actions only when contact truth is 
   assert.equal(projection.primaryAction.kind, "call");
   assert.match(projection.primaryAction.href, /^tel:/);
   assert.equal(projection.displayPhone, "+7 (999) 123-45-67");
+  assert.equal(projection.bindingMode, "confirmed_truth");
+  assert.match(projection.consistencyToken, /confirmed_truth\|ready\|/);
 });
 
 test("contact projection falls back to route CTA when contact truth is not confirmed", () => {
@@ -33,6 +35,8 @@ test("contact projection falls back to route CTA when contact truth is not confi
   assert.equal(projection.primaryAction.label, "Request contact");
   assert.equal(projection.displayPhone, "Contact details are pending confirmation.");
   assert.equal(projection.displayEmail, "Public email is pending confirmation.");
+  assert.equal(projection.bindingMode, "fallback_projection");
+  assert.match(projection.consistencyToken, /fallback_projection\|pending_confirmation\|/);
 });
 
 test("stage4a wiring uses shared contact projection helper on home and public renderer", () => {
@@ -44,4 +48,6 @@ test("stage4a wiring uses shared contact projection helper on home and public re
   assert.match(rendererSource, /buildPublicContactProjection/);
   assert.match(rendererSource, /ContactAction/);
   assert.match(rendererSource, /contact-request/);
+  assert.match(rendererSource, /data-contact-binding-mode/);
+  assert.match(rendererSource, /data-contact-consistency-token/);
 });

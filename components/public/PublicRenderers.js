@@ -242,7 +242,12 @@ export function PublicPageShell({
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
 
   return (
-    <div className={`${styles.publicShell} ${themeClassName}`}>
+    <div
+      className={`${styles.publicShell} ${themeClassName}`}
+      data-contact-binding-mode={contactProjection.bindingMode}
+      data-contact-readiness={contactProjection.readiness.code}
+      data-contact-consistency-token={contactProjection.consistencyToken}
+    >
       <header className={styles.publicShellHeader}>
         <div className={styles.publicShellBrand}>
           <p className={styles.publicShellEyebrow}>Публичный сайт</p>
