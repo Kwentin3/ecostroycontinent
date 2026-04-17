@@ -7,6 +7,7 @@ import {
   PUBLIC_DISPLAY_MODES,
   parsePublicDisplayMode
 } from "./lib/public-launch/display-mode.js";
+import { getDisplayModeState } from "./lib/public-launch/display-mode-store.js";
 import {
   PLACEHOLDER_COOKIE_NAME,
   PLACEHOLDER_QUERY_PARAM,
@@ -40,6 +41,17 @@ function setDebugCookie(response, name, value, request) {
 }
 
 async function resolvePersistedModeFromRuntimeProbe(request) {
+  try {
+    const directState = await getDisplayModeState();
+    const directMode = parsePublicDisplayMode(directState?.mode);
+
+    if (directMode) {
+      return directMode;
+    }
+  } catch {
+    // Fall through to runtime probe when direct storage access is unavailable in this runtime.
+  }
+
   try {
     const probeUrl = new URL("/api/public/display-mode", request.nextUrl.origin);
     const response = await fetch(probeUrl, {
