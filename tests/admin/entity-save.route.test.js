@@ -117,6 +117,38 @@ test("entity save route can redirect freshly created page into the unified works
   assert.equal(response.headers.get("location"), "http://localhost:3000/admin/entities/page/page_77?message=%D0%A7%D0%B5%D1%80%D0%BD%D0%BE%D0%B2%D0%B8%D0%BA+%D1%81%D0%BE%D1%85%D1%80%D0%B0%D0%BD%D1%91%D0%BD.");
 });
 
+test("entity save route blocks legacy page creation mode when launch ownership guard is active", async () => {
+  const response = await POST(
+    buildRequest({
+      title: "Service page from source",
+      h1: "Service page from source",
+      createMode: "from_service",
+      primaryServiceId: "service_1",
+      redirectMode: "page_workspace",
+      failureRedirectTo: "/admin/entities/page?create=1"
+    }),
+    { params: { entityType: "page" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      assertPageTypeAllowedForLaunchOwnership: () => {
+        throw new Error("Launch ownership guard blocks legacy pageType \"service_landing\".");
+      },
+      saveDraft: async () => {
+        throw new Error("saveDraft should not be called when ownership guard blocks the mode.");
+      }
+    }
+  );
+
+  assert.equal(response.status, 303);
+  const location = new URL(response.headers.get("location"));
+
+  assert.equal(location.pathname, "/admin/entities/page");
+  assert.equal(location.searchParams.get("create"), "1");
+  assert.equal(location.searchParams.get("createMode"), "from_service");
+  assert.equal(location.searchParams.get("error"), "Launch ownership guard blocks legacy pageType \"service_landing\".");
+});
+
 test("entity save route returns JSON payload for operator mode", async () => {
   const response = await POST(
     buildRequest({

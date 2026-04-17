@@ -10,14 +10,16 @@ import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
 import { getEntityAggregate } from "../../../../../../lib/content-core/repository.js";
 import { ENTITY_TYPES, PAGE_CREATE_MODES, PAGE_TYPES } from "../../../../../../lib/content-core/content-types.js";
 import { saveDraft } from "../../../../../../lib/content-core/service.js";
+import { assertPageTypeAllowedForLaunchOwnership } from "../../../../../../lib/public-launch/ownership.js";
 
 function getWorkingRevisionPayload(aggregate) {
   const currentDraft = aggregate?.revisions?.find((revision) => revision.state === "draft");
   return currentDraft?.payload || aggregate?.activePublishedRevision?.payload || null;
 }
 
-async function buildPageCreatePayload(formPayload, formData) {
+async function buildPageCreatePayload(formPayload, formData, deps = {}) {
   const createMode = getString(formData, "createMode") || PAGE_CREATE_MODES.STANDALONE;
+  const assertLaunchOwnership = deps.assertPageTypeAllowedForLaunchOwnership || (() => {});
 
   if (createMode === PAGE_CREATE_MODES.CLONE_ADAPT) {
     const cloneFromPageId = getString(formData, "cloneFromPageId");
@@ -32,6 +34,11 @@ async function buildPageCreatePayload(formPayload, formData) {
     if (!clonePayload) {
       throw new Error("Не удалось прочитать исходную страницу для копии.");
     }
+
+    assertLaunchOwnership({
+      nextPageType: clonePayload.pageType || formPayload.pageType || PAGE_TYPES.ABOUT,
+      previousPageType: ""
+    });
 
     return {
       ...clonePayload,
@@ -49,6 +56,11 @@ async function buildPageCreatePayload(formPayload, formData) {
   }
 
   if (createMode === PAGE_CREATE_MODES.FROM_SERVICE) {
+    assertLaunchOwnership({
+      nextPageType: PAGE_TYPES.SERVICE_LANDING,
+      previousPageType: ""
+    });
+
     const primaryServiceId = getString(formData, "primaryServiceId");
 
     if (!primaryServiceId) {
@@ -88,6 +100,11 @@ async function buildPageCreatePayload(formPayload, formData) {
   }
 
   if (createMode === PAGE_CREATE_MODES.FROM_EQUIPMENT) {
+    assertLaunchOwnership({
+      nextPageType: PAGE_TYPES.EQUIPMENT_LANDING,
+      previousPageType: ""
+    });
+
     const primaryEquipmentId = getString(formData, "primaryEquipmentId");
 
     if (!primaryEquipmentId) {
@@ -126,9 +143,15 @@ async function buildPageCreatePayload(formPayload, formData) {
     };
   }
 
+  const standalonePageType = formPayload.pageType || PAGE_TYPES.ABOUT;
+  assertLaunchOwnership({
+    nextPageType: standalonePageType,
+    previousPageType: ""
+  });
+
   return {
     ...formPayload,
-    pageType: formPayload.pageType || PAGE_TYPES.ABOUT
+    pageType: standalonePageType
   };
 }
 
@@ -137,6 +160,7 @@ export async function POST(request, { params }, deps = {}) {
     requireRouteUser,
     userCanEditContent,
     saveDraft,
+    assertPageTypeAllowedForLaunchOwnership,
     ...deps
   };
   const { user, response } = await routeDeps.requireRouteUser(request);
@@ -164,7 +188,7 @@ export async function POST(request, { params }, deps = {}) {
 
   try {
     const payload = entityType === ENTITY_TYPES.PAGE
-      ? await buildPageCreatePayload(buildEntityPayload(entityType, formData), formData)
+      ? await buildPageCreatePayload(buildEntityPayload(entityType, formData), formData, routeDeps)
       : buildEntityPayload(entityType, formData);
     const result = await routeDeps.saveDraft({
       entityType,

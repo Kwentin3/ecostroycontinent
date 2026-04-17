@@ -22,6 +22,7 @@ import {
   buildPageWorkspaceMetadataState,
   extractPageWorkspaceAiPatch
 } from "../../../../../../../lib/admin/page-workspace.js";
+import { assertPageTypeAllowedForLaunchOwnership } from "../../../../../../../lib/public-launch/ownership.js";
 
 function getCurrentDraft(aggregate) {
   return aggregate?.revisions?.find((revision) => revision.state === "draft") ?? null;
@@ -68,7 +69,8 @@ const DEFAULT_ROUTE_DEPS = Object.freeze({
   findEntityById,
   saveDraft,
   submitRevisionForReview,
-  requestLandingWorkspaceCandidate
+  requestLandingWorkspaceCandidate,
+  assertPageTypeAllowedForLaunchOwnership
 });
 
 export async function POST(request, { params }, overrides = {}) {
@@ -107,6 +109,10 @@ export async function POST(request, { params }, overrides = {}) {
         composition: body?.composition ?? {},
         metadata: buildPageWorkspaceMetadataState(baseValue)
       });
+      routeDeps.assertPageTypeAllowedForLaunchOwnership({
+        nextPageType: nextInput.pageType,
+        previousPageType: baseValue.pageType
+      });
       const saved = await routeDeps.saveDraft({
         entityType: ENTITY_TYPES.PAGE,
         entityId: entity.id,
@@ -131,6 +137,10 @@ export async function POST(request, { params }, overrides = {}) {
         baseValue,
         composition: buildPageWorkspaceCompositionState(baseValue),
         metadata: body?.metadata ?? {}
+      });
+      routeDeps.assertPageTypeAllowedForLaunchOwnership({
+        nextPageType: nextInput.pageType,
+        previousPageType: baseValue.pageType
       });
       const saved = await routeDeps.saveDraft({
         entityType: ENTITY_TYPES.PAGE,
@@ -178,6 +188,10 @@ export async function POST(request, { params }, overrides = {}) {
         baseValue,
         composition: body?.composition ?? {},
         metadata
+      });
+      routeDeps.assertPageTypeAllowedForLaunchOwnership({
+        nextPageType: nextInput.pageType,
+        previousPageType: baseValue.pageType
       });
       const canonicalPayload = normalizeEntityInput(ENTITY_TYPES.PAGE, {
         ...nextInput,
@@ -232,7 +246,8 @@ export async function POST(request, { params }, overrides = {}) {
       });
     }
   } catch (error) {
-    return jsonError(toOperatorMessage(error), error?.name === "ZodError" ? 400 : 500);
+    const status = error?.name === "ZodError" || error?.name === "LaunchOwnershipGuardError" ? 400 : 500;
+    return jsonError(toOperatorMessage(error), status);
   }
 
   return jsonError("Неизвестное действие рабочего экрана страницы.", 400);
