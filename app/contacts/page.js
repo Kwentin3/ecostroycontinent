@@ -11,13 +11,14 @@ import {
   getPlaceholderGlobalSettings,
   getPlaceholderServices
 } from "../../lib/public-launch/placeholder-fixtures";
-import { resolvePlaceholderMode } from "../../lib/public-launch/placeholder-mode";
+import { resolvePublicRuntimeDisplayMode } from "../../lib/public-launch/runtime-display-mode";
 import { buildPublicRouteMetadata } from "../../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
-  const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
   const [publishedPage, globalSettings] = await Promise.all([
     getPublishedContactsPage(),
     getPublishedGlobalSettings()
@@ -37,7 +38,8 @@ export async function generateMetadata({ searchParams }) {
 
 export default async function ContactsPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
-  const placeholderMode = await resolvePlaceholderMode(resolvedSearchParams);
+  const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
 
   const [publishedPage, globalSettings, lookups] = await Promise.all([
     getPublishedContactsPage(),

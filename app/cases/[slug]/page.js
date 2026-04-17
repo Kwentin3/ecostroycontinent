@@ -11,14 +11,15 @@ import {
   getPlaceholderGlobalSettings,
   getPlaceholderServices
 } from "../../../lib/public-launch/placeholder-fixtures";
-import { resolvePlaceholderMode } from "../../../lib/public-launch/placeholder-mode";
+import { resolvePublicRuntimeDisplayMode } from "../../../lib/public-launch/runtime-display-mode";
 import { buildPublicRouteMetadata } from "../../../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
-  const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
   const [publishedCase, globalSettings] = await Promise.all([
     getPublishedCaseBySlug(slug),
     getPublishedGlobalSettings()
@@ -39,7 +40,8 @@ export async function generateMetadata({ params, searchParams }) {
 export default async function CaseDetailPage({ params, searchParams }) {
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
-  const placeholderMode = await resolvePlaceholderMode(resolvedSearchParams);
+  const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
 
   const [publishedCase, lookups, globalSettings] = await Promise.all([
     getPublishedCaseBySlug(slug),

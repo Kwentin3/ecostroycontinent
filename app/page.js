@@ -14,13 +14,14 @@ import {
   getPlaceholderServices
 } from "../lib/public-launch/placeholder-fixtures";
 import { buildPublicContactProjection } from "../lib/public-launch/contact-projection";
-import { resolvePlaceholderMode } from "../lib/public-launch/placeholder-mode";
+import { resolvePublicRuntimeDisplayMode } from "../lib/public-launch/runtime-display-mode";
 import { buildPublicRouteMetadata } from "../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
-  const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
   const globalSettings = await getPublishedGlobalSettings();
   const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   return buildPublicRouteMetadata({
@@ -46,7 +47,8 @@ function isInternalHref(href) {
 
 export default async function HomePage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
-  const placeholderMode = await resolvePlaceholderMode(resolvedSearchParams);
+  const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(resolvedSearchParams);
+  const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled;
 
   const [globalSettings, services, cases] = await Promise.all([
     getPublishedGlobalSettings(),
