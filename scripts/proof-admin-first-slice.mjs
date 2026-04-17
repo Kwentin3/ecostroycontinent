@@ -285,6 +285,13 @@ async function main() {
 
   logStep("Uploading and publishing proof media asset");
   const mediaAssetId = await uploadProofMedia({ cookie: seoCookie, title: assetTitle });
+  const mediaAssetRevisionId = await getCurrentRevisionId({
+    cookie: seoCookie,
+    entityType: "media_asset",
+    entityId: mediaAssetId
+  });
+  await submitForReview({ cookie: seoCookie, revisionId: mediaAssetRevisionId });
+  await publishRevisionById({ cookie: superadminCookie, revisionId: mediaAssetRevisionId });
 
   logStep("Creating gallery draft");
   const galleryDraft = await saveEntityDraft({
@@ -411,7 +418,10 @@ async function main() {
     serviceHistory.includes(`targetRevisionId\" value=\"${firstPublishedServiceRevisionId}`),
     "Service history should include rollback target revision binding."
   );
-  ensureOk(serviceHistory.includes("published"), "Service history should show published revisions.");
+  ensureOk(
+    serviceHistory.includes(firstPublishedServiceRevisionId),
+    "Service history should include first published revision id."
+  );
 
   const caseHistory = await getHistoryHtml({ cookie: superadminCookie, entityType: "case", entityId: caseDraft.entityId });
   ensureOk(caseHistory.includes(casePublishedRevisionId), "Case history should include published case revision id.");
