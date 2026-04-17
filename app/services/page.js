@@ -27,15 +27,26 @@ export default async function ServicesPage({ searchParams }) {
 
   return (
     <PublicListPage
-      eyebrow="Публичный раздел"
+      eyebrow="Каталог услуг"
       title="Услуги"
-      intro="Здесь показываются только опубликованные версии услуг."
+      intro="Раздел ведёт к отдельным service detail страницам с scope, proof и следующим действием."
       items={resolvedServices}
       itemHrefPrefix="/services"
       globalSettings={resolvedGlobalSettings}
       currentPath="/services"
       serviceLinks={resolvedServices}
       placeholderMarker={usingPlaceholder}
+      emptyTitle="Каталог услуг пока пуст"
+      emptyDescription="Опубликованные service detail страницы ещё не готовы для этого режима."
+      emptyActionHref="/cases"
+      emptyActionLabel="Перейти в раздел кейсов"
+      nextStepTitle="Следующий шаг"
+      nextStepDescription="Выберите услугу для перехода к деталям или сразу откройте контактный маршрут."
+      nextStepPrimaryHref="/contacts"
+      nextStepPrimaryLabel="Связаться"
+      nextStepSecondaryHref="/cases"
+      nextStepSecondaryLabel="Смотреть кейсы"
+      nextStepTone="tinted"
     />
   );
 }

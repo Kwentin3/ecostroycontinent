@@ -2,32 +2,18 @@
 
 import { PublicPageShell } from "../components/public/PublicRenderers";
 import styles from "../components/public/public-ui.module.css";
-import { getPublishedGlobalSettings, getPublishedServices } from "../lib/read-side/public-content";
 import {
+  getPublishedCases,
+  getPublishedGlobalSettings,
+  getPublishedServices
+} from "../lib/read-side/public-content";
+import { normalizeLegacyCopy } from "../lib/ui-copy";
+import {
+  getPlaceholderCases,
   getPlaceholderGlobalSettings,
   getPlaceholderServices
 } from "../lib/public-launch/placeholder-fixtures";
 import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../lib/public-launch/placeholder-mode";
-
-// Temporary decorative shell only. Keep these tiles local to the homepage.
-// Do not move them into Content Core or any second media truth.
-const homeTiles = [
-  {
-    src: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80",
-    className: styles.mosaicLead,
-    position: "center 38%"
-  },
-  {
-    src: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=900&q=80",
-    className: styles.mosaicSupportLeft,
-    position: "center center"
-  },
-  {
-    src: "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=900&q=80",
-    className: styles.mosaicSupportRight,
-    position: "center center"
-  }
-];
 
 export const dynamic = "force-dynamic";
 
@@ -36,50 +22,152 @@ export async function generateMetadata({ searchParams }) {
   return buildPlaceholderRobotsMetadata(placeholderMode);
 }
 
+function pickHighlights(items, limit = 3) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return [];
+  }
+
+  return items.filter((item) => item?.slug && item?.title).slice(0, limit);
+}
+
+function toPhoneHref(phone) {
+  if (!phone || typeof phone !== "string") {
+    return "";
+  }
+
+  const sanitized = phone.replace(/[^\d+]/g, "");
+  return sanitized.length > 0 ? `tel:${sanitized}` : "";
+}
+
 export default async function HomePage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const placeholderMode = await resolvePlaceholderMode(resolvedSearchParams);
 
-  const [globalSettings, services] = await Promise.all([
+  const [globalSettings, services, cases] = await Promise.all([
     getPublishedGlobalSettings(),
-    getPublishedServices()
+    getPublishedServices(),
+    getPublishedCases()
   ]);
 
-  const resolvedServices = services.length > 0
-    ? services
-    : (placeholderMode ? getPlaceholderServices() : services);
+  const usingPlaceholderServices = placeholderMode && services.length === 0;
+  const usingPlaceholderCases = placeholderMode && cases.length === 0;
+  const usingPlaceholderGlobalSettings = placeholderMode && !globalSettings;
+
+  const resolvedServices = usingPlaceholderServices ? getPlaceholderServices() : services;
+  const resolvedCases = usingPlaceholderCases ? getPlaceholderCases() : cases;
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
+  const featuredServices = pickHighlights(resolvedServices, 3);
+  const featuredCases = pickHighlights(resolvedCases, 2);
+  const phoneHref = toPhoneHref(resolvedGlobalSettings?.primaryPhone);
+  const placeholderMarker = usingPlaceholderServices || usingPlaceholderCases || usingPlaceholderGlobalSettings;
 
   return (
     <PublicPageShell
       globalSettings={resolvedGlobalSettings}
       currentPath="/"
       serviceLinks={resolvedServices}
-      placeholderMarker={placeholderMode}
+      placeholderMarker={placeholderMarker}
     >
-      <main className={styles.homeShell}>
-        {/* Minimal auth entry: keep it visible, but do not turn it into a heavy CTA. */}
-        <Link href="/admin/login" className={styles.loginIcon} aria-label="Войти в админку" title="Войти в админку">
-          ↗
-        </Link>
-
-        <section className={styles.homeCopy}>
-          <h1 className={styles.homeTitle}>Экостройконтинент</h1>
-          <p className={styles.homeStatus}>В разработке</p>
+      <main className={styles.page}>
+        <section
+          id="preview-home-hero"
+          data-preview-section="hero"
+          className={`${styles.hero} ${styles.previewSection} ${styles.sectionToneTinted} ${styles.textEmphasisStrong}`}
+        >
+          <p className={styles.eyebrow}>Public launch core</p>
+          <h1>{resolvedGlobalSettings?.publicBrandName || "Ecostroycontinent"}</h1>
+          <p>The homepage works as a trust and navigation hub for services, proof pages, and contact actions.</p>
+          <p className={styles.note}>
+            {resolvedGlobalSettings?.serviceArea || "Service area is not confirmed in published data yet."}
+          </p>
+          <div className={styles.linkRow}>
+            <Link className={styles.actionLink} href="/services">Open services</Link>
+            <Link className={styles.actionLinkSecondary} href="/cases">View cases</Link>
+            <Link className={styles.actionLinkSecondary} href="/contacts">Contact</Link>
+          </div>
         </section>
 
-        {/* Keep the first viewport poster-like; this shell should not read as a feed. */}
-        <section className={styles.homeMosaic} aria-hidden="true">
-          {homeTiles.map((tile) => (
-            <div
-              key={tile.src}
-              className={`${styles.mosaicCard} ${tile.className}`}
-              style={{
-                "--tile-image": `url("${tile.src}")`,
-                backgroundPosition: tile.position
-              }}
-            />
-          ))}
+        <section
+          id="preview-home-services"
+          data-preview-section="home-services"
+          className={`${styles.stack} ${styles.previewSection}`}
+        >
+          <section className={`${styles.card} ${styles.sectionTonePlain}`}>
+            <p className={styles.eyebrow}>Service entry</p>
+            <h2>Key service routes</h2>
+            <p className={styles.note}>Home routes users to dedicated service detail pages instead of replacing them.</p>
+          </section>
+          {featuredServices.length > 0 ? (
+            <section className={styles.grid}>
+              {featuredServices.map((service) => (
+                <article key={service.entityId || service.slug} className={styles.card}>
+                  <h3>{service.title}</h3>
+                  <p>{normalizeLegacyCopy(service.summary || service.serviceScope || "Service details are available on the dedicated route.")}</p>
+                  <div className={styles.linkRow}>
+                    <Link className={styles.actionLink} href={`/services/${service.slug}`}>Open service detail</Link>
+                  </div>
+                </article>
+              ))}
+            </section>
+          ) : (
+            <section className={`${styles.card} ${styles.sectionTonePlain}`}>
+              <p className={styles.note}>No published services are available in this mode.</p>
+              <div className={styles.linkRow}>
+                <Link className={styles.actionLink} href="/services">Check services index</Link>
+              </div>
+            </section>
+          )}
+        </section>
+
+        <section
+          id="preview-home-proof"
+          data-preview-section="home-proof"
+          className={`${styles.stack} ${styles.previewSection}`}
+        >
+          <section className={`${styles.card} ${styles.sectionToneTinted}`}>
+            <p className={styles.eyebrow}>Proof layer</p>
+            <h2>Cases as evidence entry</h2>
+            <p className={styles.note}>Cases index stays an evidence route tied to service intent.</p>
+          </section>
+          {featuredCases.length > 0 ? (
+            <section className={styles.grid}>
+              {featuredCases.map((item) => (
+                <article key={item.entityId || item.slug} className={styles.card}>
+                  <h3>{item.title}</h3>
+                  <p>{normalizeLegacyCopy(item.result || item.task || item.location || "Case details are available on the dedicated route.")}</p>
+                  <div className={styles.linkRow}>
+                    <Link className={styles.actionLink} href={`/cases/${item.slug}`}>Open case detail</Link>
+                  </div>
+                </article>
+              ))}
+            </section>
+          ) : (
+            <section className={`${styles.card} ${styles.sectionTonePlain}`}>
+              <p className={styles.note}>No published cases are available in this mode.</p>
+              <div className={styles.linkRow}>
+                <Link className={styles.actionLink} href="/cases">Check cases index</Link>
+              </div>
+            </section>
+          )}
+        </section>
+
+        <section
+          id="preview-home-next-step"
+          data-preview-section="home-next-step"
+          className={`${styles.card} ${styles.previewSection} ${styles.sectionToneEmphasis}`}
+        >
+          <h2>Next step</h2>
+          <p className={styles.ctaCopy}>
+            After selecting a service or case, the user should have a clear and immediate contact path.
+          </p>
+          <div className={styles.linkRow}>
+            <Link className={styles.actionLink} href="/contacts">Open contacts</Link>
+            {phoneHref ? (
+              <a className={styles.actionLinkSecondary} href={phoneHref}>
+                Call: {resolvedGlobalSettings?.primaryPhone}
+              </a>
+            ) : null}
+          </div>
         </section>
       </main>
     </PublicPageShell>

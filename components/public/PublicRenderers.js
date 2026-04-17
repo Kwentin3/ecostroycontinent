@@ -463,11 +463,26 @@ export function PublicListPage({
   currentPath = "/",
   serviceLinks = [],
   placeholderMarker = false,
-  breadcrumbs = null
+  breadcrumbs = null,
+  emptyTitle = "Пока нет опубликованных материалов",
+  emptyDescription = "Раздел не содержит опубликованных сущностей в текущем режиме.",
+  emptyActionHref = "",
+  emptyActionLabel = "",
+  nextStepTitle = "",
+  nextStepDescription = "",
+  nextStepPrimaryHref = "",
+  nextStepPrimaryLabel = "",
+  nextStepSecondaryHref = "",
+  nextStepSecondaryLabel = "",
+  nextStepTone = "plain"
 }) {
   const trail = Array.isArray(breadcrumbs)
     ? breadcrumbs
     : buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: title });
+  const listItems = Array.isArray(items)
+    ? items.filter((item) => item?.slug && item?.title)
+    : [];
+  const hasNextStep = Boolean(nextStepTitle || nextStepDescription || nextStepPrimaryHref || nextStepSecondaryHref);
 
   return (
     <PublicPageShell
@@ -487,15 +502,47 @@ export function PublicListPage({
           <h1>{title}</h1>
           <p className={styles.note}>{intro}</p>
         </section>
-        <section className={styles.grid}>
-          {items.map((item) => (
-            <article key={item.entityId} className={styles.card}>
-              <h2>{item.title}</h2>
-              <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
-              <Link className={styles.actionLink} href={`${itemHrefPrefix}/${item.slug}`}>{PUBLIC_COPY.listOpen}</Link>
-            </article>
-          ))}
-        </section>
+        {listItems.length > 0 ? (
+          <section className={styles.grid}>
+            {listItems.map((item) => (
+              <article key={item.entityId || item.slug} className={styles.card}>
+                <h2>{item.title}</h2>
+                <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
+                <Link className={styles.actionLink} href={`${itemHrefPrefix}/${item.slug}`}>{PUBLIC_COPY.listOpen}</Link>
+              </article>
+            ))}
+          </section>
+        ) : (
+          <section className={`${styles.card} ${styles.previewSection} ${styles.sectionTonePlain}`}>
+            <h2>{emptyTitle}</h2>
+            <p className={styles.note}>{emptyDescription}</p>
+            {emptyActionHref && emptyActionLabel ? (
+              <div className={styles.linkRow}>
+                <Link className={styles.actionLink} href={emptyActionHref}>{emptyActionLabel}</Link>
+              </div>
+            ) : null}
+          </section>
+        )}
+        {hasNextStep ? (
+          <section
+            id="preview-list-next-steps"
+            data-preview-section="next-steps"
+            className={getSectionClassName([styles.card, styles.previewSection], { surfaceTone: nextStepTone, textEmphasisPreset: "standard" })}
+          >
+            {nextStepTitle ? <h2>{nextStepTitle}</h2> : null}
+            {nextStepDescription ? <p className={styles.note}>{nextStepDescription}</p> : null}
+            {nextStepPrimaryHref || nextStepSecondaryHref ? (
+              <div className={styles.linkRow}>
+                {nextStepPrimaryHref && nextStepPrimaryLabel ? (
+                  <Link className={styles.actionLink} href={nextStepPrimaryHref}>{nextStepPrimaryLabel}</Link>
+                ) : null}
+                {nextStepSecondaryHref && nextStepSecondaryLabel ? (
+                  <Link className={styles.actionLinkSecondary} href={nextStepSecondaryHref}>{nextStepSecondaryLabel}</Link>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
       </main>
     </PublicPageShell>
   );

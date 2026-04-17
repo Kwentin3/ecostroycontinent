@@ -34,15 +34,26 @@ export default async function CasesPage({ searchParams }) {
 
   return (
     <PublicListPage
-      eyebrow="Публичный раздел"
+      eyebrow="Proof layer"
       title="Кейсы"
-      intro="Здесь показываются только опубликованные версии кейсов."
+      intro="Раздел показывает подтверждённые кейсы и ведёт к detail-страницам с task, work scope и result."
       items={resolvedCases}
       itemHrefPrefix="/cases"
       globalSettings={resolvedGlobalSettings}
       currentPath="/cases"
       serviceLinks={resolvedServices}
       placeholderMarker={usingPlaceholder}
+      emptyTitle="Кейсы пока не опубликованы"
+      emptyDescription="Пока нет proof-ready кейсов в текущем режиме публикации."
+      emptyActionHref="/services"
+      emptyActionLabel="Открыть каталог услуг"
+      nextStepTitle="Следующий шаг"
+      nextStepDescription="После просмотра кейса переходите к релевантной услуге или сразу к контактному действию."
+      nextStepPrimaryHref="/services"
+      nextStepPrimaryLabel="Перейти к услугам"
+      nextStepSecondaryHref="/contacts"
+      nextStepSecondaryLabel="Открыть контакты"
+      nextStepTone="tinted"
     />
   );
 }
