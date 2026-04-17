@@ -156,6 +156,13 @@ async function publishRevisionById({ cookie, revisionId }) {
   });
 
   ensureOk(response.status >= 300 && response.status < 400, `Publish redirect expected for ${revisionId}.`);
+  const redirectUrl = parseRedirectPath(response);
+  const blockedByReadiness = redirectUrl.pathname.includes(`/admin/revisions/${revisionId}/publish`)
+    && redirectUrl.searchParams.has("error");
+  ensureOk(
+    !blockedByReadiness,
+    `Publish blocked for ${revisionId}: ${redirectUrl.searchParams.get("error") || "unknown reason"}`
+  );
 }
 
 async function rollbackEntity({ cookie, entityType, entityId, targetRevisionId }) {
