@@ -10,6 +10,7 @@ import {
   getPublicNavItems,
   resolvePublicNavSection
 } from "../../lib/public-launch/navigation.js";
+import { buildPublicContactProjection } from "../../lib/public-launch/contact-projection.js";
 import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
 import styles from "./public-ui.module.css";
 
@@ -206,6 +207,25 @@ function Breadcrumbs({ items }) {
   );
 }
 
+function ContactAction({
+  action,
+  className,
+  defaultLabel = "Open contacts"
+}) {
+  if (!action?.href) {
+    return null;
+  }
+
+  const label = action.label || defaultLabel;
+  const href = action.href;
+
+  if (href.startsWith("/") || href.startsWith("#")) {
+    return <Link className={className} href={href}>{label}</Link>;
+  }
+
+  return <a className={className} href={href}>{label}</a>;
+}
+
 export function PublicPageShell({
   globalSettings,
   themeClassName = "",
@@ -219,6 +239,7 @@ export function PublicPageShell({
   const activeSection = resolvePublicNavSection(currentPath);
   const quickServiceLinks = buildServiceQuickLinks(serviceLinks, { limit: 8 });
   const resolvedBreadcrumbs = Array.isArray(breadcrumbs) ? breadcrumbs : [];
+  const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
 
   return (
     <div className={`${styles.publicShell} ${themeClassName}`}>
@@ -240,8 +261,8 @@ export function PublicPageShell({
           ))}
         </nav>
         <div className={styles.publicShellMeta}>
-          <span>{globalSettings?.primaryPhone || "Телефон не указан"}</span>
-          <span>{globalSettings?.serviceArea || "География не указана"}</span>
+          <span>{contactProjection.displayPhone}</span>
+          <span>{contactProjection.displayRegion}</span>
         </div>
       </header>
       {quickServiceLinks.length > 0 ? (
@@ -273,8 +294,8 @@ export function PublicPageShell({
           ))}
         </nav>
         <div className={styles.publicShellMeta}>
-          <span>{globalSettings?.publicEmail || "Почта не указана"}</span>
-          <span>{globalSettings?.primaryPhone || "Телефон не указан"}</span>
+          <span>{contactProjection.displayEmail}</span>
+          <span>{contactProjection.displayPhone}</span>
         </div>
       </footer>
     </div>
@@ -285,7 +306,7 @@ function getSection(page, type) {
   return (page.sections || []).find((section) => section.type === type) || null;
 }
 
-function renderPageSections({ page, globalSettings, services, equipment, cases, galleries }) {
+function renderPageSections({ page, globalSettings, services, equipment, cases, galleries, contactProjection }) {
   const sourceRefs = page.sourceRefs || {};
   const targeting = page.targeting || {};
   const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
@@ -320,8 +341,24 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
           >
             <h2>{section.title || "РљРѕРЅС‚Р°РєС‚С‹"}</h2>
             {section.body ? <p>{section.body}</p> : null}
-            <p>{globalSettings?.primaryPhone || PUBLIC_COPY.contactInfoFallback}</p>
-            <p>{globalSettings?.serviceArea || PUBLIC_COPY.serviceAreaFallback}</p>
+            <p>{contactProjection?.displayPhone || PUBLIC_COPY.contactInfoFallback}</p>
+            <p>{contactProjection?.displayRegion || PUBLIC_COPY.serviceAreaFallback}</p>
+            <p className={styles.note}>{contactProjection?.readiness?.message}</p>
+            <div className={styles.linkRow}>
+              <ContactAction
+                action={contactProjection?.primaryAction}
+                className={styles.actionLink}
+                defaultLabel={PUBLIC_COPY.ctaFallback}
+              />
+              {contactProjection?.secondaryActions?.map((action) => (
+                <ContactAction
+                  key={action.key || action.href}
+                  action={action}
+                  className={styles.actionLinkSecondary}
+                  defaultLabel={PUBLIC_COPY.ctaFallback}
+                />
+              ))}
+            </div>
           </section>
         );
       case PAGE_SECTION_TYPES.SERVICE_SCOPE:
@@ -558,12 +595,14 @@ export function ServicePage({
   placeholderMarker = false
 }) {
   const primaryMedia = resolveMedia && service.primaryMediaAssetId ? resolveMedia(service.primaryMediaAssetId) : null;
-  const trail = buildPublicBreadcrumbs({ pathname: `/services/${service.slug}`, pageTitle: service.h1 || service.title });
+  const currentPath = `/services/${service.slug}`;
+  const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: service.h1 || service.title });
+  const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
 
   return (
     <PublicPageShell
       globalSettings={globalSettings}
-      currentPath={`/services/${service.slug}`}
+      currentPath={currentPath}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
       placeholderMarker={placeholderMarker}
@@ -610,8 +649,17 @@ export function ServicePage({
         />
         <section id="preview-service-next-steps" data-preview-section="next-steps" className={`${styles.card} ${styles.previewSection}`}>
           <h2>Следующий шаг</h2>
-          <p className={styles.note}>Перейдите к доказательствам или сразу свяжитесь с нами.</p>
+          <p className={styles.note}>{contactProjection.defaultCtaDescription}</p>
           <div className={styles.linkRow}>
+            <ContactAction action={contactProjection.primaryAction} className={styles.actionLink} defaultLabel={PUBLIC_COPY.ctaFallback} />
+            {contactProjection.secondaryActions.map((action) => (
+              <ContactAction
+                key={action.key || action.href}
+                action={action}
+                className={styles.actionLinkSecondary}
+                defaultLabel={PUBLIC_COPY.ctaFallback}
+              />
+            ))}
             <Link className={styles.actionLink} href="/cases">Смотреть кейсы</Link>
             <Link className={styles.actionLinkSecondary} href="/contacts">Связаться</Link>
           </div>
@@ -722,6 +770,7 @@ export function StandalonePage({
       ? "/about"
       : "/";
   const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: page.h1 || page.title });
+  const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
 
   return (
     <PublicPageShell
@@ -777,9 +826,34 @@ export function StandalonePage({
             services,
             equipment: equipment || (() => null),
             cases,
-            galleries
+            galleries,
+            contactProjection
           })}
         </section>
+        {page.pageType === PAGE_TYPES.CONTACTS ? (
+          <section id="contact-request" data-preview-section="contact-request" className={`${styles.card} ${styles.previewSection}`}>
+            <h2>Contact action</h2>
+            <p className={styles.note}>{contactProjection.readiness.message}</p>
+            <p className={styles.note}>{contactProjection.displayRegion}</p>
+            <div className={styles.linkRow}>
+              <ContactAction action={contactProjection.primaryAction} className={styles.actionLink} defaultLabel={PUBLIC_COPY.ctaFallback} />
+              {contactProjection.secondaryActions.map((action) => (
+                <ContactAction
+                  key={action.key || action.href}
+                  action={action}
+                  className={styles.actionLinkSecondary}
+                  defaultLabel={PUBLIC_COPY.ctaFallback}
+                />
+              ))}
+              <Link className={styles.actionLinkSecondary} href="/services">Open services</Link>
+            </div>
+            <p id="contact-messengers" className={styles.note}>
+              {contactProjection.messengers.length > 0
+                ? `Active channels: ${contactProjection.messengers.map((item) => item.label).join(", ")}`
+                : "Messenger channels are not configured yet."}
+            </p>
+          </section>
+        ) : null}
       </main>
     </PublicPageShell>
   );

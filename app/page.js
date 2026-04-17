@@ -13,6 +13,7 @@ import {
   getPlaceholderGlobalSettings,
   getPlaceholderServices
 } from "../lib/public-launch/placeholder-fixtures";
+import { buildPublicContactProjection } from "../lib/public-launch/contact-projection";
 import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../lib/public-launch/placeholder-mode";
 
 export const dynamic = "force-dynamic";
@@ -30,13 +31,8 @@ function pickHighlights(items, limit = 3) {
   return items.filter((item) => item?.slug && item?.title).slice(0, limit);
 }
 
-function toPhoneHref(phone) {
-  if (!phone || typeof phone !== "string") {
-    return "";
-  }
-
-  const sanitized = phone.replace(/[^\d+]/g, "");
-  return sanitized.length > 0 ? `tel:${sanitized}` : "";
+function isInternalHref(href) {
+  return typeof href === "string" && (href.startsWith("/") || href.startsWith("#"));
 }
 
 export default async function HomePage({ searchParams }) {
@@ -58,7 +54,7 @@ export default async function HomePage({ searchParams }) {
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
   const featuredServices = pickHighlights(resolvedServices, 3);
   const featuredCases = pickHighlights(resolvedCases, 2);
-  const phoneHref = toPhoneHref(resolvedGlobalSettings?.primaryPhone);
+  const contactProjection = buildPublicContactProjection(resolvedGlobalSettings, { currentPath: "/" });
   const placeholderMarker = usingPlaceholderServices || usingPlaceholderCases || usingPlaceholderGlobalSettings;
 
   return (
@@ -77,13 +73,22 @@ export default async function HomePage({ searchParams }) {
           <p className={styles.eyebrow}>Public launch core</p>
           <h1>{resolvedGlobalSettings?.publicBrandName || "Ecostroycontinent"}</h1>
           <p>The homepage works as a trust and navigation hub for services, proof pages, and contact actions.</p>
-          <p className={styles.note}>
-            {resolvedGlobalSettings?.serviceArea || "Service area is not confirmed in published data yet."}
-          </p>
+          <p className={styles.note}>{contactProjection.displayRegion}</p>
+          <p className={styles.note}>{contactProjection.readiness.message}</p>
           <div className={styles.linkRow}>
+            {contactProjection.primaryAction?.href ? (
+              isInternalHref(contactProjection.primaryAction.href) ? (
+                <Link className={styles.actionLink} href={contactProjection.primaryAction.href}>
+                  {contactProjection.primaryAction.label}
+                </Link>
+              ) : (
+                <a className={styles.actionLink} href={contactProjection.primaryAction.href}>
+                  {contactProjection.primaryAction.label}
+                </a>
+              )
+            ) : null}
             <Link className={styles.actionLink} href="/services">Open services</Link>
             <Link className={styles.actionLinkSecondary} href="/cases">View cases</Link>
-            <Link className={styles.actionLinkSecondary} href="/contacts">Contact</Link>
           </div>
         </section>
 
@@ -161,12 +166,29 @@ export default async function HomePage({ searchParams }) {
             After selecting a service or case, the user should have a clear and immediate contact path.
           </p>
           <div className={styles.linkRow}>
-            <Link className={styles.actionLink} href="/contacts">Open contacts</Link>
-            {phoneHref ? (
-              <a className={styles.actionLinkSecondary} href={phoneHref}>
-                Call: {resolvedGlobalSettings?.primaryPhone}
-              </a>
+            {contactProjection.primaryAction?.href ? (
+              isInternalHref(contactProjection.primaryAction.href) ? (
+                <Link className={styles.actionLink} href={contactProjection.primaryAction.href}>
+                  {contactProjection.primaryAction.label}
+                </Link>
+              ) : (
+                <a className={styles.actionLink} href={contactProjection.primaryAction.href}>
+                  {contactProjection.primaryAction.label}
+                </a>
+              )
             ) : null}
+            {contactProjection.secondaryActions.length > 0 ? (
+              isInternalHref(contactProjection.secondaryActions[0].href) ? (
+                <Link className={styles.actionLinkSecondary} href={contactProjection.secondaryActions[0].href}>
+                  {contactProjection.secondaryActions[0].label}
+                </Link>
+              ) : (
+                <a className={styles.actionLinkSecondary} href={contactProjection.secondaryActions[0].href}>
+                  {contactProjection.secondaryActions[0].label}
+                </a>
+              )
+            ) : null}
+            <Link className={styles.actionLinkSecondary} href="/contacts">Open contacts</Link>
           </div>
         </section>
       </main>
