@@ -58,6 +58,24 @@ const GALLERY_ASPECT_RATIO_CLASS_NAMES = Object.freeze({
   portrait: styles.galleryAspectPortrait
 });
 
+const UNDER_CONSTRUCTION_MOSAIC_TILES = Object.freeze([
+  {
+    key: "lead",
+    className: styles.mosaicLead,
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80"
+  },
+  {
+    key: "support-left",
+    className: styles.mosaicSupportLeft,
+    imageUrl: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=900&q=80"
+  },
+  {
+    key: "support-right",
+    className: styles.mosaicSupportRight,
+    imageUrl: "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=900&q=80"
+  }
+]);
+
 function getThemeClassName(pageThemeKey) {
   return THEME_CLASS_NAMES[pageThemeKey || DEFAULT_LANDING_PAGE_THEME_KEY] ?? styles.themeEarthSand;
 }
@@ -634,54 +652,43 @@ export function PublicListPage({
 export function PublicHoldingPage({
   globalSettings = null,
   currentPath = "/",
-  serviceLinks = [],
-  title = "Сайт в режиме подготовки",
-  description = "Публичный контур временно переведён в режим under construction."
+  serviceLinks = []
 }) {
-  const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: "В разработке" });
-
   return (
-    <PublicPageShell
-      globalSettings={globalSettings}
-      currentPath={currentPath}
-      breadcrumbs={trail}
-      serviceLinks={serviceLinks}
-      allowStructuredData={false}
-    >
-      <main className={styles.page}>
-        <section
-          id="preview-holding-hero"
-          data-preview-section="holding-hero"
-          className={getSectionClassName([styles.hero, styles.previewSection], { surfaceTone: "tinted", textEmphasisPreset: "strong" })}
-        >
-          <p className={styles.eyebrow}>Under construction mode</p>
-          <h1>{title}</h1>
-          <p>{description}</p>
-          <p className={styles.note}>
-            Режим управляется из админки как operational control и не меняет published truth сущностей.
-          </p>
-          <div className={styles.placeholderMarker} role="note">
-            UNDER CONSTRUCTION - NOT LAUNCH CONTENT
-          </div>
-        </section>
+    <main className={styles.homeShell}>
+      <Link href="/admin/login" className={styles.loginIcon} aria-label="Войти в админку" title="Войти в админку">
+        ↗
+      </Link>
 
-        <section
-          id="preview-holding-status"
-          data-preview-section="holding-status"
-          className={getSectionClassName([styles.card, styles.previewSection], { surfaceTone: "plain", textEmphasisPreset: "standard" })}
-        >
-          <h2>Что это значит</h2>
-          <p className={styles.note}>
-            В режиме under construction публичные маршруты показывают единую holding-поверхность до следующего операционного переключения.
-          </p>
-          <div className={styles.linkRow}>
-            <Link className={styles.actionLink} href="/">Открыть главную</Link>
-            <Link className={styles.actionLinkSecondary} href="/services">Открыть услуги</Link>
-            <Link className={styles.actionLinkSecondary} href="/cases">Открыть кейсы</Link>
-          </div>
-        </section>
-      </main>
-    </PublicPageShell>
+      <section className={styles.homeCopy} id="preview-holding-hero" data-preview-section="holding-hero">
+        <p className={styles.eyebrow}>Экостройконтинент</p>
+        <h1 className={styles.homeTitle}>Экостройконтинент</h1>
+        <p className={styles.homeStatus}>В разработке</p>
+        <p className={styles.note}>
+          Временный public shell. Источник картинок: Unsplash. Публичная витрина остаётся read-side only.
+        </p>
+        <p className={styles.note}>Under construction mode</p>
+        <div className={styles.placeholderMarker} role="note">
+          UNDER CONSTRUCTION - NOT LAUNCH CONTENT
+        </div>
+      </section>
+
+      <section
+        className={styles.homeMosaic}
+        id="preview-holding-status"
+        data-preview-section="holding-status"
+        aria-label="Подборка изображений для режима в разработке"
+      >
+        {UNDER_CONSTRUCTION_MOSAIC_TILES.map((tile) => (
+          <article
+            key={tile.key}
+            className={`${styles.mosaicCard} ${tile.className}`}
+            style={{ "--tile-image": `url("${tile.imageUrl}")` }}
+            aria-hidden="true"
+          />
+        ))}
+      </section>
+    </main>
   );
 }
 
