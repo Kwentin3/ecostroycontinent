@@ -1,30 +1,58 @@
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 
 import { StandalonePage } from "../../components/public/PublicRenderers";
-import { buildPublishedLookups, getPublishedAboutPage, getPublishedGlobalSettings } from "../../lib/read-side/public-content";
+import {
+  buildPublishedLookups,
+  getPublishedAboutPage,
+  getPublishedGlobalSettings
+} from "../../lib/read-side/public-content";
+import {
+  getPlaceholderAboutPage,
+  getPlaceholderGlobalSettings,
+  getPlaceholderServices
+} from "../../lib/public-launch/placeholder-fixtures";
+import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../../lib/public-launch/placeholder-mode";
 
 export const dynamic = "force-dynamic";
 
-export default async function AboutPage() {
-  const [page, globalSettings, lookups] = await Promise.all([
+export async function generateMetadata({ searchParams }) {
+  const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  return buildPlaceholderRobotsMetadata(placeholderMode);
+}
+
+export default async function AboutPage({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
+  const placeholderMode = await resolvePlaceholderMode(resolvedSearchParams);
+
+  const [publishedPage, globalSettings, lookups] = await Promise.all([
     getPublishedAboutPage(),
     getPublishedGlobalSettings(),
     buildPublishedLookups()
   ]);
 
+  const placeholderPage = placeholderMode ? getPlaceholderAboutPage() : null;
+  const page = publishedPage || placeholderPage;
+
   if (!page) {
     notFound();
   }
 
+  const usingPlaceholder = !publishedPage && Boolean(placeholderPage);
+  const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
+  const resolvedServiceLinks = lookups.services.length > 0
+    ? lookups.services
+    : (placeholderMode ? getPlaceholderServices() : []);
+
   return (
     <StandalonePage
       page={page}
-      globalSettings={globalSettings}
+      globalSettings={resolvedGlobalSettings}
       services={(id) => lookups.serviceMap.get(id) || null}
       cases={(id) => lookups.caseMap.get(id) || null}
       galleries={(id) => lookups.galleryMap.get(id) || null}
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
-      serviceLinks={lookups.services}
+      serviceLinks={resolvedServiceLinks}
+      placeholderMarker={usingPlaceholder}
     />
   );
 }

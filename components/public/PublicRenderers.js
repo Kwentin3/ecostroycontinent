@@ -10,6 +10,7 @@ import {
   getPublicNavItems,
   resolvePublicNavSection
 } from "../../lib/public-launch/navigation.js";
+import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
 import styles from "./public-ui.module.css";
 
 const THEME_CLASS_NAMES = Object.freeze({
@@ -211,6 +212,7 @@ export function PublicPageShell({
   currentPath = "/",
   breadcrumbs = [],
   serviceLinks = [],
+  placeholderMarker = false,
   children
 }) {
   const navItems = getPublicNavItems();
@@ -253,6 +255,11 @@ export function PublicPageShell({
             ))}
           </ul>
         </details>
+      ) : null}
+      {placeholderMarker ? (
+        <div className={styles.placeholderMarker} role="note" aria-label="placeholder-marker">
+          {PLACEHOLDER_MARKER_TEXT}
+        </div>
       ) : null}
       <Breadcrumbs items={resolvedBreadcrumbs} />
       {children}
@@ -455,6 +462,7 @@ export function PublicListPage({
   globalSettings = null,
   currentPath = "/",
   serviceLinks = [],
+  placeholderMarker = false,
   breadcrumbs = null
 }) {
   const trail = Array.isArray(breadcrumbs)
@@ -467,6 +475,7 @@ export function PublicListPage({
       currentPath={currentPath}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      placeholderMarker={placeholderMarker}
     >
       <main className={styles.page}>
         <section
@@ -492,7 +501,15 @@ export function PublicListPage({
   );
 }
 
-export function ServicePage({ service, relatedCases, galleries, resolveMedia, globalSettings, serviceLinks = [] }) {
+export function ServicePage({
+  service,
+  relatedCases,
+  galleries,
+  resolveMedia,
+  globalSettings,
+  serviceLinks = [],
+  placeholderMarker = false
+}) {
   const primaryMedia = resolveMedia && service.primaryMediaAssetId ? resolveMedia(service.primaryMediaAssetId) : null;
   const trail = buildPublicBreadcrumbs({ pathname: `/services/${service.slug}`, pageTitle: service.h1 || service.title });
 
@@ -502,6 +519,7 @@ export function ServicePage({ service, relatedCases, galleries, resolveMedia, gl
       currentPath={`/services/${service.slug}`}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      placeholderMarker={placeholderMarker}
     >
       <main className={styles.page}>
         <section
@@ -556,7 +574,15 @@ export function ServicePage({ service, relatedCases, galleries, resolveMedia, gl
   );
 }
 
-export function CasePage({ item, relatedServices, galleries, resolveMedia, globalSettings, serviceLinks = [] }) {
+export function CasePage({
+  item,
+  relatedServices,
+  galleries,
+  resolveMedia,
+  globalSettings,
+  serviceLinks = [],
+  placeholderMarker = false
+}) {
   const primaryMedia = resolveMedia && item.primaryMediaAssetId ? resolveMedia(item.primaryMediaAssetId) : null;
   const trail = buildPublicBreadcrumbs({ pathname: `/cases/${item.slug}`, pageTitle: item.title });
 
@@ -566,6 +592,7 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia, globa
       currentPath={`/cases/${item.slug}`}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      placeholderMarker={placeholderMarker}
     >
       <main className={styles.page}>
         <section
@@ -623,7 +650,17 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia, globa
   );
 }
 
-export function StandalonePage({ page, globalSettings, services, equipment, cases, galleries, resolveMedia, serviceLinks = [] }) {
+export function StandalonePage({
+  page,
+  globalSettings,
+  services,
+  equipment,
+  cases,
+  galleries,
+  resolveMedia,
+  serviceLinks = [],
+  placeholderMarker = false
+}) {
   const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
   const pageThemeClassName = getThemeClassName(page.pageThemeKey);
   const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
@@ -646,6 +683,7 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
       currentPath={currentPath}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      placeholderMarker={placeholderMarker}
     >
       <main className={styles.page}>
         <section

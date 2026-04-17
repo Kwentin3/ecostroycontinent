@@ -1,23 +1,52 @@
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 
 import { CasePage } from "../../../components/public/PublicRenderers";
-import { buildPublishedLookups, getPublishedCaseBySlug, getPublishedGlobalSettings } from "../../../lib/read-side/public-content";
+import {
+  buildPublishedLookups,
+  getPublishedCaseBySlug,
+  getPublishedGlobalSettings
+} from "../../../lib/read-side/public-content";
+import {
+  getPlaceholderCaseBySlug,
+  getPlaceholderGlobalSettings,
+  getPlaceholderServices
+} from "../../../lib/public-launch/placeholder-fixtures";
+import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../../../lib/public-launch/placeholder-mode";
 
 export const dynamic = "force-dynamic";
 
-export default async function CaseDetailPage({ params }) {
+export async function generateMetadata({ searchParams }) {
+  const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  return buildPlaceholderRobotsMetadata(placeholderMode);
+}
+
+export default async function CaseDetailPage({ params, searchParams }) {
   const { slug } = await params;
-  const [item, lookups, globalSettings] = await Promise.all([
+  const resolvedSearchParams = await searchParams;
+  const placeholderMode = await resolvePlaceholderMode(resolvedSearchParams);
+
+  const [publishedCase, lookups, globalSettings] = await Promise.all([
     getPublishedCaseBySlug(slug),
     buildPublishedLookups(),
     getPublishedGlobalSettings()
   ]);
 
+  const placeholderCase = placeholderMode ? getPlaceholderCaseBySlug(slug) : null;
+  const item = publishedCase || placeholderCase;
+
   if (!item) {
     notFound();
   }
 
-  const relatedServices = (item.serviceIds || []).map((id) => lookups.serviceMap.get(id)).filter(Boolean);
+  const usingPlaceholder = !publishedCase && Boolean(placeholderCase);
+  const relatedServices = usingPlaceholder
+    ? getPlaceholderServices().filter((service) => (item.serviceIds || []).includes(service.entityId))
+    : (item.serviceIds || []).map((id) => lookups.serviceMap.get(id)).filter(Boolean);
+
+  const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
+  const resolvedServiceLinks = lookups.services.length > 0
+    ? lookups.services
+    : (placeholderMode ? getPlaceholderServices() : []);
 
   return (
     <CasePage
@@ -25,8 +54,9 @@ export default async function CaseDetailPage({ params }) {
       relatedServices={relatedServices}
       galleries={(id) => lookups.galleryMap.get(id) || null}
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
-      globalSettings={globalSettings}
-      serviceLinks={lookups.services}
+      globalSettings={resolvedGlobalSettings}
+      serviceLinks={resolvedServiceLinks}
+      placeholderMarker={usingPlaceholder}
     />
   );
 }

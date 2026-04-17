@@ -3,6 +3,11 @@
 import { PublicPageShell } from "../components/public/PublicRenderers";
 import styles from "../components/public/public-ui.module.css";
 import { getPublishedGlobalSettings, getPublishedServices } from "../lib/read-side/public-content";
+import {
+  getPlaceholderGlobalSettings,
+  getPlaceholderServices
+} from "../lib/public-launch/placeholder-fixtures";
+import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../lib/public-launch/placeholder-mode";
 
 // Temporary decorative shell only. Keep these tiles local to the homepage.
 // Do not move them into Content Core or any second media truth.
@@ -26,14 +31,32 @@ const homeTiles = [
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export async function generateMetadata({ searchParams }) {
+  const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  return buildPlaceholderRobotsMetadata(placeholderMode);
+}
+
+export default async function HomePage({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
+  const placeholderMode = await resolvePlaceholderMode(resolvedSearchParams);
+
   const [globalSettings, services] = await Promise.all([
     getPublishedGlobalSettings(),
     getPublishedServices()
   ]);
 
+  const resolvedServices = services.length > 0
+    ? services
+    : (placeholderMode ? getPlaceholderServices() : services);
+  const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
+
   return (
-    <PublicPageShell globalSettings={globalSettings} currentPath="/" serviceLinks={services}>
+    <PublicPageShell
+      globalSettings={resolvedGlobalSettings}
+      currentPath="/"
+      serviceLinks={resolvedServices}
+      placeholderMarker={placeholderMode}
+    >
       <main className={styles.homeShell}>
         {/* Minimal auth entry: keep it visible, but do not turn it into a heavy CTA. */}
         <Link href="/admin/login" className={styles.loginIcon} aria-label="Войти в админку" title="Войти в админку">
