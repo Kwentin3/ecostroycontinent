@@ -664,13 +664,6 @@ export function PublicHoldingPage({
         <p className={styles.eyebrow}>Экостройконтинент</p>
         <h1 className={styles.homeTitle}>Экостройконтинент</h1>
         <p className={styles.homeStatus}>В разработке</p>
-        <p className={styles.note}>
-          Временный public shell. Источник картинок: Unsplash. Публичная витрина остаётся read-side only.
-        </p>
-        <p className={styles.note}>Under construction mode</p>
-        <div className={styles.placeholderMarker} role="note">
-          UNDER CONSTRUCTION - NOT LAUNCH CONTENT
-        </div>
       </section>
 
       <section

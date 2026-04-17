@@ -17,6 +17,8 @@ test("public routes wire under-construction runtime mode to a unified holding su
     assert.match(source, /PublicHoldingPage/);
   }
 
-  assert.match(renderersSource, /UNDER CONSTRUCTION - NOT LAUNCH CONTENT/);
-  assert.match(renderersSource, /Under construction mode/);
+  assert.match(renderersSource, /homeMosaic/);
+  assert.match(renderersSource, /В разработке/);
+  assert.doesNotMatch(renderersSource, /UNDER CONSTRUCTION - NOT LAUNCH CONTENT/);
+  assert.doesNotMatch(renderersSource, /Under construction mode/);
 });
