@@ -16,11 +16,14 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const globalSettings = await getPublishedGlobalSettings();
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   return buildPublicRouteMetadata({
     pathname: "/cases",
     placeholderMode,
-    title: "Кейсы — Экостройконтинент",
-    description: "Подтверждённые кейсы как proof-layer для сервисных страниц."
+    title: "Кейсы",
+    description: "Подтверждённые кейсы как proof-layer для сервисных страниц.",
+    siteName
   });
 }
 
@@ -48,6 +51,7 @@ export default async function CasesPage({ searchParams }) {
       globalSettings={resolvedGlobalSettings}
       currentPath="/cases"
       serviceLinks={resolvedServices}
+      allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
       emptyTitle="Кейсы пока не опубликованы"
       emptyDescription="Пока нет proof-ready кейсов в текущем режиме публикации."

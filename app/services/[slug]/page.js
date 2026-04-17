@@ -20,11 +20,20 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const [publishedService, globalSettings] = await Promise.all([
+    getPublishedServiceBySlug(slug),
+    getPublishedGlobalSettings()
+  ]);
+  const placeholderService = placeholderMode ? getPlaceholderServiceBySlug(slug) : null;
+  const service = publishedService || placeholderService;
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   return buildPublicRouteMetadata({
     pathname: `/services/${slug}`,
     placeholderMode,
-    title: "Услуга — Экостройконтинент",
-    description: "Детальная страница услуги: scope, proof и следующий шаг к контакту."
+    title: service?.seo?.metaTitle || service?.h1 || service?.title || "Услуга",
+    description: service?.seo?.metaDescription || service?.summary || "Детальная страница услуги: scope, proof и следующий шаг к контакту.",
+    seo: service?.seo,
+    siteName
   });
 }
 
@@ -64,6 +73,7 @@ export default async function ServiceDetailPage({ params, searchParams }) {
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
       globalSettings={resolvedGlobalSettings}
       serviceLinks={resolvedServiceLinks}
+      allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
     />
   );

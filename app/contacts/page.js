@@ -18,11 +18,20 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const [publishedPage, globalSettings] = await Promise.all([
+    getPublishedContactsPage(),
+    getPublishedGlobalSettings()
+  ]);
+  const placeholderPage = placeholderMode ? getPlaceholderContactsPage() : null;
+  const page = publishedPage || placeholderPage;
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   return buildPublicRouteMetadata({
     pathname: "/contacts",
     placeholderMode,
-    title: "Контакты — Экостройконтинент",
-    description: "Контактная поверхность для следующего шага после услуги или кейса."
+    title: page?.seo?.metaTitle || page?.h1 || page?.title || "Контакты",
+    description: page?.seo?.metaDescription || page?.intro || "Контактная поверхность для следующего шага после услуги или кейса.",
+    seo: page?.seo,
+    siteName
   });
 }
 
@@ -58,6 +67,7 @@ export default async function ContactsPage({ searchParams }) {
       galleries={(id) => lookups.galleryMap.get(id) || null}
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
       serviceLinks={resolvedServiceLinks}
+      allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
     />
   );

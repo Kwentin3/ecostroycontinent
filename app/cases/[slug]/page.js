@@ -19,11 +19,20 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const [publishedCase, globalSettings] = await Promise.all([
+    getPublishedCaseBySlug(slug),
+    getPublishedGlobalSettings()
+  ]);
+  const placeholderCase = placeholderMode ? getPlaceholderCaseBySlug(slug) : null;
+  const item = publishedCase || placeholderCase;
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   return buildPublicRouteMetadata({
     pathname: `/cases/${slug}`,
     placeholderMode,
-    title: "Кейс — Экостройконтинент",
-    description: "Детальная страница кейса с задачей, объёмом работ и результатом."
+    title: item?.seo?.metaTitle || item?.title || "Кейс",
+    description: item?.seo?.metaDescription || item?.result || item?.task || "Детальная страница кейса с задачей, объёмом работ и результатом.",
+    seo: item?.seo,
+    siteName
   });
 }
 
@@ -63,6 +72,7 @@ export default async function CaseDetailPage({ params, searchParams }) {
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
       globalSettings={resolvedGlobalSettings}
       serviceLinks={resolvedServiceLinks}
+      allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
     />
   );

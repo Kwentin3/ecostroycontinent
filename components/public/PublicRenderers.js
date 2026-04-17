@@ -12,6 +12,11 @@ import {
 } from "../../lib/public-launch/navigation.js";
 import { buildPublicContactProjection } from "../../lib/public-launch/contact-projection.js";
 import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
+import {
+  buildBreadcrumbStructuredData,
+  buildLocalBusinessStructuredData,
+  serializeStructuredData
+} from "../../lib/public-launch/seo-structured-data.js";
 import styles from "./public-ui.module.css";
 
 const THEME_CLASS_NAMES = Object.freeze({
@@ -226,12 +231,32 @@ function ContactAction({
   return <a className={className} href={href}>{label}</a>;
 }
 
+function StructuredDataScripts({ items }) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      {items.map((item, index) => (
+        <script
+          key={`${item.kind || "schema"}-${index}`}
+          type="application/ld+json"
+          data-schema-kind={item.kind || "schema"}
+          dangerouslySetInnerHTML={{ __html: serializeStructuredData(item.payload) }}
+        />
+      ))}
+    </>
+  );
+}
+
 export function PublicPageShell({
   globalSettings,
   themeClassName = "",
   currentPath = "/",
   breadcrumbs = [],
   serviceLinks = [],
+  allowStructuredData = true,
   placeholderMarker = false,
   children
 }) {
@@ -240,6 +265,19 @@ export function PublicPageShell({
   const quickServiceLinks = buildServiceQuickLinks(serviceLinks, { limit: 8 });
   const resolvedBreadcrumbs = Array.isArray(breadcrumbs) ? breadcrumbs : [];
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
+  const breadcrumbStructuredData = allowStructuredData
+    ? buildBreadcrumbStructuredData({
+      breadcrumbs: resolvedBreadcrumbs,
+      currentPath
+    })
+    : null;
+  const localBusinessStructuredData = allowStructuredData
+    ? buildLocalBusinessStructuredData({
+      globalSettings,
+      contactProjection
+    })
+    : null;
+  const structuredDataItems = [breadcrumbStructuredData, localBusinessStructuredData].filter(Boolean);
 
   return (
     <div
@@ -248,6 +286,7 @@ export function PublicPageShell({
       data-contact-readiness={contactProjection.readiness.code}
       data-contact-consistency-token={contactProjection.consistencyToken}
     >
+      <StructuredDataScripts items={structuredDataItems} />
       <header className={styles.publicShellHeader}>
         <div className={styles.publicShellBrand}>
           <p className={styles.publicShellEyebrow}>Публичный сайт</p>
@@ -516,7 +555,8 @@ export function PublicListPage({
   nextStepPrimaryLabel = "",
   nextStepSecondaryHref = "",
   nextStepSecondaryLabel = "",
-  nextStepTone = "plain"
+  nextStepTone = "plain",
+  allowStructuredData = true
 }) {
   const trail = Array.isArray(breadcrumbs)
     ? breadcrumbs
@@ -532,6 +572,7 @@ export function PublicListPage({
       currentPath={currentPath}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
     >
       <main className={styles.page}>
@@ -597,6 +638,7 @@ export function ServicePage({
   resolveMedia,
   globalSettings,
   serviceLinks = [],
+  allowStructuredData = true,
   placeholderMarker = false
 }) {
   const primaryMedia = resolveMedia && service.primaryMediaAssetId ? resolveMedia(service.primaryMediaAssetId) : null;
@@ -610,6 +652,7 @@ export function ServicePage({
       currentPath={currentPath}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
     >
       <main className={styles.page}>
@@ -681,6 +724,7 @@ export function CasePage({
   resolveMedia,
   globalSettings,
   serviceLinks = [],
+  allowStructuredData = true,
   placeholderMarker = false
 }) {
   const primaryMedia = resolveMedia && item.primaryMediaAssetId ? resolveMedia(item.primaryMediaAssetId) : null;
@@ -692,6 +736,7 @@ export function CasePage({
       currentPath={`/cases/${item.slug}`}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
     >
       <main className={styles.page}>
@@ -759,6 +804,7 @@ export function StandalonePage({
   galleries,
   resolveMedia,
   serviceLinks = [],
+  allowStructuredData = true,
   placeholderMarker = false
 }) {
   const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
@@ -784,6 +830,7 @@ export function StandalonePage({
       currentPath={currentPath}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
     >
       <main className={styles.page}>

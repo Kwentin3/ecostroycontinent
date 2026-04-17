@@ -18,11 +18,20 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const [publishedPage, globalSettings] = await Promise.all([
+    getPublishedAboutPage(),
+    getPublishedGlobalSettings()
+  ]);
+  const placeholderPage = placeholderMode ? getPlaceholderAboutPage() : null;
+  const page = publishedPage || placeholderPage;
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   return buildPublicRouteMetadata({
     pathname: "/about",
     placeholderMode,
-    title: "О компании — Экостройконтинент",
-    description: "О компании, подходе и зоне работ в рамках launch-core."
+    title: page?.seo?.metaTitle || page?.h1 || page?.title || "О компании",
+    description: page?.seo?.metaDescription || page?.intro || "О компании, подходе и зоне работ в рамках launch-core.",
+    seo: page?.seo,
+    siteName
   });
 }
 
@@ -58,6 +67,7 @@ export default async function AboutPage({ searchParams }) {
       galleries={(id) => lookups.galleryMap.get(id) || null}
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
       serviceLinks={resolvedServiceLinks}
+      allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
     />
   );

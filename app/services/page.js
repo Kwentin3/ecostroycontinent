@@ -11,11 +11,14 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
+  const globalSettings = await getPublishedGlobalSettings();
+  const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   return buildPublicRouteMetadata({
     pathname: "/services",
     placeholderMode,
-    title: "Услуги — Экостройконтинент",
-    description: "Каталог услуг с переходом на отдельные service detail страницы."
+    title: "Услуги",
+    description: "Каталог услуг с переходом на отдельные service detail страницы.",
+    siteName
   });
 }
 
@@ -41,6 +44,7 @@ export default async function ServicesPage({ searchParams }) {
       globalSettings={resolvedGlobalSettings}
       currentPath="/services"
       serviceLinks={resolvedServices}
+      allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
       emptyTitle="Каталог услуг пока пуст"
       emptyDescription="Опубликованные service detail страницы ещё не готовы для этого режима."
