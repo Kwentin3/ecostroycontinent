@@ -14,13 +14,19 @@ import {
   getPlaceholderServices
 } from "../lib/public-launch/placeholder-fixtures";
 import { buildPublicContactProjection } from "../lib/public-launch/contact-projection";
-import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../lib/public-launch/placeholder-mode";
+import { resolvePlaceholderMode } from "../lib/public-launch/placeholder-mode";
+import { buildPublicRouteMetadata } from "../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
-  return buildPlaceholderRobotsMetadata(placeholderMode);
+  return buildPublicRouteMetadata({
+    pathname: "/",
+    placeholderMode,
+    title: "ЭКОСТРОЙКОНТИНЕНТ — услуги и кейсы",
+    description: "Главная как trust и navigation hub для услуг, кейсов и контактного действия."
+  });
 }
 
 function pickHighlights(items, limit = 3) {

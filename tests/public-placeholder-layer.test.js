@@ -74,7 +74,7 @@ test("public placeholder layer wiring is present in routes and middleware", () =
   const rendererSource = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
   assert.match(servicesIndex, /resolvePlaceholderMode/);
-  assert.match(servicesIndex, /buildPlaceholderRobotsMetadata/);
+  assert.match(servicesIndex, /buildPublicRouteMetadata|buildPlaceholderRobotsMetadata/);
   assert.match(servicesIndex, /placeholderMarker=\{usingPlaceholder\}/);
   assert.match(serviceDetail, /getPlaceholderServiceBySlug/);
   assert.match(contactsPage, /getPlaceholderContactsPage/);

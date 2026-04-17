@@ -11,13 +11,20 @@ import {
   getPlaceholderGlobalSettings,
   getPlaceholderServices
 } from "../../../lib/public-launch/placeholder-fixtures";
-import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../../../lib/public-launch/placeholder-mode";
+import { resolvePlaceholderMode } from "../../../lib/public-launch/placeholder-mode";
+import { buildPublicRouteMetadata } from "../../../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ searchParams }) {
+export async function generateMetadata({ params, searchParams }) {
+  const { slug } = await params;
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
-  return buildPlaceholderRobotsMetadata(placeholderMode);
+  return buildPublicRouteMetadata({
+    pathname: `/cases/${slug}`,
+    placeholderMode,
+    title: "Кейс — Экостройконтинент",
+    description: "Детальная страница кейса с задачей, объёмом работ и результатом."
+  });
 }
 
 export default async function CaseDetailPage({ params, searchParams }) {

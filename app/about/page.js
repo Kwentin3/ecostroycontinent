@@ -11,13 +11,19 @@ import {
   getPlaceholderGlobalSettings,
   getPlaceholderServices
 } from "../../lib/public-launch/placeholder-fixtures";
-import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../../lib/public-launch/placeholder-mode";
+import { resolvePlaceholderMode } from "../../lib/public-launch/placeholder-mode";
+import { buildPublicRouteMetadata } from "../../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
-  return buildPlaceholderRobotsMetadata(placeholderMode);
+  return buildPublicRouteMetadata({
+    pathname: "/about",
+    placeholderMode,
+    title: "О компании — Экостройконтинент",
+    description: "О компании, подходе и зоне работ в рамках launch-core."
+  });
 }
 
 export default async function AboutPage({ searchParams }) {

@@ -12,13 +12,20 @@ import {
   getPlaceholderServiceBySlug,
   getPlaceholderServices
 } from "../../../lib/public-launch/placeholder-fixtures";
-import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../../../lib/public-launch/placeholder-mode";
+import { resolvePlaceholderMode } from "../../../lib/public-launch/placeholder-mode";
+import { buildPublicRouteMetadata } from "../../../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ searchParams }) {
+export async function generateMetadata({ params, searchParams }) {
+  const { slug } = await params;
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
-  return buildPlaceholderRobotsMetadata(placeholderMode);
+  return buildPublicRouteMetadata({
+    pathname: `/services/${slug}`,
+    placeholderMode,
+    title: "Услуга — Экостройконтинент",
+    description: "Детальная страница услуги: scope, proof и следующий шаг к контакту."
+  });
 }
 
 export default async function ServiceDetailPage({ params, searchParams }) {

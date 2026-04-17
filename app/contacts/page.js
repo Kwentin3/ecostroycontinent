@@ -11,13 +11,19 @@ import {
   getPlaceholderGlobalSettings,
   getPlaceholderServices
 } from "../../lib/public-launch/placeholder-fixtures";
-import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../../lib/public-launch/placeholder-mode";
+import { resolvePlaceholderMode } from "../../lib/public-launch/placeholder-mode";
+import { buildPublicRouteMetadata } from "../../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
-  return buildPlaceholderRobotsMetadata(placeholderMode);
+  return buildPublicRouteMetadata({
+    pathname: "/contacts",
+    placeholderMode,
+    title: "Контакты — Экостройконтинент",
+    description: "Контактная поверхность для следующего шага после услуги или кейса."
+  });
 }
 
 export default async function ContactsPage({ searchParams }) {

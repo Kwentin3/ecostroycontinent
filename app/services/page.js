@@ -4,13 +4,19 @@ import {
   getPublishedServices
 } from "../../lib/read-side/public-content";
 import { getPlaceholderGlobalSettings, getPlaceholderServices } from "../../lib/public-launch/placeholder-fixtures";
-import { buildPlaceholderRobotsMetadata, resolvePlaceholderMode } from "../../lib/public-launch/placeholder-mode";
+import { resolvePlaceholderMode } from "../../lib/public-launch/placeholder-mode";
+import { buildPublicRouteMetadata } from "../../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
   const placeholderMode = await resolvePlaceholderMode(await searchParams);
-  return buildPlaceholderRobotsMetadata(placeholderMode);
+  return buildPublicRouteMetadata({
+    pathname: "/services",
+    placeholderMode,
+    title: "Услуги — Экостройконтинент",
+    description: "Каталог услуг с переходом на отдельные service detail страницы."
+  });
 }
 
 export default async function ServicesPage({ searchParams }) {
