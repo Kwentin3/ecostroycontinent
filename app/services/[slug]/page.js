@@ -26,6 +26,7 @@ export default async function ServiceDetailPage({ params }) {
       galleries={(id) => lookups.galleryMap.get(id) || null}
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
       globalSettings={globalSettings}
+      serviceLinks={lookups.services}
     />
   );
 }

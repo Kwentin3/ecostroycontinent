@@ -1,6 +1,8 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
+import { PublicPageShell } from "../components/public/PublicRenderers";
 import styles from "../components/public/public-ui.module.css";
+import { getPublishedGlobalSettings, getPublishedServices } from "../lib/read-side/public-content";
 
 // Temporary decorative shell only. Keep these tiles local to the homepage.
 // Do not move them into Content Core or any second media truth.
@@ -22,32 +24,41 @@ const homeTiles = [
   }
 ];
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const [globalSettings, services] = await Promise.all([
+    getPublishedGlobalSettings(),
+    getPublishedServices()
+  ]);
+
   return (
-    <main className={styles.homeShell}>
-      {/* Minimal auth entry: keep it visible, but do not turn it into a heavy CTA. */}
-      <Link href="/admin/login" className={styles.loginIcon} aria-label="Войти в админку" title="Войти в админку">
-        ↗
-      </Link>
+    <PublicPageShell globalSettings={globalSettings} currentPath="/" serviceLinks={services}>
+      <main className={styles.homeShell}>
+        {/* Minimal auth entry: keep it visible, but do not turn it into a heavy CTA. */}
+        <Link href="/admin/login" className={styles.loginIcon} aria-label="Войти в админку" title="Войти в админку">
+          ↗
+        </Link>
 
-      <section className={styles.homeCopy}>
-        <h1 className={styles.homeTitle}>Экостройконтинент</h1>
-        <p className={styles.homeStatus}>В разработке</p>
-      </section>
+        <section className={styles.homeCopy}>
+          <h1 className={styles.homeTitle}>Экостройконтинент</h1>
+          <p className={styles.homeStatus}>В разработке</p>
+        </section>
 
-      {/* Keep the first viewport poster-like; this shell should not read as a feed. */}
-      <section className={styles.homeMosaic} aria-hidden="true">
-        {homeTiles.map((tile) => (
-          <div
-            key={tile.src}
-            className={`${styles.mosaicCard} ${tile.className}`}
-            style={{
-              "--tile-image": `url("${tile.src}")`,
-              backgroundPosition: tile.position
-            }}
-          />
-        ))}
-      </section>
-    </main>
+        {/* Keep the first viewport poster-like; this shell should not read as a feed. */}
+        <section className={styles.homeMosaic} aria-hidden="true">
+          {homeTiles.map((tile) => (
+            <div
+              key={tile.src}
+              className={`${styles.mosaicCard} ${tile.className}`}
+              style={{
+                "--tile-image": `url("${tile.src}")`,
+                backgroundPosition: tile.position
+              }}
+            />
+          ))}
+        </section>
+      </main>
+    </PublicPageShell>
   );
 }

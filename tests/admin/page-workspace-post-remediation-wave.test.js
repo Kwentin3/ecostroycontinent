@@ -28,7 +28,7 @@ test("preview viewport falls back to desktop for unknown device", () => {
 test("standalone page keeps theme styling on the outer preview shell", () => {
   const source = readFileSync(new URL("../../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
-  assert.match(source, /<PublicPageShell globalSettings=\{globalSettings\} themeClassName=\{pageThemeClassName\}>/);
+  assert.match(source, /<PublicPageShell[\s\S]*globalSettings=\{globalSettings\}[\s\S]*themeClassName=\{pageThemeClassName\}[\s\S]*currentPath=\{currentPath\}/);
 });
 
 test("page workspace preview modal uses a single control center and renders viewport as a clean canvas", () => {

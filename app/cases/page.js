@@ -1,10 +1,14 @@
 import { PublicListPage } from "../../components/public/PublicRenderers";
-import { getPublishedCases } from "../../lib/read-side/public-content";
+import { getPublishedCases, getPublishedGlobalSettings, getPublishedServices } from "../../lib/read-side/public-content";
 
 export const dynamic = "force-dynamic";
 
 export default async function CasesPage() {
-  const cases = await getPublishedCases();
+  const [cases, globalSettings, services] = await Promise.all([
+    getPublishedCases(),
+    getPublishedGlobalSettings(),
+    getPublishedServices()
+  ]);
 
   return (
     <PublicListPage
@@ -13,6 +17,9 @@ export default async function CasesPage() {
       intro="Здесь показываются только опубликованные версии кейсов."
       items={cases}
       itemHrefPrefix="/cases"
+      globalSettings={globalSettings}
+      currentPath="/cases"
+      serviceLinks={services}
     />
   );
 }

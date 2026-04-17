@@ -24,6 +24,7 @@ export default async function AboutPage() {
       cases={(id) => lookups.caseMap.get(id) || null}
       galleries={(id) => lookups.galleryMap.get(id) || null}
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
+      serviceLinks={lookups.services}
     />
   );
 }

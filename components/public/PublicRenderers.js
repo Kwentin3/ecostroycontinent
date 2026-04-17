@@ -1,9 +1,15 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 import { PAGE_SECTION_TYPES, PAGE_TYPES } from "../../lib/content-core/content-types.js";
 import { normalizePageMediaSettings } from "../../lib/content-core/page-media.js";
 import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { DEFAULT_LANDING_PAGE_THEME_KEY } from "../../lib/landing-composition/visual-semantics.js";
+import {
+  buildPublicBreadcrumbs,
+  buildServiceQuickLinks,
+  getPublicNavItems,
+  resolvePublicNavSection
+} from "../../lib/public-launch/navigation.js";
 import styles from "./public-ui.module.css";
 
 const THEME_CLASS_NAMES = Object.freeze({
@@ -177,23 +183,92 @@ function GallerySection({
   );
 }
 
-function PublicPageShell({ globalSettings, themeClassName = "", children }) {
+function Breadcrumbs({ items }) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
+  return (
+    <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
+      <ol>
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+
+          return (
+            <li key={item.key || `${item.label}-${index}`}>
+              {item.href && !isLast ? <Link href={item.href}>{item.label}</Link> : <span>{item.label}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+export function PublicPageShell({
+  globalSettings,
+  themeClassName = "",
+  currentPath = "/",
+  breadcrumbs = [],
+  serviceLinks = [],
+  children
+}) {
+  const navItems = getPublicNavItems();
+  const activeSection = resolvePublicNavSection(currentPath);
+  const quickServiceLinks = buildServiceQuickLinks(serviceLinks, { limit: 8 });
+  const resolvedBreadcrumbs = Array.isArray(breadcrumbs) ? breadcrumbs : [];
+
   return (
     <div className={`${styles.publicShell} ${themeClassName}`}>
       <header className={styles.publicShellHeader}>
-        <div>
-          <p className={styles.publicShellEyebrow}>Публичная страница</p>
+        <div className={styles.publicShellBrand}>
+          <p className={styles.publicShellEyebrow}>Публичный сайт</p>
           <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
         </div>
+        <nav className={styles.publicShellNav} aria-label="Главная навигация">
+          {navItems.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`${styles.publicShellNavLink} ${activeSection === item.key ? styles.publicShellNavLinkActive : ""}`.trim()}
+              aria-current={activeSection === item.key ? "page" : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
         <div className={styles.publicShellMeta}>
           <span>{globalSettings?.primaryPhone || "Телефон не указан"}</span>
           <span>{globalSettings?.serviceArea || "География не указана"}</span>
         </div>
       </header>
+      {quickServiceLinks.length > 0 ? (
+        <details className={styles.servicesQuickAccess}>
+          <summary>Быстрый доступ к услугам</summary>
+          <ul>
+            {quickServiceLinks.map((item) => (
+              <li key={item.key}>
+                <Link href={item.href}>{item.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+      <Breadcrumbs items={resolvedBreadcrumbs} />
       {children}
       <footer className={styles.publicShellFooter}>
         <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
-        <span>{globalSettings?.publicEmail || "Почта не указана"}</span>
+        <nav className={styles.publicShellFooterNav} aria-label="Навигация в подвале">
+          {navItems.map((item) => (
+            <Link key={`footer-${item.key}`} href={item.href} className={styles.publicShellFooterLink}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className={styles.publicShellMeta}>
+          <span>{globalSettings?.publicEmail || "Почта не указана"}</span>
+          <span>{globalSettings?.primaryPhone || "Телефон не указан"}</span>
+        </div>
       </footer>
     </div>
   );
@@ -236,7 +311,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "Контакты"}</h2>
+            <h2>{section.title || "РљРѕРЅС‚Р°РєС‚С‹"}</h2>
             {section.body ? <p>{section.body}</p> : null}
             <p>{globalSettings?.primaryPhone || PUBLIC_COPY.contactInfoFallback}</p>
             <p>{globalSettings?.serviceArea || PUBLIC_COPY.serviceAreaFallback}</p>
@@ -250,8 +325,8 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "Что входит в услугу"}</h2>
-            <p>{section.body || primaryService?.serviceScope || primaryService?.summary || "Описание пока не заполнено."}</p>
+            <h2>{section.title || "Р§С‚Рѕ РІС…РѕРґРёС‚ РІ СѓСЃР»СѓРіСѓ"}</h2>
+            <p>{section.body || primaryService?.serviceScope || primaryService?.summary || "РћРїРёСЃР°РЅРёРµ РїРѕРєР° РЅРµ Р·Р°РїРѕР»РЅРµРЅРѕ."}</p>
             {primaryService?.problemsSolved ? <p>{primaryService.problemsSolved}</p> : null}
           </section>
         );
@@ -263,8 +338,8 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "О технике"}</h2>
-            <p>{section.body || primaryEquipment?.capabilitySummary || primaryEquipment?.shortSummary || "Описание техники пока не заполнено."}</p>
+            <h2>{section.title || "Рћ С‚РµС…РЅРёРєРµ"}</h2>
+            <p>{section.body || primaryEquipment?.capabilitySummary || primaryEquipment?.shortSummary || "РћРїРёСЃР°РЅРёРµ С‚РµС…РЅРёРєРё РїРѕРєР° РЅРµ Р·Р°РїРѕР»РЅРµРЅРѕ."}</p>
           </section>
         );
       case PAGE_SECTION_TYPES.EQUIPMENT_SPECS: {
@@ -281,7 +356,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "Характеристики"}</h2>
+            <h2>{section.title || "РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё"}</h2>
             <ul className={styles.listing}>
               {items.map((item) => <li key={item}>{item}</li>)}
             </ul>
@@ -305,8 +380,8 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "Где работаем"}</h2>
-            <p>{geoBits.join(" · ") || "География пока не заполнена."}</p>
+            <h2>{section.title || "Р“РґРµ СЂР°Р±РѕС‚Р°РµРј"}</h2>
+            <p>{geoBits.join(" В· ") || "Р“РµРѕРіСЂР°С„РёСЏ РїРѕРєР° РЅРµ Р·Р°РїРѕР»РЅРµРЅР°."}</p>
           </section>
         );
       }
@@ -358,7 +433,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "Оставьте заявку"}</h2>
+            <h2>{section.title || "РћСЃС‚Р°РІСЊС‚Рµ Р·Р°СЏРІРєСѓ"}</h2>
             <div className={styles.ctaRow}>
               <p className={styles.ctaCopy}>{section.body || globalSettings?.defaultCtaDescription || ""}</p>
               <p className={styles.ctaChip}>{section.ctaLabel || globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}</p>
@@ -371,9 +446,28 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
   });
 }
 
-export function PublicListPage({ eyebrow, title, intro, items, itemHrefPrefix }) {
+export function PublicListPage({
+  eyebrow,
+  title,
+  intro,
+  items,
+  itemHrefPrefix,
+  globalSettings = null,
+  currentPath = "/",
+  serviceLinks = [],
+  breadcrumbs = null
+}) {
+  const trail = Array.isArray(breadcrumbs)
+    ? breadcrumbs
+    : buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: title });
+
   return (
-    <div className={styles.publicShell}>
+    <PublicPageShell
+      globalSettings={globalSettings}
+      currentPath={currentPath}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+    >
       <main className={styles.page}>
         <section
           id="preview-list-hero"
@@ -394,15 +488,21 @@ export function PublicListPage({ eyebrow, title, intro, items, itemHrefPrefix })
           ))}
         </section>
       </main>
-    </div>
+    </PublicPageShell>
   );
 }
 
-export function ServicePage({ service, relatedCases, galleries, resolveMedia, globalSettings }) {
+export function ServicePage({ service, relatedCases, galleries, resolveMedia, globalSettings, serviceLinks = [] }) {
   const primaryMedia = resolveMedia && service.primaryMediaAssetId ? resolveMedia(service.primaryMediaAssetId) : null;
+  const trail = buildPublicBreadcrumbs({ pathname: `/services/${service.slug}`, pageTitle: service.h1 || service.title });
 
   return (
-    <PublicPageShell globalSettings={globalSettings}>
+    <PublicPageShell
+      globalSettings={globalSettings}
+      currentPath={`/services/${service.slug}`}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+    >
       <main className={styles.page}>
         <section
           id="preview-service-hero"
@@ -443,16 +543,30 @@ export function ServicePage({ service, relatedCases, galleries, resolveMedia, gl
           sectionId="preview-service-gallery"
           sectionName="gallery"
         />
+        <section id="preview-service-next-steps" data-preview-section="next-steps" className={`${styles.card} ${styles.previewSection}`}>
+          <h2>Следующий шаг</h2>
+          <p className={styles.note}>Перейдите к доказательствам или сразу свяжитесь с нами.</p>
+          <div className={styles.linkRow}>
+            <Link className={styles.actionLink} href="/cases">Смотреть кейсы</Link>
+            <Link className={styles.actionLinkSecondary} href="/contacts">Связаться</Link>
+          </div>
+        </section>
       </main>
     </PublicPageShell>
   );
 }
 
-export function CasePage({ item, relatedServices, galleries, resolveMedia, globalSettings }) {
+export function CasePage({ item, relatedServices, galleries, resolveMedia, globalSettings, serviceLinks = [] }) {
   const primaryMedia = resolveMedia && item.primaryMediaAssetId ? resolveMedia(item.primaryMediaAssetId) : null;
+  const trail = buildPublicBreadcrumbs({ pathname: `/cases/${item.slug}`, pageTitle: item.title });
 
   return (
-    <PublicPageShell globalSettings={globalSettings}>
+    <PublicPageShell
+      globalSettings={globalSettings}
+      currentPath={`/cases/${item.slug}`}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+    >
       <main className={styles.page}>
         <section
           id="preview-case-hero"
@@ -496,12 +610,20 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia, globa
           sectionId="preview-case-gallery"
           sectionName="gallery"
         />
+        <section id="preview-case-next-steps" data-preview-section="next-steps" className={`${styles.card} ${styles.previewSection}`}>
+          <h2>Следующий шаг</h2>
+          <p className={styles.note}>Выберите релевантную услугу или перейдите к контакту для запроса.</p>
+          <div className={styles.linkRow}>
+            <Link className={styles.actionLink} href="/services">Перейти к услугам</Link>
+            <Link className={styles.actionLinkSecondary} href="/contacts">Оставить заявку</Link>
+          </div>
+        </section>
       </main>
     </PublicPageShell>
   );
 }
 
-export function StandalonePage({ page, globalSettings, services, equipment, cases, galleries, resolveMedia }) {
+export function StandalonePage({ page, globalSettings, services, equipment, cases, galleries, resolveMedia, serviceLinks = [] }) {
   const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
   const pageThemeClassName = getThemeClassName(page.pageThemeKey);
   const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
@@ -510,9 +632,21 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
   const primaryService = sourceRefs.primaryServiceId ? services(sourceRefs.primaryServiceId) : null;
   const primaryEquipment = sourceRefs.primaryEquipmentId ? equipment?.(sourceRefs.primaryEquipmentId) : null;
   const showSplitHeroMedia = mediaSettings.heroLayout === "split" && primaryMedia;
+  const currentPath = page.pageType === PAGE_TYPES.CONTACTS
+    ? "/contacts"
+    : page.pageType === PAGE_TYPES.ABOUT
+      ? "/about"
+      : "/";
+  const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: page.h1 || page.title });
 
   return (
-    <PublicPageShell globalSettings={globalSettings} themeClassName={pageThemeClassName}>
+    <PublicPageShell
+      globalSettings={globalSettings}
+      themeClassName={pageThemeClassName}
+      currentPath={currentPath}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+    >
       <main className={styles.page}>
         <section
           id="preview-page-hero"
@@ -524,9 +658,9 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
         >
           <p className={styles.eyebrow}>
             {page.pageType === PAGE_TYPES.SERVICE_LANDING
-              ? "Страница услуги"
+              ? "РЎС‚СЂР°РЅРёС†Р° СѓСЃР»СѓРіРё"
               : page.pageType === PAGE_TYPES.EQUIPMENT_LANDING
-                ? "Страница техники"
+                ? "РЎС‚СЂР°РЅРёС†Р° С‚РµС…РЅРёРєРё"
                 : PUBLIC_COPY.pageEyebrow}
           </p>
           <h1>{page.h1}</h1>
@@ -565,3 +699,4 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
     </PublicPageShell>
   );
 }
+
