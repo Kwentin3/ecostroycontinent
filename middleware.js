@@ -14,10 +14,6 @@ import {
   parsePlaceholderToggle
 } from "./lib/public-launch/placeholder-mode.js";
 
-const PERSISTED_MODE_CACHE_TTL_MS = 5000;
-let cachedPersistedMode = null;
-let cachedPersistedModeExpiresAt = 0;
-
 function mapPlaceholderToggleToMode(toggle) {
   if (toggle === true) {
     return PUBLIC_DISPLAY_MODES.MIXED_PLACEHOLDER;
@@ -44,12 +40,6 @@ function setDebugCookie(response, name, value, request) {
 }
 
 async function resolvePersistedModeFromRuntimeProbe(request) {
-  const now = Date.now();
-
-  if (cachedPersistedMode && cachedPersistedModeExpiresAt > now) {
-    return cachedPersistedMode;
-  }
-
   try {
     const probeUrl = new URL("/api/public/display-mode", request.nextUrl.origin);
     const response = await fetch(probeUrl, {
@@ -70,9 +60,6 @@ async function resolvePersistedModeFromRuntimeProbe(request) {
     if (!resolvedMode) {
       return null;
     }
-
-    cachedPersistedMode = resolvedMode;
-    cachedPersistedModeExpiresAt = now + PERSISTED_MODE_CACHE_TTL_MS;
 
     return resolvedMode;
   } catch {
