@@ -149,8 +149,10 @@ test("safe removal planner leads operator to the upstream published ref first", 
 
   assert.equal(plan.mode, "blocked_by_published_refs");
   assert.equal(plan.primaryAction.type, "link");
+  assert.equal(plan.primaryAction.label, "Открыть услугу и освободить ссылку");
   assert.match(plan.primaryAction.href, /\/admin\/entities\/service\/service_live_1\?returnTo=/);
   assert.equal(plan.steps[0].status, "current");
+  assert.match(plan.steps[0].description, /в опубликованной услуге «Proof Service»/);
 });
 
 test("safe removal planner keeps test graph teardown as the primary path for test data", async () => {
@@ -198,6 +200,73 @@ test("safe removal planner keeps test graph teardown as the primary path for tes
   assert.equal(plan.primaryAction.type, "form");
   assert.equal(plan.primaryAction.action, "/api/admin/entities/case/case_test_1/test-graph-teardown");
   assert.equal(plan.steps[2].status, "current");
+});
+
+test("safe removal planner uses natural russian forms for draft and mixed-graph guidance", async () => {
+  const draftPlan = await buildSafeRemovalPlan(
+    makeInput(ENTITY_TYPES.CASE, "case_2"),
+    {
+      assessEntityDelete: async () => makeDeleteEvaluation({
+        entityType: ENTITY_TYPES.CASE,
+        entityId: "case_2",
+        reasons: ["На объект ссылается рабочий черновик услуги."],
+        draftIncomingRefs: [
+          {
+            entityType: ENTITY_TYPES.SERVICE,
+            entityId: "service_draft_1",
+            label: "Черновик услуги",
+            href: "/admin/entities/service/service_draft_1",
+            reason: "На объект ссылается рабочий черновик услуги.",
+            state: "draft"
+          }
+        ]
+      }),
+      evaluateLegacyTestFixtureNormalization: async () => ({
+        allowed: false,
+        blockers: ["Не применяется."],
+        warnings: [],
+        publishedIncomingRefs: [],
+        draftIncomingRefs: [],
+        relatedTargets: [],
+        root: null
+      })
+    }
+  );
+
+  assert.equal(draftPlan.primaryAction.label, "Открыть черновик услуги и убрать связь");
+  assert.match(draftPlan.steps[1].description, /В рабочем черновике услуги «Черновик услуги»/);
+
+  const testGraphPlan = await buildSafeRemovalPlan(
+    makeInput(ENTITY_TYPES.CASE, "case_test_2"),
+    {
+      assessEntityDelete: async () => makeDeleteEvaluation({
+        entityType: ENTITY_TYPES.CASE,
+        entityId: "case_test_2",
+        rootOverrides: {
+          isTestData: true
+        }
+      }),
+      evaluateTestGraphTeardown: async () => ({
+        allowed: false,
+        blockers: ["Граф удерживается живой услугой."],
+        blockingRefs: [
+          {
+            entityType: ENTITY_TYPES.SERVICE,
+            entityId: "service_live_2",
+            label: "Живая услуга",
+            href: "/admin/entities/service/service_live_2",
+            reason: "Граф удерживается живой услугой.",
+            state: "published"
+          }
+        ],
+        survivingRefs: [],
+        members: [],
+        deletePlan: []
+      })
+    }
+  );
+
+  assert.match(testGraphPlan.steps[0].description, /удерживается услугой «Живая услуга»/);
 });
 
 test("safe removal planner exposes legacy fixture normalization as a secondary path", async () => {
