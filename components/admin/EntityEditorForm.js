@@ -14,11 +14,14 @@ import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
 import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
-import { getEntityDeletePreviewHref } from "../../lib/admin/entity-delete.js";
+import { getEntityDeletePreviewHref, isDeleteToolEntityTypeSupported } from "../../lib/admin/entity-delete.js";
 import { isAgentTestCreationOrigin } from "../../lib/admin/entity-origin.js";
-import { getLegacyTestFixtureNormalizationHref } from "../../lib/admin/legacy-test-fixture-normalization.js";
-import { getTestGraphTeardownHref } from "../../lib/admin/test-graph-teardown.js";
-import { getLiveDeactivationHref } from "../../lib/admin/live-deactivation.js";
+import {
+  getLegacyTestFixtureNormalizationHref,
+  isLegacyTestFixtureNormalizationEntityTypeSupported
+} from "../../lib/admin/legacy-test-fixture-normalization.js";
+import { getTestGraphTeardownHref, isTestGraphTeardownEntityTypeSupported } from "../../lib/admin/test-graph-teardown.js";
+import { getLiveDeactivationHref, isLiveDeactivationEntityTypeSupported } from "../../lib/admin/live-deactivation.js";
 import { userCanPublishRevision } from "../../lib/auth/session.js";
 import styles from "./admin-ui.module.css";
 
@@ -119,7 +122,7 @@ export function EntityEditorForm({
 }) {
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const historyHref = entityId ? `/admin/entities/${entityType}/${entityId}/history` : "";
-  const canDeletePreview = Boolean(entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE));
+  const canDeletePreview = Boolean(entityId && isDeleteToolEntityTypeSupported(entityType));
   const canDeleteEntity = false; // Entity delete now always goes through the explicit preview screen.
   const canPublish = user.role === "superadmin";
   const canLiveDeactivate = Boolean(
@@ -127,18 +130,18 @@ export function EntityEditorForm({
     && canPublish
     && activePublishedRevision
     && !isAgentTestCreationOrigin(entityCreationOrigin)
-    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+    && isLiveDeactivationEntityTypeSupported(entityType)
   );
   const canTeardownTestGraph = Boolean(
     entityId
     && isAgentTestCreationOrigin(entityCreationOrigin)
-    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+    && isTestGraphTeardownEntityTypeSupported(entityType)
   );
   const canNormalizeLegacyTestFixture = Boolean(
     entityId
     && canPublish
     && !isAgentTestCreationOrigin(entityCreationOrigin)
-    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+    && isLegacyTestFixtureNormalizationEntityTypeSupported(entityType)
   );
   const canOpenPublishReadiness = Boolean(
     currentRevision
@@ -245,7 +248,7 @@ export function EntityEditorForm({
             ) : null}
             {canDeletePreview ? (
               <Link href={getEntityDeletePreviewHref(entityType, entityId)} className={styles.dangerButton}>
-                Удалить
+                Безопасно убрать
               </Link>
             ) : null}
             {canDeleteEntity ? (
