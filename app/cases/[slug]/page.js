@@ -29,7 +29,7 @@ export async function generateMetadata({ params, searchParams }) {
       pathname: `/cases/${slug}`,
       placeholderMode,
       title: "Кейс — в режиме подготовки",
-      description: "Детальная страница кейса временно показывает holding-поверхность.",
+      description: "Детальная страница кейса временно показывает поверхность режима подготовки.",
       siteName
     });
   }
@@ -66,7 +66,7 @@ export default async function CaseDetailPage({ params, searchParams }) {
         currentPath={`/cases/${slug}`}
         serviceLinks={services}
         title="Детальная страница кейса в режиме подготовки"
-        description="Case detail временно отключён в пользу единого holding-режима."
+        description="Детальная страница кейса временно отключена в пользу единого режима подготовки."
       />
     );
   }

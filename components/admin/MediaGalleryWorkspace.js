@@ -1599,7 +1599,7 @@ export function MediaGalleryWorkspace({
                         <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
                         <span className={styles.mediaBadgeCluster}>
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
-                          {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Live</span> : null}
+                          {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Опубликовано</span> : null}
                           {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тест</span> : null}
                           {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
                           <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>

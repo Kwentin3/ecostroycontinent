@@ -228,7 +228,7 @@ export async function POST(request, { params }, overrides = {}) {
       }, routeDeps);
 
       if (candidateResult.status !== "ok") {
-        return jsonError("AI не смог подготовить предложение для страницы.", 502);
+        return jsonError("ИИ не смог подготовить предложение для страницы.", 502);
       }
 
       return NextResponse.json({

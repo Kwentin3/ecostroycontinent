@@ -237,7 +237,7 @@ export function EntityTruthSections({
         <TruthGroup id="equipment-seo-truth" title="Данные техники" note="Это базовая карточка техники, которая потом может стать источником для страницы.">
           <div className={styles.gridTwo}>
             <label className={styles.label}>
-              <span>Slug</span>
+              <span>Короткий адрес</span>
               <input name="slug" defaultValue={value.slug || ""} required />
             </label>
             <label className={styles.label}>

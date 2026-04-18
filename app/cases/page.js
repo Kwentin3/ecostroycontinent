@@ -21,8 +21,8 @@ export async function generateMetadata({ searchParams }) {
   const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   const title = runtimeDisplayMode.underConstruction ? "Кейсы — в режиме подготовки" : "Кейсы";
   const description = runtimeDisplayMode.underConstruction
-    ? "Раздел кейсов временно показывает holding-поверхность."
-    : "Подтверждённые кейсы как proof-layer для сервисных страниц.";
+    ? "Раздел кейсов временно показывает поверхность режима подготовки."
+    : "Подтверждённые кейсы как слой подтверждений для страниц услуг.";
 
   return buildPublicRouteMetadata({
     pathname: "/cases",
@@ -50,7 +50,7 @@ export default async function CasesPage({ searchParams }) {
         currentPath="/cases"
         serviceLinks={services}
         title="Раздел кейсов в режиме подготовки"
-        description="Proof-layer временно переведён в under construction режим."
+        description="Слой подтверждений временно переведён в режим подготовки."
       />
     );
   }
@@ -67,11 +67,11 @@ export default async function CasesPage({ searchParams }) {
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
 
   return (
-    <PublicListPage
-      eyebrow="Proof layer"
+      <PublicListPage
+      eyebrow="Слой подтверждений"
       title="Кейсы"
-      intro="Раздел показывает подтверждённые кейсы и ведёт к detail-страницам с task, work scope и result."
-      items={resolvedCases}
+      intro="Раздел показывает подтверждённые кейсы и ведёт к детальным страницам с задачей, объёмом работ и результатом."
+        items={resolvedCases}
       itemHrefPrefix="/cases"
       globalSettings={resolvedGlobalSettings}
       currentPath="/cases"
@@ -79,7 +79,7 @@ export default async function CasesPage({ searchParams }) {
       allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
       emptyTitle="Кейсы пока не опубликованы"
-      emptyDescription="Пока нет proof-ready кейсов в текущем режиме публикации."
+      emptyDescription="Пока нет готовых к публикации кейсов в текущем режиме."
       emptyActionHref="/services"
       emptyActionLabel="Открыть каталог услуг"
       nextStepTitle="Следующий шаг"

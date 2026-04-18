@@ -6,7 +6,7 @@ export async function GET(_request, { params }) {
   const asset = await getPublishedMediaAsset(entityId);
 
   if (!asset) {
-    return new Response("Not found", { status: 404 });
+    return new Response("Не найдено", { status: 404 });
   }
 
   try {
@@ -19,6 +19,6 @@ export async function GET(_request, { params }) {
       }
     });
   } catch {
-    return new Response("Not found", { status: 404 });
+    return new Response("Не найдено", { status: 404 });
   }
 }

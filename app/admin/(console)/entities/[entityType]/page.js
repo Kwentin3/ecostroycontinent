@@ -325,7 +325,7 @@ export default async function EntityListPage({ params, searchParams }) {
             <SurfacePacket
             eyebrow="Реестр страниц"
             title="Страницы"
-            summary="Это единый вход в page workflow: обзор страниц, поиск нужной и переход в основной рабочий экран без хопа в отдельную AI-поверхность."
+            summary="Это единый вход в page workflow: обзор страниц, поиск нужной и переход в основной рабочий экран без хопа в отдельную ИИ-поверхность."
             legend={getEntityListLegend(normalizedType)}
             bullets={[
               ...viewModel.bullets,

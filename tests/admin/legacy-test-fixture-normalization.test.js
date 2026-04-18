@@ -125,7 +125,7 @@ test("evaluateLegacyTestFixtureNormalization allows isolated legacy page and war
   assert.equal(result.allowed, true);
   assert.equal(result.root.creationOrigin, null);
   assert.equal(result.root.resultingCreationOrigin, "agent_test");
-  assert.ok(result.warnings.some((warning) => warning.includes("review/publish")));
+  assert.ok(result.warnings.some((warning) => warning.includes("проверки и публикации")));
 });
 
 test("evaluateLegacyTestFixtureNormalization refuses when non-test published page points to service", async () => {

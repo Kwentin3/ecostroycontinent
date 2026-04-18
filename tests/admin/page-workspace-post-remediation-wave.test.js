@@ -14,7 +14,7 @@ test("preview viewport exposes tablet semantics as explicit operator affordance"
   assert.equal(tablet.value, "tablet");
   assert.equal(tablet.width, 834);
   assert.equal(tablet.deviceShellClassName, "previewViewportDeviceTablet");
-  assert.equal(formatPreviewViewportWidth(tablet.width), "834 px");
+  assert.equal(formatPreviewViewportWidth(tablet.width), "834 пикс.");
   assert.match(tablet.hint, /РїРµСЂРµРЅРѕСЃ|CTA|СЃРµРєС†Рё/i);
 });
 

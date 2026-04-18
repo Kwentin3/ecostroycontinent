@@ -30,7 +30,7 @@ export async function generateMetadata({ params, searchParams }) {
       pathname: `/services/${slug}`,
       placeholderMode,
       title: "Услуга — в режиме подготовки",
-      description: "Маршрут услуги временно показывает holding-поверхность.",
+      description: "Маршрут услуги временно показывает поверхность режима подготовки.",
       siteName
     });
   }
@@ -42,7 +42,7 @@ export async function generateMetadata({ params, searchParams }) {
     pathname: `/services/${slug}`,
     placeholderMode,
     title: service?.seo?.metaTitle || service?.h1 || service?.title || "Услуга",
-    description: service?.seo?.metaDescription || service?.summary || "Детальная страница услуги: scope, proof и следующий шаг к контакту.",
+    description: service?.seo?.metaDescription || service?.summary || "Детальная страница услуги: объём работ, подтверждение и следующий шаг к контакту.",
     seo: service?.seo,
     siteName
   });
@@ -66,7 +66,7 @@ export default async function ServiceDetailPage({ params, searchParams }) {
         currentPath={`/services/${slug}`}
         serviceLinks={services}
         title="Детальная страница услуги в режиме подготовки"
-        description="Детальная service-поверхность временно отключена в пользу единого holding-режима."
+        description="Детальная страница услуги временно отключена в пользу единого режима подготовки."
       />
     );
   }

@@ -16,8 +16,8 @@ export async function generateMetadata({ searchParams }) {
   const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
   const title = runtimeDisplayMode.underConstruction ? "Услуги — в режиме подготовки" : "Услуги";
   const description = runtimeDisplayMode.underConstruction
-    ? "Раздел услуг временно показывает holding-поверхность."
-    : "Каталог услуг с переходом на отдельные service detail страницы.";
+    ? "Раздел услуг временно показывает поверхность режима подготовки."
+    : "Каталог услуг с переходом на отдельные страницы услуг.";
 
   return buildPublicRouteMetadata({
     pathname: "/services",
@@ -45,7 +45,7 @@ export default async function ServicesPage({ searchParams }) {
         currentPath="/services"
         serviceLinks={services}
         title="Раздел услуг в режиме подготовки"
-        description="Каталог услуг временно переведён в under construction режим."
+        description="Каталог услуг временно переведён в режим подготовки."
       />
     );
   }
@@ -60,11 +60,11 @@ export default async function ServicesPage({ searchParams }) {
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
 
   return (
-    <PublicListPage
-      eyebrow="Каталог услуг"
-      title="Услуги"
-      intro="Раздел ведёт к отдельным service detail страницам с scope, proof и следующим действием."
-      items={resolvedServices}
+      <PublicListPage
+        eyebrow="Каталог услуг"
+        title="Услуги"
+      intro="Раздел ведёт к отдельным страницам услуг с объёмом работ, подтверждением и следующим шагом."
+        items={resolvedServices}
       itemHrefPrefix="/services"
       globalSettings={resolvedGlobalSettings}
       currentPath="/services"
@@ -72,7 +72,7 @@ export default async function ServicesPage({ searchParams }) {
       allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
       emptyTitle="Каталог услуг пока пуст"
-      emptyDescription="Опубликованные service detail страницы ещё не готовы для этого режима."
+      emptyDescription="Опубликованные страницы услуг ещё не готовы для этого режима."
       emptyActionHref="/cases"
       emptyActionLabel="Перейти в раздел кейсов"
       nextStepTitle="Следующий шаг"

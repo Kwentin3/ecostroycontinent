@@ -68,19 +68,19 @@ export default async function TestGraphTeardownPage({ params, searchParams }) {
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         <section className={styles.panel}>
           <p className={styles.helpText}>
-            Сначала проверьте dry-run. Этот экран удаляет только чистый тестовый граф и не работает как обычный unpublish.
+            Сначала проверьте пробный прогон. Этот экран удаляет только чистый тестовый граф и не работает как обычное снятие с публикации.
           </p>
           <div className={styles.badgeRow}>
             <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
-            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть published truth</span> : null}
+            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
             <span className={`${styles.badge} ${evaluation.allowed ? styles.mediaBadgesuccess : styles.mediaBadgedanger}`}>
-              {evaluation.allowed ? "Teardown разрешён" : "Teardown заблокирован"}
+              {evaluation.allowed ? "Снятие разрешено" : "Снятие заблокировано"}
             </span>
           </div>
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Dry-run</h3>
+          <h3>Пробный прогон</h3>
           <div className={styles.cockpitCoverageSummary}>
             <strong>{evaluation.root?.label || entityId}</strong>
             <span className={styles.mutedText}>{ENTITY_TYPE_LABELS[normalizedType]}</span>
@@ -97,7 +97,7 @@ export default async function TestGraphTeardownPage({ params, searchParams }) {
                   <span className={`${styles.badge} ${member.published ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
                     {getStatusLabel(member)}
                   </span>
-                  {member.deactivatePublished ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Будет снят published pointer</span> : null}
+                  {member.deactivatePublished ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Будет снят опубликованный указатель</span> : null}
                   <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Будет удалён</span>
                 </div>
                 <div className={styles.inlineActions}>
@@ -130,7 +130,7 @@ export default async function TestGraphTeardownPage({ params, searchParams }) {
 
         {evaluation.blockers.length > 0 ? (
           <section className={styles.statusPanelBlocking}>
-            <strong>Teardown остановлен.</strong>
+            <strong>Снятие остановлено.</strong>
             <ul className={styles.stack}>
               {evaluation.blockers.map((blocker) => (
                 <li key={blocker} className={styles.timelineItem}>{blocker}</li>
@@ -166,7 +166,7 @@ export default async function TestGraphTeardownPage({ params, searchParams }) {
           <section className={styles.panel}>
             <h3>Выполнение</h3>
             <p className={styles.helpText}>
-              Сначала будут деактивированы published pointers для test-marked участников графа, затем объекты удалятся в безопасном порядке.
+              Сначала будут деактивированы опубликованные указатели для участников графа, помеченных как тестовые, затем объекты удалятся в безопасном порядке.
             </p>
             <ConfirmActionForm
               action={`/api/admin/entities/${normalizedType}/${entityId}/test-graph-teardown`}

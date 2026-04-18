@@ -26,15 +26,15 @@ test("contact projection falls back to route CTA when contact truth is not confi
     contactTruthConfirmed: false,
     primaryPhone: "+7 (999) 123-45-67",
     publicEmail: "hello@example.com",
-    defaultCtaLabel: "Request contact"
+    defaultCtaLabel: "Связаться"
   }, { currentPath: "/services/drainage" });
 
   assert.equal(projection.readiness.code, "pending_confirmation");
   assert.equal(projection.primaryAction.kind, "route");
   assert.equal(projection.primaryAction.href, "/contacts#contact-request");
-  assert.equal(projection.primaryAction.label, "Request contact");
-  assert.equal(projection.displayPhone, "Contact details are pending confirmation.");
-  assert.equal(projection.displayEmail, "Public email is pending confirmation.");
+  assert.equal(projection.primaryAction.label, "Связаться");
+  assert.equal(projection.displayPhone, "Контактные данные еще не подтверждены.");
+  assert.equal(projection.displayEmail, "Публичная почта еще не подтверждена.");
   assert.equal(projection.bindingMode, "fallback_projection");
   assert.match(projection.consistencyToken, /fallback_projection\|pending_confirmation\|/);
 });

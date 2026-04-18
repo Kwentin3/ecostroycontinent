@@ -28,7 +28,7 @@ export async function generateMetadata({ searchParams }) {
       pathname: "/contacts",
       placeholderMode,
       title: "Контакты — в режиме подготовки",
-      description: "Маршрут /contacts временно показывает holding-поверхность.",
+      description: "Маршрут /contacts временно показывает поверхность режима подготовки.",
       siteName
     });
   }
@@ -64,7 +64,7 @@ export default async function ContactsPage({ searchParams }) {
         currentPath="/contacts"
         serviceLinks={services}
         title="Контакты в режиме подготовки"
-        description="Контактная поверхность временно переведена в under construction режим."
+        description="Контактная поверхность временно переведена в режим подготовки."
       />
     );
   }

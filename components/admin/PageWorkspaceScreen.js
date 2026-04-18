@@ -614,31 +614,31 @@ export function PageWorkspaceScreen({
   ]), [compositionDirty, currentSignal.label, currentSignal.tone, lifecycleState?.hasLivePublishedRevision, metadata.pageType, metadataDirty, ownerApprovalLabel, ownerApprovalTone, revision, revisionStateLabel]);
   const seoAuditItems = useMemo(() => ([
     buildPresenceAudit(
-      "Slug",
+      "Короткий адрес",
       Boolean(metadata.slug.trim()),
       `/${metadata.slug.trim()}`,
       "Маршрут не задан"
     ),
-    buildLengthAudit("H1", composition.h1, {
+    buildLengthAudit("Основной заголовок", composition.h1, {
       min: 10,
       max: 90,
-      emptyText: "H1 не заполнен",
-      shortText: "H1 слишком короткий",
-      longText: "H1 слишком длинный"
+      emptyText: "Основной заголовок не заполнен",
+      shortText: "Основной заголовок слишком короткий",
+      longText: "Основной заголовок слишком длинный"
     }),
-    buildLengthAudit("Meta title", metadata.seo?.metaTitle || "", {
+    buildLengthAudit("Заголовок для поиска", metadata.seo?.metaTitle || "", {
       min: 35,
       max: 65,
-      emptyText: "Meta title не заполнен",
-      shortText: "Meta title короткий",
-      longText: "Meta title длинный"
+      emptyText: "Заголовок для поиска не заполнен",
+      shortText: "Заголовок для поиска короткий",
+      longText: "Заголовок для поиска длинный"
     }),
-    buildLengthAudit("Meta description", metadata.seo?.metaDescription || "", {
+    buildLengthAudit("Описание для поиска", metadata.seo?.metaDescription || "", {
       min: 80,
       max: 170,
-      emptyText: "Meta description не заполнен",
-      shortText: "Meta description короткий",
-      longText: "Meta description длинный"
+      emptyText: "Описание для поиска не заполнено",
+      shortText: "Описание для поиска короткое",
+      longText: "Описание для поиска длинное"
     }),
     buildPresenceAudit(
       "Главное медиа",

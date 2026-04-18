@@ -81,7 +81,7 @@ test("display mode switch route requires explicit confirmation for published_onl
     buildRequest({
       redirectTo: "/admin",
       mode: "published_only",
-      reason: "Return to launch-like runtime"
+      reason: "Вернуть опубликованный режим"
     }),
     {},
     {
@@ -101,7 +101,7 @@ test("display mode switch route requires explicit confirmation for published_onl
   const location = response.headers.get("location") || "";
   assert.match(location, /error=/);
   const decodedLocation = decodeURIComponent(location.replace(/\+/g, " "));
-  assert.match(decodedLocation, /launch-like runtime requires explicit confirmation/);
+  assert.match(decodedLocation, /Переключение в режим только опубликованного контента требует явного подтверждения/);
 });
 
 test("admin dashboard wiring includes display mode control panel and api route", () => {

@@ -233,7 +233,7 @@ function Breadcrumbs({ items }) {
 function ContactAction({
   action,
   className,
-  defaultLabel = "Open contacts"
+  defaultLabel = "Открыть контакты"
 }) {
   if (!action?.href) {
     return null;
@@ -340,7 +340,7 @@ export function PublicPageShell({
         </details>
       ) : null}
       {placeholderMarker ? (
-        <div className={styles.placeholderMarker} role="note" aria-label="placeholder-marker">
+        <div className={styles.placeholderMarker} role="note" aria-label="Техническая метка заглушки">
           {PLACEHOLDER_MARKER_TEXT}
         </div>
       ) : null}
@@ -938,7 +938,7 @@ export function StandalonePage({
         </section>
         {page.pageType === PAGE_TYPES.CONTACTS ? (
           <section id="contact-request" data-preview-section="contact-request" className={`${styles.card} ${styles.previewSection}`}>
-            <h2>Contact action</h2>
+            <h2>Контактное действие</h2>
             <p className={styles.note}>{contactProjection.readiness.message}</p>
             <p className={styles.note}>{contactProjection.displayRegion}</p>
             <div className={styles.linkRow}>
@@ -951,12 +951,12 @@ export function StandalonePage({
                   defaultLabel={PUBLIC_COPY.ctaFallback}
                 />
               ))}
-              <Link className={styles.actionLinkSecondary} href="/services">Open services</Link>
+              <Link className={styles.actionLinkSecondary} href="/services">Открыть услуги</Link>
             </div>
             <p id="contact-messengers" className={styles.note}>
               {contactProjection.messengers.length > 0
-                ? `Active channels: ${contactProjection.messengers.map((item) => item.label).join(", ")}`
-                : "Messenger channels are not configured yet."}
+                ? `Активные каналы: ${contactProjection.messengers.map((item) => item.label).join(", ")}`
+                : "Каналы в мессенджерах пока не настроены."}
             </p>
           </section>
         ) : null}

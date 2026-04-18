@@ -28,7 +28,7 @@ export async function generateMetadata({ searchParams }) {
       pathname: "/about",
       placeholderMode,
       title: "О компании — в режиме подготовки",
-      description: "Маршрут /about временно показывает holding-поверхность.",
+      description: "Маршрут /about временно показывает поверхность режима подготовки.",
       siteName
     });
   }
@@ -41,7 +41,7 @@ export async function generateMetadata({ searchParams }) {
     pathname: "/about",
     placeholderMode,
     title: page?.seo?.metaTitle || page?.h1 || page?.title || "О компании",
-    description: page?.seo?.metaDescription || page?.intro || "О компании, подходе и зоне работ в рамках launch-core.",
+    description: page?.seo?.metaDescription || page?.intro || "О компании, подходе и зоне работ в рамках публичного контура запуска.",
     seo: page?.seo,
     siteName
   });
@@ -64,7 +64,7 @@ export default async function AboutPage({ searchParams }) {
         currentPath="/about"
         serviceLinks={services}
         title="Раздел о компании в режиме подготовки"
-        description="/about временно переведён в under construction режим."
+        description="/about временно переведён в режим подготовки."
       />
     );
   }

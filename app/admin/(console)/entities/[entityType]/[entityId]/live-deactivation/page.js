@@ -102,7 +102,7 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
             </li>
             <li className={styles.timelineItem}>
               <strong>Карта сайта</strong>
-              <p className={styles.mutedText}>{evaluation.routeEffects?.sitemapImpact || "Отдельный sitemap runtime route в текущем коде не найден."}</p>
+              <p className={styles.mutedText}>{evaluation.routeEffects?.sitemapImpact || "Отдельный маршрут sitemap в текущем коде не найден."}</p>
             </li>
             <li className={styles.timelineItem}>
               <strong>Какие адреса обновятся</strong>

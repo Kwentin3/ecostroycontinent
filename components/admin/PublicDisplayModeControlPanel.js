@@ -7,13 +7,13 @@ import styles from "./admin-ui.module.css";
 
 function formatTimestamp(value) {
   if (!value) {
-    return "n/a";
+    return "н/д";
   }
 
   const parsed = new Date(value);
 
   if (!Number.isFinite(parsed.getTime())) {
-    return "n/a";
+    return "н/д";
   }
 
   return parsed.toISOString();
@@ -26,12 +26,12 @@ function renderCurrentState(state = null, actor = null) {
 
   return (
     <section className={styles.statusPanelInfo}>
-      <p className={styles.eyebrow}>Current runtime mode</p>
+      <p className={styles.eyebrow}>Текущий режим</p>
       <p><strong>{meta.label}</strong></p>
       <p className={styles.mutedText}>{meta.description}</p>
-      <p className={styles.mutedText}>Changed at: {formatTimestamp(safeState.changedAt)}</p>
-      <p className={styles.mutedText}>Changed by: {changedBy}</p>
-      {safeState.reason ? <p className={styles.mutedText}>Reason: {safeState.reason}</p> : null}
+      <p className={styles.mutedText}>Изменено: {formatTimestamp(safeState.changedAt)}</p>
+      <p className={styles.mutedText}>Кем: {changedBy}</p>
+      {safeState.reason ? <p className={styles.mutedText}>Причина: {safeState.reason}</p> : null}
     </section>
   );
 }
@@ -40,7 +40,7 @@ function renderAuditTrail(items = []) {
   if (!Array.isArray(items) || items.length === 0) {
     return (
       <section className={styles.panelMuted}>
-        <p className={styles.mutedText}>No display mode switches recorded yet.</p>
+        <p className={styles.mutedText}>Переходов режима пока нет.</p>
       </section>
     );
   }
@@ -59,9 +59,9 @@ function renderAuditTrail(items = []) {
               {" -> "}
               <strong>{nextMeta.label}</strong>
             </p>
-            <p className={styles.mutedText}>When: {formatTimestamp(item.changedAt)}</p>
-            <p className={styles.mutedText}>Who: {actor}</p>
-            {item.reason ? <p className={styles.mutedText}>Reason: {item.reason}</p> : null}
+            <p className={styles.mutedText}>Когда: {formatTimestamp(item.changedAt)}</p>
+            <p className={styles.mutedText}>Кто: {actor}</p>
+            {item.reason ? <p className={styles.mutedText}>Причина: {item.reason}</p> : null}
           </li>
         );
       })}
@@ -76,10 +76,10 @@ export function PublicDisplayModeControlPanel({
 }) {
   return (
     <section className={styles.panel} aria-labelledby="public-display-mode-control">
-      <p className={styles.eyebrow}>Operational control</p>
-      <h3 id="public-display-mode-control">Public display mode</h3>
+      <p className={styles.eyebrow}>Операционное управление</p>
+      <h3 id="public-display-mode-control">Режим отображения публичного сайта</h3>
       <p className={styles.mutedText}>
-        Runtime mode is operational state. It is not content truth and does not replace publish workflow.
+        Режим исполнения - это операционное состояние. Он не заменяет истину контента и не подменяет публикацию.
       </p>
 
       {renderCurrentState(currentState, currentState?.changedBy ? actorMap[currentState.changedBy] : null)}
@@ -87,7 +87,7 @@ export function PublicDisplayModeControlPanel({
       <form method="post" action="/api/admin/system/display-mode" className={styles.formGrid}>
         <input type="hidden" name="redirectTo" value="/admin" />
         <label className={styles.label}>
-          Target mode
+          Целевой режим
           <select name="mode" defaultValue={currentState?.mode || ""} required>
             {PUBLIC_DISPLAY_MODE_VALUES.map((mode) => {
               const meta = getPublicDisplayModeMeta(mode);
@@ -100,36 +100,36 @@ export function PublicDisplayModeControlPanel({
           </select>
         </label>
         <label className={styles.label}>
-          Reason
+          Причина
           <textarea
             name="reason"
             required
             minLength={4}
             maxLength={400}
-            placeholder="Why this switch is needed right now"
+            placeholder="Почему нужен этот переключатель сейчас"
           />
         </label>
         <label className={styles.label}>
-          Safety confirmation for published mode
+          Подтверждение для режима только опубликованного
           <div>
             <label>
               <input type="checkbox" name="confirmPublishedOnly" value="yes" />
-              {" "}I confirm switching to published-only launch-like runtime.
+              {" "}Подтверждаю переключение на режим только опубликованного контента.
             </label>
           </div>
         </label>
-        <button type="submit" className={styles.primaryButton}>Apply display mode</button>
+        <button type="submit" className={styles.primaryButton}>Применить режим</button>
       </form>
 
       <section>
-        <p className={styles.eyebrow}>Mode switch audit trail</p>
+        <p className={styles.eyebrow}>Лента переключений режима</p>
         {renderAuditTrail(history.map((item) => ({
           ...item,
           actorDisplayName: item.actorUserId ? actorMap[item.actorUserId]?.displayName : "",
           actorUsername: item.actorUserId ? actorMap[item.actorUserId]?.username : ""
         })))}
         <p className={styles.mutedText}>
-          Actor role labels come from canonical RBAC: {getRoleLabel("superadmin")}.
+          Метки ролей берутся из канонической RBAC: {getRoleLabel("superadmin")}.
         </p>
       </section>
     </section>

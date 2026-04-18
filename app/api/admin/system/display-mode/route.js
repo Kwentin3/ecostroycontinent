@@ -13,7 +13,7 @@ const MIN_REASON_LENGTH = 4;
 
 function ensureReason(reason) {
   if (reason.length < MIN_REASON_LENGTH) {
-    throw new Error("Reason is required for display mode switch.");
+    throw new Error("Для переключения режима требуется причина.");
   }
 }
 
@@ -23,7 +23,7 @@ function ensurePublishedOnlyConfirmation({ nextMode, confirmed }) {
   }
 
   if (!confirmed) {
-    throw new Error("Switch to launch-like runtime requires explicit confirmation.");
+    throw new Error("Переключение в режим только опубликованного контента требует явного подтверждения.");
   }
 }
 
@@ -59,7 +59,7 @@ export async function POST(request, _context, deps = {}) {
     const nextMode = routeDeps.parsePublicDisplayMode(rawMode);
 
     if (!nextMode) {
-      throw new Error("Unsupported display mode.");
+      throw new Error("Неподдерживаемый режим отображения.");
     }
 
     ensureReason(reason);
@@ -74,8 +74,8 @@ export async function POST(request, _context, deps = {}) {
 
     return redirectWithQuery(request, redirectTo, {
       message: result.changed
-        ? `Display mode switched to ${nextMeta.label}.`
-        : `Display mode already set to ${nextMeta.label}.`
+        ? `Режим отображения переключен на ${nextMeta.label}.`
+        : `Режим отображения уже установлен: ${nextMeta.label}.`
     });
   } catch (error) {
     return redirectWithError(request, redirectTo, error);

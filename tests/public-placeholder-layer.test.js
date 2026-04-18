@@ -83,7 +83,7 @@ test("public placeholder layer wiring is present in routes and middleware", () =
   assert.match(runtimeDisplayModeSource, /PUBLIC_DISPLAY_MODE_QUERY_PARAM/);
   assert.match(runtimeDisplayModeSource, /PLACEHOLDER_QUERY_PARAM/);
   assert.match(rendererSource, /placeholderMarker/);
-  assert.match(rendererSource, /TEST PLACEHOLDER - NOT LAUNCH CONTENT|PLACEHOLDER_MARKER_TEXT/);
+  assert.match(rendererSource, /ТЕХНИЧЕСКАЯ ЗАГЛУШКА - НЕ БОЕВОЙ КОНТЕНТ|PLACEHOLDER_MARKER_TEXT/);
 
   assert.match(middlewareSource, /PLACEHOLDER_QUERY_PARAM/);
   assert.match(middlewareSource, /PLACEHOLDER_COOKIE_NAME/);

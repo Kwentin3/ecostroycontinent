@@ -237,7 +237,7 @@ export function PageMetadataModal({
           {activeTab === "route" ? (
             <div className={styles.grid}>
               <div className={styles.field}>
-                <span>Slug</span>
+                <span>Короткий адрес</span>
                 <input
                   className={styles.input}
                   value={draft.slug}

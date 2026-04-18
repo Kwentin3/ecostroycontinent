@@ -28,8 +28,8 @@ export async function generateMetadata({ searchParams }) {
     ? `${siteName} — сайт в режиме подготовки`
     : `${siteName} — услуги и кейсы`;
   const description = runtimeDisplayMode.underConstruction
-    ? "Публичный контур временно переведён в under construction режим."
-    : "Главная как trust и navigation hub для услуг, кейсов и контактного действия.";
+    ? "Публичный контур временно переведён в режим подготовки."
+    : "Главная как опорная страница доверия и навигации для услуг, кейсов и контактного действия.";
   return buildPublicRouteMetadata({
     pathname: "/",
     placeholderMode,
@@ -68,7 +68,7 @@ export default async function HomePage({ searchParams }) {
         currentPath="/"
         serviceLinks={services}
         title="Сайт в режиме подготовки"
-        description="Главная временно работает как holding-поверхность до следующего операционного переключения."
+        description="Главная временно работает как поверхность режима подготовки до следующего переключения."
       />
     );
   }
@@ -105,9 +105,9 @@ export default async function HomePage({ searchParams }) {
           data-preview-section="hero"
           className={`${styles.hero} ${styles.previewSection} ${styles.sectionToneTinted} ${styles.textEmphasisStrong}`}
         >
-          <p className={styles.eyebrow}>Public launch core</p>
-          <h1>{resolvedGlobalSettings?.publicBrandName || "Ecostroycontinent"}</h1>
-          <p>The homepage works as a trust and navigation hub for services, proof pages, and contact actions.</p>
+          <p className={styles.eyebrow}>Публичное ядро запуска</p>
+          <h1>{resolvedGlobalSettings?.publicBrandName || "Экостройконтинент"}</h1>
+          <p>Главная служит опорной страницей доверия и навигации для услуг, страниц подтверждений и контактных действий.</p>
           <p className={styles.note}>{contactProjection.displayRegion}</p>
           <p className={styles.note}>{contactProjection.readiness.message}</p>
           <div className={styles.linkRow}>
@@ -122,8 +122,8 @@ export default async function HomePage({ searchParams }) {
                 </a>
               )
             ) : null}
-            <Link className={styles.actionLink} href="/services">Open services</Link>
-            <Link className={styles.actionLinkSecondary} href="/cases">View cases</Link>
+            <Link className={styles.actionLink} href="/services">Открыть услуги</Link>
+            <Link className={styles.actionLinkSecondary} href="/cases">Посмотреть кейсы</Link>
           </div>
         </section>
 
@@ -133,27 +133,27 @@ export default async function HomePage({ searchParams }) {
           className={`${styles.stack} ${styles.previewSection}`}
         >
           <section className={`${styles.card} ${styles.sectionTonePlain}`}>
-            <p className={styles.eyebrow}>Service entry</p>
-            <h2>Key service routes</h2>
-            <p className={styles.note}>Home routes users to dedicated service detail pages instead of replacing them.</p>
+            <p className={styles.eyebrow}>Вход в услуги</p>
+            <h2>Ключевые маршруты услуг</h2>
+            <p className={styles.note}>Главная ведет к отдельным страницам услуг вместо того, чтобы подменять их.</p>
           </section>
           {featuredServices.length > 0 ? (
             <section className={styles.grid}>
               {featuredServices.map((service) => (
                 <article key={service.entityId || service.slug} className={styles.card}>
                   <h3>{service.title}</h3>
-                  <p>{normalizeLegacyCopy(service.summary || service.serviceScope || "Service details are available on the dedicated route.")}</p>
+                  <p>{normalizeLegacyCopy(service.summary || service.serviceScope || "Детали услуги доступны на отдельном маршруте.")}</p>
                   <div className={styles.linkRow}>
-                    <Link className={styles.actionLink} href={`/services/${service.slug}`}>Open service detail</Link>
+                    <Link className={styles.actionLink} href={`/services/${service.slug}`}>Открыть страницу услуги</Link>
                   </div>
                 </article>
               ))}
             </section>
           ) : (
             <section className={`${styles.card} ${styles.sectionTonePlain}`}>
-              <p className={styles.note}>No published services are available in this mode.</p>
+              <p className={styles.note}>В этом режиме пока нет опубликованных услуг.</p>
               <div className={styles.linkRow}>
-                <Link className={styles.actionLink} href="/services">Check services index</Link>
+                <Link className={styles.actionLink} href="/services">Открыть каталог услуг</Link>
               </div>
             </section>
           )}
@@ -165,27 +165,27 @@ export default async function HomePage({ searchParams }) {
           className={`${styles.stack} ${styles.previewSection}`}
         >
           <section className={`${styles.card} ${styles.sectionToneTinted}`}>
-            <p className={styles.eyebrow}>Proof layer</p>
-            <h2>Cases as evidence entry</h2>
-            <p className={styles.note}>Cases index stays an evidence route tied to service intent.</p>
+            <p className={styles.eyebrow}>Слой подтверждений</p>
+            <h2>Кейсы как вход в подтверждения</h2>
+            <p className={styles.note}>Каталог кейсов остаётся маршрутом подтверждений, связанным с услугами.</p>
           </section>
           {featuredCases.length > 0 ? (
             <section className={styles.grid}>
               {featuredCases.map((item) => (
                 <article key={item.entityId || item.slug} className={styles.card}>
                   <h3>{item.title}</h3>
-                  <p>{normalizeLegacyCopy(item.result || item.task || item.location || "Case details are available on the dedicated route.")}</p>
+                  <p>{normalizeLegacyCopy(item.result || item.task || item.location || "Детали кейса доступны на отдельном маршруте.")}</p>
                   <div className={styles.linkRow}>
-                    <Link className={styles.actionLink} href={`/cases/${item.slug}`}>Open case detail</Link>
+                    <Link className={styles.actionLink} href={`/cases/${item.slug}`}>Открыть страницу кейса</Link>
                   </div>
                 </article>
               ))}
             </section>
           ) : (
             <section className={`${styles.card} ${styles.sectionTonePlain}`}>
-              <p className={styles.note}>No published cases are available in this mode.</p>
+              <p className={styles.note}>В этом режиме пока нет опубликованных кейсов.</p>
               <div className={styles.linkRow}>
-                <Link className={styles.actionLink} href="/cases">Check cases index</Link>
+                <Link className={styles.actionLink} href="/cases">Открыть каталог кейсов</Link>
               </div>
             </section>
           )}
@@ -196,9 +196,9 @@ export default async function HomePage({ searchParams }) {
           data-preview-section="home-next-step"
           className={`${styles.card} ${styles.previewSection} ${styles.sectionToneEmphasis}`}
         >
-          <h2>Next step</h2>
+          <h2>Следующий шаг</h2>
           <p className={styles.ctaCopy}>
-            After selecting a service or case, the user should have a clear and immediate contact path.
+            После выбора услуги или кейса пользователь должен сразу видеть понятный путь к контакту.
           </p>
           <div className={styles.linkRow}>
             {contactProjection.primaryAction?.href ? (
@@ -223,7 +223,7 @@ export default async function HomePage({ searchParams }) {
                 </a>
               )
             ) : null}
-            <Link className={styles.actionLinkSecondary} href="/contacts">Open contacts</Link>
+            <Link className={styles.actionLinkSecondary} href="/contacts">Открыть контакты</Link>
           </div>
         </section>
       </main>
