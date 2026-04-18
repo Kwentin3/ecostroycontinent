@@ -656,7 +656,7 @@ function MediaOverlay({
                     onChange={(event) => onFileSelect(event.target.files?.[0] ?? null)}
                   />
                 </label>
-                <p className={styles.helpText}>V1 остаётся image-only. Видео и документы сюда не добавляем.</p>
+                <p className={styles.helpText}>V1 остаётся только для изображений. Видео и документы сюда не добавляем.</p>
               </div>
             )}
           </section>
@@ -1376,15 +1376,15 @@ export function MediaGalleryWorkspace({
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "Не удалось обновить lifecycle ассета.");
+        throw new Error(payload.error || "Не удалось обновить жизненный цикл ассета.");
       }
 
       setItems((current) => current.map((item) => (item.id === payload.item.id ? payload.item : item)));
       setSelectedId(payload.item.id);
       setRecentlySavedId(payload.item.id);
-      setMessage(payload.message || "Lifecycle ассета обновлён.");
+      setMessage(payload.message || "Жизненный цикл ассета обновлён.");
     } catch (actionError) {
-      setError(actionError.message || "Не удалось обновить lifecycle ассета.");
+      setError(actionError.message || "Не удалось обновить жизненный цикл ассета.");
     } finally {
       setLifecycleBusy(false);
     }

@@ -270,7 +270,7 @@ export function PageRegistryClient({
       { label: "Частично", value: stats.partial ?? 0 },
       { label: "Готово", value: stats.ready ?? 0 },
       { label: "Нет версии", value: stats.missing ?? 0 },
-      { label: "Вне live", value: stats.inactive ?? 0 }
+      { label: "Снято с публикации", value: stats.inactive ?? 0 }
     ];
   }, [records.length, summary]);
 

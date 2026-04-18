@@ -170,18 +170,18 @@ function moveSection(sections = [], type, direction) {
 
 function getMediaRecommendationSummary(pageType) {
   if (pageType === PAGE_TYPES.SERVICE_LANDING) {
-    return "Split-обложка, ровная доказательная галерея и группировка по коллекциям.";
+    return "Раздельная обложка, ровная доказательная галерея и группировка по коллекциям.";
   }
 
   if (pageType === PAGE_TYPES.EQUIPMENT_LANDING) {
-    return "Крупный hero-кадр, один ведущий фотоакцент и поддерживающие галереи по коллекциям.";
+    return "Крупный главный кадр, один ведущий фотоакцент и поддерживающие галереи по коллекциям.";
   }
 
   if (pageType === PAGE_TYPES.CONTACTS) {
-    return "Спокойная подача без визуального перегруза: базовый hero и вторичная лента фотографий.";
+    return "Спокойная подача без визуального перегруза: базовый главный блок и вторичная лента фотографий.";
   }
 
-  return "Баланс текста и визуала: split-обложка, акцентный первый кадр и галереи по коллекциям.";
+  return "Баланс текста и визуала: раздельная обложка, акцентный первый кадр и галереи по коллекциям.";
 }
 
 function SourceChecklistLegacy({ title, items, selectedIds, onToggle, emptyState = null }) {
