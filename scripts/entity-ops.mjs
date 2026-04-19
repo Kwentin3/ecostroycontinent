@@ -8,12 +8,13 @@ import { runEntityOperations } from "../lib/entity-ops/runner.js";
 
 function printHelp() {
   console.log(`Usage:
-  node --env-file=.env scripts/entity-ops.mjs --input <file> [--entity-type <type>] [--mode <mode>] [--execute]
+  node --env-file=.env scripts/entity-ops.mjs --input <file> [--kind <kind>] [--entity-type <type>] [--mode <mode>] [--execute]
 
 Options:
   --input <file>           JSON or JSONL batch file
+  --kind <kind>            Default kind: entity | media | display_mode | removal
   --entity-type <type>     Default entity type for entries without entityType
-  --mode <mode>            Default mode: create | update | upsert | delete
+  --mode <mode>            Default mode for the selected kind
   --base-url <url>         Override APP_BASE_URL / ENTITY_OPS_BASE_URL
   --username <name>        Override ENTITY_OPS_USERNAME
   --password <value>       Override ENTITY_OPS_PASSWORD
@@ -69,7 +70,8 @@ function printReport(report) {
   for (const item of report.items) {
     const status = item.ok ? item.action : "error";
     const target = item.entityId ? ` (${item.entityId})` : "";
-    console.log(`- [${status}] ${item.entityType} :: ${item.label}${target}`);
+    const scope = item.kind === "display_mode" ? "display_mode" : (item.entityType || item.kind);
+    console.log(`- [${status}] ${scope} :: ${item.label}${target}`);
 
     if (item.reason) {
       console.log(`  reason: ${item.reason}`);
@@ -87,6 +89,18 @@ function printReport(report) {
 
     if (Array.isArray(item.deletedIds) && item.deletedIds.length > 0) {
       console.log(`  deleted: ${item.deletedIds.join(", ")}`);
+    }
+
+    if (item.currentMode) {
+      console.log(`  currentMode: ${item.currentMode}`);
+    }
+
+    if (item.filePath) {
+      console.log(`  file: ${item.filePath}`);
+    }
+
+    if (item.message) {
+      console.log(`  message: ${item.message}`);
     }
   }
 }
@@ -114,6 +128,7 @@ async function main() {
   const inputText = await fs.readFile(inputPath, "utf8");
   const document = parseEntityOpsDocument(inputText, inputPath);
   const operations = normalizeEntityOperations(document, {
+    defaultKind: args.kind,
     defaultEntityType: args.entityType,
     defaultMode: args.mode,
     defaultChangeIntent: args.changeIntent,
