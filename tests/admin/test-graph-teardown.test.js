@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
+import { AUDIT_EVENT_KEYS, ENTITY_TYPES } from "../../lib/content-core/content-types.js";
 import { evaluateTestGraphTeardown, executeTestGraphTeardown } from "../../lib/admin/test-graph-teardown.js";
 
 function makeAggregate(entityType, entityId, overrides = {}) {
@@ -127,7 +127,7 @@ test("evaluateTestGraphTeardown allows a pure test-marked published graph", asyn
   assert.equal(result.allowed, true);
   assert.deepEqual(
     result.deletePlan.map((item) => item.entityId),
-    ["page_test_1", "case_test_1", "service_test_1", "media_test_1"]
+    ["page_test_1", "service_test_1", "case_test_1", "media_test_1"]
   );
 });
 
@@ -229,6 +229,56 @@ test("evaluateTestGraphTeardown allows teardown when only non-test media survive
   assert.equal(result.survivingRefs[0].entityId, "media_live_1");
 });
 
+test("evaluateTestGraphTeardown supports equipment as a first-class test graph root", async () => {
+  const equipment = makeAggregate(ENTITY_TYPES.EQUIPMENT, "equipment_test_1", {
+    activePublishedRevisionId: "rev_equipment_pub",
+    latestState: "published",
+    latestPayload: {
+      title: "Test equipment",
+      primaryMediaAssetId: "media_test_1"
+    }
+  });
+  const media = makeAggregate(ENTITY_TYPES.MEDIA_ASSET, "media_test_1", {
+    activePublishedRevisionId: "rev_media_pub",
+    latestState: "published",
+    latestPayload: {
+      title: "Test media",
+      storageKey: "media/test-equipment.png"
+    }
+  });
+  const deps = buildDeps({
+    aggregates: {
+      equipment_test_1: equipment,
+      media_test_1: media
+    },
+    latestCards: {
+      [ENTITY_TYPES.PAGE]: [],
+      [ENTITY_TYPES.SERVICE]: [],
+      [ENTITY_TYPES.EQUIPMENT]: [makeLatestCard(equipment)],
+      [ENTITY_TYPES.CASE]: [],
+      [ENTITY_TYPES.GALLERY]: []
+    },
+    publishedCards: {
+      [ENTITY_TYPES.PAGE]: [],
+      [ENTITY_TYPES.SERVICE]: [],
+      [ENTITY_TYPES.EQUIPMENT]: [makePublishedCard(equipment)],
+      [ENTITY_TYPES.CASE]: [],
+      [ENTITY_TYPES.GALLERY]: []
+    }
+  });
+
+  const result = await evaluateTestGraphTeardown({
+    entityType: ENTITY_TYPES.EQUIPMENT,
+    entityId: "equipment_test_1"
+  }, deps);
+
+  assert.equal(result.allowed, true);
+  assert.deepEqual(
+    result.deletePlan.map((item) => item.entityId),
+    ["equipment_test_1", "media_test_1"]
+  );
+});
+
 test("executeTestGraphTeardown deactivates published truth and deletes in dependency-aware order", async () => {
   const operations = [];
   const deleteCalls = [];
@@ -292,6 +342,9 @@ test("executeTestGraphTeardown deactivates published truth and deletes in depend
     },
     deleteMediaFile: async (storageKey) => {
       operations.push(`storage:${storageKey}`);
+    },
+    recordDestructiveEvent: async (input) => {
+      operations.push(`event:${input.auditEventKey}:${input.target.entityId}:${input.outcome}`);
     }
   });
 
@@ -303,6 +356,7 @@ test("executeTestGraphTeardown deactivates published truth and deletes in depend
     "delete:page_test_1",
     "delete:service_test_1",
     "delete:media_test_1",
+    `event:${AUDIT_EVENT_KEYS.TEST_GRAPH_TEARDOWN_EXECUTED}:page_test_1:executed`,
     "storage:media/test.png"
   ]);
   assert.deepEqual(deleteCalls, [

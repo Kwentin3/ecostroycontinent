@@ -81,7 +81,8 @@ export async function POST(request, { params }, deps = {}) {
       results.push(await routeDeps.deleteEntityWithSafety({
         entityType,
         entityId,
-        testOnly
+        testOnly,
+        actorUserId: user.id
       }));
     }
 

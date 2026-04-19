@@ -6,9 +6,9 @@ import { ConfirmActionForm } from "../../../../../../../components/admin/Confirm
 import styles from "../../../../../../../components/admin/admin-ui.module.css";
 import {
   evaluateTestGraphTeardown,
-  getEntityAdminHref,
   isTestGraphTeardownEntityTypeSupported
 } from "../../../../../../../lib/admin/test-graph-teardown.js";
+import { getEntityAdminHref } from "../../../../../../../lib/admin/entity-links.js";
 import { normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
 import { requireEditorUser } from "../../../../../../../lib/admin/page-helpers.js";
 import { assertEntityType } from "../../../../../../../lib/content-core/service.js";

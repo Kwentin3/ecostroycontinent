@@ -11,8 +11,8 @@ test("entity editor exposes new quarantine controls and keeps legacy delete path
 
   assert.match(source, /getRemovalMarkHref/);
   assert.match(source, /getRemovalUnmarkHref/);
-  assert.match(source, /Центр очистки/);
-  assert.match(source, /Безопасно убрать \(legacy\)/);
+  assert.match(source, /getRemovalSweepHref\(\)/);
+  assert.match(source, /getEntityDeletePreviewHref/);
 });
 
 test("media workspace and collection overlay expose removal quarantine controls", () => {
@@ -21,7 +21,7 @@ test("media workspace and collection overlay expose removal quarantine controls"
 
   assert.match(workspaceSource, /getRemovalMarkHref\("media_asset", item\.id\)/);
   assert.match(workspaceSource, /getRemovalUnmarkHref\("media_asset", item\.id\)/);
-  assert.match(workspaceSource, /Центр очистки/);
+  assert.match(workspaceSource, /getRemovalSweepHref\(\)/);
   assert.match(collectionSource, /getRemovalMarkHref\("gallery", selectedCollection\.id\)/);
   assert.match(collectionSource, /getRemovalUnmarkHref\("gallery", selectedCollection\.id\)/);
   assert.match(collectionSource, /!item\.markedForRemovalAt \|\| fields\.assetIds\.includes\(item\.id\)/);
@@ -34,6 +34,8 @@ test("cleanup center is wired into admin navigation and purge flow", () => {
 
   assert.match(shellSource, /\/admin\/removal-sweep/);
   assert.match(pageSource, /listRemovalSweepComponents/);
+  assert.match(pageSource, /listRecentDestructiveEvents/);
+  assert.match(pageSource, /Destructive ledger/);
   assert.match(pageSource, /\/api\/admin\/removal-sweep\/purge/);
   assert.match(routeSource, /executeRemovalSweep/);
   assert.match(routeSource, /userIsSuperadmin/);

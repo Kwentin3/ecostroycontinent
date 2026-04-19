@@ -134,6 +134,44 @@ test("evaluateLiveDeactivation allows an ordinary published media asset with no 
   assert.ok(result.routeEffects.routeOutcome.includes("404"));
 });
 
+test("evaluateLiveDeactivation allows published equipment with no incoming refs", async () => {
+  const aggregate = makeAggregate(ENTITY_TYPES.EQUIPMENT, "equipment_live_1", {
+    activePublishedRevisionId: "rev_equipment_live_1",
+    latestPayload: {
+      slug: "excavator-210",
+      title: "Excavator 210"
+    }
+  });
+
+  const result = await evaluateLiveDeactivation(
+    {
+      entityType: ENTITY_TYPES.EQUIPMENT,
+      entityId: "equipment_live_1"
+    },
+    buildDeps({
+      aggregate,
+      latestCards: {
+        [ENTITY_TYPES.PAGE]: [],
+        [ENTITY_TYPES.SERVICE]: [],
+        [ENTITY_TYPES.EQUIPMENT]: [makeLatestCard(aggregate)],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      },
+      publishedCards: {
+        [ENTITY_TYPES.PAGE]: [],
+        [ENTITY_TYPES.SERVICE]: [],
+        [ENTITY_TYPES.EQUIPMENT]: [makePublishedCard(aggregate)],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      }
+    })
+  );
+
+  assert.equal(result.allowed, true);
+  assert.equal(result.routeEffects.routePath, null);
+  assert.match(result.routeEffects.listImpact, /lookup техники/i);
+});
+
 test("evaluateLiveDeactivation refuses when surviving published page points to service", async () => {
   const service = makeAggregate(ENTITY_TYPES.SERVICE, "service_live_1", {
     activePublishedRevisionId: "rev_service_live_1",
@@ -413,7 +451,7 @@ test("evaluateLiveDeactivation refuses test-marked published root", async () => 
   assert.ok(result.blockers.includes("Тестовый опубликованный объект нужно убирать через удаление тестового графа."));
 });
 
-test("executeLiveDeactivation clears published pointer and records audit evidence", async () => {
+test("executeLiveDeactivation clears published pointer and records forensic evidence", async () => {
   const operations = [];
   const result = await executeLiveDeactivation({
     entityType: ENTITY_TYPES.SERVICE,
@@ -437,8 +475,8 @@ test("executeLiveDeactivation clears published pointer and records audit evidenc
     clearEntityActivePublishedRevision: async (entityId, actorUserId) => {
       operations.push(`clear:${entityId}:${actorUserId}`);
     },
-    recordAuditEvent: async (input) => {
-      operations.push(`audit:${input.eventKey}:${input.entityId}`);
+    recordDestructiveEvent: async (input) => {
+      operations.push(`event:${input.auditEventKey}:${input.target.entityId}:${input.outcome}`);
     }
   });
 
@@ -446,6 +484,6 @@ test("executeLiveDeactivation clears published pointer and records audit evidenc
   assert.deepEqual(result.revalidationPaths, ["/services/service-live", "/services"]);
   assert.deepEqual(operations, [
     "clear:service_live_1:user_1",
-    `audit:${AUDIT_EVENT_KEYS.LIVE_DEACTIVATED}:service_live_1`
+    `event:${AUDIT_EVENT_KEYS.LIVE_DEACTIVATED}:service_live_1:executed`
   ]);
 });

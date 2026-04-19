@@ -46,9 +46,6 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
 
   const sourceHref = `/admin/entities/${normalizedType}/${entityId}`;
   const failureRedirectTo = `/admin/entities/${normalizedType}/${entityId}/normalize-test-fixture`;
-  // This bridge is only for already-existing legacy fixtures that were created before
-  // the explicit `test__...` naming canon. New temporary entities must be marked as test data
-  // at creation time instead of relying on post-hoc normalization.
 
   return (
     <AdminShell
@@ -68,9 +65,9 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
 
         <section className={styles.panel}>
           <p className={styles.helpText}>
-            Это корректирующий экран только для подтверждённых устаревших тестовых наборов. Он меняет сохранённую метку на
-            <code> agent_test </code>, чтобы существующий путь снятия мог честно рассматривать объект как тестовый.
-            Это не удаление, не снятие с публикации и не обычная метка.
+            Это корректирующий экран только для подтвержденных устаревших тестовых наборов. Он меняет сохраненную метку происхождения на
+            <code> agent_test </code>,
+            чтобы существующий путь безопасного удаления мог честно считать объект тестовым. Это не удаление, не снятие с публикации и не обход дисциплины публикации.
           </p>
           <div className={styles.badgeRow}>
             <span className={`${styles.badge} ${evaluation.allowed ? styles.mediaBadgesuccess : styles.mediaBadgedanger}`}>
@@ -79,13 +76,13 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
             {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
             {evaluation.root?.hasReviewRevision ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Есть остаток проверки</span> : null}
             <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>
-              marker: {evaluation.root?.creationOrigin || "null"} → {evaluation.root?.resultingCreationOrigin || "agent_test"}
+              Метка: {evaluation.root?.creationOrigin || "null"} → {evaluation.root?.resultingCreationOrigin || "agent_test"}
             </span>
           </div>
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Dry-run</h3>
+          <h3>Предпросмотр операции</h3>
           <ul className={styles.stack}>
             <li className={styles.timelineItem}>
               <strong>Объект</strong>
@@ -97,11 +94,11 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
             </li>
             <li className={styles.timelineItem}>
               <strong>Что изменится</strong>
-              <p className={styles.mutedText}>После операции объект станет помеченным как тестовый, и в редакторском интерфейсе появится вход в `Удалить тестовый граф`, если остальные условия тоже соблюдены.</p>
+              <p className={styles.mutedText}>После операции объект станет помеченным как тестовый, и в операторском интерфейсе станет доступен путь удаления тестового графа, если остальные условия безопасности тоже выполнены.</p>
             </li>
             <li className={styles.timelineItem}>
               <strong>Что не изменится</strong>
-              <p className={styles.mutedText}>Нормализация сама по себе не удаляет объект, не снимает остаток проверки и не обходит правила безопасности для опубликованных и ссылочных данных.</p>
+              <p className={styles.mutedText}>Нормализация сама по себе не удаляет объект, не снимает его с публикации, не закрывает остатки проверки и не убирает publish-обязательства.</p>
             </li>
           </ul>
         </section>
@@ -149,9 +146,9 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Связанные Page / Service / Case</h3>
+          <h3>Связанные сущности с собственным маршрутом</h3>
           {evaluation.relatedTargets.length === 0 ? (
-            <p className={styles.mutedText}>Связанных route-owning сущностей в этом срезе не найдено.</p>
+            <p className={styles.mutedText}>Связанных страниц, услуг и кейсов в этом срезе не найдено.</p>
           ) : (
             <ul className={styles.stack}>
               {evaluation.relatedTargets.map((target) => (
@@ -178,7 +175,7 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
 
         {evaluation.warnings.length > 0 ? (
           <section className={styles.statusPanelWarning}>
-            <strong>Что всё ещё может блокировать teardown</strong>
+            <strong>Что еще может заблокировать последующее удаление</strong>
             <ul className={styles.stack}>
               {evaluation.warnings.map((warning) => (
                 <li key={warning} className={styles.timelineItem}>{warning}</li>
@@ -202,11 +199,11 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
           <section className={styles.panel}>
             <h3>Подтверждение</h3>
             <p className={styles.helpText}>
-              Используйте это только для подтверждённых устаревших тестовых наборов. После пометки объект войдёт в путь снятия для тестовых данных, но не будет удалён автоматически.
+              Используйте это только для подтвержденных устаревших тестовых наборов. После пометки объект войдет в тестовый контур удаления, но не будет удален автоматически.
             </p>
             <ConfirmActionForm
               action={`/api/admin/entities/${normalizedType}/${entityId}/normalize-test-fixture`}
-              confirmMessage="Пометить объект как устаревший тестовый набор? Это изменит возможность снятия и запишется в аудит."
+              confirmMessage="Пометить объект как устаревший тестовый набор? Это изменит путь безопасного удаления и запишется в форензик-журнал."
               className={styles.inlineActions}
             >
               <input type="hidden" name="redirectTo" value={sourceHref} />

@@ -63,16 +63,16 @@ test("mark removal route marks supported entity and records audit evidence", asy
 
 test("mark removal route rejects unsupported entity types with readable error", async () => {
   const response = await markRemovalPost(
-    buildRequest("http://localhost/api/admin/entities/page/entity_1/mark-removal", {
-      failureRedirectTo: "/admin/entities/page/entity_1"
+    buildRequest("http://localhost/api/admin/entities/global_settings/entity_1/mark-removal", {
+      failureRedirectTo: "/admin/entities/global_settings/entity_1"
     }),
-    { params: { entityType: "page", entityId: "entity_1" } },
+    { params: { entityType: "global_settings", entityId: "entity_1" } },
     {
       requireRouteUser: async () => ({ user: { id: "user_editor", role: "seo_manager" }, response: null }),
       userCanEditContent: () => true,
       findEntityById: async () => ({
         id: "entity_1",
-        entityType: "page",
+        entityType: "global_settings",
         markedForRemovalAt: null
       }),
       markEntityForRemoval: async () => {

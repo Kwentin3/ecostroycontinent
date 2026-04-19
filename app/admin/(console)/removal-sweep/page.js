@@ -1,11 +1,13 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 import { AdminShell } from "../../../../components/admin/AdminShell";
 import { ConfirmActionForm } from "../../../../components/admin/ConfirmActionForm";
 import styles from "../../../../components/admin/admin-ui.module.css";
+import { getEntityAdminHref } from "../../../../lib/admin/entity-links.js";
 import { requireEditorUser } from "../../../../lib/admin/page-helpers.js";
 import { listRemovalSweepComponents } from "../../../../lib/admin/removal-sweep-analysis.js";
 import { getRemovalSweepHref } from "../../../../lib/admin/removal-quarantine.js";
+import { listRecentDestructiveEvents } from "../../../../lib/content-ops/destructive-forensics.js";
 import { getEntityTypeLabel, normalizeLegacyCopy } from "../../../../lib/ui-copy.js";
 import { userIsSuperadmin } from "../../../../lib/auth/roles.js";
 
@@ -30,6 +32,95 @@ function renderItemList(items = [], emptyLabel = "Ничего не найден
           ) : null}
         </li>
       ))}
+    </ul>
+  );
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "Дата не указана";
+  }
+
+  const parsed = Date.parse(value);
+
+  if (!Number.isFinite(parsed)) {
+    return "Дата не указана";
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Moscow"
+  }).format(new Date(parsed));
+}
+
+function getOperationLabel(operationKind) {
+  switch (operationKind) {
+    case "safe_delete":
+      return "Безопасное удаление";
+    case "live_deactivation":
+      return "Снятие с live";
+    case "test_graph_teardown":
+      return "Удаление тестового графа";
+    case "removal_sweep":
+      return "Очистка помеченного графа";
+    default:
+      return operationKind || "Destructive operation";
+  }
+}
+
+function getOutcomeLabel(outcome) {
+  if (outcome === "executed") {
+    return "Выполнено";
+  }
+
+  if (outcome === "blocked") {
+    return "Заблокировано";
+  }
+
+  return outcome || "Зафиксировано";
+}
+
+function renderDestructiveEvents(events = []) {
+  if (events.length === 0) {
+    return <p className={styles.mutedText}>Событий destructive ledger пока нет.</p>;
+  }
+
+  return (
+    <ul className={styles.stack}>
+      {events.map((event) => {
+        const rootHref = event.rootEntityType && event.rootEntityId
+          ? getEntityAdminHref(event.rootEntityType, event.rootEntityId)
+          : null;
+
+        return (
+          <li key={event.id} className={styles.timelineItem}>
+            <div className={styles.cockpitCoverageSummary}>
+              <div>
+                <strong>{event.summary}</strong>
+                <p className={styles.mutedText}>
+                  {getOperationLabel(event.operationKind)} • {getOutcomeLabel(event.outcome)} • {formatDateTime(event.createdAt)}
+                </p>
+              </div>
+              <span className={`${styles.badge} ${event.outcome === "executed" ? styles.mediaBadgesuccess : styles.mediaBadgewarning}`}>
+                {getOutcomeLabel(event.outcome)}
+              </span>
+            </div>
+            <p className={styles.helpText}>
+              Корень: {event.rootEntityLabel || event.rootEntityId || "не указан"}
+              {event.rootEntityType ? ` (${getEntityTypeLabel(event.rootEntityType)})` : ""}
+            </p>
+            {rootHref ? (
+              <div className={styles.inlineActions}>
+                <Link href={rootHref} className={styles.secondaryButton}>Открыть корень</Link>
+              </div>
+            ) : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -109,7 +200,10 @@ function renderComponent(component, { canPurge }) {
 export default async function RemovalSweepPage({ searchParams }) {
   const user = await requireEditorUser();
   const query = await searchParams;
-  const components = await listRemovalSweepComponents();
+  const [components, recentEvents] = await Promise.all([
+    listRemovalSweepComponents(),
+    listRecentDestructiveEvents({ limit: 12 })
+  ]);
   const readyComponents = components.filter((component) => component.verdict === "ready");
   const blockedComponents = components.filter((component) => component.verdict !== "ready");
 
@@ -130,7 +224,7 @@ export default async function RemovalSweepPage({ searchParams }) {
         <section className={styles.panel}>
           <h3>Новый cleanup-контур</h3>
           <p className={styles.helpText}>
-            Здесь собираются все объекты, помеченные на удаление. Система строит связанный граф, показывает внешние блокеры и позволяет очистить только те компоненты, которые действительно готовы.
+            Здесь собираются все объекты, помеченные на удаление. Система строит связанный граф, показывает внешние блокеры и позволяет очищать только те компоненты, которые действительно готовы.
           </p>
           <div className={styles.badgeRow}>
             <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Готово: {readyComponents.length}</span>
@@ -139,12 +233,20 @@ export default async function RemovalSweepPage({ searchParams }) {
           </div>
         </section>
 
+        <section className={styles.panel}>
+          <h3>Destructive ledger</h3>
+          <p className={styles.helpText}>
+            Здесь видны последние blocked и executed destructive operations. Этот журнал переживает hard delete и помогает восстановить картину после очистки.
+          </p>
+          {renderDestructiveEvents(recentEvents)}
+        </section>
+
         {components.length === 0 ? (
           <section className={styles.panel}>
             <div className={styles.emptyState}>
               <p className={styles.mutedText}>Сейчас нет объектов, помеченных на удаление.</p>
               <p className={styles.helpText}>
-                Пометьте услугу, кейс, медиафайл или коллекцию на экране самой сущности, и она появится здесь со всем связанным графом.
+                Пометьте услугу, кейс, технику, медиафайл, коллекцию или страницу на экране самой сущности, и она появится здесь вместе со связанным графом.
               </p>
             </div>
           </section>
