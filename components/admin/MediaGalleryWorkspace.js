@@ -23,19 +23,19 @@ import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
 
 const FILTERS = [
-  { key: "test-only", label: "РўРѕР»СЊРєРѕ С‚РµСЃС‚РѕРІС‹Рµ" },
-  { key: "all", label: "Р’СЃРµ" },
-  { key: "recent", label: "РќРµРґР°РІРЅРёРµ" },
-  { key: "mine", label: "РњРѕРё" },
-  { key: "missing-alt", label: "РќРµС‚ Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅРѕРіРѕ С‚РµРєСЃС‚Р°" },
-  { key: "orphan", label: "РЎРёСЂРѕС‚С‹" },
-  { key: "used", label: "РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ" },
-  { key: "unused", label: "РќРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ" },
-  { key: "draft", label: "Р§РµСЂРЅРѕРІРёРєРё" },
-  { key: "review", label: "РќР° РїСЂРѕРІРµСЂРєРµ" },
-  { key: "published", label: "РћРїСѓР±Р»РёРєРѕРІР°РЅРѕ" },
-  { key: "archived", label: "Р’ Р°СЂС…РёРІРµ" },
-  { key: "broken", label: "РџСЂРѕР±Р»РµРјРЅС‹Рµ" }
+  { key: "test-only", label: "Только тестовые" },
+  { key: "all", label: "Все" },
+  { key: "recent", label: "Недавние" },
+  { key: "mine", label: "Мои" },
+  { key: "missing-alt", label: "Нет альтернативного текста" },
+  { key: "orphan", label: "Сироты" },
+  { key: "used", label: "Используется" },
+  { key: "unused", label: "Не используется" },
+  { key: "draft", label: "Черновики" },
+  { key: "review", label: "На проверке" },
+  { key: "published", label: "Опубликовано" },
+  { key: "archived", label: "В архиве" },
+  { key: "broken", label: "Проблемные" }
 ];
 
 const STATUS_SORT_ORDER = {
@@ -59,36 +59,36 @@ function buildTitleFromFilename(filename) {
     .replace(/\s+/g, " ")
     .trim();
 
-  return base || "РњРµРґРёР°С„Р°Р№Р»";
+  return base || "Медиафайл";
 }
 
 function formatBytes(value) {
   const bytes = Number(value || 0);
 
   if (!bytes) {
-    return "Р Р°Р·РјРµСЂ РЅРµ СѓРєР°Р·Р°РЅ";
+    return "Размер не указан";
   }
 
   if (bytes < 1024) {
-    return `${bytes} Р‘`;
+    return `${bytes} Б`;
   }
 
   if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} РљР‘`;
+    return `${(bytes / 1024).toFixed(1)} КБ`;
   }
 
-  return `${(bytes / (1024 * 1024)).toFixed(1)} РњР‘`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
 function formatDate(value) {
   if (!value) {
-    return "Р”Р°С‚Р° РЅРµ СѓРєР°Р·Р°РЅР°";
+    return "Дата не указана";
   }
 
   const parsed = Date.parse(value);
 
   if (!Number.isFinite(parsed)) {
-    return "Р”Р°С‚Р° РЅРµ СѓРєР°Р·Р°РЅР°";
+    return "Дата не указана";
   }
 
   return new Intl.DateTimeFormat("ru-RU", {
@@ -153,21 +153,21 @@ function matchesQuery(item, normalizedQuery) {
 
 function getActiveCollectionFilterLabel(collectionFilterId, collections) {
   if (!collectionFilterId) {
-    return "Р’СЃРµ РєРѕР»Р»РµРєС†РёРё";
+    return "Все коллекции";
   }
 
   if (collectionFilterId === COLLECTION_FILTER_ORPHAN) {
-    return "Р‘РµР· РєРѕР»Р»РµРєС†РёРё";
+    return "Без коллекции";
   }
 
-  return collections.find((item) => item.id === collectionFilterId)?.title || "Р’С‹Р±СЂР°РЅРЅР°СЏ РєРѕР»Р»РµРєС†РёСЏ";
+  return collections.find((item) => item.id === collectionFilterId)?.title || "Выбранная коллекция";
 }
 
 function summarizeOverlayCollections(collectionIds, collections) {
   const selected = collections.filter((item) => collectionIds.includes(item.id));
 
   if (selected.length === 0) {
-    return "РќРµ СЃРѕСЃС‚РѕРёС‚ РІ РєРѕР»Р»РµРєС†РёСЏС…";
+    return "Не состоит в коллекциях";
   }
 
   if (selected.length === 1) {
@@ -220,30 +220,30 @@ function getToneForItem(item) {
 
 function getWarningNote(item) {
   if (item.brokenBinary) {
-    return "Р‘РёРЅР°СЂРЅРёРє РЅРµ С‡РёС‚Р°РµС‚СЃСЏ С‡РµСЂРµР· РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°.";
+    return "Бинарник не читается через предпросмотр администратора.";
   }
 
   if (item.archived) {
-    return "РљР°СЂС‚РѕС‡РєР° СѓР¶Рµ РІ Р°СЂС…РёРІРµ Рё РЅРµ РґРѕР»Р¶РЅР° СѓС‡Р°СЃС‚РІРѕРІР°С‚СЊ РІ РЅРѕРІС‹С… РїСЂРёРІСЏР·РєР°С…, РїРѕРєР° РІС‹ РЅРµ РІРµСЂРЅС‘С‚Рµ РµС‘ РІ Р°РєС‚РёРІРЅС‹Р№ СЃРїРёСЃРѕРє.";
+    return "Карточка уже в архиве и не должна участвовать в новых привязках, пока вы не вернёте её в активный список.";
   }
 
   if (item.publishedRevisionNumber) {
-    return `РЈ РєР°СЂС‚РѕС‡РєРё РµСЃС‚СЊ РґРµР№СЃС‚РІСѓСЋС‰Р°СЏ РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅР°СЏ РІРµСЂСЃРёСЏ (СЂРµРІРёР·РёСЏ #${item.publishedRevisionNumber}). РЈРґР°Р»РµРЅРёРµ Рё РїСЂСЏРјС‹Рµ РїСЂР°РІРєРё С‚РµРїРµСЂСЊ РёРґСѓС‚ С‡РµСЂРµР· РѕС‚РґРµР»СЊРЅСѓСЋ РїСЂРѕРІРµСЂРєСѓ РїРµСЂРµРґ РґРµР№СЃС‚РІРёРµРј.`;
+    return `У карточки есть действующая опубликованная версия (ревизия #${item.publishedRevisionNumber}). Удаление и прямые правки теперь идут через отдельную проверку перед действием.`;
   }
 
   if (item.missingAlt) {
-    return "РќСѓР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ alt, С‡С‚РѕР±С‹ РЅРµ РѕСЃС‚Р°РІР»СЏС‚СЊ Р°СЃСЃРµС‚ СЃС‹СЂС‹Рј.";
+    return "Нужно добавить alt, чтобы не оставлять ассет сырым.";
   }
 
   if (item.orphaned) {
-    return "РљР°СЂС‚РѕС‡РєР° РїРѕРєР° СЃРёСЂРѕС‚Р°: РµС‘ РјРѕР¶РЅРѕ РѕСЃС‚Р°РІРёС‚СЊ РѕС‚РґРµР»СЊРЅС‹Рј Р°СЃСЃРµС‚РѕРј РёР»Рё Р±С‹СЃС‚СЂРѕ РІРєР»СЋС‡РёС‚СЊ РІ РѕРґРЅСѓ РёР· РєРѕР»Р»РµРєС†РёР№.";
+    return "Карточка пока сирота: её можно оставить отдельным ассетом или быстро включить в одну из коллекций.";
   }
 
   if (!item.ownershipNote) {
-    return "РЎС‚РѕРёС‚ РґРѕР±Р°РІРёС‚СЊ Р·Р°РјРµС‚РєСѓ Рѕ РїСЂР°РІР°С…, С‡С‚РѕР±С‹ РЅРµ РїРѕС‚РµСЂСЏС‚СЊ РїСЂРѕРёСЃС…РѕР¶РґРµРЅРёРµ С„Р°Р№Р»Р°.";
+    return "Стоит добавить заметку о правах, чтобы не потерять происхождение файла.";
   }
 
-  return "РљР°СЂС‚РѕС‡РєР° РІС‹РіР»СЏРґРёС‚ СЂР°Р±РѕС‡РµР№. РџСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РѕС‚РєСЂРѕР№С‚Рµ СЂР°СЃС€РёСЂРµРЅРЅРѕРµ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РёР»Рё РєРѕР»Р»РµРєС†РёРё.";
+  return "Карточка выглядит рабочей. При необходимости откройте расширенное редактирование или коллекции.";
 }
 
 function getGridColumns(nodes) {
@@ -303,42 +303,42 @@ function getImageEditAvailability({ mode, item, file }) {
   if (mode === "create") {
     return {
       canEdit: Boolean(file),
-      reason: file ? "" : "РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ РґР»СЏ Р·Р°РіСЂСѓР·РєРё."
+      reason: file ? "" : "Сначала выберите изображение для загрузки."
     };
   }
 
   if (!item) {
     return {
       canEdit: false,
-      reason: "РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ РєР°СЂС‚РѕС‡РєСѓ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ."
+      reason: "Сначала выберите карточку для редактирования."
     };
   }
 
   if (item.archived) {
     return {
       canEdit: false,
-      reason: "РђСЂС…РёРІРЅС‹Рµ Р°СЃСЃРµС‚С‹ СЃРЅР°С‡Р°Р»Р° РЅСѓР¶РЅРѕ РІРµСЂРЅСѓС‚СЊ РІ Р°РєС‚РёРІРЅС‹Р№ СЃРїРёСЃРѕРє."
+      reason: "Архивные ассеты сначала нужно вернуть в активный список."
     };
   }
 
   if (item.publishedRevisionNumber) {
     return {
       canEdit: false,
-      reason: "Р”Р»СЏ РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅС‹С… РјРµРґРёР° РїСЂСЏРјРѕРµ РїРµСЂРµР·Р°РїРёСЃС‹РІР°РЅРёРµ Р·Р°РїСЂРµС‰РµРЅРѕ. Р”Р»СЏ РЅРёС… РЅСѓР¶РµРЅ РѕС‚РґРµР»СЊРЅС‹Р№ СЃС†РµРЅР°СЂРёР№ РїСЂР°РІРѕРє."
+      reason: "Для опубликованных медиа прямое перезаписывание запрещено. Для них нужен отдельный сценарий правок."
     };
   }
 
   if (item.statusKey !== "draft") {
     return {
       canEdit: false,
-      reason: "РР·РѕР±СЂР°Р¶РµРЅРёРµ РјРѕР¶РЅРѕ РїСЂР°РІРёС‚СЊ С‚РѕР»СЊРєРѕ РІ С‡РµСЂРЅРѕРІРёРєРµ."
+      reason: "Изображение можно править только в черновике."
     };
   }
 
   if (!item.hasPreview && mode === "edit") {
     return {
       canEdit: false,
-      reason: "РќРµС‚ РґРѕСЃС‚СѓРїРЅРѕРіРѕ РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂР°, РїРѕСЌС‚РѕРјСѓ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ СЃРµР№С‡Р°СЃ РЅРµРґРѕСЃС‚СѓРїРЅРѕ."
+      reason: "Нет доступного предпросмотра, поэтому редактирование изображения сейчас недоступно."
     };
   }
 
@@ -371,9 +371,9 @@ function MediaInspector({
   if (!item) {
     return (
       <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
-        <h3 className={styles.mediaInspectorTitle}>РљР°СЂС‚РѕС‡РєР° РЅРµ РІС‹Р±СЂР°РЅР°</h3>
+        <h3 className={styles.mediaInspectorTitle}>Карточка не выбрана</h3>
         <p className={styles.helpText}>
-          Р’С‹Р±РµСЂРёС‚Рµ РєР°СЂС‚РѕС‡РєСѓ РІ РјРµРґРёР°С‚РµРєРµ, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РєСЂСѓРїРЅРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ, СЃРёРіРЅР°Р»С‹, РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ Рё СЃРѕСЃС‚РѕСЏРЅРёРµ РєРѕР»Р»РµРєС†РёР№.
+          Выберите карточку в медиатеке, чтобы увидеть крупное изображение, сигналы, использование и состояние коллекций.
         </p>
       </aside>
     );
@@ -383,69 +383,69 @@ function MediaInspector({
     <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
       <div className={styles.mediaInspectorHeader}>
         <div className={styles.stack}>
-          <p className={styles.eyebrow}>РРЅСЃРїРµРєС‚РѕСЂ</p>
+          <p className={styles.eyebrow}>Инспектор</p>
           <h3 className={styles.mediaInspectorTitle}>{item.title}</h3>
-          <p className={styles.helpText}>{item.originalFilename || "РРјСЏ С„Р°Р№Р»Р° РїРѕРєР° РЅРµ Р·Р°РґР°РЅРѕ"}</p>
+          <p className={styles.helpText}>{item.originalFilename || "Имя файла пока не задано"}</p>
         </div>
         <button type="button" className={styles.primaryButton} onClick={onEdit}>
-          Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ
+          Редактировать
         </button>
       </div>
 
       <div className={styles.mediaInspectorPreview}>
         {item.hasPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "РџСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ"} />
+          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
         ) : (
-          <div className={styles.mediaInspectorPlaceholder}>РќРµС‚ РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂР°</div>
+          <div className={styles.mediaInspectorPlaceholder}>Нет предпросмотра</div>
         )}
       </div>
 
       <div className={styles.badgeRow}>
-        {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Р•СЃС‚СЊ РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅР°СЏ РІРµСЂСЃРёСЏ</span> : null}
+        {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
-        {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>РўРµСЃС‚РѕРІС‹Рµ</span> : null}
-        {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>РџРѕРјРµС‡РµРЅРѕ РЅР° СѓРґР°Р»РµРЅРёРµ</span> : null}
+        {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
+        {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
         {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
         <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
-          {item.missingAlt ? "РќРµС‚ Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅРѕРіРѕ С‚РµРєСЃС‚Р°" : "РђР»СЊС‚РµСЂРЅР°С‚РёРІРЅС‹Р№ С‚РµРєСЃС‚ РµСЃС‚СЊ"}
+          {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст есть"}
         </span>
         <span className={`${styles.badge} ${item.orphaned ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
-          {item.orphaned ? "РЎРёСЂРѕС‚Р°" : item.collectionShortLabel}
+          {item.orphaned ? "Сирота" : item.collectionShortLabel}
         </span>
         <span className={`${styles.badge} ${item.usageCount ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
           {item.whereUsedLabel}
         </span>
-        {item.brokenBinary ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>РЎР»РѕРјР°РЅ</span> : null}
+        {item.brokenBinary ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Сломан</span> : null}
       </div>
 
       <dl className={styles.mediaMetaList}>
         <div>
-          <dt>Р¤РѕСЂРјР°С‚</dt>
-          <dd>{item.mimeType || "РќРµ СѓРєР°Р·Р°РЅ"}</dd>
+          <dt>Формат</dt>
+          <dd>{item.mimeType || "Не указан"}</dd>
         </div>
         <div>
-          <dt>Р Р°Р·РјРµСЂ</dt>
+          <dt>Размер</dt>
           <dd>{formatBytes(item.sizeBytes)}</dd>
         </div>
         <div>
-          <dt>РћР±РЅРѕРІР»РµРЅРѕ</dt>
+          <dt>Обновлено</dt>
           <dd>{formatDate(item.updatedAt)}</dd>
         </div>
         <div>
-          <dt>Р—Р°РіСЂСѓР·РёР»</dt>
-          <dd>{item.uploadedBy || "РќРµ СѓРєР°Р·Р°РЅРѕ"}</dd>
+          <dt>Загрузил</dt>
+          <dd>{item.uploadedBy || "Не указано"}</dd>
         </div>
       </dl>
 
       <section className={styles.mediaInspectorSection}>
-        <h4>Р‘С‹СЃС‚СЂС‹Рµ СЃРёРіРЅР°Р»С‹</h4>
+        <h4>Быстрые сигналы</h4>
         <p className={styles.helpText}>{getWarningNote(item)}</p>
         {item.caption ? <p className={styles.mediaSnippet}>{item.caption}</p> : null}
       </section>
 
       <section className={styles.mediaInspectorSection}>
-        <h4>РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ</h4>
+        <h4>Использование</h4>
         <dl className={styles.mediaMetaList}>
           {item.usageSummaryItems.map((summaryItem) => (
             <div key={summaryItem.key}>
@@ -457,10 +457,10 @@ function MediaInspector({
       </section>
 
       <section className={styles.mediaInspectorSection}>
-        <h4>РљРѕР»Р»РµРєС†РёРё</h4>
+        <h4>Коллекции</h4>
         {item.collectionEntries.length === 0 ? (
           <p className={styles.helpText}>
-            РљР°СЂС‚РѕС‡РєР° РїРѕРєР° РЅРёРєСѓРґР° РЅРµ РІС…РѕРґРёС‚. Р­С‚Рѕ С‡РµСЃС‚РЅС‹Р№ СЃС‚Р°С‚СѓСЃ СЃРёСЂРѕС‚С‹: Р°СЃСЃРµС‚ Р¶РёРІС‘С‚ РѕС‚РґРµР»СЊРЅРѕ, РїРѕРєР° РІС‹ РЅРµ РїСЂРёРІСЏР¶РµС‚Рµ РµРіРѕ Рє РїРѕРґР±РѕСЂРєРµ.
+            Карточка пока никуда не входит. Это честный статус сироты: ассет живёт отдельно, пока вы не привяжете его к подборке.
           </p>
         ) : (
           <div className={styles.mediaUsageList}>
@@ -472,7 +472,7 @@ function MediaInspector({
                 onClick={() => onOpenCollectionManager({ collectionId: entry.id, seedAssetId: item.id })}
               >
                 <strong>{entry.title}</strong>
-                <span>{entry.memberCount} С„Р°Р№Р»РѕРІ</span>
+                <span>{entry.memberCount} файлов</span>
                 <span className={styles.mutedText}>{entry.statusLabel}</span>
               </button>
             ))}
@@ -484,23 +484,23 @@ function MediaInspector({
             className={styles.secondaryButton}
             onClick={() => onOpenCollectionManager({ seedAssetId: item.id })}
           >
-            Р’ РєРѕР»Р»РµРєС†РёСЋ
+            В коллекцию
           </button>
           <button
             type="button"
             className={styles.secondaryButton}
             onClick={() => onCreateCollection(item.id)}
           >
-            РќРѕРІР°СЏ РєРѕР»Р»РµРєС†РёСЏ
+            Новая коллекция
           </button>
         </div>
       </section>
 
       <section className={styles.mediaInspectorSection}>
-        <h4>Р“РґРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ</h4>
+        <h4>Где используется</h4>
         {item.usageEntries.length === 0 ? (
           <p className={styles.helpText}>
-            РџРѕРєР° РЅРµС‚ СЃСЃС‹Р»РѕРє РЅР° СЌС‚РѕС‚ Р°СЃСЃРµС‚. Р­С‚Рѕ С…РѕСЂРѕС€РёР№ РјРѕРјРµРЅС‚ РґР»СЏ СЃРїРѕРєРѕР№РЅРѕР№ РґРѕРІРѕРґРєРё РјРµС‚Р°РґР°РЅРЅС‹С… Рё РєРѕР»Р»РµРєС†РёР№.
+            Пока нет ссылок на этот ассет. Это хороший момент для спокойной доводки метаданных и коллекций.
           </p>
         ) : (
           <div className={styles.mediaUsageList}>
@@ -516,36 +516,36 @@ function MediaInspector({
       </section>
 
       <section className={styles.mediaInspectorSection}>
-        <h4>Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ</h4>
+        <h4>Безопасность</h4>
         <p className={styles.helpText}>{item.archiveReason}</p>
         {item.markedForRemovalAt ? (
           <p className={styles.helpText}>
-            Р­С‚РѕС‚ РјРµРґРёР°С„Р°Р№Р» СѓР¶Рµ РїРѕРјРµС‡РµРЅ РЅР° СѓРґР°Р»РµРЅРёРµ. РќРѕРІС‹Рµ СЃСЃС‹Р»РєРё РЅР° РЅРµРіРѕ Р±Р»РѕРєРёСЂСѓСЋС‚СЃСЏ, Р° С„РёРЅР°Р»СЊРЅР°СЏ РѕС‡РёСЃС‚РєР° Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РёР· С†РµРЅС‚СЂР° РѕС‡РёСЃС‚РєРё.
+            Этот медиафайл уже помечен на удаление. Новые ссылки на него блокируются, а финальная очистка запускается из центра очистки.
           </p>
         ) : null}
         <div className={styles.inlineActions}>
           {!item.markedForRemovalAt ? (
             <ConfirmActionForm
               action={getRemovalMarkHref("media_asset", item.id)}
-              confirmMessage="РџРѕРјРµС‚РёС‚СЊ РјРµРґРёР°С„Р°Р№Р» РЅР° СѓРґР°Р»РµРЅРёРµ? РќРѕРІС‹Рµ СЃСЃС‹Р»РєРё РЅР° РЅРµРіРѕ Р±СѓРґСѓС‚ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅС‹."
+              confirmMessage="Пометить медиафайл на удаление? Новые ссылки на него будут заблокированы."
             >
               <input type="hidden" name="redirectTo" value={returnTo} />
               <input type="hidden" name="failureRedirectTo" value={returnTo} />
-              <button type="submit" className={styles.secondaryButton}>РџРѕРјРµС‚РёС‚СЊ РЅР° СѓРґР°Р»РµРЅРёРµ</button>
+              <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
             </ConfirmActionForm>
           ) : null}
           {item.markedForRemovalAt ? (
             <ConfirmActionForm
               action={getRemovalUnmarkHref("media_asset", item.id)}
-              confirmMessage="РЎРЅСЏС‚СЊ РїРѕРјРµС‚РєСѓ СѓРґР°Р»РµРЅРёСЏ?"
+              confirmMessage="Снять пометку удаления?"
             >
               <input type="hidden" name="redirectTo" value={returnTo} />
               <input type="hidden" name="failureRedirectTo" value={returnTo} />
-              <button type="submit" className={styles.secondaryButton}>РЎРЅСЏС‚СЊ РїРѕРјРµС‚РєСѓ СѓРґР°Р»РµРЅРёСЏ</button>
+              <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
             </ConfirmActionForm>
           ) : null}
           <Link href={getRemovalSweepHref()} className={item.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
-            Р¦РµРЅС‚СЂ РѕС‡РёСЃС‚РєРё
+            Центр очистки
           </Link>
           <button
             type="button"
@@ -553,16 +553,16 @@ function MediaInspector({
             onClick={() => onLifecycleAction(item.archived ? "restore" : "archive")}
             disabled={lifecycleBusy || (!item.canArchive && !item.canRestore)}
           >
-            {lifecycleBusy ? "РЎРѕС…СЂР°РЅСЏРµРј..." : item.archived ? "Р’РµСЂРЅСѓС‚СЊ РёР· Р°СЂС…РёРІР°" : "Р’ Р°СЂС…РёРІ"}
+            {lifecycleBusy ? "Сохраняем..." : item.archived ? "Вернуть из архива" : "В архив"}
           </button>
           <Link href={deleteHref} className={styles.secondaryButton}>Проверить удаление (legacy)</Link>
           {item.isTestData ? (
             <Link href={appendAdminReturnTo(getTestGraphTeardownHref("media_asset", item.id), returnTo)} className={styles.secondaryButton}>
-              РЈРґР°Р»РёС‚СЊ С‚РµСЃС‚РѕРІС‹Р№ РіСЂР°С„
+              Удалить тестовый граф
             </Link>
           ) : null}
           <Link href={appendAdminReturnTo(`/admin/entities/media_asset/${item.id}/history`, returnTo)} className={styles.secondaryButton}>
-            РСЃС‚РѕСЂРёСЏ
+            История
           </Link>
         </div>
       </section>
@@ -633,19 +633,19 @@ function MediaOverlay({
       >
         <div className={styles.mediaOverlayHeader}>
           <div>
-            <p className={styles.eyebrow}>{mode === "create" ? "РќРѕРІС‹Р№ Р°СЃСЃРµС‚" : "Р РµРґР°РєС‚РѕСЂ Р°СЃСЃРµС‚Р°"}</p>
+            <p className={styles.eyebrow}>{mode === "create" ? "Новый ассет" : "Редактор ассета"}</p>
             <h3 id="media-overlay-title" className={styles.mediaOverlayTitle}>
-              {mode === "create" ? "Р—Р°РіСЂСѓР·РєР° Рё РјРµС‚Р°РґР°РЅРЅС‹Рµ" : "РњРµС‚Р°РґР°РЅРЅС‹Рµ С‚РµРєСѓС‰РµРіРѕ Р°СЃСЃРµС‚Р°"}
+              {mode === "create" ? "Загрузка и метаданные" : "Метаданные текущего ассета"}
             </h3>
           </div>
           <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={busy}>
-            Р—Р°РєСЂС‹С‚СЊ
+            Закрыть
           </button>
         </div>
 
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
 
-        <div className={styles.mediaOverlayTabs} role="tablist" aria-label="Р РµР¶РёРјС‹ СЂРµРґР°РєС‚РѕСЂР° РјРµРґРёР°">
+        <div className={styles.mediaOverlayTabs} role="tablist" aria-label="Режимы редактора медиа">
           <button
             type="button"
             role="tab"
@@ -653,7 +653,7 @@ function MediaOverlay({
             className={`${styles.filterPill} ${activeTab === "metadata" ? styles.filterPillActive : ""}`}
             onClick={() => setActiveTab("metadata")}
           >
-            РњРµС‚Р°РґР°РЅРЅС‹Рµ
+            Метаданные
           </button>
           <button
             type="button"
@@ -662,7 +662,7 @@ function MediaOverlay({
             className={`${styles.filterPill} ${activeTab === "image" ? styles.filterPillActive : ""}`}
             onClick={() => setActiveTab("image")}
           >
-            РР·РѕР±СЂР°Р¶РµРЅРёРµ
+            Изображение
           </button>
         </div>
 
@@ -670,7 +670,7 @@ function MediaOverlay({
           <section className={styles.mediaOverlayPreview}>
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewUrl} alt={fields.alt || fields.title || fields.originalFilename || "РџСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ"} />
+              <img src={previewUrl} alt={fields.alt || fields.title || fields.originalFilename || "Предпросмотр"} />
             ) : (
               <div
                 className={`${styles.mediaOverlayDropzone} ${dragActive ? styles.mediaOverlayDropzoneActive : ""}`}
@@ -679,9 +679,9 @@ function MediaOverlay({
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
               >
-                <p>Р’С‹Р±РµСЂРёС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ РёР»Рё РїРµСЂРµС‚Р°С‰РёС‚Рµ РµРіРѕ СЃСЋРґР°</p>
+                <p>Выберите изображение или перетащите его сюда</p>
                 <label className={styles.secondaryButton}>
-                  <span>Р’С‹Р±СЂР°С‚СЊ С„Р°Р№Р»</span>
+                  <span>Выбрать файл</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -689,7 +689,7 @@ function MediaOverlay({
                     onChange={(event) => onFileSelect(event.target.files?.[0] ?? null)}
                   />
                 </label>
-                <p className={styles.helpText}>V1 РѕСЃС‚Р°С‘С‚СЃСЏ С‚РѕР»СЊРєРѕ РґР»СЏ РёР·РѕР±СЂР°Р¶РµРЅРёР№. Р’РёРґРµРѕ Рё РґРѕРєСѓРјРµРЅС‚С‹ СЃСЋРґР° РЅРµ РґРѕР±Р°РІР»СЏРµРј.</p>
+                <p className={styles.helpText}>V1 остаётся только для изображений. Видео и документы сюда не добавляем.</p>
               </div>
             )}
           </section>
@@ -698,7 +698,7 @@ function MediaOverlay({
             <form className={styles.mediaOverlayForm} onSubmit={onSubmit}>
               <div className={styles.gridTwo}>
                 <label className={styles.label}>
-                  <span>РќР°Р·РІР°РЅРёРµ</span>
+                  <span>Название</span>
                   <input
                     ref={titleRef}
                     name="title"
@@ -707,7 +707,7 @@ function MediaOverlay({
                   />
                 </label>
                 <label className={styles.label}>
-                  <span>РђР»СЊС‚РµСЂРЅР°С‚РёРІРЅС‹Р№ С‚РµРєСЃС‚</span>
+                  <span>Альтернативный текст</span>
                   <input
                     name="alt"
                     value={fields.alt}
@@ -715,7 +715,7 @@ function MediaOverlay({
                   />
                 </label>
                 <label className={`${styles.label} ${styles.gridWide}`}>
-                  <span>РџРѕРґРїРёСЃСЊ</span>
+                  <span>Подпись</span>
                   <textarea
                     name="caption"
                     value={fields.caption}
@@ -723,7 +723,7 @@ function MediaOverlay({
                   />
                 </label>
                 <label className={styles.label}>
-                  <span>РСЃС‚РѕС‡РЅРёРє</span>
+                  <span>Источник</span>
                   <input
                     name="sourceNote"
                     value={fields.sourceNote}
@@ -731,7 +731,7 @@ function MediaOverlay({
                   />
                 </label>
                 <label className={styles.label}>
-                  <span>РџСЂР°РІР°</span>
+                  <span>Права</span>
                   <input
                     name="ownershipNote"
                     value={fields.ownershipNote}
@@ -739,26 +739,26 @@ function MediaOverlay({
                   />
                 </label>
                 <label className={`${styles.label} ${styles.gridWide}`}>
-                  <span>РљРѕРјРјРµРЅС‚Р°СЂРёР№ Рє РёР·РјРµРЅРµРЅРёСЋ</span>
+                  <span>Комментарий к изменению</span>
                   <input
                     name="changeIntent"
                     value={fields.changeIntent}
                     onChange={(event) => onFieldChange("changeIntent", event.target.value)}
                   />
                   <p className={styles.helpText}>
-                    РљРѕРјРјРµРЅС‚Р°СЂРёР№ РЅРµ РѕР±СЏР·Р°С‚РµР»РµРЅ, РЅРѕ РѕРЅ РїРѕС‚РѕРј РїРѕРјРѕРіР°РµС‚ Р±С‹СЃС‚СЂРµРµ РїРѕРЅСЏС‚СЊ СЃРјС‹СЃР» РІРµСЂСЃРёРё РІ РёСЃС‚РѕСЂРёРё Рё РїСЂРѕРІРµСЂРєРµ.
+                    Комментарий не обязателен, но он потом помогает быстрее понять смысл версии в истории и проверке.
                   </p>
                 </label>
                 {mode === "edit" ? (
                   <details className={`${styles.collectionField} ${styles.gridWide}`}>
                     <summary className={styles.collectionFieldSummary}>
-                      <span className={styles.collectionFieldLabel}>Р’ РєРѕР»Р»РµРєС†РёСЏС…</span>
+                      <span className={styles.collectionFieldLabel}>В коллекциях</span>
                       <span className={styles.collectionFieldValue}>{selectedCollectionsLabel}</span>
                     </summary>
                     <div className={styles.collectionFieldPanel}>
                       {collections.length === 0 ? (
                       <p className={styles.helpText}>
-                          РљРѕР»Р»РµРєС†РёР№ РїРѕРєР° РЅРµС‚. РЎРЅР°С‡Р°Р»Р° СЃРѕР·РґР°Р№С‚Рµ РїРѕРґР±РѕСЂРєСѓ РІ РѕСЃРЅРѕРІРЅРѕР№ РјРµРґРёР°С‚РµРєРµ, Р° РїРѕС‚РѕРј РІРµСЂРЅРёС‚РµСЃСЊ Рє РєР°СЂС‚РѕС‡РєРµ.
+                          Коллекций пока нет. Сначала создайте подборку в основной медиатеке, а потом вернитесь к карточке.
                         </p>
                       ) : (
                         <div className={styles.collectionFieldList} role="list">
@@ -774,7 +774,7 @@ function MediaOverlay({
                                 />
                                 <span className={styles.collectionFieldOptionBody}>
                                   <strong>{collection.title}</strong>
-                                  <span className={styles.mutedText}>{collection.memberCount} С„Р°Р№Р»РѕРІ</span>
+                                  <span className={styles.mutedText}>{collection.memberCount} файлов</span>
                                 </span>
                               </label>
                             );
@@ -782,7 +782,7 @@ function MediaOverlay({
                         </div>
                       )}
                       <p className={styles.helpText}>
-                        Р—РґРµСЃСЊ РјРµРЅСЏРµС‚СЃСЏ С‚РѕР»СЊРєРѕ membership С‚РµРєСѓС‰РµРіРѕ Р°СЃСЃРµС‚Р°. РЎРѕСЃС‚Р°РІ РєРѕР»Р»РµРєС†РёРё Рё РіР»Р°РІРЅС‹Р№ РєР°РґСЂ РїРѕ-РїСЂРµР¶РЅРµРјСѓ Р¶РёРІСѓС‚ РІ СЂРµРґР°РєС‚РѕСЂРµ РєРѕР»Р»РµРєС†РёР№.
+                        Здесь меняется только membership текущего ассета. Состав коллекции и главный кадр по-прежнему живут в редакторе коллекций.
                       </p>
                     </div>
                   </details>
@@ -790,17 +790,17 @@ function MediaOverlay({
               </div>
 
               <div className={styles.mediaOverlayMeta}>
-                <span>{fields.originalFilename || "Р¤Р°Р№Р» РїРѕРєР° РЅРµ РІС‹Р±СЂР°РЅ"}</span>
+                <span>{fields.originalFilename || "Файл пока не выбран"}</span>
                 {fields.originalFilename ? <span>{formatBytes(fields.sizeBytes)}</span> : null}
-                {editedBinary ? <span>РР·РѕР±СЂР°Р¶РµРЅРёРµ РёР·РјРµРЅРµРЅРѕ Р»РѕРєР°Р»СЊРЅРѕ</span> : null}
+                {editedBinary ? <span>Изображение изменено локально</span> : null}
               </div>
 
               <div className={styles.mediaOverlayActions}>
                 <button type="submit" className={styles.primaryButton} disabled={busy || (mode === "create" && !file)}>
-                  {busy ? "РЎРѕС…СЂР°РЅСЏРµРј..." : mode === "create" ? "РЎРѕС…СЂР°РЅРёС‚СЊ Р°СЃСЃРµС‚" : "РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ"}
+                  {busy ? "Сохраняем..." : mode === "create" ? "Сохранить ассет" : "Сохранить изменения"}
                 </button>
                 <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={busy}>
-                  РћС‚РјРµРЅР°
+                  Отмена
                 </button>
               </div>
             </form>
@@ -818,10 +818,10 @@ function MediaOverlay({
               />
               <div className={styles.mediaOverlayActions}>
                 <button type="button" className={styles.primaryButton} onClick={() => setActiveTab("metadata")}>
-                  Р’РµСЂРЅСѓС‚СЊСЃСЏ Рє РјРµС‚Р°РґР°РЅРЅС‹Рј
+                  Вернуться к метаданным
                 </button>
                 <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={busy}>
-                  РћС‚РјРµРЅР°
+                  Отмена
                 </button>
               </div>
             </div>
@@ -940,13 +940,13 @@ export function MediaGalleryWorkspace({
     .filter((item) => matchesCollectionFilter(item, collectionFilterId))
     .sort((left, right) => compareItems(left, right, sortMode));
   const summaryItems = [
-    { label: "РўРµСЃС‚РѕРІС‹Рµ", value: items.filter((item) => item.isTestData).length },
-    { label: "Р’СЃРµРіРѕ", value: items.length },
-    { label: "РќРµС‚ Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅРѕРіРѕ С‚РµРєСЃС‚Р°", value: items.filter((item) => item.missingAlt).length },
-    { label: "РЎРёСЂРѕС‚С‹", value: items.filter((item) => item.orphaned).length },
-    { label: "РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ", value: items.filter((item) => item.usageCount > 0).length },
-    { label: "Р’ Р°СЂС…РёРІРµ", value: items.filter((item) => item.archived).length },
-    { label: "РЎР»РѕРјР°РЅРЅС‹Рµ", value: items.filter((item) => item.brokenBinary).length }
+    { label: "Тестовые", value: items.filter((item) => item.isTestData).length },
+    { label: "Всего", value: items.length },
+    { label: "Нет альтернативного текста", value: items.filter((item) => item.missingAlt).length },
+    { label: "Сироты", value: items.filter((item) => item.orphaned).length },
+    { label: "Используется", value: items.filter((item) => item.usageCount > 0).length },
+    { label: "В архиве", value: items.filter((item) => item.archived).length },
+    { label: "Сломанные", value: items.filter((item) => item.brokenBinary).length }
   ];
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
   const selectedTestDeleteCount = selectedDeleteIds.length;
@@ -1107,7 +1107,7 @@ export function MediaGalleryWorkspace({
     }
 
     if (!response.ok && (payload.deletedCount ?? 0) === 0) {
-      throw new Error(payload.error || "РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ РѕР±СЉРµРєС‚С‹.");
+      throw new Error(payload.error || "Не удалось удалить выбранные объекты.");
     }
 
     return payload;
@@ -1115,11 +1115,11 @@ export function MediaGalleryWorkspace({
 
   async function handleBulkDeleteTestData() {
     if (selectedDeleteIds.length === 0) {
-      setError("РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ С‚РµСЃС‚РѕРІС‹Рµ РѕР±СЉРµРєС‚С‹ РґР»СЏ СѓРґР°Р»РµРЅРёСЏ.");
+      setError("Сначала выберите тестовые объекты для удаления.");
       return;
     }
 
-    if (!window.confirm("РЈРґР°Р»РёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ С‚РµСЃС‚РѕРІС‹Рµ РѕР±СЉРµРєС‚С‹? Р”РµР№СЃС‚РІРёРµ РЅРµРѕР±СЂР°С‚РёРјРѕ.")) {
+    if (!window.confirm("Удалить выбранные тестовые объекты? Действие необратимо.")) {
       return;
     }
 
@@ -1130,7 +1130,7 @@ export function MediaGalleryWorkspace({
     try {
       await performDeleteRequest(selectedDeleteIds, { testOnly: true });
     } catch (deleteError) {
-      setError(deleteError.message || "РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ С‚РµСЃС‚РѕРІС‹Рµ РѕР±СЉРµРєС‚С‹.");
+      setError(deleteError.message || "Не удалось удалить тестовые объекты.");
     } finally {
       setDeleteBusy(false);
     }
@@ -1220,7 +1220,7 @@ export function MediaGalleryWorkspace({
     event.preventDefault();
 
     if (!draftFile) {
-      setOverlayError("РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ.");
+      setOverlayError("Сначала выберите изображение.");
       return;
     }
 
@@ -1244,18 +1244,18 @@ export function MediaGalleryWorkspace({
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ Р°СЃСЃРµС‚.");
+        throw new Error(payload.error || "Не удалось сохранить ассет.");
       }
 
       setItems((current) => [payload.item, ...current.filter((item) => item.id !== payload.item.id)]);
       setSelectedId(payload.item.id);
       setRecentlySavedId(payload.item.id);
-      setMessage(payload.message || "РђСЃСЃРµС‚ СЃРѕС…СЂР°РЅС‘РЅ.");
+      setMessage(payload.message || "Ассет сохранён.");
       setError("");
       closeOverlay();
       updateWorkspaceUrl({ assetId: payload.item.id, compose: null, collectionId: "" });
     } catch (submitError) {
-      setOverlayError(submitError.message || "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ Р°СЃСЃРµС‚.");
+      setOverlayError(submitError.message || "Не удалось сохранить ассет.");
     } finally {
       setOverlayBusy(false);
     }
@@ -1265,7 +1265,7 @@ export function MediaGalleryWorkspace({
     event.preventDefault();
 
     if (!selectedItem) {
-      setOverlayError("РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ РєР°СЂС‚РѕС‡РєСѓ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ.");
+      setOverlayError("Сначала выберите карточку для редактирования.");
       return;
     }
 
@@ -1295,7 +1295,7 @@ export function MediaGalleryWorkspace({
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ.");
+        throw new Error(payload.error || "Не удалось сохранить изменения.");
       }
 
       setItems((current) => current.map((item) => (item.id === payload.item.id ? payload.item : item)));
@@ -1316,12 +1316,12 @@ export function MediaGalleryWorkspace({
       }
       setSelectedId(payload.item.id);
       setRecentlySavedId(payload.item.id);
-      setMessage(payload.message || "РР·РјРµРЅРµРЅРёСЏ СЃРѕС…СЂР°РЅРµРЅС‹.");
+      setMessage(payload.message || "Изменения сохранены.");
       setError(payload.warning || "");
       closeOverlay();
       updateWorkspaceUrl({ assetId: payload.item.id, compose: null, collectionId: "" });
     } catch (submitError) {
-      setOverlayError(submitError.message || "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ.");
+      setOverlayError(submitError.message || "Не удалось сохранить изменения.");
     } finally {
       setOverlayBusy(false);
     }
@@ -1359,7 +1359,7 @@ export function MediaGalleryWorkspace({
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РєРѕР»Р»РµРєС†РёСЋ.");
+        throw new Error(payload.error || "Не удалось сохранить коллекцию.");
       }
 
       if (payload.collection) {
@@ -1379,11 +1379,11 @@ export function MediaGalleryWorkspace({
         }
       }
 
-      setMessage(payload.message || "РљРѕР»Р»РµРєС†РёСЏ СЃРѕС…СЂР°РЅРµРЅР°.");
+      setMessage(payload.message || "Коллекция сохранена.");
       setError("");
       closeOverlay();
     } catch (submitError) {
-      setOverlayError(submitError.message || "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РєРѕР»Р»РµРєС†РёСЋ.");
+      setOverlayError(submitError.message || "Не удалось сохранить коллекцию.");
     } finally {
       setOverlayBusy(false);
     }
@@ -1409,15 +1409,15 @@ export function MediaGalleryWorkspace({
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ Р¶РёР·РЅРµРЅРЅС‹Р№ С†РёРєР» Р°СЃСЃРµС‚Р°.");
+        throw new Error(payload.error || "Не удалось обновить жизненный цикл ассета.");
       }
 
       setItems((current) => current.map((item) => (item.id === payload.item.id ? payload.item : item)));
       setSelectedId(payload.item.id);
       setRecentlySavedId(payload.item.id);
-      setMessage(payload.message || "Р–РёР·РЅРµРЅРЅС‹Р№ С†РёРєР» Р°СЃСЃРµС‚Р° РѕР±РЅРѕРІР»С‘РЅ.");
+      setMessage(payload.message || "Жизненный цикл ассета обновлён.");
     } catch (actionError) {
-      setError(actionError.message || "РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ Р¶РёР·РЅРµРЅРЅС‹Р№ С†РёРєР» Р°СЃСЃРµС‚Р°.");
+      setError(actionError.message || "Не удалось обновить жизненный цикл ассета.");
     } finally {
       setLifecycleBusy(false);
     }
@@ -1460,7 +1460,7 @@ export function MediaGalleryWorkspace({
     }
   }
 
-  const activeFilterLabel = FILTERS.find((filter) => filter.key === filterKey)?.label || "Р’СЃРµ";
+  const activeFilterLabel = FILTERS.find((filter) => filter.key === filterKey)?.label || "Все";
   const activeCollectionFilterLabel = getActiveCollectionFilterLabel(collectionFilterId, collectionOptions);
 
   return (
@@ -1471,12 +1471,12 @@ export function MediaGalleryWorkspace({
       <section className={styles.panel}>
         <div className={styles.mediaToolbar}>
           <div className={styles.mediaToolbarIntro}>
-            <p className={styles.eyebrow}>Р Р°Р±РѕС‡РµРµ РјРµСЃС‚Рѕ</p>
-            <h3 className={styles.mediaToolbarTitle}>РњРµРґРёР°С‚РµРєР°</h3>
+            <p className={styles.eyebrow}>Рабочее место</p>
+            <h3 className={styles.mediaToolbarTitle}>Медиатека</h3>
             <p className={styles.helpText}>
-              Р—РґРµСЃСЊ Р¶РёРІС‘С‚ Р±РёР±Р»РёРѕС‚РµРєР° РјРµРґРёР° Рё РІСЃС‚СЂРѕРµРЅРЅС‹Р№ СЃР»РѕР№ РєРѕР»Р»РµРєС†РёР№: СЃР»РµРІР° Рё РІ С†РµРЅС‚СЂРµ РѕСЃС‚Р°СЋС‚СЃСЏ РєР°СЂС‚РѕС‡РєРё, СЃРїСЂР°РІР° Р±С‹СЃС‚СЂС‹Р№ РёРЅСЃРїРµРєС‚РѕСЂ, Р° Р±РѕР»СЊС€РѕРµ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РѕС‚РєСЂС‹РІР°РµС‚СЃСЏ РїРѕРІРµСЂС… С‚РѕРіРѕ Р¶Рµ СЌРєСЂР°РЅР°.
+              Здесь живёт библиотека медиа и встроенный слой коллекций: слева и в центре остаются карточки, справа быстрый инспектор, а большое редактирование открывается поверх того же экрана.
             </p>
-            <div className={styles.mediaToolbarStats} aria-label="РЎРІРѕРґРєР° РјРµРґРёР°С‚РµРєРё">
+            <div className={styles.mediaToolbarStats} aria-label="Сводка медиатеки">
               {summaryItems.map((item) => (
                 <span key={item.label} className={styles.mediaToolbarStat}>
                   <strong>{item.value}</strong>
@@ -1487,42 +1487,42 @@ export function MediaGalleryWorkspace({
           </div>
           <div className={styles.mediaToolbarControls}>
             <label className={styles.searchLabel}>
-              <span>РџРѕРёСЃРє</span>
+              <span>Поиск</span>
               <input
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 className={styles.searchInput}
-                placeholder="РќР°Р·РІР°РЅРёРµ, Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅС‹Р№ С‚РµРєСЃС‚, РїРѕРґРїРёСЃСЊ, РёРјСЏ С„Р°Р№Р»Р°, РєРѕР»Р»РµРєС†РёСЏ"
+                placeholder="Название, альтернативный текст, подпись, имя файла, коллекция"
               />
             </label>
             <label className={styles.label}>
-              <span>РЎРѕСЂС‚РёСЂРѕРІРєР°</span>
+              <span>Сортировка</span>
               <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
-                <option value="newest">РЎРЅР°С‡Р°Р»Р° РЅРѕРІС‹Рµ</option>
-                <option value="oldest">РЎРЅР°С‡Р°Р»Р° СЃС‚Р°СЂС‹Рµ</option>
-                <option value="title">РџРѕ РЅР°Р·РІР°РЅРёСЋ</option>
-                <option value="status">РџРѕ СЃС‚Р°С‚СѓСЃСѓ</option>
+                <option value="newest">Сначала новые</option>
+                <option value="oldest">Сначала старые</option>
+                <option value="title">По названию</option>
+                <option value="status">По статусу</option>
               </select>
             </label>
             <button type="button" className={styles.primaryButton} onClick={openCreateOverlay}>
-              Р—Р°РіСЂСѓР·РёС‚СЊ
+              Загрузить
             </button>
             <button type="button" className={styles.secondaryButton} onClick={() => openCollectionManager()}>
-              РљРѕР»Р»РµРєС†РёРё
+              Коллекции
             </button>
             {selectedItem ? (
               <Link href={selectedDeleteHref} className={styles.secondaryButton}>Проверить удаление (legacy)</Link>
             ) : null}
             {selectedTestDeleteCount > 0 ? (
               <button type="button" className={styles.dangerButton} onClick={handleBulkDeleteTestData} disabled={deleteBusy}>
-                {deleteBusy ? "РЈРґР°Р»СЏРµРј..." : `РЈРґР°Р»РёС‚СЊ С‚РµСЃС‚РѕРІС‹Рµ (${selectedTestDeleteCount})`}
+                {deleteBusy ? "Удаляем..." : `Удалить тестовые (${selectedTestDeleteCount})`}
               </button>
             ) : null}
           </div>
         </div>
 
-        <div className={styles.mediaFilterRow} role="toolbar" aria-label="Р‘С‹СЃС‚СЂС‹Рµ С„РёР»СЊС‚СЂС‹ РјРµРґРёР°С‚РµРєРё">
+        <div className={styles.mediaFilterRow} role="toolbar" aria-label="Быстрые фильтры медиатеки">
           {FILTERS.map((filter) => (
             <button
               key={filter.key}
@@ -1534,10 +1534,10 @@ export function MediaGalleryWorkspace({
             </button>
           ))}
           <label className={`${styles.label} ${styles.mediaFilterSelect}`}>
-            <span>РљРѕР»Р»РµРєС†РёСЏ</span>
+            <span>Коллекция</span>
             <select value={collectionFilterId} onChange={(event) => setCollectionFilterId(event.target.value)}>
-              <option value={COLLECTION_FILTER_ALL}>Р’СЃРµ РєРѕР»Р»РµРєС†РёРё</option>
-              <option value={COLLECTION_FILTER_ORPHAN}>Р‘РµР· РєРѕР»Р»РµРєС†РёРё</option>
+              <option value={COLLECTION_FILTER_ALL}>Все коллекции</option>
+              <option value={COLLECTION_FILTER_ORPHAN}>Без коллекции</option>
               {collectionOptions.map((collection) => (
                 <option key={collection.id} value={collection.id}>
                   {collection.title}
@@ -1550,29 +1550,29 @@ export function MediaGalleryWorkspace({
         <div className={styles.mediaWorkspace}>
           <section className={styles.mediaCanvas}>
             <div className={styles.mediaCanvasMeta}>
-              <span>Р¤РёР»СЊС‚СЂ: {activeFilterLabel}</span>
-              <span>РљРѕР»Р»РµРєС†РёСЏ: {activeCollectionFilterLabel}</span>
-              <span>РџРѕРєР°Р·Р°РЅРѕ: {displayedItems.length}</span>
-              <span>РљРѕР»Р»РµРєС†РёР№: {collections.length}</span>
+              <span>Фильтр: {activeFilterLabel}</span>
+              <span>Коллекция: {activeCollectionFilterLabel}</span>
+              <span>Показано: {displayedItems.length}</span>
+              <span>Коллекций: {collections.length}</span>
             </div>
 
             {items.length === 0 ? (
               <div className={styles.emptyState}>
-                <p>Р‘РёР±Р»РёРѕС‚РµРєР° РїРѕРєР° РїСѓСЃС‚Р°СЏ.</p>
+                <p>Библиотека пока пустая.</p>
                 <p className={styles.helpText}>
-                  РќР°С‡РЅРёС‚Рµ СЃ Р·Р°РіСЂСѓР·РєРё РїРµСЂРІРѕРіРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ, Рё РѕРЅРѕ СЃСЂР°Р·Сѓ РїРѕСЏРІРёС‚СЃСЏ РІ РјРµРґРёР°С‚РµРєРµ РєР°Рє СЂР°Р±РѕС‡Р°СЏ РєР°СЂС‚РѕС‡РєР°.
+                  Начните с загрузки первого изображения, и оно сразу появится в медиатеке как рабочая карточка.
                 </p>
                 <div className={styles.inlineActions}>
                   <button type="button" className={styles.primaryButton} onClick={openCreateOverlay}>
-                    Р—Р°РіСЂСѓР·РёС‚СЊ РїРµСЂРІРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ
+                    Загрузить первое изображение
                   </button>
                 </div>
               </div>
             ) : displayedItems.length === 0 ? (
               <div className={styles.emptyState}>
-                <p>РџРѕ С‚РµРєСѓС‰РµРјСѓ С„РёР»СЊС‚СЂСѓ РЅРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ.</p>
+                <p>По текущему фильтру ничего не найдено.</p>
                 <p className={styles.helpText}>
-                  РЎР±СЂРѕСЃСЊС‚Рµ РїРѕРёСЃРє РёР»Рё РїРµСЂРµРєР»СЋС‡РёС‚Рµ Р±С‹СЃС‚СЂС‹Р№ С„РёР»СЊС‚СЂ, С‡С‚РѕР±С‹ СЃРЅРѕРІР° СѓРІРёРґРµС‚СЊ РєР°СЂС‚РѕС‡РєРё.
+                  Сбросьте поиск или переключите быстрый фильтр, чтобы снова увидеть карточки.
                 </p>
                 <div className={styles.inlineActions}>
                   <button
@@ -1584,7 +1584,7 @@ export function MediaGalleryWorkspace({
                       setCollectionFilterId(COLLECTION_FILTER_ALL);
                     }}
                   >
-                    РЎР±СЂРѕСЃРёС‚СЊ С„РёР»СЊС‚СЂС‹
+                    Сбросить фильтры
                   </button>
                 </div>
               </div>
@@ -1621,28 +1621,28 @@ export function MediaGalleryWorkspace({
                         ) : null}
                         {item.hasPreview ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "РџСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ"} />
+                          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
                         ) : (
-                          <span className={styles.mediaPlaceholder}>РќРµС‚ РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂР°</span>
+                          <span className={styles.mediaPlaceholder}>Нет предпросмотра</span>
                         )}
                       </span>
                       <span className={styles.mediaLibraryBody}>
                         <strong>{item.title}</strong>
-                        <span className={styles.mutedText}>{item.originalFilename || "РРјСЏ С„Р°Р№Р»Р° РЅРµ Р·Р°РґР°РЅРѕ"}</span>
-                        <span className={styles.mutedText}>РљРѕР»Р»РµРєС†РёРё: {item.collectionLabel}</span>
+                        <span className={styles.mutedText}>{item.originalFilename || "Имя файла не задано"}</span>
+                        <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
                         <span className={styles.mediaBadgeCluster}>
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
-                          {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>РћРїСѓР±Р»РёРєРѕРІР°РЅРѕ</span> : null}
-                          {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>РўРµСЃС‚</span> : null}
-                          {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>РЈРґР°Р»РµРЅРёРµ</span> : null}
-                          {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>РђСЂС…РёРІ</span> : null}
+                          {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Опубликовано</span> : null}
+                          {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тест</span> : null}
+                          {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Удаление</span> : null}
+                          {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
                           <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
-                          {item.missingAlt ? "РќРµС‚ Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅРѕРіРѕ С‚РµРєСЃС‚Р°" : "РђР»СЊС‚РµСЂРЅР°С‚РёРІРЅС‹Р№ С‚РµРєСЃС‚"}
+                          {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст"}
                           </span>
                           <span className={`${styles.badge} ${item.usageCount ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
-                            {item.usageCount ? `РЎРІСЏР·Рё ${item.usageCount}` : "РќРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ"}
+                            {item.usageCount ? `Связи ${item.usageCount}` : "Не используется"}
                           </span>
-                          {item.brokenBinary ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>РЎР»РѕРјР°РЅ</span> : null}
+                          {item.brokenBinary ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Сломан</span> : null}
                         </span>
                       </span>
                     </button>
@@ -1653,7 +1653,7 @@ export function MediaGalleryWorkspace({
 
             {selectedHiddenByFilter ? (
               <div className={styles.statusPanelWarning}>
-                Р’С‹Р±СЂР°РЅРЅР°СЏ РєР°СЂС‚РѕС‡РєР° СЃРµР№С‡Р°СЃ СЃРєСЂС‹С‚Р° С„РёР»СЊС‚СЂРѕРј, РЅРѕ РёРЅСЃРїРµРєС‚РѕСЂ СЃРѕС…СЂР°РЅС‘РЅ, С‡С‚РѕР±С‹ РІС‹ РЅРµ РїРѕС‚РµСЂСЏР»Рё РєРѕРЅС‚РµРєСЃС‚.
+                Выбранная карточка сейчас скрыта фильтром, но инспектор сохранён, чтобы вы не потеряли контекст.
               </div>
             ) : null}
           </section>
