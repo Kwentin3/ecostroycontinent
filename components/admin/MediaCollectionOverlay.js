@@ -3,8 +3,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ConfirmActionForm } from "./ConfirmActionForm";
 import { RelationChipRow } from "./RelationChipRow";
 import { buildRelationSelectionModel } from "../../lib/admin/relation-navigation.js";
+import {
+  getRemovalMarkHref,
+  getRemovalSweepHref,
+  getRemovalUnmarkHref
+} from "../../lib/admin/removal-quarantine.js";
 import styles from "./admin-ui.module.css";
 
 const NEW_COLLECTION_ID = "__new_collection__";
@@ -121,13 +127,14 @@ export function MediaCollectionOverlay({
 
   const filteredAssets = useMemo(() => {
     const normalized = assetQuery.trim().toLowerCase();
+    const visibleAssets = mediaItems.filter((item) => !item.markedForRemovalAt || fields.assetIds.includes(item.id));
 
     if (!normalized) {
-      return mediaItems;
+      return visibleAssets;
     }
 
-    return mediaItems.filter((item) => buildAssetHaystack(item).includes(normalized));
-  }, [assetQuery, mediaItems]);
+    return visibleAssets.filter((item) => buildAssetHaystack(item).includes(normalized));
+  }, [assetQuery, fields.assetIds, mediaItems]);
 
   const selectedCollection = selectedCollectionId === NEW_COLLECTION_ID ? null : collectionMap.get(selectedCollectionId) ?? null;
   const selectedAssets = fields.assetIds.map((assetId) => mediaMap.get(assetId)).filter(Boolean);
@@ -232,6 +239,54 @@ export function MediaCollectionOverlay({
         </div>
 
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
+        {selectedCollection?.markedForRemovalAt ? (
+          <div className={styles.statusPanelInfo}>
+            Коллекция помечена на удаление. Новые ссылки на неё блокируются, а финальная очистка запускается из центра очистки.
+          </div>
+        ) : null}
+        {selectedCollection ? (
+          <div className={styles.inlineActions}>
+            {!selectedCollection.markedForRemovalAt ? (
+              <ConfirmActionForm
+                action={getRemovalMarkHref("gallery", selectedCollection.id)}
+                confirmMessage="Пометить коллекцию на удаление? Новые ссылки на неё будут заблокированы."
+              >
+                <input
+                  type="hidden"
+                  name="redirectTo"
+                  value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                />
+                <input
+                  type="hidden"
+                  name="failureRedirectTo"
+                  value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                />
+                <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
+              </ConfirmActionForm>
+            ) : null}
+            {selectedCollection.markedForRemovalAt ? (
+              <ConfirmActionForm
+                action={getRemovalUnmarkHref("gallery", selectedCollection.id)}
+                confirmMessage="Снять пометку удаления?"
+              >
+                <input
+                  type="hidden"
+                  name="redirectTo"
+                  value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                />
+                <input
+                  type="hidden"
+                  name="failureRedirectTo"
+                  value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                />
+                <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
+              </ConfirmActionForm>
+            ) : null}
+            <Link href={getRemovalSweepHref()} className={selectedCollection.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
+              Центр очистки
+            </Link>
+          </div>
+        ) : null}
 
         <div className={styles.collectionOverlayLayout}>
           <aside className={styles.collectionOverlaySidebar}>
@@ -277,6 +332,7 @@ export function MediaCollectionOverlay({
                   <span className={styles.mutedText}>
                     {collection.memberCount} файлов • {collection.statusLabel}
                   </span>
+                  {collection.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
                   <span className={styles.mutedText}>{collection.whereUsedLabel}</span>
                 </button>
               ))}
@@ -388,6 +444,7 @@ export function MediaCollectionOverlay({
                     </span>
                     <span className={styles.mediaInfo}>
                       <strong>{asset.title || asset.originalFilename || asset.id}</strong>
+                      {asset.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
                     <span>Альтернативный текст: {asset.alt || "не заполнен"}</span>
                       <span>Коллекции: {asset.collectionLabel}</span>
                     </span>

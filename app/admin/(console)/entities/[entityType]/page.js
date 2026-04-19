@@ -467,6 +467,7 @@ export default async function EntityListPage({ params, searchParams }) {
                         <strong>{row.entityLabel}</strong>
                         <span className={styles.mutedText}>{row.entityTypeLabel}</span>
                         {row.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
+                        {row.isMarkedForRemoval ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
                       </div>
                     </td>
                     <td>

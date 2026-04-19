@@ -200,6 +200,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
         relationOptions={data.relationOptions}
         mediaOptions={data.mediaOptions}
         caseProjectTypeOptions={data.caseProjectTypeOptions}
+        markedForRemovalAt={data.state.entity.markedForRemovalAt ?? null}
         workspaceMemoryCard={data.workspaceMemoryCard}
         user={user}
         message={query?.message}

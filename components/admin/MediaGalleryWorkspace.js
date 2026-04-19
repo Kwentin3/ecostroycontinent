@@ -6,12 +6,18 @@ import { useDeferredValue, useEffect, useRef, useState } from "react";
 // Media is value-sensitive in this project. Avoid creating test media here unless
 // it is strictly necessary for verification, and always prefix disposable assets
 // with `test__...` so they stay safely classifiable for later cleanup.
+import { ConfirmActionForm } from "./ConfirmActionForm";
 import {
   COLLECTION_FILTER_ALL,
   COLLECTION_FILTER_ORPHAN,
   matchesCollectionFilter
 } from "../../lib/admin/media-gallery-filters";
 import { appendAdminReturnTo } from "../../lib/admin/relation-navigation.js";
+import {
+  getRemovalMarkHref,
+  getRemovalSweepHref,
+  getRemovalUnmarkHref
+} from "../../lib/admin/removal-quarantine.js";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -399,6 +405,7 @@ function MediaInspector({
         {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
         {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
+        {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
         {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
         <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
           {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст есть"}
@@ -511,7 +518,35 @@ function MediaInspector({
       <section className={styles.mediaInspectorSection}>
         <h4>Безопасность</h4>
         <p className={styles.helpText}>{item.archiveReason}</p>
+        {item.markedForRemovalAt ? (
+          <p className={styles.helpText}>
+            Этот медиафайл уже помечен на удаление. Новые ссылки на него блокируются, а финальная очистка запускается из центра очистки.
+          </p>
+        ) : null}
         <div className={styles.inlineActions}>
+          {!item.markedForRemovalAt ? (
+            <ConfirmActionForm
+              action={getRemovalMarkHref("media_asset", item.id)}
+              confirmMessage="Пометить медиафайл на удаление? Новые ссылки на него будут заблокированы."
+            >
+              <input type="hidden" name="redirectTo" value={returnTo} />
+              <input type="hidden" name="failureRedirectTo" value={returnTo} />
+              <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
+            </ConfirmActionForm>
+          ) : null}
+          {item.markedForRemovalAt ? (
+            <ConfirmActionForm
+              action={getRemovalUnmarkHref("media_asset", item.id)}
+              confirmMessage="Снять пометку удаления?"
+            >
+              <input type="hidden" name="redirectTo" value={returnTo} />
+              <input type="hidden" name="failureRedirectTo" value={returnTo} />
+              <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
+            </ConfirmActionForm>
+          ) : null}
+          <Link href={getRemovalSweepHref()} className={item.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
+            Центр очистки
+          </Link>
           <button
             type="button"
             className={styles.secondaryButton}
@@ -1601,6 +1636,7 @@ export function MediaGalleryWorkspace({
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
                           {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Опубликовано</span> : null}
                           {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тест</span> : null}
+                          {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Удаление</span> : null}
                           {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
                           <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
                           {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст"}

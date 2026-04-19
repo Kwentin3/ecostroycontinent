@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 import { getInfraHealthSnapshot } from "../../lib/admin/infra-health.js";
 import { getRoleLabel } from "../../lib/auth/session.js";
@@ -7,22 +7,23 @@ import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
 const baseNavItems = [
-  { href: "/admin", label: "Главная" },
-  { href: "/admin/review", label: "Проверка" },
-  { href: "/admin/entities/global_settings", label: "Настройки" },
-  { href: "/admin/entities/media_asset", label: "Медиа" },
-  { href: "/admin/entities/service", label: "Услуги" },
-  { href: "/admin/entities/equipment", label: "Техника" },
-  { href: "/admin/entities/case", label: "Кейсы" },
-  { href: "/admin/entities/page", label: "Страницы" },
-  { href: "/admin/users", label: "Пользователи" }
+  { href: "/admin", label: "Р“Р»Р°РІРЅР°СЏ" },
+  { href: "/admin/review", label: "РџСЂРѕРІРµСЂРєР°" },
+  { href: "/admin/removal-sweep", label: "Очистка" },
+  { href: "/admin/entities/global_settings", label: "РќР°СЃС‚СЂРѕР№РєРё" },
+  { href: "/admin/entities/media_asset", label: "РњРµРґРёР°" },
+  { href: "/admin/entities/service", label: "РЈСЃР»СѓРіРё" },
+  { href: "/admin/entities/equipment", label: "РўРµС…РЅРёРєР°" },
+  { href: "/admin/entities/case", label: "РљРµР№СЃС‹" },
+  { href: "/admin/entities/page", label: "РЎС‚СЂР°РЅРёС†С‹" },
+  { href: "/admin/users", label: "РџРѕР»СЊР·РѕРІР°С‚РµР»Рё" }
 ];
 
 export function getNavItems(user) {
   const navItems = [...baseNavItems];
 
   if (userIsSuperadmin(user)) {
-    navItems.push({ href: "/admin/diagnostics/llm", label: "LLM диагностика" });
+    navItems.push({ href: "/admin/diagnostics/llm", label: "LLM РґРёР°РіРЅРѕСЃС‚РёРєР°" });
   }
 
   return navItems;
@@ -50,8 +51,8 @@ function renderBreadcrumbs(breadcrumbs) {
 
 function renderInfraHealth(items) {
   return (
-    <section className={styles.infraStatus} aria-label="Состояние инфраструктуры">
-      <p className={styles.infraStatusTitle}>Инфраструктура</p>
+    <section className={styles.infraStatus} aria-label="РЎРѕСЃС‚РѕСЏРЅРёРµ РёРЅС„СЂР°СЃС‚СЂСѓРєС‚СѓСЂС‹">
+      <p className={styles.infraStatusTitle}>РРЅС„СЂР°СЃС‚СЂСѓРєС‚СѓСЂР°</p>
       <div className={styles.infraStatusList}>
         {items.map((item) => (
           <div key={item.key} className={styles.infraStatusRow}>
@@ -80,13 +81,13 @@ export async function AdminShell({ user, title, children, actions = null, breadc
     <div className={styles.appShell}>
       <aside className={styles.sidebar}>
         <div className={styles.sidebarTop}>
-          <p className={styles.eyebrow}>Экостройконтинент</p>
-          <h1 className={styles.sidebarTitle}>Админка</h1>
+          <p className={styles.eyebrow}>Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚</p>
+          <h1 className={styles.sidebarTitle}>РђРґРјРёРЅРєР°</h1>
           <p className={styles.sidebarUser}>
             {user.display_name} | {getRoleLabel(user.role)}
           </p>
         </div>
-        <nav className={styles.nav} aria-label="Основная навигация">
+        <nav className={styles.nav} aria-label="РћСЃРЅРѕРІРЅР°СЏ РЅР°РІРёРіР°С†РёСЏ">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -101,13 +102,13 @@ export async function AdminShell({ user, title, children, actions = null, breadc
         <div className={styles.sidebarFooter}>
           {renderInfraHealth(infraHealth.items)}
           <form action="/api/admin/logout" method="post">
-            <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>Выйти</button>
+            <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>Р’С‹Р№С‚Рё</button>
           </form>
         </div>
       </aside>
       <main className={styles.main}>
         {breadcrumbs.length ? (
-          <nav className={styles.depthBar} aria-label="Навигация по уровням">
+          <nav className={styles.depthBar} aria-label="РќР°РІРёРіР°С†РёСЏ РїРѕ СѓСЂРѕРІРЅСЏРј">
             {renderBreadcrumbs(breadcrumbs)}
           </nav>
         ) : null}
@@ -123,3 +124,4 @@ export async function AdminShell({ user, title, children, actions = null, breadc
     </div>
   );
 }
+

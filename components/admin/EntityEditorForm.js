@@ -20,6 +20,12 @@ import {
   getLegacyTestFixtureNormalizationHref,
   isLegacyTestFixtureNormalizationEntityTypeSupported
 } from "../../lib/admin/legacy-test-fixture-normalization.js";
+import {
+  getRemovalMarkHref,
+  getRemovalSweepHref,
+  getRemovalUnmarkHref,
+  isRemovalQuarantineEntityTypeSupported
+} from "../../lib/admin/removal-quarantine.js";
 import { getTestGraphTeardownHref, isTestGraphTeardownEntityTypeSupported } from "../../lib/admin/test-graph-teardown.js";
 import { getLiveDeactivationHref, isLiveDeactivationEntityTypeSupported } from "../../lib/admin/live-deactivation.js";
 import { userCanPublishRevision } from "../../lib/auth/session.js";
@@ -116,15 +122,18 @@ export function EntityEditorForm({
   relationOptions,
   mediaOptions,
   caseProjectTypeOptions = [],
+  markedForRemovalAt = null,
   user,
   message,
   error
 }) {
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const historyHref = entityId ? `/admin/entities/${entityType}/${entityId}/history` : "";
+  const canUseRemovalQuarantine = Boolean(entityId && isRemovalQuarantineEntityTypeSupported(entityType));
   const canDeletePreview = Boolean(entityId && isDeleteToolEntityTypeSupported(entityType));
   const canDeleteEntity = false; // Entity delete now always goes through the explicit preview screen.
   const canPublish = user.role === "superadmin";
+  const isMarkedForRemoval = Boolean(markedForRemovalAt);
   const canLiveDeactivate = Boolean(
     entityId
     && canPublish
@@ -222,6 +231,11 @@ export function EntityEditorForm({
             {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
           </SurfacePacket>
         )}
+        {isMarkedForRemoval ? (
+          <section className={styles.statusPanelInfo}>
+            Объект помечен на удаление. Новые ссылки на него блокируются, а финальная очистка запускается из центра очистки.
+          </section>
+        ) : null}
         {entityId || canDeleteEntity ? (
           <div className={styles.inlineActions}>
             {entityId ? <Link href={historyHref} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
@@ -230,6 +244,31 @@ export function EntityEditorForm({
             ) : null}
             {!activePublishedRevision && currentRevision?.state === "published" ? (
               <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Р’РЅРµ live</span>
+            ) : null}
+            {canUseRemovalQuarantine && !isMarkedForRemoval ? (
+              <ConfirmActionForm
+                action={getRemovalMarkHref(entityType, entityId)}
+                confirmMessage="Пометить объект на удаление? Новые ссылки на него будут заблокированы."
+              >
+                <input type="hidden" name="redirectTo" value={redirectTo} />
+                <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
+              </ConfirmActionForm>
+            ) : null}
+            {canUseRemovalQuarantine && isMarkedForRemoval ? (
+              <ConfirmActionForm
+                action={getRemovalUnmarkHref(entityType, entityId)}
+                confirmMessage="Снять пометку удаления?"
+              >
+                <input type="hidden" name="redirectTo" value={redirectTo} />
+                <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
+              </ConfirmActionForm>
+            ) : null}
+            {canUseRemovalQuarantine ? (
+              <Link href={getRemovalSweepHref()} className={isMarkedForRemoval ? styles.primaryButton : styles.secondaryButton}>
+                Центр очистки
+              </Link>
             ) : null}
             {canTeardownTestGraph ? (
               <Link href={getTestGraphTeardownHref(entityType, entityId)} className={styles.secondaryButton}>
@@ -247,8 +286,8 @@ export function EntityEditorForm({
               </Link>
             ) : null}
             {canDeletePreview ? (
-              <Link href={getEntityDeletePreviewHref(entityType, entityId)} className={styles.dangerButton}>
-                Безопасно убрать
+              <Link href={getEntityDeletePreviewHref(entityType, entityId)} className={styles.secondaryButton}>
+                Безопасно убрать (legacy)
               </Link>
             ) : null}
             {canDeleteEntity ? (
