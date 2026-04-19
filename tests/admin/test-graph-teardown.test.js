@@ -331,8 +331,8 @@ test("executeTestGraphTeardown deactivates published truth and deletes in depend
     deleteEntityById: async (entityId) => {
       operations.push(`delete:${entityId}`);
     },
-    deleteEntityWithSafetyInDb: async ({ entityType, entityId, testOnly }) => {
-      deleteCalls.push({ entityType, entityId, testOnly });
+    deleteEntityWithSafetyInDb: async ({ entityType, entityId, testOnly, ignoreIncomingEntityIds }) => {
+      deleteCalls.push({ entityType, entityId, testOnly, ignoreIncomingEntityIds });
       operations.push(`delete:${entityId}`);
       return {
         deleted: true,
@@ -360,7 +360,17 @@ test("executeTestGraphTeardown deactivates published truth and deletes in depend
     "storage:media/test.png"
   ]);
   assert.deepEqual(deleteCalls, [
-    { entityType: ENTITY_TYPES.SERVICE, entityId: "service_test_1", testOnly: true },
-    { entityType: ENTITY_TYPES.MEDIA_ASSET, entityId: "media_test_1", testOnly: true }
+    {
+      entityType: ENTITY_TYPES.SERVICE,
+      entityId: "service_test_1",
+      testOnly: true,
+      ignoreIncomingEntityIds: ["page_test_1", "service_test_1", "media_test_1"]
+    },
+    {
+      entityType: ENTITY_TYPES.MEDIA_ASSET,
+      entityId: "media_test_1",
+      testOnly: true,
+      ignoreIncomingEntityIds: ["page_test_1", "service_test_1", "media_test_1"]
+    }
   ]);
 });
