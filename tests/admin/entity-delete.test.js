@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
-import { assessEntityDelete, buildDeleteBatchSummary } from "../../lib/admin/entity-delete.js";
+import {
+  assessEntityDelete,
+  buildDeleteBatchSummary,
+  deleteEntityWithSafetyInDb
+} from "../../lib/admin/entity-delete.js";
 
 function makeAggregate(entityType, entityId, overrides = {}) {
   return {
@@ -184,4 +188,37 @@ test("delete batch summary keeps deleted and refused counts", () => {
   assert.equal(summary.deletedCount, 1);
   assert.equal(summary.refusedCount, 2);
   assert.equal(summary.reasons.length, 2);
+});
+
+test("direct safe delete DB helper preserves refusal reasons for orchestration callers", async () => {
+  const result = await deleteEntityWithSafetyInDb(
+    {
+      entityType: ENTITY_TYPES.SERVICE,
+      entityId: "service_1",
+      actorUserId: "user_1"
+    },
+    {
+      assessEntityDelete: async () => ({
+        allowed: false,
+        entityType: ENTITY_TYPES.SERVICE,
+        entityId: "service_1",
+        reasons: ["Объект используется в опубликованной странице."],
+        stateBlockers: [],
+        publishedIncomingRefs: [],
+        draftIncomingRefs: [],
+        root: {
+          entityId: "service_1",
+          entityType: ENTITY_TYPES.SERVICE,
+          label: "Service 1"
+        }
+      }),
+      recordDestructiveEvent: async () => {},
+      deleteEntityById: async () => {
+        throw new Error("should not execute");
+      }
+    }
+  );
+
+  assert.equal(result.deleted, false);
+  assert.deepEqual(result.reasons, ["Объект используется в опубликованной странице."]);
 });
