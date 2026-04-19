@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { evaluateRemovalSweepComponent } from "../../lib/admin/removal-sweep-analysis.js";
+import { evaluateRemovalSweepComponent, executeRemovalSweep } from "../../lib/admin/removal-sweep-analysis.js";
 
 function makeCard(entityType, entityId, payload, { marked = true, state = "draft" } = {}) {
   return {
@@ -113,4 +113,43 @@ test("removal sweep analysis blocks component when unmarked published page still
   assert.equal(evaluation.verdict, "blocked");
   assert.equal(evaluation.publishedIncomingRefs.length, 1);
   assert.match(evaluation.summary, /живой непомеченный контур/i);
+});
+
+test("removal sweep passes full component ids into safe-delete execution for cyclic teardown", async () => {
+  const deleteCalls = [];
+
+  const result = await executeRemovalSweep(
+    {
+      entityType: "service",
+      entityId: "service_marked",
+      actorUserId: "user_1",
+      correlationId: "corr_1"
+    },
+    {
+      ...buildDeps(),
+      withTransaction: async (handler) => handler({}),
+      recordAuditEvent: async () => {},
+      recordDestructiveEvent: async () => {},
+      deleteEntityWithSafetyInDb: async (input) => {
+        deleteCalls.push(input);
+
+        assert.deepEqual(
+          [...input.ignoreIncomingEntityIds].sort(),
+          ["case_marked", "service_marked"]
+        );
+
+        return {
+          deleted: true,
+          reasons: [],
+          storageKeys: []
+        };
+      }
+    }
+  );
+
+  assert.equal(result.deleted.length, 2);
+  assert.deepEqual(
+    deleteCalls.map((item) => item.entityId),
+    ["service_marked", "case_marked"]
+  );
 });
