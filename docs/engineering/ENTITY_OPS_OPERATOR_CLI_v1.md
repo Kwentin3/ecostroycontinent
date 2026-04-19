@@ -1,4 +1,4 @@
-# Entity Ops Operator CLI v1
+﻿# Entity Ops Operator CLI v1
 
 ## Purpose
 
@@ -6,23 +6,16 @@
 
 It is intentionally not a raw database shell and not a publish shortcut.
 
-The tool now covers four narrow operation families through one stable entrypoint:
+The tool covers four narrow operation families through one stable entrypoint:
 
-- `entity`: create, update, upsert, delete draft entities through the canonical admin save/delete routes;
-- `media`: create or patch media assets through the dedicated media library API;
-- `display_mode`: switch the persisted public display mode through the superadmin control route;
+- `entity`: create, update, upsert, and delete draft entities through the canonical admin save/delete routes.
+- `media`: create or patch media assets through the dedicated media library API.
+- `display_mode`: switch the persisted public display mode through the superadmin control route.
 - `removal`: mark, unmark, and purge entities through the bounded removal-quarantine and sweep routes.
 
 ## Why this tool exists
 
-The project already has a strong write-side:
-
-- login and RBAC are explicit;
-- save paths go through the canonical admin runtime;
-- removal and display-mode actions already have their own guarded routes;
-- audit and workflow guarantees live in the application, not in ad-hoc scripts.
-
-`entity-ops` keeps those guarantees while giving the operator and the internal agent one compact, scriptable control surface.
+The project already has guarded write-side routes, role checks, workflow boundaries, and runtime validation. `entity-ops` keeps those guarantees while giving the operator and the internal agent one compact, scriptable control surface.
 
 ## What it intentionally uses
 
@@ -107,12 +100,20 @@ Supported overrides:
 - `--password`
 - `--change-intent`
 - `--creation-origin`
-- `--report`
-- `--execute`
+- `--format`: `text` or `json`
+- `--json`: shorthand for `--format json`
+- `--report`: write a JSON report to a file
+- `--execute`: apply the operations
 
 ## Input contract
 
 The tool accepts `JSON` or `JSONL`.
+
+Windows note:
+
+- input files are decoded safely from UTF-8, UTF-8 with BOM, UTF-16LE, or UTF-16BE
+- PowerShell-generated batch files do not need manual recoding before use
+- `--json` is recommended when the caller wants machine-readable stdout and wants to avoid console-format ambiguity
 
 When `fields` is omitted, non-reserved top-level keys become save fields.
 
@@ -175,10 +176,10 @@ Supported modes:
 
 Typical use cases:
 
-- upload a new file from disk;
-- patch media metadata safely;
-- replace a binary on a draft media asset;
-- update collection membership during a media patch.
+- upload a new file from disk
+- patch media metadata safely
+- replace a binary on a draft media asset
+- update collection membership during a media patch
 
 Example:
 
@@ -292,21 +293,32 @@ Removal notes:
 
 ## Output
 
-The tool prints:
+The tool supports two stdout modes:
 
-- execution mode;
-- total operations;
-- summary counters;
-- per-operation result lines;
-- preview diff keys in dry-run and execute mode;
-- route messages for redirect-backed actions;
-- current display mode after a successful mode switch;
-- uploaded local file path for media create/update operations.
+- `text`: human-readable summary for operators
+- `json`: machine-readable report for agents and automation
 
-Optional JSON report:
+Text mode prints:
+
+- execution mode
+- total operations
+- summary counters
+- per-operation result lines
+- preview diff keys in dry-run and execute mode
+- route messages for redirect-backed actions
+- current display mode after a successful mode switch
+- uploaded local file path for media create/update operations
+
+Optional JSON report file:
 
 ```powershell
 npm run entity:ops -- --input .\var\entity-batch.json --report .\var\entity-ops-report.json
+```
+
+Machine-readable stdout:
+
+```powershell
+npm run entity:ops -- --input .\var\entity-batch.json --json
 ```
 
 ## Recommended delivery flow

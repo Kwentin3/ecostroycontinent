@@ -4,10 +4,16 @@ import path from "node:path";
 import { EntityOpsAdminClient } from "../lib/entity-ops/client.js";
 import { getEntityOpsConfig } from "../lib/entity-ops/config.js";
 import { normalizeEntityOperations, parseEntityOpsDocument } from "../lib/entity-ops/input.js";
+import {
+  readEntityOpsInputFile,
+  resolveEntityOpsOutputFormat,
+  serializeEntityOpsReport,
+  writeUtf8
+} from "../lib/entity-ops/io.js";
 import { runEntityOperations } from "../lib/entity-ops/runner.js";
 
 function printHelp() {
-  console.log(`Usage:
+  writeUtf8(process.stdout, `Usage:
   node --env-file=.env scripts/entity-ops.mjs --input <file> [--kind <kind>] [--entity-type <type>] [--mode <mode>] [--execute]
 
 Options:
@@ -20,6 +26,8 @@ Options:
   --password <value>       Override ENTITY_OPS_PASSWORD
   --change-intent <text>   Default changeIntent for every item
   --creation-origin <val>  Default creationOrigin for every item
+  --format <kind>          Output format: text | json
+  --json                   Shorthand for --format json
   --report <file>          Write JSON report to file
   --execute                Apply changes; without this flag the script runs in dry-run mode
   --help                   Show this help
@@ -44,6 +52,11 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (arg === "--json") {
+      options.json = true;
+      continue;
+    }
+
     if (!arg.startsWith("--")) {
       throw new Error(`Unexpected argument: ${arg}`);
     }
@@ -62,54 +75,11 @@ function parseArgs(argv) {
   return options;
 }
 
-function printReport(report) {
-  console.log(`Mode: ${report.execute ? "execute" : "dry-run"}`);
-  console.log(`Total: ${report.total}`);
-  console.log(`Summary: ${JSON.stringify(report.summary)}`);
-
-  for (const item of report.items) {
-    const status = item.ok ? item.action : "error";
-    const target = item.entityId ? ` (${item.entityId})` : "";
-    const scope = item.kind === "display_mode" ? "display_mode" : (item.entityType || item.kind);
-    console.log(`- [${status}] ${scope} :: ${item.label}${target}`);
-
-    if (item.reason) {
-      console.log(`  reason: ${item.reason}`);
-    }
-
-    const diffKeys = Object.keys(item.previewDiff || {});
-
-    if (diffKeys.length > 0) {
-      console.log(`  diff: ${diffKeys.join(", ")}`);
-    }
-
-    if (Array.isArray(item.changedFields) && item.changedFields.length > 0) {
-      console.log(`  saved: ${item.changedFields.join(", ")}`);
-    }
-
-    if (Array.isArray(item.deletedIds) && item.deletedIds.length > 0) {
-      console.log(`  deleted: ${item.deletedIds.join(", ")}`);
-    }
-
-    if (item.currentMode) {
-      console.log(`  currentMode: ${item.currentMode}`);
-    }
-
-    if (item.filePath) {
-      console.log(`  file: ${item.filePath}`);
-    }
-
-    if (item.message) {
-      console.log(`  message: ${item.message}`);
-    }
-  }
-}
-
 async function writeReport(reportPath, report) {
   const resolved = path.resolve(reportPath);
   await fs.mkdir(path.dirname(resolved), { recursive: true });
   await fs.writeFile(resolved, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  console.log(`Report written to ${resolved}`);
+  writeUtf8(process.stdout, `Report written to ${resolved}\n`);
 }
 
 async function main() {
@@ -125,7 +95,7 @@ async function main() {
   }
 
   const inputPath = path.resolve(args.input);
-  const inputText = await fs.readFile(inputPath, "utf8");
+  const inputText = await readEntityOpsInputFile(inputPath);
   const document = parseEntityOpsDocument(inputText, inputPath);
   const operations = normalizeEntityOperations(document, {
     defaultKind: args.kind,
@@ -144,7 +114,9 @@ async function main() {
     execute: args.execute
   });
 
-  printReport(report);
+  writeUtf8(process.stdout, serializeEntityOpsReport(report, {
+    format: resolveEntityOpsOutputFormat(args)
+  }));
 
   if (args.report) {
     await writeReport(args.report, report);
@@ -156,6 +128,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error?.message || error);
+  writeUtf8(process.stderr, `${error?.message || error}\n`);
   process.exitCode = 1;
 });
