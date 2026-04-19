@@ -15,7 +15,7 @@ test("preview viewport exposes tablet semantics as explicit operator affordance"
   assert.equal(tablet.width, 834);
   assert.equal(tablet.deviceShellClassName, "previewViewportDeviceTablet");
   assert.equal(formatPreviewViewportWidth(tablet.width), "834 пикс.");
-  assert.match(tablet.hint, /РїРµСЂРµРЅРѕСЃ|CTA|СЃРµРєС†Рё/i);
+  assert.match(tablet.hint, /перенос|CTA|секц/i);
 });
 
 test("preview viewport falls back to desktop for unknown device", () => {
@@ -126,3 +126,4 @@ test("cleanup aggregate builder still orders existing revisions without duplicat
   assert.equal(aggregates[0].revisions[0].id, "rev_2");
   assert.equal(aggregates[0].revisions[1].id, "rev_1");
 });
+

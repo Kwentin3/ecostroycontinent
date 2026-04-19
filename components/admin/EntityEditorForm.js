@@ -243,7 +243,7 @@ export function EntityEditorForm({
               <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
             ) : null}
             {!activePublishedRevision && currentRevision?.state === "published" ? (
-              <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Р’РЅРµ live</span>
+              <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Вне live</span>
             ) : null}
             {canUseRemovalQuarantine && !isMarkedForRemoval ? (
               <ConfirmActionForm
@@ -282,7 +282,7 @@ export function EntityEditorForm({
             ) : null}
             {canLiveDeactivate ? (
               <Link href={getLiveDeactivationHref(entityType, entityId)} className={styles.secondaryButton}>
-                Р’С‹РІРµСЃС‚Рё РёР· Р¶РёРІРѕРіРѕ РєРѕРЅС‚СѓСЂР°
+                Вывести из живого контура
               </Link>
             ) : null}
             {canDeletePreview ? (

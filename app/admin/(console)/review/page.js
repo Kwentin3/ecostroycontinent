@@ -192,7 +192,7 @@ function renderPageGalleryCardPreview(card, modalModel, previewPayload) {
 }
 
 function renderCanonicalPageGalleryCardPreview(card, modalModel, previewPayload) {
-  const previewIntro = card.previewIntro || "РљР°СЂС‚РѕС‡РєР° СЃС‚СЂР°РЅРёС†С‹ РїРѕРєР°Р·С‹РІР°РµС‚ РїРµСЂРІС‹Р№ СЌРєСЂР°РЅ С‚Р°Рє, РєР°Рє РµРіРѕ СѓРІРёРґРёС‚ РїРѕСЃРµС‚РёС‚РµР»СЊ.";
+  const previewIntro = card.previewIntro || "Карточка страницы показывает первый экран так, как его увидит посетитель.";
 
   return (
     <PagePreviewThumbnail

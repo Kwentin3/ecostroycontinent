@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 import { PAGE_SECTION_TYPES, PAGE_TYPES } from "../../lib/content-core/content-types.js";
 import { normalizePageMediaSettings } from "../../lib/content-core/page-media.js";
@@ -401,7 +401,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "РљРѕРЅС‚Р°РєС‚С‹"}</h2>
+            <h2>{section.title || "Контакты"}</h2>
             {section.body ? <p>{section.body}</p> : null}
             <p>{contactProjection?.displayPhone || PUBLIC_COPY.contactInfoFallback}</p>
             <p>{contactProjection?.displayRegion || PUBLIC_COPY.serviceAreaFallback}</p>
@@ -431,8 +431,8 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "Р§С‚Рѕ РІС…РѕРґРёС‚ РІ СѓСЃР»СѓРіСѓ"}</h2>
-            <p>{section.body || primaryService?.serviceScope || primaryService?.summary || "РћРїРёСЃР°РЅРёРµ РїРѕРєР° РЅРµ Р·Р°РїРѕР»РЅРµРЅРѕ."}</p>
+            <h2>{section.title || "Что входит в услугу"}</h2>
+            <p>{section.body || primaryService?.serviceScope || primaryService?.summary || "Описание пока не заполнено."}</p>
             {primaryService?.problemsSolved ? <p>{primaryService.problemsSolved}</p> : null}
           </section>
         );
@@ -444,8 +444,8 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "Рћ С‚РµС…РЅРёРєРµ"}</h2>
-            <p>{section.body || primaryEquipment?.capabilitySummary || primaryEquipment?.shortSummary || "РћРїРёСЃР°РЅРёРµ С‚РµС…РЅРёРєРё РїРѕРєР° РЅРµ Р·Р°РїРѕР»РЅРµРЅРѕ."}</p>
+            <h2>{section.title || "О технике"}</h2>
+            <p>{section.body || primaryEquipment?.capabilitySummary || primaryEquipment?.shortSummary || "Описание техники пока не заполнено."}</p>
           </section>
         );
       case PAGE_SECTION_TYPES.EQUIPMENT_SPECS: {
@@ -462,7 +462,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё"}</h2>
+            <h2>{section.title || "Характеристики"}</h2>
             <ul className={styles.listing}>
               {items.map((item) => <li key={item}>{item}</li>)}
             </ul>
@@ -486,8 +486,8 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "Р“РґРµ СЂР°Р±РѕС‚Р°РµРј"}</h2>
-            <p>{geoBits.join(" В· ") || "Р“РµРѕРіСЂР°С„РёСЏ РїРѕРєР° РЅРµ Р·Р°РїРѕР»РЅРµРЅР°."}</p>
+            <h2>{section.title || "Где работаем"}</h2>
+            <p>{geoBits.join(" · ") || "География пока не заполнена."}</p>
           </section>
         );
       }
@@ -539,7 +539,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             data-preview-section={section.type}
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
-            <h2>{section.title || "РћСЃС‚Р°РІСЊС‚Рµ Р·Р°СЏРІРєСѓ"}</h2>
+            <h2>{section.title || "Оставьте заявку"}</h2>
             <div className={styles.ctaRow}>
               <p className={styles.ctaCopy}>{section.body || globalSettings?.defaultCtaDescription || ""}</p>
               <p className={styles.ctaChip}>{section.ctaLabel || globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}</p>
@@ -898,9 +898,9 @@ export function StandalonePage({
         >
           <p className={styles.eyebrow}>
             {page.pageType === PAGE_TYPES.SERVICE_LANDING
-              ? "РЎС‚СЂР°РЅРёС†Р° СѓСЃР»СѓРіРё"
+              ? "Страница услуги"
               : page.pageType === PAGE_TYPES.EQUIPMENT_LANDING
-                ? "РЎС‚СЂР°РЅРёС†Р° С‚РµС…РЅРёРєРё"
+                ? "Страница техники"
                 : PUBLIC_COPY.pageEyebrow}
           </p>
           <h1>{page.h1}</h1>
