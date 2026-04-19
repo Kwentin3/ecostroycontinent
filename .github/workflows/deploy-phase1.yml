@@ -148,17 +148,52 @@ jobs:
             -e TEST_ACCEPTANCE_USERNAME="$TEST_ACCEPTANCE_USERNAME" \
             -e TEST_ACCEPTANCE_PASSWORD="$TEST_ACCEPTANCE_PASSWORD" \
             -e TEST_ACCEPTANCE_PREFIX="$TEST_ACCEPTANCE_PREFIX" \
+            -e OUTPUT_FILE=/work/.live-removal-sweep-acceptance-report.json \
             node:22-alpine \
             node scripts/live-removal-sweep-acceptance.mjs
 
       - name: Fallback cleanup for prefixed test data
         if: ${{ always() && inputs.run_live_removal_acceptance }}
         run: |
-          docker exec repo-app-1 node /app/scripts/cleanup-test-data.mjs \
-            --confirm \
-            --allow-referenced \
-            --pattern "$TEST_ACCEPTANCE_PREFIX" \
-            --json || true
+          if [ ! -f "$GITHUB_WORKSPACE/.live-removal-sweep-acceptance-report.json" ]; then
+            exit 0
+          fi
+
+          mapfile -t entity_ids < <(
+            docker run --rm \
+              -v "$GITHUB_WORKSPACE:/work" \
+              -w /work \
+              node:22-alpine \
+              node - <<'EOF'
+            const fs = require("node:fs");
+            const reportPath = "/work/.live-removal-sweep-acceptance-report.json";
+
+            if (!fs.existsSync(reportPath)) {
+              process.exit(0);
+            }
+
+            const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+            const ids = Object.values(report.created || {})
+              .map((item) => item?.id)
+              .filter(Boolean);
+
+            for (const id of ids) {
+              console.log(id);
+            }
+EOF
+          )
+
+          if [ "${#entity_ids[@]}" -eq 0 ]; then
+            exit 0
+          fi
+
+          cleanup_cmd=(docker exec repo-app-1 node /app/scripts/cleanup-test-data.mjs --confirm --allow-referenced --exact-entity-ids --json)
+
+          for entity_id in "${entity_ids[@]}"; do
+            cleanup_cmd+=(--entity-id "$entity_id")
+          done
+
+          "${cleanup_cmd[@]}" || true
 
       - name: Remove temporary operator
         if: ${{ always() && inputs.run_live_removal_acceptance }}
