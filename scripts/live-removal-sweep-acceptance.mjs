@@ -228,6 +228,19 @@ function assertIncludes(haystack, needle, label) {
   }
 }
 
+function escapeRegExp(value) {
+  return String(value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function cleanupPageContainsPurgeEntityId(html, entityId) {
+  if (!entityId) {
+    return false;
+  }
+
+  const pattern = new RegExp(`name="entityId" value="${escapeRegExp(entityId)}"`, "i");
+  return pattern.test(html);
+}
+
 async function writeReport(report) {
   const outputFile = String(process.env.OUTPUT_FILE ?? "").trim();
 
@@ -348,6 +361,12 @@ async function main() {
     assertIncludes(cleanupHtml, caseFields.title, "cleanup center");
     assertIncludes(cleanupHtml, media.title, "cleanup center");
     assertIncludes(cleanupHtml, "Очистить граф", "cleanup center");
+    report.checks.cleanupCenterHasActiveRoot = cleanupPageContainsPurgeEntityId(cleanupHtml, serviceId);
+
+    if (!report.checks.cleanupCenterHasActiveRoot) {
+      throw new Error("Cleanup center did not expose an active purge target for the test graph.");
+    }
+
     report.checks.cleanupCenterVisible = true;
 
     const purge = await client.purge("case", caseId);
@@ -362,10 +381,7 @@ async function main() {
     }
 
     const cleanupAfterHtml = await client.fetchHtml("/admin/removal-sweep");
-    report.checks.cleanupCenterCleared =
-      !cleanupAfterHtml.includes(serviceFields.title)
-      && !cleanupAfterHtml.includes(caseFields.title)
-      && !cleanupAfterHtml.includes(media.title);
+    report.checks.cleanupCenterCleared = !cleanupPageContainsPurgeEntityId(cleanupAfterHtml, serviceId);
 
     if (!report.checks.cleanupCenterCleared) {
       throw new Error("Cleanup center still shows the deleted test graph.");
