@@ -165,22 +165,22 @@ jobs:
               -w /work \
               node:22-alpine \
               node - <<'EOF'
-            const fs = require("node:fs");
-            const reportPath = "/work/.live-removal-sweep-acceptance-report.json";
+                const fs = require("node:fs");
+                const reportPath = "/work/.live-removal-sweep-acceptance-report.json";
 
-            if (!fs.existsSync(reportPath)) {
-              process.exit(0);
-            }
+                if (!fs.existsSync(reportPath)) {
+                  process.exit(0);
+                }
 
-            const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
-            const ids = Object.values(report.created || {})
-              .map((item) => item?.id)
-              .filter(Boolean);
+                const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+                const ids = Object.values(report.created || {})
+                  .map((item) => item?.id)
+                  .filter(Boolean);
 
-            for (const id of ids) {
-              console.log(id);
-            }
-EOF
+                for (const id of ids) {
+                  console.log(id);
+                }
+              EOF
           )
 
           if [ "${#entity_ids[@]}" -eq 0 ]; then
