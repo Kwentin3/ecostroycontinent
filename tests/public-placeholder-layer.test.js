@@ -66,12 +66,12 @@ test("placeholder fixtures expose route stubs for services, cases and standalone
   assert.ok(getPlaceholderCaseBySlug(cases[0].slug));
 });
 
-test("public placeholder layer wiring is present in routes and middleware", () => {
+test("public placeholder layer wiring is present in routes and proxy", () => {
   const servicesIndex = readFileSync(new URL("../app/services/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const serviceDetail = readFileSync(new URL("../app/services/[slug]/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const contactsPage = readFileSync(new URL("../app/contacts/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const runtimeDisplayModeSource = readFileSync(new URL("../lib/public-launch/runtime-display-mode.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
-  const middlewareSource = readFileSync(new URL("../middleware.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const proxySource = readFileSync(new URL("../proxy.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const rendererSource = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
   assert.match(servicesIndex, /resolvePublicRuntimeDisplayMode/);
@@ -85,8 +85,8 @@ test("public placeholder layer wiring is present in routes and middleware", () =
   assert.match(rendererSource, /placeholderMarker/);
   assert.match(rendererSource, /ТЕХНИЧЕСКАЯ ЗАГЛУШКА - НЕ БОЕВОЙ КОНТЕНТ|PLACEHOLDER_MARKER_TEXT/);
 
-  assert.match(middlewareSource, /PLACEHOLDER_QUERY_PARAM/);
-  assert.match(middlewareSource, /PLACEHOLDER_COOKIE_NAME/);
-  assert.match(middlewareSource, /X-Robots-Tag/);
-  assert.match(middlewareSource, /noindex, nofollow/);
+  assert.match(proxySource, /PLACEHOLDER_QUERY_PARAM/);
+  assert.match(proxySource, /PLACEHOLDER_COOKIE_NAME/);
+  assert.match(proxySource, /X-Robots-Tag/);
+  assert.match(proxySource, /noindex, nofollow/);
 });

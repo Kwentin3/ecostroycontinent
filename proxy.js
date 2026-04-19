@@ -122,7 +122,7 @@ function resolveDebugModeAndApplyCookies(request, response) {
   return debugMode;
 }
 
-export async function middleware(request) {
+export async function proxy(request) {
   if (!isPublicCorePath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
@@ -146,5 +146,3 @@ export async function middleware(request) {
 export const config = {
   matcher: ["/", "/services/:path*", "/cases/:path*", "/about", "/contacts"]
 };
-
-export const runtime = "nodejs";
