@@ -63,6 +63,18 @@ jobs:
             --env-file /opt/ecostroycontinent/runtime/app-image.env \
             --project-name repo \
             -f compose.yaml \
+            up -d sql
+          docker compose \
+            --env-file /opt/ecostroycontinent/runtime/.env \
+            --env-file /opt/ecostroycontinent/runtime/app-image.env \
+            --project-name repo \
+            -f compose.yaml \
+            run --rm --no-deps app npm run db:migrate
+          docker compose \
+            --env-file /opt/ecostroycontinent/runtime/.env \
+            --env-file /opt/ecostroycontinent/runtime/app-image.env \
+            --project-name repo \
+            -f compose.yaml \
             up -d --remove-orphans
 
       - name: Confirm deployed image pin
