@@ -164,23 +164,7 @@ jobs:
               -v "$GITHUB_WORKSPACE:/work" \
               -w /work \
               node:22-alpine \
-              node - <<'EOF'
-                const fs = require("node:fs");
-                const reportPath = "/work/.live-removal-sweep-acceptance-report.json";
-
-                if (!fs.existsSync(reportPath)) {
-                  process.exit(0);
-                }
-
-                const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
-                const ids = Object.values(report.created || {})
-                  .map((item) => item?.id)
-                  .filter(Boolean);
-
-                for (const id of ids) {
-                  console.log(id);
-                }
-              EOF
+              node -e 'const fs = require("node:fs"); const reportPath = "/work/.live-removal-sweep-acceptance-report.json"; if (!fs.existsSync(reportPath)) { process.exit(0); } const report = JSON.parse(fs.readFileSync(reportPath, "utf8")); for (const id of Object.values(report.created || {}).map((item) => item && item.id).filter(Boolean)) { console.log(id); }'
           )
 
           if [ "${#entity_ids[@]}" -eq 0 ]; then
