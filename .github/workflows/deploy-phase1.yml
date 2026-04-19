@@ -7,6 +7,11 @@ on:
         description: Pinned GHCR image reference to write into /opt/ecostroycontinent/runtime/.env
         required: true
         type: string
+      run_live_removal_acceptance:
+        description: Run the live removal sweep acceptance harness after deploy
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -104,3 +109,58 @@ jobs:
             sleep 3
           done
           curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"
+
+      - name: Prepare temporary operator for live acceptance
+        if: ${{ inputs.run_live_removal_acceptance }}
+        run: |
+          set -a
+          . /opt/ecostroycontinent/runtime/.env
+          set +a
+
+          prefix="test_removal_live_${GITHUB_RUN_ID}"
+          user_id="user_${prefix}"
+          username="test_removal_ops_${GITHUB_RUN_ID}"
+          password="$(docker exec repo-app-1 node -e "console.log(require('node:crypto').randomBytes(18).toString('base64url'))")"
+          password_hash="$(docker exec repo-app-1 node --input-type=module -e "import { hashPassword } from './lib/auth/password.js'; console.log(hashPassword(process.argv[1]));" "$password")"
+
+          echo "::add-mask::$password"
+          echo "::add-mask::$password_hash"
+
+          printf 'TEST_ACCEPTANCE_PREFIX=%s\n' "$prefix" >> "$GITHUB_ENV"
+          printf 'TEST_ACCEPTANCE_USER_ID=%s\n' "$user_id" >> "$GITHUB_ENV"
+          printf 'TEST_ACCEPTANCE_USERNAME=%s\n' "$username" >> "$GITHUB_ENV"
+          printf 'TEST_ACCEPTANCE_PASSWORD=%s\n' "$password" >> "$GITHUB_ENV"
+          printf 'TEST_ACCEPTANCE_PASSWORD_HASH=%s\n' "$password_hash" >> "$GITHUB_ENV"
+          printf 'LIVE_APP_BASE_URL=%s\n' "$APP_BASE_URL" >> "$GITHUB_ENV"
+
+      - name: Insert temporary operator into live DB
+        if: ${{ inputs.run_live_removal_acceptance }}
+        run: |
+          docker exec repo-sql-1 sh -lc "psql -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -c \"INSERT INTO app_users (id, username, display_name, role, password_hash, active) VALUES ('${TEST_ACCEPTANCE_USER_ID}', '${TEST_ACCEPTANCE_USERNAME}', 'Live Removal Acceptance', 'superadmin', '${TEST_ACCEPTANCE_PASSWORD_HASH}', TRUE);\""
+
+      - name: Run live removal sweep acceptance
+        if: ${{ inputs.run_live_removal_acceptance }}
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/work" \
+            -w /work \
+            -e APP_BASE_URL="$LIVE_APP_BASE_URL" \
+            -e TEST_ACCEPTANCE_USERNAME="$TEST_ACCEPTANCE_USERNAME" \
+            -e TEST_ACCEPTANCE_PASSWORD="$TEST_ACCEPTANCE_PASSWORD" \
+            -e TEST_ACCEPTANCE_PREFIX="$TEST_ACCEPTANCE_PREFIX" \
+            node:22-alpine \
+            node scripts/live-removal-sweep-acceptance.mjs
+
+      - name: Fallback cleanup for prefixed test data
+        if: ${{ always() && inputs.run_live_removal_acceptance }}
+        run: |
+          docker exec repo-app-1 node /app/scripts/cleanup-test-data.mjs \
+            --confirm \
+            --allow-referenced \
+            --pattern "$TEST_ACCEPTANCE_PREFIX" \
+            --json || true
+
+      - name: Remove temporary operator
+        if: ${{ always() && inputs.run_live_removal_acceptance }}
+        run: |
+          docker exec repo-sql-1 sh -lc "psql -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -c \"DELETE FROM app_users WHERE id = '${TEST_ACCEPTANCE_USER_ID}' OR username = '${TEST_ACCEPTANCE_USERNAME}';\""
