@@ -23,7 +23,6 @@ const STATUS_OPTIONS = [
   { value: "all", label: "Все" },
   { value: "needs_owner", label: "Требуют решения" },
   { value: "returned", label: "Возвращены" },
-  { value: "approved", label: "Согласованы" },
   { value: "in_review", label: "На проверке" }
 ];
 
@@ -41,6 +40,14 @@ const MODAL_PAGE_PREVIEW_ZOOM = Object.freeze({
   tablet: 0.4,
   mobile: 0.58
 });
+
+function normalizeStatusFilter(value) {
+  if (value === "approved") {
+    return "in_review";
+  }
+
+  return value;
+}
 
 function buildReviewUrl({
   query = "",
@@ -91,10 +98,6 @@ function cardStatusClassName(card) {
 
   if (card.status.key === "returned") {
     return styles.reviewGalleryCardReturned;
-  }
-
-  if (card.status.key === "approved") {
-    return styles.reviewGalleryCardApproved;
   }
 
   return "";
@@ -252,7 +255,7 @@ export default async function ReviewQueuePage({ searchParams }) {
   const queue = await getReviewQueue();
   const query = await searchParams;
   const search = typeof query?.q === "string" ? query.q : "";
-  const status = typeof query?.status === "string" ? query.status : "all";
+  const status = normalizeStatusFilter(typeof query?.status === "string" ? query.status : "all");
   const type = typeof query?.type === "string" ? query.type : "all";
   const selectedRevisionId = typeof query?.selected === "string" ? query.selected : "";
   const previewMode = typeof query?.preview === "string" ? query.preview : "desktop";
@@ -318,7 +321,7 @@ export default async function ReviewQueuePage({ searchParams }) {
               <span className={styles.reviewGalleryCounter}>Всего: {summary.total}</span>
               <span className={styles.reviewGalleryCounter}>Требуют решения: {summary.byStatus.needs_owner || 0}</span>
               <span className={styles.reviewGalleryCounter}>Возвращены: {summary.byStatus.returned || 0}</span>
-              <span className={styles.reviewGalleryCounter}>Согласованы: {summary.byStatus.approved || 0}</span>
+              <span className={styles.reviewGalleryCounter}>На проверке: {summary.byStatus.in_review || 0}</span>
             </div>
           </div>
 
@@ -501,12 +504,12 @@ export default async function ReviewQueuePage({ searchParams }) {
 
                 {publishHref ? (
                   <div className={styles.inlineActions}>
-                    <Link href={publishHref} className={styles.secondaryButton}>Проверить перед публикацией</Link>
+                    <Link href={publishHref} className={styles.secondaryButton}>Открыть публикацию</Link>
                   </div>
                 ) : null}
                 {publishWaitingForOwner ? (
                   <p className={styles.reviewModalActionNote}>
-                    Путь к публикации откроется после согласования владельца.
+                    Карточка остаётся в проверке и откроет публикацию после согласования владельца.
                   </p>
                 ) : null}
               </section>

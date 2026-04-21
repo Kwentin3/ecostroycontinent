@@ -390,7 +390,7 @@ function getPublicationNote(item, currentUserRole) {
   }
 
   if (canOpenMediaPublishReadiness(item, currentUserRole)) {
-    return "Версия уже на проверке. Следующий шаг — открыть проверку перед публикацией и выпустить медиафайл.";
+    return "Версия уже на проверке. Откройте задачу на экране проверки и завершите публикацию оттуда.";
   }
 
   if (isWaitingForOwnerApproval(item)) {
@@ -430,8 +430,9 @@ function MediaInspector({
   const waitingForOwnerApproval = isWaitingForOwnerApproval(item);
   const canOpenPublishReadiness = canOpenMediaPublishReadiness(item, currentUserRole);
   const reviewHref = item.currentRevisionId ? `/admin/review/${item.currentRevisionId}` : "";
-  const publishReadinessHref = item.currentRevisionId ? `/admin/revisions/${item.currentRevisionId}/publish` : "";
   const publicationNote = getPublicationNote(item, currentUserRole);
+  const reviewButtonLabel = canOpenPublishReadiness ? "Продолжить проверку" : "Открыть проверку";
+  const reviewButtonClassName = canOpenPublishReadiness ? styles.primaryButton : styles.secondaryButton;
 
   return (
     <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
@@ -560,10 +561,7 @@ function MediaInspector({
             </form>
           ) : null}
           {item.statusKey === "review" && reviewHref ? (
-            <Link href={reviewHref} className={styles.secondaryButton}>Открыть проверку</Link>
-          ) : null}
-          {canOpenPublishReadiness ? (
-            <Link href={publishReadinessHref} className={styles.primaryButton}>Проверить перед публикацией</Link>
+            <Link href={reviewHref} className={reviewButtonClassName}>{reviewButtonLabel}</Link>
           ) : null}
           {waitingForOwnerApproval ? (
             <button type="button" className={styles.secondaryButton} disabled>Ждёт согласования</button>

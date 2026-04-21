@@ -152,6 +152,8 @@ export function EntityEditorForm({
     && !isAgentTestCreationOrigin(entityCreationOrigin)
     && isLegacyTestFixtureNormalizationEntityTypeSupported(entityType)
   );
+  const reviewHref = currentRevision ? `/admin/review/${currentRevision.id}` : "";
+  const canOpenReview = Boolean(currentRevision && currentRevision.state === "review" && reviewHref);
   const canOpenPublishReadiness = Boolean(
     currentRevision
     && currentRevision.state === "review"
@@ -636,8 +638,10 @@ export function EntityEditorForm({
                   {ADMIN_COPY.sendForReview}
                 </button>
               ) : null}
-              {canOpenPublishReadiness ? (
-                <Link href={`/admin/revisions/${currentRevision.id}/publish`} className={styles.secondaryButton}>Проверить перед публикацией</Link>
+              {canOpenReview ? (
+                <Link href={reviewHref} className={styles.secondaryButton}>
+                  {canOpenPublishReadiness ? "Продолжить проверку" : "Открыть проверку"}
+                </Link>
               ) : null}
               {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
             </div>

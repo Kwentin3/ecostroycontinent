@@ -16,9 +16,10 @@ test("media workspace keeps the submit and publish path discoverable after the e
   assert.match(mediaLibrarySource, /ownerApprovalStatus: latestRevision\?\.ownerApprovalStatus \?\? "not_required"/);
   assert.match(workspaceSource, /Публикация/);
   assert.match(workspaceSource, /Отправить на проверку/);
-  assert.match(workspaceSource, /Проверить перед публикацией/);
+  assert.match(workspaceSource, /Продолжить проверку/);
+  assert.match(workspaceSource, /Открыть проверку/);
   assert.match(workspaceSource, /Ждёт согласования/);
   assert.match(workspaceSource, /currentUserRole === "superadmin"/);
   assert.match(workspaceSource, /\/api\/admin\/revisions\/\$\{item\.currentRevisionId\}\/submit/);
-  assert.match(workspaceSource, /\/admin\/revisions\/\$\{item\.currentRevisionId\}\/publish/);
+  assert.match(workspaceSource, /\/admin\/review\/\$\{item\.currentRevisionId\}/);
 });

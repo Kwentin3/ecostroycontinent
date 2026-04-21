@@ -40,7 +40,8 @@ function buildQueueItem({
 test("owner review status model prioritizes materials that still need owner decision", () => {
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "pending" }).key, "needs_owner");
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "rejected" }).key, "returned");
-  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" }).key, "approved");
+  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" }).key, "in_review");
+  assert.match(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" }).label, /Готово к публикации/);
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "in_review");
 });
 
@@ -122,14 +123,20 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
   assert.equal(cards[1].status.key, "needs_owner");
   assert.equal(cards[2].status.key, "returned");
   assert.equal(cards[2].mediaUrl, "/api/admin/media/media_1/preview");
-  assert.equal(cards[3].status.key, "approved");
-  assert.equal(cards[4].status.key, "in_review");
-  assert.match(cards[3].summary, /Объект сдан в срок/);
-  assert.match(cards[4].summary, /Свяжитесь с нами/);
-  assert.equal(cards[4].previewTitle, "Контакты");
-  assert.equal(cards[4].previewThemeKey, "forest_contrast");
-  assert.equal(cards[4].previewHeroLayout, "split");
-  assert.equal(cards[4].pageType, "contacts");
+  const caseCard = cards.find((card) => card.entityType === ENTITY_TYPES.CASE);
+  const pageCard = cards.find((card) => card.entityType === ENTITY_TYPES.PAGE);
+
+  assert.ok(caseCard);
+  assert.ok(pageCard);
+  assert.equal(caseCard.status.key, "in_review");
+  assert.match(caseCard.status.label, /Готово к публикации/);
+  assert.match(caseCard.summary, /Объект сдан в срок/);
+  assert.equal(pageCard.status.key, "in_review");
+  assert.match(pageCard.summary, /Свяжитесь с нами/);
+  assert.equal(pageCard.previewTitle, "Контакты");
+  assert.equal(pageCard.previewThemeKey, "forest_contrast");
+  assert.equal(pageCard.previewHeroLayout, "split");
+  assert.equal(pageCard.pageType, "contacts");
 
   const equipmentCard = cards.find((card) => card.entityType === ENTITY_TYPES.EQUIPMENT);
   const serviceCard = cards.find((card) => card.entityType === ENTITY_TYPES.SERVICE);
@@ -167,6 +174,7 @@ test("owner review gallery filters by status, type, and compact text content", (
   ]);
 
   assert.equal(filterOwnerReviewGalleryCards(cards, { status: "needs_owner" }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { status: "approved" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { type: ENTITY_TYPES.CASE }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "монолитные" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "склад" }).length, 1);
@@ -192,7 +200,7 @@ test("owner review gallery summary exposes compact counts for filters", () => {
 
   assert.equal(summary.total, 2);
   assert.equal(summary.byStatus.needs_owner, 1);
-  assert.equal(summary.byStatus.approved, 1);
+  assert.equal(summary.byStatus.in_review, 1);
   assert.equal(summary.byType[ENTITY_TYPES.SERVICE], 1);
   assert.equal(summary.byType[ENTITY_TYPES.CASE], 1);
 });
