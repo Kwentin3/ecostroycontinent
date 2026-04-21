@@ -457,7 +457,10 @@ function MediaInspector({
   const waitingForOwnerApproval = isWaitingForOwnerApproval(item);
   const canOpenPublishReadiness = canOpenMediaPublishReadiness(item, currentUserRole);
   const activePublishedRevision = item.publishedRevisionNumber
-    ? { id: "__live__", revisionNumber: item.publishedRevisionNumber }
+    ? {
+      id: item.statusKey === "published" && item.currentRevisionId ? item.currentRevisionId : "__live__",
+      revisionNumber: item.publishedRevisionNumber
+    }
     : null;
   const currentRevision = item.currentRevisionId ? {
     id: item.currentRevisionId,
