@@ -44,6 +44,11 @@ import {
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import { getWorkspaceQuestionHint } from "../../lib/admin/question-model.js";
 import { getOwnerApprovalStatusLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import {
+  getLivePublicationStatusModel,
+  getPublishActionCopy,
+  getWorkingRevisionStatusModel
+} from "../../lib/admin/workflow-status.js";
 import { PageMetadataModal } from "./PageMetadataModal";
 import { PreviewViewport } from "./PreviewViewport";
 import adminStyles from "./admin-ui.module.css";
@@ -458,7 +463,6 @@ export function PageWorkspaceScreen({
   });
   const [lifecycleState, setLifecycleState] = useState(lifecycle);
   const [lifecycleBusy, setLifecycleBusy] = useState("");
-  const [lifecycleMenuOpen, setLifecycleMenuOpen] = useState(false);
   const [activePicker, setActivePicker] = useState("");
   const [pickerQuery, setPickerQuery] = useState("");
   const previewDialogRef = useRef(null);
@@ -570,6 +574,15 @@ export function PageWorkspaceScreen({
     : "Согласование не требуется";
   const ownerApprovalPending = Boolean(revision?.ownerReviewRequired && revision.ownerApprovalStatus === "pending");
   const canOpenPublishReadiness = Boolean(publishHref && revision?.state === "review");
+  const activePublishedRevision = lifecycleState?.hasLivePublishedRevision
+    ? {
+      id: revision?.state === "published" ? revision.id : "__live__",
+      revisionNumber: revision?.state === "published" ? revision.revisionNumber : null
+    }
+    : null;
+  const workflowStatus = getWorkingRevisionStatusModel({ currentRevision: revision, activePublishedRevision });
+  const liveStatus = getLivePublicationStatusModel({ currentRevision: revision, activePublishedRevision });
+  const publishAction = getPublishActionCopy({ activePublishedRevision });
   const recommendedMediaSettings = useMemo(() => getDefaultPageMediaSettings(metadata.pageType), [metadata.pageType]);
   const usingRecommendedMediaSettings = useMemo(
     () => arePageMediaSettingsEqual(composition.mediaSettings, recommendedMediaSettings),
@@ -582,9 +595,14 @@ export function PageWorkspaceScreen({
   const selectedGalleryItems = galleryItems.filter((item) => (composition.sourceRefs.galleryIds || []).includes(item.id));
   const pageStatusItems = useMemo(() => ([
     {
-      label: "Состояние",
-      tone: currentSignal.tone || "unknown",
-      detail: currentSignal.label || "Статус пока не определён"
+      label: "Рабочий статус",
+      tone: workflowStatus.tone,
+      detail: workflowStatus.label
+    },
+    {
+      label: "Публикация",
+      tone: liveStatus.tone,
+      detail: liveStatus.label
     },
     {
       label: "Версия",
@@ -592,14 +610,14 @@ export function PageWorkspaceScreen({
       detail: revision ? `Версия №${revision.revisionNumber} · ${revisionStateLabel}` : "Черновик ещё не сохранён"
     },
     {
-      label: "Тип страницы",
-      tone: "unknown",
-      detail: PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType
-    },
-    {
       label: "Согласование",
       tone: revision?.ownerReviewRequired ? ownerApprovalTone : "unknown",
       detail: ownerApprovalLabel
+    },
+    {
+      label: "Готовность контента",
+      tone: currentSignal.tone || "unknown",
+      detail: currentSignal.label || "Статус пока не определён"
     },
     {
       label: "Изменения",
@@ -607,11 +625,25 @@ export function PageWorkspaceScreen({
       detail: compositionDirty || metadataDirty ? "Есть несохранённые правки" : "Все изменения сохранены"
     },
     {
-      label: "Публикация",
-      tone: lifecycleState?.hasLivePublishedRevision ? "healthy" : "unknown",
-      detail: lifecycleState?.hasLivePublishedRevision ? "Страница опубликована" : "Живой версии пока нет"
+      label: "Тип страницы",
+      tone: "unknown",
+      detail: PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType
     }
-  ]), [compositionDirty, currentSignal.label, currentSignal.tone, lifecycleState?.hasLivePublishedRevision, metadata.pageType, metadataDirty, ownerApprovalLabel, ownerApprovalTone, revision, revisionStateLabel]);
+  ]), [
+    compositionDirty,
+    currentSignal.label,
+    currentSignal.tone,
+    liveStatus.label,
+    liveStatus.tone,
+    metadata.pageType,
+    metadataDirty,
+    ownerApprovalLabel,
+    ownerApprovalTone,
+    revision,
+    revisionStateLabel,
+    workflowStatus.label,
+    workflowStatus.tone
+  ]);
   const seoAuditItems = useMemo(() => ([
     buildPresenceAudit(
       "Короткий адрес",
@@ -957,7 +989,6 @@ export function PageWorkspaceScreen({
     }
 
     setLifecycleBusy("archive");
-    setLifecycleMenuOpen(false);
     setError("");
     setStatus("");
 
@@ -1003,7 +1034,6 @@ export function PageWorkspaceScreen({
     }
 
     setLifecycleBusy("delete");
-    setLifecycleMenuOpen(false);
     setError("");
     setStatus("");
 
@@ -1057,19 +1087,17 @@ export function PageWorkspaceScreen({
             Один редактор обслуживает и отдельные страницы, и коммерческие посадки. Тип страницы меняет набор секций, но не уводит в другой экран.
           </p>
           <div className={styles.statusRow}>
-            <span className={`${styles.badge} ${toneClassName(currentSignal.tone)}`}>{currentSignal.label}</span>
+            <span className={`${styles.badge} ${toneClassName(workflowStatus.tone)}`}>{workflowStatus.label}</span>
+            <span className={`${styles.badge} ${toneClassName(liveStatus.tone)}`}>{liveStatus.label}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{revision ? `Версия №${revision.revisionNumber} · ${revisionStateLabel}` : "Черновика пока нет"}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType}</span>
             {revision?.ownerReviewRequired ? (
               <span className={`${styles.badge} ${toneClassName(ownerApprovalTone)}`}>{ownerApprovalLabel}</span>
             ) : null}
-            {lifecycleState?.hasLivePublishedRevision ? (
-              <span className={`${styles.badge} ${styles.tonehealthy}`}>В публикации</span>
-            ) : null}
             {compositionDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Есть несохраненные изменения</span> : null}
             {metadataDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Есть несохраненные метаданные</span> : null}
           </div>
-          <p className={styles.metaCompact}>{currentSignal.reason}</p>
+          <p className={styles.metaCompact}>{workflowStatus.description}</p>
         </div>
         <div className={styles.headerActions}>
           <button type="button" className={adminStyles.secondaryButton} onClick={() => handleOpenPreview(previewDevice)}>
@@ -1080,37 +1108,21 @@ export function PageWorkspaceScreen({
           </button>
           {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
           {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
-          {canOpenPublishReadiness ? <Link href={publishHref} className={adminStyles.secondaryButton}>К публикации</Link> : null}
+          {canOpenPublishReadiness ? <Link href={publishHref} className={adminStyles.primaryButton}>{publishAction.label}</Link> : null}
           {revision?.state === "review" && ownerApprovalPending ? (
             <button type="button" className={adminStyles.secondaryButton} disabled>
               Ждет согласования
             </button>
           ) : null}
-          {lifecycleState?.canArchive || lifecycleState?.canDelete ? (
-            <div className={styles.lifecycleWrap}>
-              <button
-                type="button"
-                className={adminStyles.secondaryButton}
-                onClick={() => setLifecycleMenuOpen((current) => !current)}
-                disabled={Boolean(lifecycleBusy)}
-              >
-                Жизненный цикл
-              </button>
-              {lifecycleMenuOpen ? (
-                <div className={styles.lifecycleMenu}>
-                  {lifecycleState?.canArchive ? (
-                    <button type="button" className={styles.lifecycleAction} onClick={handleArchivePage} disabled={Boolean(lifecycleBusy)}>
-                      Снять с публикации
-                    </button>
-                  ) : null}
-                  {lifecycleState?.canDelete ? (
-                    <button type="button" className={styles.lifecycleDanger} onClick={handleDeletePage} disabled={Boolean(lifecycleBusy)}>
-                      Удалить страницу
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
+          {lifecycleState?.canArchive ? (
+            <button type="button" className={adminStyles.secondaryButton} onClick={handleArchivePage} disabled={Boolean(lifecycleBusy)}>
+              {lifecycleBusy === "archive" ? "Снимаем..." : "Снять с публикации"}
+            </button>
+          ) : null}
+          {lifecycleState?.canDelete ? (
+            <button type="button" className={adminStyles.secondaryButton} onClick={handleDeletePage} disabled={Boolean(lifecycleBusy)}>
+              {lifecycleBusy === "delete" ? "Удаляем..." : "Удалить страницу"}
+            </button>
           ) : null}
           <button
             type="button"

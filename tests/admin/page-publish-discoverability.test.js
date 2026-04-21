@@ -15,12 +15,12 @@ test("page publish CTAs stay discoverable in workspace, review, and fallback edi
   const reviewSource = readUtf8(reviewPagePath);
   const genericEditorSource = readUtf8(genericEditorPath);
 
-  assert.match(workspaceSource, /К публикации/);
-  assert.match(workspaceSource, /Ждет согласования/);
+  assert.match(workspaceSource, /publishAction\.label/);
+  assert.match(workspaceSource, /Ждет согласования|Ждёт согласования/);
   assert.match(workspaceSource, /ownerApprovalStatus === "pending"/);
-  assert.match(reviewSource, /Открыть публикацию/);
-  assert.match(reviewSource, /Карточка оста(е|ё)тся в проверке и откроет публикацию после согласования владельца\./);
+  assert.match(reviewSource, /Открыть карточку/);
+  assert.match(reviewSource, /Публикация и снятие с публикации выполняются из карточки сущности/);
   assert.match(genericEditorSource, /userCanPublishRevision/);
-  assert.match(genericEditorSource, /Продолжить проверку/);
   assert.match(genericEditorSource, /Открыть проверку/);
+  assert.match(genericEditorSource, /publishAction\.label/);
 });

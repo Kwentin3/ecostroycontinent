@@ -48,11 +48,11 @@ export default async function LiveDeactivationPage({ params, searchParams }) {
   return (
     <AdminShell
       user={user}
-      title="Вывести из живого контура"
+      title="Снять с публикации"
       breadcrumbs={[
         { label: "Админка", href: "/admin" },
         { label: ENTITY_TYPE_LABELS[normalizedType], href: `/admin/entities/${normalizedType}` },
-        { label: evaluation.root?.label || "Вывести из живого контура" }
+        { label: evaluation.root?.label || "Снять с публикации" }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
       actions={<Link href={sourceHref} className={styles.secondaryButton}>Вернуться к объекту</Link>}

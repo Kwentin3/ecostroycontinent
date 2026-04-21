@@ -11,7 +11,7 @@ import { TimelineList } from "./TimelineList";
 import { SurfacePacket } from "./SurfacePacket";
 import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
 import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
-import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { ADMIN_COPY, FIELD_LABELS, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
 import { getEntityDeletePreviewHref, isDeleteToolEntityTypeSupported } from "../../lib/admin/entity-delete.js";
@@ -28,6 +28,11 @@ import {
 } from "../../lib/admin/removal-quarantine.js";
 import { getTestGraphTeardownHref, isTestGraphTeardownEntityTypeSupported } from "../../lib/admin/test-graph-teardown.js";
 import { getLiveDeactivationHref, isLiveDeactivationEntityTypeSupported } from "../../lib/admin/live-deactivation.js";
+import {
+  getLivePublicationStatusModel,
+  getPublishActionCopy,
+  getWorkingRevisionStatusModel
+} from "../../lib/admin/workflow-status.js";
 import { userCanPublishRevision } from "../../lib/auth/session.js";
 import styles from "./admin-ui.module.css";
 
@@ -153,6 +158,7 @@ export function EntityEditorForm({
     && isLegacyTestFixtureNormalizationEntityTypeSupported(entityType)
   );
   const reviewHref = currentRevision ? `/admin/review/${currentRevision.id}` : "";
+  const publishHref = currentRevision ? `/admin/revisions/${currentRevision.id}/publish` : "";
   const canOpenReview = Boolean(currentRevision && currentRevision.state === "review" && reviewHref);
   const canOpenPublishReadiness = Boolean(
     currentRevision
@@ -170,7 +176,9 @@ export function EntityEditorForm({
   const surfaceTitle = entityType === "global_settings" ? "Глобальные настройки" : getPayloadLabel(value);
   const readinessBlocking = readiness ? readiness.results.filter((result) => result.severity === "blocking").length : 0;
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
-  const currentStateLabel = currentRevision ? getRevisionStateLabel(currentRevision.state) : "Новый черновик";
+  const workflowStatus = getWorkingRevisionStatusModel({ currentRevision, activePublishedRevision });
+  const liveStatus = getLivePublicationStatusModel({ currentRevision, activePublishedRevision });
+  const publishAction = getPublishActionCopy({ activePublishedRevision });
   const mediaPreviewSrc = entityType === "media_asset" && entityId ? `/api/admin/media/${entityId}/preview` : null;
   const showCompactGuide = showActionabilityPanel;
   const surfaceSummary = entityType === "media_asset"
@@ -179,10 +187,10 @@ export function EntityEditorForm({
       ? "Коллекция собирает уже загруженные медиафайлы. Новый файл добавляйте в разделе Медиа, а здесь собирайте подборку."
       : "Основное заполняется слева, готовность и история остаются справа. Новый файл добавляйте через раздел Медиа, а не в каждой карточке отдельно.";
   const surfaceBullets = [
-    `Состояние: ${currentRevision ? currentStateLabel : "новый черновик"}`,
+    `Рабочий статус: ${workflowStatus.label}`,
+    `Публикация: ${liveStatus.label}`,
     readiness ? `Блокеров: ${readinessBlocking}` : "Проверка готовности ещё не запускалась",
-    readiness ? `Предупреждений: ${readinessWarnings}` : "Предупреждения появятся после сохранения",
-    activePublishedRevision ? `Опубликованная версия №${activePublishedRevision.revisionNumber}` : "Опубликованной версии пока нет"
+    readiness ? `Предупреждений: ${readinessWarnings}` : "Предупреждения появятся после сохранения"
   ];
   const compactGuideSummary = entityType === ENTITY_TYPES.GLOBAL_SETTINGS
     ? "Короткая памятка по глобальным настройкам. Основная работа идёт ниже в форме."
@@ -284,7 +292,7 @@ export function EntityEditorForm({
             ) : null}
             {canLiveDeactivate ? (
               <Link href={getLiveDeactivationHref(entityType, entityId)} className={styles.secondaryButton}>
-                Вывести из живого контура
+                Снять с публикации
               </Link>
             ) : null}
             {canDeletePreview ? (
@@ -640,7 +648,12 @@ export function EntityEditorForm({
               ) : null}
               {canOpenReview ? (
                 <Link href={reviewHref} className={styles.secondaryButton}>
-                  {canOpenPublishReadiness ? "Продолжить проверку" : "Открыть проверку"}
+                  Открыть проверку
+                </Link>
+              ) : null}
+              {canOpenPublishReadiness ? (
+                <Link href={publishHref} className={styles.secondaryButton}>
+                  {publishAction.label}
                 </Link>
               ) : null}
               {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}

@@ -18,6 +18,7 @@ import {
   getRemovalSweepHref,
   getRemovalUnmarkHref
 } from "../../lib/admin/removal-quarantine.js";
+import { getPublishActionCopy, getWorkingRevisionStatusModel } from "../../lib/admin/workflow-status.js";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -50,6 +51,10 @@ function getTestGraphTeardownHref(entityType, entityId) {
 
 function getDeletePreviewHref(entityType, entityId, returnTo = "") {
   return appendAdminReturnTo(`/admin/entities/${entityType}/${entityId}/delete`, returnTo);
+}
+
+function getMediaLiveDeactivationHref(entityId, returnTo = "") {
+  return appendAdminReturnTo(`/admin/entities/media_asset/${entityId}/live-deactivation`, returnTo);
 }
 
 function buildTitleFromFilename(filename) {
@@ -217,6 +222,22 @@ function getToneForItem(item) {
 
   if (item.statusKey === "published") {
     return "success";
+  }
+
+  return "muted";
+}
+
+function getBadgeTone(tone = "") {
+  if (tone === "healthy") {
+    return "success";
+  }
+
+  if (tone === "warning") {
+    return "warning";
+  }
+
+  if (tone === "danger") {
+    return "danger";
   }
 
   return "muted";
@@ -390,19 +411,21 @@ function canOpenMediaPublishReadiness(item, currentUserRole) {
 
 function getPublicationNote(item, currentUserRole) {
   if (item?.statusKey === "published") {
-    return "У файла уже есть опубликованная версия. Его можно использовать как основное медиа в технике, услуге, кейсе или странице.";
+    return "У медиафайла уже есть активная live-версия. Его можно использовать в технике, услугах, кейсах и страницах как опубликованный источник.";
   }
 
   if (canOpenMediaPublishReadiness(item, currentUserRole)) {
-    return "Версия остается в общей проверке. Согласование получено: откройте задачу на экране проверки и завершите публикацию оттуда.";
+    return item?.publishedRevisionNumber
+      ? "Согласование получено. В live пока остаётся предыдущая версия, а новые изменения можно опубликовать прямо из карточки."
+      : "Согласование получено. Медиафайл можно опубликовать прямо из карточки.";
   }
 
   if (isWaitingForOwnerApproval(item)) {
-    return "Версия на проверке, но публикация откроется только после согласования владельца.";
+    return "Версия уже отправлена на согласование. Публикация откроется после решения собственника.";
   }
 
   if (item?.statusKey === "review") {
-    return "Версия уже на проверке. Опубликовать медиафайл может только superadmin.";
+    return "Версия уже проходит общий этап согласования. Здесь можно открыть экран проверки и посмотреть замечания.";
   }
 
   return "Связанные техника, услуги, кейсы и страницы могут ссылаться только на опубликованное медиа. Сначала отправьте текущую версию на проверку.";
@@ -433,10 +456,23 @@ function MediaInspector({
   const canSubmitForReview = canSubmitMediaForReview(item, currentUserRole);
   const waitingForOwnerApproval = isWaitingForOwnerApproval(item);
   const canOpenPublishReadiness = canOpenMediaPublishReadiness(item, currentUserRole);
+  const activePublishedRevision = item.publishedRevisionNumber
+    ? { id: "__live__", revisionNumber: item.publishedRevisionNumber }
+    : null;
+  const currentRevision = item.currentRevisionId ? {
+    id: item.currentRevisionId,
+    state: item.statusKey,
+    ownerReviewRequired: item.ownerReviewRequired,
+    ownerApprovalStatus: item.ownerApprovalStatus
+  } : null;
+  const workingStatus = getWorkingRevisionStatusModel({ currentRevision, activePublishedRevision });
+  const publishAction = getPublishActionCopy({ activePublishedRevision });
   const reviewHref = item.currentRevisionId ? `/admin/review/${item.currentRevisionId}` : "";
+  const publishHref = item.currentRevisionId ? `/admin/revisions/${item.currentRevisionId}/publish` : "";
+  const liveDeactivationHref = item.publishedRevisionNumber && currentUserRole === "superadmin"
+    ? getMediaLiveDeactivationHref(item.id, returnTo)
+    : "";
   const publicationNote = getPublicationNote(item, currentUserRole);
-  const reviewButtonLabel = canOpenPublishReadiness ? "Открыть публикацию" : "Открыть проверку";
-  const reviewButtonClassName = canOpenPublishReadiness ? styles.primaryButton : styles.secondaryButton;
 
   return (
     <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
@@ -461,8 +497,8 @@ function MediaInspector({
       </div>
 
       <div className={styles.badgeRow}>
-        {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
-        <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
+        <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{workingStatus.label}</span>
+        <span className={`${styles.badge} ${styles[`mediaBadge${getBadgeTone(item.liveStatusTone)}`]}`}>{item.liveStatusLabel}</span>
         {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
         {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
         {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
@@ -564,11 +600,17 @@ function MediaInspector({
               <button type="submit" className={styles.primaryButton}>Отправить на проверку</button>
             </form>
           ) : null}
+          {canOpenPublishReadiness && publishHref ? (
+            <Link href={publishHref} className={styles.primaryButton}>{publishAction.label}</Link>
+          ) : null}
           {item.statusKey === "review" && reviewHref ? (
-            <Link href={reviewHref} className={reviewButtonClassName}>{reviewButtonLabel}</Link>
+            <Link href={reviewHref} className={styles.secondaryButton}>Открыть проверку</Link>
           ) : null}
           {waitingForOwnerApproval ? (
             <button type="button" className={styles.secondaryButton} disabled>Ждёт согласования</button>
+          ) : null}
+          {liveDeactivationHref ? (
+            <Link href={liveDeactivationHref} className={styles.secondaryButton}>Снять с публикации</Link>
           ) : null}
         </div>
       </section>
@@ -1710,7 +1752,7 @@ export function MediaGalleryWorkspace({
                         <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
                         <span className={styles.mediaBadgeCluster}>
                           <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
-                          {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Опубликовано</span> : null}
+                          <span className={`${styles.badge} ${styles[`mediaBadge${getBadgeTone(item.liveStatusTone)}`]}`}>{item.liveStatusLabel}</span>
                           {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тест</span> : null}
                           {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Удаление</span> : null}
                           {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
