@@ -72,3 +72,39 @@ test("marked reference guard ignores already existing references and blocks only
     /Нельзя создать новую ссылку на объект, помеченный на удаление/
   );
 });
+
+test("marked reference helper detects equipment links from service and case payloads", async () => {
+  const serviceConflicts = await listMarkedReferenceConflicts(
+    "service",
+    {
+      equipmentIds: ["equipment_marked"]
+    },
+    {
+      findEntityById: async (entityId) => (
+        entityId === "equipment_marked"
+          ? {
+              id: "equipment_marked",
+              entityType: "equipment",
+              markedForRemovalAt: "2026-04-21T10:00:00.000Z"
+            }
+          : null
+      )
+    }
+  );
+  const caseConflicts = await listMarkedReferenceConflicts(
+    "case",
+    {
+      equipmentIds: ["equipment_marked"]
+    },
+    {
+      findEntityById: async (entityId) => ({
+        id: entityId,
+        entityType: "equipment",
+        markedForRemovalAt: "2026-04-21T10:00:00.000Z"
+      })
+    }
+  );
+
+  assert.equal(serviceConflicts[0].field, "equipmentIds");
+  assert.equal(caseConflicts[0].field, "equipmentIds");
+});

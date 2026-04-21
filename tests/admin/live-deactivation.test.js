@@ -172,6 +172,52 @@ test("evaluateLiveDeactivation allows published equipment with no incoming refs"
   assert.match(result.routeEffects.listImpact, /lookup техники/i);
 });
 
+test("evaluateLiveDeactivation refuses when surviving published service points to equipment", async () => {
+  const equipment = makeAggregate(ENTITY_TYPES.EQUIPMENT, "equipment_live_2", {
+    activePublishedRevisionId: "rev_equipment_live_2",
+    latestPayload: {
+      slug: "excavator-325",
+      title: "Excavator 325"
+    }
+  });
+  const service = makeAggregate(ENTITY_TYPES.SERVICE, "service_live_2", {
+    activePublishedRevisionId: "rev_service_live_2",
+    latestPayload: {
+      slug: "pit-work",
+      title: "Pit work",
+      equipmentIds: ["equipment_live_2"]
+    }
+  });
+
+  const result = await evaluateLiveDeactivation(
+    {
+      entityType: ENTITY_TYPES.EQUIPMENT,
+      entityId: "equipment_live_2"
+    },
+    buildDeps({
+      aggregate: equipment,
+      latestCards: {
+        [ENTITY_TYPES.PAGE]: [],
+        [ENTITY_TYPES.SERVICE]: [makeLatestCard(service)],
+        [ENTITY_TYPES.EQUIPMENT]: [makeLatestCard(equipment)],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      },
+      publishedCards: {
+        [ENTITY_TYPES.PAGE]: [],
+        [ENTITY_TYPES.SERVICE]: [makePublishedCard(service)],
+        [ENTITY_TYPES.EQUIPMENT]: [makePublishedCard(equipment)],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      }
+    })
+  );
+
+  assert.equal(result.allowed, false);
+  assert.equal(result.publishedIncomingRefs.length, 1);
+  assert.equal(result.publishedIncomingRefs[0].entityId, "service_live_2");
+});
+
 test("evaluateLiveDeactivation refuses when surviving published page points to service", async () => {
   const service = makeAggregate(ENTITY_TYPES.SERVICE, "service_live_1", {
     activePublishedRevisionId: "rev_service_live_1",

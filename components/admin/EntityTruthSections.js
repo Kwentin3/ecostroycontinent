@@ -1,5 +1,7 @@
+import { buildRelationSelectionModel } from "../../lib/admin/relation-navigation.js";
 import { FilterableChecklist } from "./FilterableChecklist";
 import { MediaPicker } from "./MediaPicker";
+import { RelationChipRow } from "./RelationChipRow";
 import { FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { FIELD_LABELS } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
@@ -50,6 +52,32 @@ function SeoMetaFields({ value }) {
       </label>
       <input type="hidden" name="openGraphImageAssetId" value={value.seo?.openGraphImageAssetId || ""} />
     </>
+  );
+}
+
+function ReadonlyRelationSummary({
+  title,
+  note,
+  entityType,
+  options = [],
+  sourceHref = "",
+  emptyLabel
+}) {
+  const selectionModel = buildRelationSelectionModel({
+    entityType,
+    options,
+    selectedIds: options.map((option) => option.id),
+    returnTo: sourceHref,
+    emptyLabel
+  });
+
+  return (
+    <RelationChipRow
+      title={title}
+      note={note}
+      items={selectionModel.items}
+      emptyLabel={emptyLabel}
+    />
   );
 }
 
@@ -194,7 +222,15 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="service-relations" title="Связи" note="Связанные кейсы и галереи делают карточку собранной.">
+        <TruthGroup id="service-relations" title="Связи" note="Услуга собирается из доказательств, галереи и готовых объектов техники.">
+          <FilterableChecklist
+            legend="Связанная техника"
+            name="equipmentIds"
+            options={relationOptions.equipment}
+            selectedIds={Array.isArray(value.equipmentIds) ? value.equipmentIds : ((relationOptions.reverseEquipment || []).map((item) => item.id))}
+            entityType="equipment"
+            sourceHref={sourceHref}
+          />
           <FilterableChecklist
             legend="Связанные кейсы"
             name="relatedCaseIds"
@@ -283,22 +319,22 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="equipment-relations" title="Связи" note="Техника может быть связана с услугами, кейсами и коллекциями без копирования truth в текст страницы.">
-          <FilterableChecklist
-            legend="Связанные услуги"
-            name="serviceIds"
-            options={relationOptions.services}
-            selectedIds={value.serviceIds || []}
+        <TruthGroup id="equipment-relations" title="Использование" note="Сама техника хранит собственный truth и медиа. Использование в услугах и кейсах задаётся на стороне этих доменов и показывается здесь как входящие связи.">
+          <ReadonlyRelationSummary
+            title="Используется в услугах"
+            note="Услуги выбирают технику как готовый объект: описание, медиа и характеристики подтягиваются из карточки техники."
             entityType="service"
+            options={relationOptions.referencingServices || []}
             sourceHref={sourceHref}
+            emptyLabel="Эта техника пока не выбрана ни в одной услуге."
           />
-          <FilterableChecklist
-            legend="Связанные кейсы"
-            name="relatedCaseIds"
-            options={relationOptions.cases}
-            selectedIds={value.relatedCaseIds || []}
+          <ReadonlyRelationSummary
+            title="Используется в кейсах"
+            note="Кейсы показывают, где эта техника была применена как подтверждённый объект, а не как свободный текст."
             entityType="case"
+            options={relationOptions.referencingCases || []}
             sourceHref={sourceHref}
+            emptyLabel="Эта техника пока не привязана ни к одному кейсу."
           />
           <FilterableChecklist
             legend="Коллекции"
@@ -375,13 +411,21 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="case-relations" title="Связи" note="Кейсу нужны связанные услуги и коллекции, чтобы он был контекстным.">
+        <TruthGroup id="case-relations" title="Связи" note="Кейс связывается с услугами, коллекциями и техникой, которая реально использовалась на объекте.">
           <FilterableChecklist
             legend="Связанные услуги"
             name="serviceIds"
             options={relationOptions.services}
             selectedIds={value.serviceIds || []}
             entityType="service"
+            sourceHref={sourceHref}
+          />
+          <FilterableChecklist
+            legend="Техника в кейсе"
+            name="equipmentIds"
+            options={relationOptions.equipment}
+            selectedIds={Array.isArray(value.equipmentIds) ? value.equipmentIds : ((relationOptions.reverseEquipment || []).map((item) => item.id))}
+            entityType="equipment"
             sourceHref={sourceHref}
           />
           <FilterableChecklist

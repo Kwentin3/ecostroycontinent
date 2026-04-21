@@ -688,6 +688,7 @@ export function PublicHoldingPage({
 export function ServicePage({
   service,
   relatedCases,
+  relatedEquipment = [],
   galleries,
   resolveMedia,
   globalSettings,
@@ -742,6 +743,17 @@ export function ServicePage({
             ))}
           </section>
         ) : null}
+        {relatedEquipment.length > 0 ? (
+          <section id="preview-service-related-equipment" data-preview-section="related-equipment" className={`${styles.grid} ${styles.previewSection}`}>
+            <h2>Техника для выполнения услуги</h2>
+            {relatedEquipment.map((item) => (
+              <article key={item.entityId} className={styles.card}>
+                <h3>{item.title}</h3>
+                <p>{item.capabilitySummary || item.shortSummary || item.equipmentType}</p>
+              </article>
+            ))}
+          </section>
+        ) : null}
         <GallerySection
           title={PUBLIC_COPY.galleryHeading}
           galleries={service.galleryIds || []}
@@ -774,6 +786,7 @@ export function ServicePage({
 export function CasePage({
   item,
   relatedServices,
+  relatedEquipment = [],
   galleries,
   resolveMedia,
   globalSettings,
@@ -825,6 +838,17 @@ export function CasePage({
                 <h3>{service.title}</h3>
                 <p>{service.summary}</p>
                 <Link className={styles.actionLink} href={`/services/${service.slug}`}>{PUBLIC_COPY.openService}</Link>
+              </article>
+            ))}
+          </section>
+        ) : null}
+        {relatedEquipment.length > 0 ? (
+          <section id="preview-case-related-equipment" data-preview-section="related-equipment" className={`${styles.grid} ${styles.previewSection}`}>
+            <h2>Техника в кейсе</h2>
+            {relatedEquipment.map((equipmentItem) => (
+              <article key={equipmentItem.entityId} className={styles.card}>
+                <h3>{equipmentItem.title}</h3>
+                <p>{equipmentItem.capabilitySummary || equipmentItem.shortSummary || equipmentItem.equipmentType}</p>
               </article>
             ))}
           </section>

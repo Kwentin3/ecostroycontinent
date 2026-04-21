@@ -9,7 +9,7 @@ import { userCanEditContent } from "../../../../../../lib/auth/session.js";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
 import { getEntityAggregate } from "../../../../../../lib/content-core/repository.js";
 import { ENTITY_TYPES, PAGE_CREATE_MODES, PAGE_TYPES } from "../../../../../../lib/content-core/content-types.js";
-import { saveDraft } from "../../../../../../lib/content-core/service.js";
+import { listEntityCards, saveDraft } from "../../../../../../lib/content-core/service.js";
 import { assertPageTypeAllowedForLaunchOwnership } from "../../../../../../lib/public-launch/ownership.js";
 
 function getWorkingRevisionPayload(aggregate) {
@@ -20,6 +20,8 @@ function getWorkingRevisionPayload(aggregate) {
 async function buildPageCreatePayload(formPayload, formData, deps = {}) {
   const createMode = getString(formData, "createMode") || PAGE_CREATE_MODES.STANDALONE;
   const assertLaunchOwnership = deps.assertPageTypeAllowedForLaunchOwnership || (() => {});
+  const loadEntityAggregate = deps.getEntityAggregate || getEntityAggregate;
+  const listCards = deps.listEntityCards || listEntityCards;
 
   if (createMode === PAGE_CREATE_MODES.CLONE_ADAPT) {
     const cloneFromPageId = getString(formData, "cloneFromPageId");
@@ -28,7 +30,7 @@ async function buildPageCreatePayload(formPayload, formData, deps = {}) {
       throw new Error("Для режима копии нужно выбрать исходную страницу.");
     }
 
-    const cloneAggregate = await getEntityAggregate(cloneFromPageId);
+    const cloneAggregate = await loadEntityAggregate(cloneFromPageId);
     const clonePayload = getWorkingRevisionPayload(cloneAggregate);
 
     if (!clonePayload) {
@@ -67,7 +69,7 @@ async function buildPageCreatePayload(formPayload, formData, deps = {}) {
       throw new Error("Для страницы услуги нужно выбрать источник «Услуга».");
     }
 
-    const serviceAggregate = await getEntityAggregate(primaryServiceId);
+    const serviceAggregate = await loadEntityAggregate(primaryServiceId);
     const servicePayload = getWorkingRevisionPayload(serviceAggregate);
 
     if (!servicePayload) {
@@ -111,12 +113,20 @@ async function buildPageCreatePayload(formPayload, formData, deps = {}) {
       throw new Error("Для страницы техники нужно выбрать источник «Техника».");
     }
 
-    const equipmentAggregate = await getEntityAggregate(primaryEquipmentId);
+    const equipmentAggregate = await loadEntityAggregate(primaryEquipmentId);
     const equipmentPayload = getWorkingRevisionPayload(equipmentAggregate);
 
     if (!equipmentPayload) {
       throw new Error("Не удалось прочитать выбранную технику.");
     }
+
+    const caseCards = await listCards(ENTITY_TYPES.CASE);
+    const derivedCaseIds = Array.from(new Set([
+      ...(equipmentPayload.relatedCaseIds || []),
+      ...caseCards
+        .filter((card) => (card.latestRevision?.payload?.equipmentIds || []).includes(primaryEquipmentId))
+        .map((card) => card.entity.id)
+    ]));
 
     return {
       ...formPayload,
@@ -131,7 +141,7 @@ async function buildPageCreatePayload(formPayload, formData, deps = {}) {
       sourceRefs: {
         primaryServiceId: "",
         primaryEquipmentId,
-        caseIds: equipmentPayload.relatedCaseIds || [],
+        caseIds: derivedCaseIds,
         galleryIds: equipmentPayload.galleryIds || []
       },
       targeting: {
@@ -160,6 +170,8 @@ export async function POST(request, { params }, deps = {}) {
     requireRouteUser,
     userCanEditContent,
     saveDraft,
+    getEntityAggregate,
+    listEntityCards,
     assertPageTypeAllowedForLaunchOwnership,
     ...deps
   };

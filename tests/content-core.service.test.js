@@ -356,6 +356,79 @@ test("media normalization defaults lifecycleState to active when it is omitted",
   assert.equal(media.lifecycleState, "active");
 });
 
+test("service and case normalization keep equipmentIds as first-class references", () => {
+  const service = normalizeEntityInput(ENTITY_TYPES.SERVICE, {
+    slug: "foundation",
+    title: "Foundation",
+    h1: "Foundation works",
+    summary: "Summary",
+    serviceScope: "Scope",
+    problemsSolved: "",
+    methods: "",
+    ctaVariant: "Request quote",
+    equipmentIds: ["equipment_1", "equipment_2"],
+    relatedCaseIds: [],
+    galleryIds: [],
+    primaryMediaAssetId: "",
+    seo: {}
+  });
+  const item = normalizeEntityInput(ENTITY_TYPES.CASE, {
+    slug: "foundation-case",
+    title: "Foundation case",
+    location: "Sochi",
+    projectType: "",
+    task: "Task",
+    workScope: "Scope",
+    result: "Result",
+    serviceIds: ["service_1"],
+    equipmentIds: ["equipment_2"],
+    galleryIds: [],
+    primaryMediaAssetId: "",
+    seo: {}
+  });
+
+  assert.deepEqual(service.equipmentIds, ["equipment_1", "equipment_2"]);
+  assert.deepEqual(item.equipmentIds, ["equipment_2"]);
+});
+
+test("buildChangeSummary tracks equipmentIds for service entities", () => {
+  const changedFields = buildChangeSummary(
+    ENTITY_TYPES.SERVICE,
+    {
+      slug: "drainage",
+      title: "Drainage",
+      h1: "Drainage works",
+      summary: "Summary",
+      serviceScope: "Scope",
+      problemsSolved: "",
+      methods: "",
+      ctaVariant: "default",
+      equipmentIds: [],
+      relatedCaseIds: [],
+      galleryIds: [],
+      primaryMediaAssetId: "",
+      seo: {}
+    },
+    {
+      slug: "drainage",
+      title: "Drainage",
+      h1: "Drainage works",
+      summary: "Summary",
+      serviceScope: "Scope",
+      problemsSolved: "",
+      methods: "",
+      ctaVariant: "default",
+      equipmentIds: ["equipment_1"],
+      relatedCaseIds: [],
+      galleryIds: [],
+      primaryMediaAssetId: "",
+      seo: {}
+    }
+  );
+
+  assert.deepEqual(changedFields, ["equipmentIds"]);
+});
+
 test("entity type parsing and owner-review rules stay narrow and contract-safe", () => {
   assert.equal(assertEntityType("service"), ENTITY_TYPES.SERVICE);
   assert.throws(() => assertEntityType("article"));

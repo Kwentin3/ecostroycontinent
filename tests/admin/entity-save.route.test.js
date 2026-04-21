@@ -279,3 +279,72 @@ test("entity save route returns registry-native fallback when page creation fail
     "http://localhost:3000/admin/entities/page?create=1&error=page+type+collision&createPageType=contacts&createMode=standalone&createTitle=Contact+center"
   );
 });
+
+test("entity save route builds equipment landing from equipment-owned and case-owned links", async () => {
+  let captured = null;
+  const response = await POST(
+    buildRequest({
+      createMode: "from_equipment",
+      primaryEquipmentId: "equipment_1",
+      responseMode: "json"
+    }),
+    { params: { entityType: "page" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      assertPageTypeAllowedForLaunchOwnership: () => {},
+      getEntityAggregate: async (entityId) => {
+        assert.equal(entityId, "equipment_1");
+        return {
+          activePublishedRevision: {
+            payload: {
+              slug: "crawler-excavator",
+              title: "Crawler Excavator",
+              shortSummary: "Heavy-duty machine",
+              primaryMediaAssetId: "media_equipment_1",
+              capabilitySummary: "Digs foundations",
+              keySpecs: ["21 t", "bucket 1.2 m3"],
+              galleryIds: ["gallery_1"],
+              relatedCaseIds: ["case_legacy", "case_duplicate"]
+            }
+          }
+        };
+      },
+      listEntityCards: async (entityType) => {
+        assert.equal(entityType, "case");
+        return [
+          {
+            entity: { id: "case_duplicate" },
+            latestRevision: { payload: { equipmentIds: ["equipment_1"] } }
+          },
+          {
+            entity: { id: "case_new" },
+            latestRevision: { payload: { equipmentIds: ["equipment_1", "equipment_2"] } }
+          },
+          {
+            entity: { id: "case_other" },
+            latestRevision: { payload: { equipmentIds: ["equipment_9"] } }
+          }
+        ];
+      },
+      saveDraft: async (input) => {
+        captured = input;
+        return {
+          entity: { id: "page_equipment_1", entityType: "page" },
+          revision: { id: "rev_page_equipment_1", state: "draft" },
+          changedFields: ["sourceRefs", "equipmentSpecs"]
+        };
+      }
+    }
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.ok, true);
+  assert.equal(captured.payload.pageType, "equipment_landing");
+  assert.equal(captured.payload.seedSlug, "crawler-excavator");
+  assert.equal(captured.payload.sourceRefs.primaryEquipmentId, "equipment_1");
+  assert.deepEqual(captured.payload.sourceRefs.caseIds, ["case_legacy", "case_duplicate", "case_new"]);
+  assert.deepEqual(captured.payload.sourceRefs.galleryIds, ["gallery_1"]);
+  assert.deepEqual(captured.payload.equipmentSpecs, ["21 t", "bucket 1.2 m3"]);
+});

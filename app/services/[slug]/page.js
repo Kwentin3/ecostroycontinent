@@ -1,6 +1,8 @@
 ﻿import { notFound } from "next/navigation";
 
 import { PublicHoldingPage, ServicePage } from "../../../components/public/PublicRenderers";
+import { ENTITY_TYPES } from "../../../lib/content-core/content-types";
+import { resolveEquipmentRecordsForEntity } from "../../../lib/content-core/equipment-relations.js";
 import {
   buildPublishedLookups,
   getPublishedGlobalSettings,
@@ -88,6 +90,14 @@ export default async function ServiceDetailPage({ params, searchParams }) {
   const relatedCases = usingPlaceholder
     ? getPlaceholderCases().filter((item) => (service.relatedCaseIds || []).includes(item.entityId))
     : (service.relatedCaseIds || []).map((id) => lookups.caseMap.get(id)).filter(Boolean);
+  const relatedEquipment = usingPlaceholder
+    ? []
+    : resolveEquipmentRecordsForEntity({
+        payload: service,
+        equipmentRecords: lookups.equipment,
+        entityType: ENTITY_TYPES.SERVICE,
+        entityId: service.entityId
+      });
 
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
   const resolvedServiceLinks = lookups.services.length > 0
@@ -98,6 +108,7 @@ export default async function ServiceDetailPage({ params, searchParams }) {
     <ServicePage
       service={service}
       relatedCases={relatedCases}
+      relatedEquipment={relatedEquipment}
       galleries={(id) => lookups.galleryMap.get(id) || null}
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
       globalSettings={resolvedGlobalSettings}
