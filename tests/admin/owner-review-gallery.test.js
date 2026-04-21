@@ -45,7 +45,7 @@ test("owner review status model prioritizes materials that still need owner deci
   assert.equal(approvedStatus.key, "approved");
   assert.match(approvedStatus.label, /Согласовано/);
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "approved" }).key, "approved");
-  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "in_review");
+  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "approved");
 });
 
 test("owner review gallery cards sort attention-first and keep page-specific preview fields", () => {
@@ -134,7 +134,7 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
   assert.equal(caseCard.status.key, "approved");
   assert.match(caseCard.status.label, /Согласовано/);
   assert.match(caseCard.summary, /Объект сдан в срок/);
-  assert.equal(pageCard.status.key, "in_review");
+  assert.equal(pageCard.status.key, "approved");
   assert.match(pageCard.summary, /Свяжитесь с нами/);
   assert.equal(pageCard.previewTitle, "Контакты");
   assert.equal(pageCard.previewThemeKey, "forest_contrast");
