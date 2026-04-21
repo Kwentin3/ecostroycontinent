@@ -456,6 +456,10 @@ function MediaInspector({
   const canSubmitForReview = canSubmitMediaForReview(item, currentUserRole);
   const waitingForOwnerApproval = isWaitingForOwnerApproval(item);
   const canOpenPublishReadiness = canOpenMediaPublishReadiness(item, currentUserRole);
+  // Media library rows expose the live marker as publishedRevisionNumber plus
+  // the current revision id. When the current row is itself the active live
+  // revision, reuse currentRevisionId as the live id so workflow-status can
+  // distinguish "synced live" from "withdrawn from live".
   const activePublishedRevision = item.publishedRevisionNumber
     ? {
       id: item.statusKey === "published" && item.currentRevisionId ? item.currentRevisionId : "__live__",

@@ -20,6 +20,9 @@ import { getReviewQueue } from "../../../../lib/content-ops/workflow";
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../../../lib/content-core/content-types.js";
 import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
 
+// The review screen is intentionally about review-lane resolution only.
+// These filters do not describe live publication state. An "approved" card may
+// still wait for an explicit publish from the entity surface.
 const STATUS_OPTIONS = [
   { value: "all", label: "Все" },
   { value: "needs_owner", label: "Требуют решения" },

@@ -16,6 +16,8 @@ This document consolidates the current runtime contract for how the main content
 - `page`
 - `global_settings`
 
+If you are entering the codebase with near-zero context, read `docs/engineering/ADMIN_CONTENT_LANDSCAPE_ZERO_CONTEXT_MAP_v1.md` first and then come back here.
+
 It exists so refactors do not have to rediscover domain boundaries by reading UI behavior alone.
 
 This contract does not replace the workflow and publish docs. It narrows one specific question:
@@ -220,11 +222,12 @@ If only one layer changes, the refactor is incomplete.
 
 ## Recommended read order for future refactors
 
-1. This document
-2. `lib/content-core/content-types.js`
-3. `lib/content-core/schemas.js`
-4. `lib/content-core/entity-references.js`
-5. `lib/content-core/service.js`
-6. `lib/content-ops/readiness.js`
-7. `lib/read-side/public-content.js`
-8. Relevant route reader or workspace file
+1. `docs/engineering/ADMIN_CONTENT_LANDSCAPE_ZERO_CONTEXT_MAP_v1.md`
+2. This document
+3. `lib/content-core/content-types.js`
+4. `lib/content-core/schemas.js`
+5. `lib/content-core/entity-references.js`
+6. `lib/content-core/service.js`
+7. `lib/content-ops/readiness.js`
+8. `lib/read-side/public-content.js`
+9. Relevant route reader or workspace file
