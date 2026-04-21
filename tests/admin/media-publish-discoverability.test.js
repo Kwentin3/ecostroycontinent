@@ -19,6 +19,8 @@ test("media workspace keeps the submit and publish path discoverable after the e
   assert.match(workspaceSource, /Продолжить проверку/);
   assert.match(workspaceSource, /Открыть проверку/);
   assert.match(workspaceSource, /Ждёт согласования/);
+  assert.match(workspaceSource, /getOwnerApprovalStatusLabel/);
+  assert.match(workspaceSource, /Версия остается в общей проверке\./);
   assert.match(workspaceSource, /currentUserRole === "superadmin"/);
   assert.match(workspaceSource, /\/api\/admin\/revisions\/\$\{item\.currentRevisionId\}\/submit/);
   assert.match(workspaceSource, /\/admin\/review\/\$\{item\.currentRevisionId\}/);

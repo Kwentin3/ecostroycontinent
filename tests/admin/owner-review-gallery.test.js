@@ -40,8 +40,11 @@ function buildQueueItem({
 test("owner review status model prioritizes materials that still need owner decision", () => {
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "pending" }).key, "needs_owner");
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "rejected" }).key, "returned");
-  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" }).key, "in_review");
-  assert.match(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" }).label, /Готово к публикации/);
+  const approvedStatus = getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" });
+
+  assert.equal(approvedStatus.key, "in_review");
+  assert.match(approvedStatus.label, /На проверке/);
+  assert.match(approvedStatus.secondaryLabel, /Согласовано/);
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "in_review");
 });
 
@@ -129,7 +132,8 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
   assert.ok(caseCard);
   assert.ok(pageCard);
   assert.equal(caseCard.status.key, "in_review");
-  assert.match(caseCard.status.label, /Готово к публикации/);
+  assert.match(caseCard.status.label, /На проверке/);
+  assert.match(caseCard.status.secondaryLabel, /Согласовано/);
   assert.match(caseCard.summary, /Объект сдан в срок/);
   assert.equal(pageCard.status.key, "in_review");
   assert.match(pageCard.summary, /Свяжитесь с нами/);

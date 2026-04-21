@@ -100,6 +100,10 @@ function cardStatusClassName(card) {
     return styles.reviewGalleryCardReturned;
   }
 
+  if (card.status.secondaryLabel) {
+    return styles.reviewGalleryCardApproved;
+  }
+
   return "";
 }
 
@@ -410,6 +414,9 @@ export default async function ReviewQueuePage({ searchParams }) {
                   <div className={styles.reviewGallerySignals}>
                     {card.needsAttention ? <span className={styles.reviewGalleryAttentionMark} aria-label="Требует решения">!</span> : null}
                     <span className={styles.reviewGalleryStatus}>{card.status.label}</span>
+                    {card.status.secondaryLabel ? (
+                      <span className={styles.reviewGalleryStatus}>{card.status.secondaryLabel}</span>
+                    ) : null}
                   </div>
                 </div>
 
@@ -454,6 +461,7 @@ export default async function ReviewQueuePage({ searchParams }) {
             summary={selectedModal.summary}
             meta={[
               selectedCard.status.label,
+              ...(selectedCard.status.secondaryLabel ? [selectedCard.status.secondaryLabel] : []),
               selectedCard.submittedAtLabel || "На проверке"
             ]}
           >
@@ -470,6 +478,9 @@ export default async function ReviewQueuePage({ searchParams }) {
                 </p>
                 <div className={styles.reviewModalActionMeta}>
                   <span className={styles.reviewGalleryStatus}>{selectedCard.status.label}</span>
+                  {selectedCard.status.secondaryLabel ? (
+                    <span className={styles.reviewGalleryStatus}>{selectedCard.status.secondaryLabel}</span>
+                  ) : null}
                   {selectedCard.needsAttention ? (
                     <span className={styles.reviewGalleryWarning}>Нужно ваше решение</span>
                   ) : null}
