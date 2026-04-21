@@ -23,4 +23,5 @@ test("page publish CTAs stay discoverable in workspace, review, and fallback edi
   assert.match(genericEditorSource, /userCanPublishRevision/);
   assert.match(genericEditorSource, /Открыть проверку/);
   assert.match(genericEditorSource, /publishAction\.label/);
+  assert.match(genericEditorSource, /name="returnTo" value=\{redirectTo\}/);
 });

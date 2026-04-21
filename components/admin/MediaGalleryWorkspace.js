@@ -604,6 +604,7 @@ function MediaInspector({
         <div className={styles.inlineActions}>
           {canSubmitForReview ? (
             <form action={`/api/admin/revisions/${item.currentRevisionId}/submit`} method="post">
+              <input type="hidden" name="returnTo" value={returnTo} />
               <button type="submit" className={styles.primaryButton}>Отправить на проверку</button>
             </form>
           ) : null}

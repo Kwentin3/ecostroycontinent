@@ -630,6 +630,7 @@ export function EntityEditorForm({
             </>)}
 
             <div className={styles.inlineActions}>
+              <input type="hidden" name="returnTo" value={redirectTo} />
               <button type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
               {false && entityType === ENTITY_TYPES.SERVICE && canSubmit ? (
                 <button

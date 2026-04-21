@@ -82,6 +82,8 @@ Important interpretation:
 
 - review status answers "where is the candidate revision in the review lane?"
 - review status does not answer "is this entity currently live?"
+- entering the review lane does not always mean the operator should stay on the review screen
+- when owner approval is not required, submit may return the operator to the source card already in `Ready to publish`
 
 If a review card says `approved`, that means approval was obtained for the candidate revision. It does not mean the candidate revision is already published.
 
@@ -124,6 +126,7 @@ The canonical status projection lives in `lib/admin/workflow-status.js`.
 | --- | --- | --- |
 | How are working/live badges calculated? | `lib/admin/workflow-status.js` | This is the canonical two-axis projection. |
 | Why does the review screen show approved items that are not live? | `lib/admin/owner-review.js`, `app/admin/(console)/review/page.js` | Review queue is about approval state, not live state. |
+| Why does submit sometimes return to the card instead of opening review? | `app/api/admin/revisions/[revisionId]/submit/route.js` | Non-owner review flows should continue from the source entity once the revision is already publish-ready. |
 | Where do publish / unpublish actions belong? | `components/admin/EntityEditorForm.js`, `components/admin/MediaGalleryWorkspace.js` | Entity surfaces own live transitions. |
 | Which cross-domain references are valid? | `lib/content-core/entity-references.js`, `lib/content-core/schemas.js` | Schema and executable reference collection must stay aligned. |
 | Which references must be published before publish? | `lib/content-ops/readiness.js` | Publish-time business rules live here. |

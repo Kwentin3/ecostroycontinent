@@ -27,6 +27,7 @@ test("media workspace keeps the submit and publish path discoverable after the e
   assert.match(workspaceSource, /item\.statusKey === "published" && item\.currentRevisionId \? item\.currentRevisionId : "__live__"/);
   assert.match(workspaceSource, /currentUserRole === "superadmin"/);
   assert.match(workspaceSource, /\/api\/admin\/revisions\/\$\{item\.currentRevisionId\}\/submit/);
+  assert.match(workspaceSource, /name="returnTo" value=\{returnTo\}/);
   assert.match(workspaceSource, /\/admin\/revisions\/\$\{item\.currentRevisionId\}\/publish/);
   assert.match(workspaceSource, /\/admin\/review\/\$\{item\.currentRevisionId\}/);
   assert.match(workspaceSource, /Снять с публикации/);
