@@ -209,6 +209,7 @@ export default async function EntityListPage({ params, searchParams }) {
             initialCompose={initialCompose}
             initialFilterKey={testOnly ? "test-only" : "all"}
             currentUsername={user.username}
+            currentUserRole={user.role}
             initialMessage={query?.message ? normalizeLegacyCopy(query.message) : ""}
             initialError={query?.error ? normalizeLegacyCopy(query.error) : ""}
             workspaceContextHref={workspaceContextHref}

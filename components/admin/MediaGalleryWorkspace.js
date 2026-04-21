@@ -358,8 +358,55 @@ function mergeById(currentItems, nextItems) {
   return Array.from(map.values());
 }
 
+function isEditorRole(role) {
+  return role === "superadmin" || role === "seo_manager";
+}
+
+function canSubmitMediaForReview(item, currentUserRole) {
+  return Boolean(item?.currentRevisionId) && item?.statusKey === "draft" && isEditorRole(currentUserRole);
+}
+
+function isWaitingForOwnerApproval(item) {
+  return Boolean(
+    item?.currentRevisionId
+    && item?.statusKey === "review"
+    && item?.ownerReviewRequired
+    && item?.ownerApprovalStatus !== "approved"
+  );
+}
+
+function canOpenMediaPublishReadiness(item, currentUserRole) {
+  return Boolean(
+    item?.currentRevisionId
+    && item?.statusKey === "review"
+    && currentUserRole === "superadmin"
+    && (!item?.ownerReviewRequired || item?.ownerApprovalStatus === "approved")
+  );
+}
+
+function getPublicationNote(item, currentUserRole) {
+  if (item?.statusKey === "published") {
+    return "У файла уже есть опубликованная версия. Его можно использовать как основное медиа в технике, услуге, кейсе или странице.";
+  }
+
+  if (canOpenMediaPublishReadiness(item, currentUserRole)) {
+    return "Версия уже на проверке. Следующий шаг — открыть проверку перед публикацией и выпустить медиафайл.";
+  }
+
+  if (isWaitingForOwnerApproval(item)) {
+    return "Версия на проверке, но публикация откроется только после согласования владельца.";
+  }
+
+  if (item?.statusKey === "review") {
+    return "Версия уже на проверке. Опубликовать медиафайл может только superadmin.";
+  }
+
+  return "Связанные техника, услуги, кейсы и страницы могут ссылаться только на опубликованное медиа. Сначала отправьте текущую версию на проверку.";
+}
+
 function MediaInspector({
   item,
+  currentUserRole = "",
   onEdit,
   onOpenCollectionManager,
   onCreateCollection,
@@ -378,6 +425,13 @@ function MediaInspector({
       </aside>
     );
   }
+
+  const canSubmitForReview = canSubmitMediaForReview(item, currentUserRole);
+  const waitingForOwnerApproval = isWaitingForOwnerApproval(item);
+  const canOpenPublishReadiness = canOpenMediaPublishReadiness(item, currentUserRole);
+  const reviewHref = item.currentRevisionId ? `/admin/review/${item.currentRevisionId}` : "";
+  const publishReadinessHref = item.currentRevisionId ? `/admin/revisions/${item.currentRevisionId}/publish` : "";
+  const publicationNote = getPublicationNote(item, currentUserRole);
 
   return (
     <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
@@ -493,6 +547,27 @@ function MediaInspector({
           >
             Новая коллекция
           </button>
+        </div>
+      </section>
+
+      <section className={styles.mediaInspectorSection}>
+        <h4>Публикация</h4>
+        <p className={styles.helpText}>{publicationNote}</p>
+        <div className={styles.inlineActions}>
+          {canSubmitForReview ? (
+            <form action={`/api/admin/revisions/${item.currentRevisionId}/submit`} method="post">
+              <button type="submit" className={styles.primaryButton}>Отправить на проверку</button>
+            </form>
+          ) : null}
+          {item.statusKey === "review" && reviewHref ? (
+            <Link href={reviewHref} className={styles.secondaryButton}>Открыть проверку</Link>
+          ) : null}
+          {canOpenPublishReadiness ? (
+            <Link href={publishReadinessHref} className={styles.primaryButton}>Проверить перед публикацией</Link>
+          ) : null}
+          {waitingForOwnerApproval ? (
+            <button type="button" className={styles.secondaryButton} disabled>Ждёт согласования</button>
+          ) : null}
         </div>
       </section>
 
@@ -840,6 +915,7 @@ export function MediaGalleryWorkspace({
   initialCompose = "",
   initialFilterKey = "all",
   currentUsername,
+  currentUserRole = "",
   initialMessage = "",
   initialError = "",
   workspaceContextHref = ""
@@ -1660,6 +1736,7 @@ export function MediaGalleryWorkspace({
 
           <MediaInspector
             item={selectedItem}
+            currentUserRole={currentUserRole}
             onEdit={() => openEditOverlay(selectedItem)}
             onOpenCollectionManager={openCollectionManager}
             onCreateCollection={(assetId) => openCollectionManager({ seedAssetId: assetId, createNew: true })}
