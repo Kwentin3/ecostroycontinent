@@ -42,9 +42,9 @@ test("owner review status model prioritizes materials that still need owner deci
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "rejected" }).key, "returned");
   const approvedStatus = getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" });
 
-  assert.equal(approvedStatus.key, "in_review");
-  assert.match(approvedStatus.label, /На проверке/);
-  assert.match(approvedStatus.secondaryLabel, /Согласовано/);
+  assert.equal(approvedStatus.key, "approved");
+  assert.match(approvedStatus.label, /Согласовано/);
+  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "approved" }).key, "approved");
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "in_review");
 });
 
@@ -131,9 +131,8 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
 
   assert.ok(caseCard);
   assert.ok(pageCard);
-  assert.equal(caseCard.status.key, "in_review");
-  assert.match(caseCard.status.label, /На проверке/);
-  assert.match(caseCard.status.secondaryLabel, /Согласовано/);
+  assert.equal(caseCard.status.key, "approved");
+  assert.match(caseCard.status.label, /Согласовано/);
   assert.match(caseCard.summary, /Объект сдан в срок/);
   assert.equal(pageCard.status.key, "in_review");
   assert.match(pageCard.summary, /Свяжитесь с нами/);
@@ -204,7 +203,7 @@ test("owner review gallery summary exposes compact counts for filters", () => {
 
   assert.equal(summary.total, 2);
   assert.equal(summary.byStatus.needs_owner, 1);
-  assert.equal(summary.byStatus.in_review, 1);
+  assert.equal(summary.byStatus.approved, 1);
   assert.equal(summary.byType[ENTITY_TYPES.SERVICE], 1);
   assert.equal(summary.byType[ENTITY_TYPES.CASE], 1);
 });

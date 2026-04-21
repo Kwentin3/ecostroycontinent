@@ -22,6 +22,7 @@ import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
 const STATUS_OPTIONS = [
   { value: "all", label: "Все" },
   { value: "needs_owner", label: "Требуют решения" },
+  { value: "approved", label: "Согласованы" },
   { value: "returned", label: "Возвращены" },
   { value: "in_review", label: "На проверке" }
 ];
@@ -42,8 +43,8 @@ const MODAL_PAGE_PREVIEW_ZOOM = Object.freeze({
 });
 
 function normalizeStatusFilter(value) {
-  if (value === "approved") {
-    return "in_review";
+  if (value === "ready_to_publish") {
+    return "approved";
   }
 
   return value;
@@ -100,7 +101,7 @@ function cardStatusClassName(card) {
     return styles.reviewGalleryCardReturned;
   }
 
-  if (card.status.secondaryLabel) {
+  if (card.status.key === "approved") {
     return styles.reviewGalleryCardApproved;
   }
 
@@ -300,6 +301,14 @@ export default async function ReviewQueuePage({ searchParams }) {
     && userCanPublishRevision(user, selectedCard.entityType, selectedCard.revision)
     && selectedCard.revision.ownerReviewRequired
     && selectedCard.revision.ownerApprovalStatus !== "approved";
+  const canResolveOwnerReview = Boolean(
+    selectedCard
+    && (user.role === "business_owner" || user.role === "superadmin")
+    && selectedCard.status.key === "needs_owner"
+  );
+  const publishButtonClassName = selectedCard?.status.key === "approved"
+    ? styles.primaryButton
+    : styles.secondaryButton;
 
   const shouldLoadPagePreviewContext = filteredCards.some((card) => card.entityType === ENTITY_TYPES.PAGE)
     || (selectedCard?.entityType === ENTITY_TYPES.PAGE && selectedModal?.pageValue);
@@ -324,6 +333,7 @@ export default async function ReviewQueuePage({ searchParams }) {
             <div className={styles.reviewScreenStats} aria-label="Сводка по материалам">
               <span className={styles.reviewGalleryCounter}>Всего: {summary.total}</span>
               <span className={styles.reviewGalleryCounter}>Требуют решения: {summary.byStatus.needs_owner || 0}</span>
+              <span className={styles.reviewGalleryCounter}>Согласованы: {summary.byStatus.approved || 0}</span>
               <span className={styles.reviewGalleryCounter}>Возвращены: {summary.byStatus.returned || 0}</span>
               <span className={styles.reviewGalleryCounter}>На проверке: {summary.byStatus.in_review || 0}</span>
             </div>
@@ -414,9 +424,6 @@ export default async function ReviewQueuePage({ searchParams }) {
                   <div className={styles.reviewGallerySignals}>
                     {card.needsAttention ? <span className={styles.reviewGalleryAttentionMark} aria-label="Требует решения">!</span> : null}
                     <span className={styles.reviewGalleryStatus}>{card.status.label}</span>
-                    {card.status.secondaryLabel ? (
-                      <span className={styles.reviewGalleryStatus}>{card.status.secondaryLabel}</span>
-                    ) : null}
                   </div>
                 </div>
 
@@ -461,7 +468,6 @@ export default async function ReviewQueuePage({ searchParams }) {
             summary={selectedModal.summary}
             meta={[
               selectedCard.status.label,
-              ...(selectedCard.status.secondaryLabel ? [selectedCard.status.secondaryLabel] : []),
               selectedCard.submittedAtLabel || "На проверке"
             ]}
           >
@@ -478,15 +484,12 @@ export default async function ReviewQueuePage({ searchParams }) {
                 </p>
                 <div className={styles.reviewModalActionMeta}>
                   <span className={styles.reviewGalleryStatus}>{selectedCard.status.label}</span>
-                  {selectedCard.status.secondaryLabel ? (
-                    <span className={styles.reviewGalleryStatus}>{selectedCard.status.secondaryLabel}</span>
-                  ) : null}
                   {selectedCard.needsAttention ? (
                     <span className={styles.reviewGalleryWarning}>Нужно ваше решение</span>
                   ) : null}
                 </div>
 
-                {(user.role === "business_owner" || user.role === "superadmin") ? (
+                {canResolveOwnerReview ? (
                   <form action={`/api/admin/revisions/${selectedCard.id}/owner-action`} method="post" className={styles.formGrid}>
                     <input type="hidden" name="returnTo" value={closeHref} />
                     <input type="hidden" name="errorReturnTo" value={errorReturnTo} />
@@ -507,15 +510,23 @@ export default async function ReviewQueuePage({ searchParams }) {
                       Если нужно доработать материал, просто опишите, что исправить. После возврата он снова появится в галерее, когда SEO пришлет обновленную версию.
                     </p>
                   </form>
+                ) : (user.role === "business_owner" || user.role === "superadmin") ? (
+                  <p className={styles.reviewModalActionNote}>
+                    {selectedCard.status.key === "approved"
+                      ? "Согласование уже получено. Следующий шаг — открыть публикацию."
+                      : "Для этого материала отдельное согласование собственника не требуется."}
+                  </p>
                 ) : (
                   <p className={styles.reviewModalActionNote}>
-                    Решение собственника может оставить только собственник или супер-админ.
+                    {selectedCard.status.key === "needs_owner"
+                      ? "Решение собственника может оставить только собственник или супер-админ."
+                      : "Карточка проходит общую проверку перед публикацией."}
                   </p>
                 )}
 
                 {publishHref ? (
                   <div className={styles.inlineActions}>
-                    <Link href={publishHref} className={styles.secondaryButton}>Открыть публикацию</Link>
+                    <Link href={publishHref} className={publishButtonClassName}>Открыть публикацию</Link>
                   </div>
                 ) : null}
                 {publishWaitingForOwner ? (

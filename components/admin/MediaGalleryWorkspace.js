@@ -18,7 +18,6 @@ import {
   getRemovalSweepHref,
   getRemovalUnmarkHref
 } from "../../lib/admin/removal-quarantine.js";
-import { getOwnerApprovalStatusLabel } from "../../lib/ui-copy.js";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -208,6 +207,10 @@ function getToneForItem(item) {
     return "muted";
   }
 
+  if (item.statusTone) {
+    return item.statusTone;
+  }
+
   if (item.statusKey === "review") {
     return "warning";
   }
@@ -376,26 +379,6 @@ function isWaitingForOwnerApproval(item) {
   );
 }
 
-function shouldShowOwnerApprovalBadge(item) {
-  return Boolean(item?.statusKey === "review" && item?.ownerReviewRequired);
-}
-
-function getOwnerApprovalTone(item) {
-  if (item?.ownerApprovalStatus === "approved") {
-    return "success";
-  }
-
-  if (item?.ownerApprovalStatus === "rejected") {
-    return "danger";
-  }
-
-  if (item?.ownerApprovalStatus === "pending") {
-    return "warning";
-  }
-
-  return "muted";
-}
-
 function canOpenMediaPublishReadiness(item, currentUserRole) {
   return Boolean(
     item?.currentRevisionId
@@ -452,7 +435,7 @@ function MediaInspector({
   const canOpenPublishReadiness = canOpenMediaPublishReadiness(item, currentUserRole);
   const reviewHref = item.currentRevisionId ? `/admin/review/${item.currentRevisionId}` : "";
   const publicationNote = getPublicationNote(item, currentUserRole);
-  const reviewButtonLabel = canOpenPublishReadiness ? "Продолжить проверку" : "Открыть проверку";
+  const reviewButtonLabel = canOpenPublishReadiness ? "Открыть публикацию" : "Открыть проверку";
   const reviewButtonClassName = canOpenPublishReadiness ? styles.primaryButton : styles.secondaryButton;
 
   return (
@@ -480,11 +463,6 @@ function MediaInspector({
       <div className={styles.badgeRow}>
         {item.publishedRevisionNumber ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
-        {shouldShowOwnerApprovalBadge(item) ? (
-          <span className={`${styles.badge} ${styles[`mediaBadge${getOwnerApprovalTone(item)}`]}`}>
-            {getOwnerApprovalStatusLabel(item.ownerApprovalStatus)}
-          </span>
-        ) : null}
         {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
         {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
         {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
