@@ -44,7 +44,7 @@ test("page workspace preview modal uses a single control center and renders view
   assert.match(previewViewportSource, /fullPage = false/);
   assert.match(previewViewportSource, /styles\.previewViewportFullPage/);
   assert.match(previewViewportSource, /data-preview-device=\{activeOption\.value\}/);
-  assert.match(css, /\.previewViewportFullPage \.previewViewportDeviceViewport\s*\{/);
+  assert.match(css, /\.previewViewportFullPage \.previewViewportDeviceDesktop \.previewViewportDeviceViewport[\s\S]*aspect-ratio:\s*auto;/);
 });
 
 test("entity registry page keeps SurfacePacket imported for non-page entity lists", () => {

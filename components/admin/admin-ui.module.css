@@ -2916,12 +2916,6 @@
   scrollbar-width: thin;
 }
 
-.previewViewportFullPage .previewViewportDeviceViewport {
-  height: auto;
-  overflow: hidden;
-  aspect-ratio: auto;
-}
-
 .previewViewportScaler {
   display: grid;
   justify-items: center;
@@ -3046,6 +3040,14 @@
   aspect-ratio: 390 / 844;
   border-radius: 28px;
   background: #fff;
+}
+
+.previewViewportFullPage .previewViewportDeviceDesktop .previewViewportDeviceViewport,
+.previewViewportFullPage .previewViewportDeviceTablet .previewViewportDeviceViewport,
+.previewViewportFullPage .previewViewportDeviceMobile .previewViewportDeviceViewport {
+  height: auto;
+  overflow: hidden;
+  aspect-ratio: auto;
 }
 
 .previewViewportFullPage .previewViewportDeviceMobile {
