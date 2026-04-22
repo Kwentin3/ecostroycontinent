@@ -561,14 +561,14 @@ export function PageWorkspaceScreen({
   const previewZoom = previewZoomByDevice[previewDevice] || DEFAULT_PREVIEW_ZOOM_BY_DEVICE[previewDevice] || 1;
   const inlinePreviewZoom = useMemo(() => {
     if (previewDevice === "mobile") {
-      return 0.55;
+      return 0.38;
     }
 
     if (previewDevice === "tablet") {
-      return 0.32;
+      return 0.24;
     }
 
-    return 0.24;
+    return 0.18;
   }, [previewDevice]);
   const themeDefinition = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey] || LANDING_PAGE_THEME_REGISTRY.earth_sand;
   const themeDirty = metadata.pageThemeKey !== savedMetadata.pageThemeKey;
@@ -1634,6 +1634,7 @@ export function PageWorkspaceScreen({
               <PreviewViewport
                 device={previewDevice}
                 zoom={inlinePreviewZoom}
+                minZoom={0.16}
                 compact
                 showToolbar={false}
                 showFrameTop={false}
