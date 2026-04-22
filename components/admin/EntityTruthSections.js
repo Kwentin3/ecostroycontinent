@@ -6,7 +6,34 @@ import { FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { FIELD_LABELS } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
-function TruthGroup({ id, title, note, kicker = null, children }) {
+function TruthGroup({
+  id,
+  title,
+  note,
+  kicker = null,
+  collapsible = true,
+  defaultOpen = false,
+  children
+}) {
+  if (collapsible) {
+    return (
+      <details id={id} className={`${styles.compactDisclosure} ${styles.editorSectionDisclosure}`} open={defaultOpen}>
+        <summary className={`${styles.compactDisclosureSummary} ${styles.editorSectionDisclosureSummary}`}>
+          <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+          <span className={styles.compactDisclosureSummaryMain}>
+            {kicker ? <span className={styles.cockpitBlockKicker}>{kicker}</span> : null}
+            <strong className={styles.editorSectionDisclosureTitle}>{title}</strong>
+            {note ? <span className={styles.compactDisclosureSummaryMeta}>{note}</span> : null}
+          </span>
+        </summary>
+        <div className={`${styles.compactDisclosureBody} ${styles.editorSectionDisclosureBody}`}>
+          <h3 className={styles.visuallyHidden}>{title}</h3>
+          <div className={styles.formGrid}>{children}</div>
+        </div>
+      </details>
+    );
+  }
+
   return (
     <section id={id} className={`${styles.panel} ${styles.panelMuted} ${styles.editorTruthSection} ${styles.anchorTarget}`}>
       <div className={styles.editorTruthSectionHeader}>
@@ -92,7 +119,7 @@ export function EntityTruthSections({
   if (entityType === "global_settings") {
     return (
       <>
-        <TruthGroup id="global-settings-brand-truth" title="Брендовые данные" note="Это публичное имя и юридическая основа карточки.">
+        <TruthGroup id="global-settings-brand-truth" title="Брендовые данные" note="Это публичное имя и юридическая основа карточки." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.publicBrandName}</span>
@@ -105,7 +132,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="global-settings-contact-truth" title="Контактные данные" note="Контакты должны быть подтверждены до публикации.">
+        <TruthGroup id="global-settings-contact-truth" title="Контактные данные" note="Контакты должны быть подтверждены до публикации." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.primaryPhone}</span>
@@ -179,7 +206,7 @@ export function EntityTruthSections({
   if (entityType === "service") {
     return (
       <>
-        <TruthGroup id="service-seo-truth" title="Данные услуги" note="Это базовые данные услуги и её видимый заголовок.">
+        <TruthGroup id="service-seo-truth" title="Данные услуги" note="Это базовые данные услуги и её видимый заголовок." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.slug}</span>
@@ -200,7 +227,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="service-core" title="Суть услуги" note="Что входит в услугу и какие задачи она закрывает.">
+        <TruthGroup id="service-core" title="Суть услуги" note="Что входит в услугу и какие задачи она закрывает." defaultOpen>
           <label className={styles.label}>
             <span>{FIELD_LABELS.serviceScope}</span>
             <textarea name="serviceScope" defaultValue={value.serviceScope || ""} required />
@@ -270,7 +297,7 @@ export function EntityTruthSections({
   if (entityType === "equipment") {
     return (
       <>
-        <TruthGroup id="equipment-seo-truth" title="Данные техники" note="Это базовая карточка техники, которая потом может стать источником для страницы.">
+        <TruthGroup id="equipment-seo-truth" title="Данные техники" note="Это базовая карточка техники, которая потом может стать источником для страницы." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>Короткий адрес</span>
@@ -291,7 +318,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="equipment-core" title="Коммерческое описание" note="Карточка должна объяснять, что это за техника и для каких задач она подходит.">
+        <TruthGroup id="equipment-core" title="Коммерческое описание" note="Карточка должна объяснять, что это за техника и для каких задач она подходит." defaultOpen>
           <label className={styles.label}>
             <span>Краткое описание</span>
             <textarea name="shortSummary" defaultValue={value.shortSummary || ""} required />
@@ -367,7 +394,7 @@ export function EntityTruthSections({
   if (entityType === "case") {
     return (
       <>
-        <TruthGroup id="case-seo-truth" title="Данные кейса" note="Это базовые данные кейса и его видимый заголовок.">
+        <TruthGroup id="case-seo-truth" title="Данные кейса" note="Это базовые данные кейса и его видимый заголовок." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.slug}</span>
@@ -396,7 +423,7 @@ export function EntityTruthSections({
           ) : null}
         </TruthGroup>
 
-        <TruthGroup id="case-core" title="Суть кейса" note="Задача, объём и результат должны быть понятны без догадок.">
+        <TruthGroup id="case-core" title="Суть кейса" note="Задача, объём и результат должны быть понятны без догадок." defaultOpen>
           <label className={styles.label}>
             <span>{FIELD_LABELS.task}</span>
             <textarea name="task" defaultValue={value.task || ""} required />
@@ -459,7 +486,7 @@ export function EntityTruthSections({
   if (entityType === "page") {
     return (
       <>
-        <TruthGroup id="page-route-truth" title="Маршрут" note="Канонический адрес и тип страницы должны быть ясными.">
+        <TruthGroup id="page-route-truth" title="Маршрут" note="Канонический адрес и тип страницы должны быть ясными." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.slug}</span>
@@ -475,7 +502,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="page-seo-truth" title="Поисковая оптимизация / заголовки" note="Заголовок страницы и H1 должны совпадать с операторским замыслом.">
+        <TruthGroup id="page-seo-truth" title="Поисковая оптимизация / заголовки" note="Заголовок страницы и H1 должны совпадать с операторским замыслом." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>Название</span>

@@ -398,6 +398,32 @@
   padding: 0 var(--space-3) var(--space-3);
 }
 
+.editorSectionDisclosure {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.editorSectionDisclosureSummary {
+  padding: 10px 14px;
+}
+
+.editorSectionDisclosureTitle {
+  font-size: 0.98rem;
+  line-height: 1.3;
+}
+
+.editorSectionDisclosureBody {
+  gap: var(--space-2);
+  padding: 0 14px 14px;
+}
+
+.editorSectionDisclosureBody .formGrid {
+  gap: 10px;
+}
+
+.editorSectionDisclosureBody .label textarea {
+  min-height: 72px;
+}
+
 .panelMuted {
   background: var(--panel-muted);
 }
@@ -453,8 +479,8 @@
 
 .editorHero {
   display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3);
+  gap: 10px;
+  padding: 12px 14px;
 }
 
 .editorHeroHeader {
@@ -466,16 +492,17 @@
 }
 
 .editorHeroCopy {
-  min-width: min(100%, 520px);
+  min-width: min(100%, 460px);
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .editorHeroSummary {
   margin: 0;
   color: var(--subtle);
-  line-height: 1.45;
-  max-width: 72ch;
+  line-height: 1.4;
+  max-width: 64ch;
+  font-size: 0.92rem;
 }
 
 .editorHeroMeta {
@@ -483,6 +510,7 @@
   gap: var(--space-1);
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-content: flex-start;
 }
 
 .editorToolbar {
@@ -490,10 +518,10 @@
   top: var(--space-4);
   z-index: 5;
   display: flex;
-  gap: var(--space-2);
+  gap: 10px;
   flex-wrap: wrap;
   align-items: center;
-  padding: var(--space-2) var(--space-3);
+  padding: 10px 14px;
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(10px);
 }
@@ -505,7 +533,7 @@
 
 .sectionTitle {
   margin: 0;
-  font-size: clamp(1.35rem, 0.8vw + 1.1rem, 1.8rem);
+  font-size: clamp(1.18rem, 0.54vw + 1.02rem, 1.5rem);
   line-height: 1.1;
 }
 
@@ -2571,7 +2599,7 @@
 
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 280px);
   gap: var(--space-3);
   align-items: start;
 }
@@ -2603,9 +2631,13 @@
 }
 
 .editorRail {
-  width: min(100%, 320px);
+  position: sticky;
+  top: var(--space-4);
+  max-height: calc(100vh - (var(--space-4) * 2));
+  overflow-y: auto;
+  width: min(100%, 280px);
   justify-self: end;
-  gap: var(--space-2);
+  gap: 10px;
 }
 
 .editorRail > * {
@@ -2621,17 +2653,18 @@
 }
 
 .editorRail .panel {
-  padding: var(--space-2);
+  padding: 10px 12px;
 }
 
 .editorRail .compactDisclosureSummary {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-2);
+  gap: 10px;
+  padding: 10px 12px;
 }
 
 .editorRail .compactDisclosureSummaryMain {
-  gap: 6px;
+  gap: 4px;
 }
 
 .editorRail .compactDisclosureSummaryStats {
@@ -2650,7 +2683,7 @@
 
 .editorRail .cockpitStateValue {
   max-width: 100%;
-  font-size: clamp(1.05rem, 0.24vw + 0.95rem, 1.2rem);
+  font-size: clamp(0.98rem, 0.2vw + 0.9rem, 1.1rem);
 }
 
 .editorRail .secondaryButton,
