@@ -20,13 +20,12 @@ import { getReviewQueue } from "../../../../lib/content-ops/workflow";
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../../../lib/content-core/content-types.js";
 import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
 
-// The review screen is intentionally about review-lane resolution only.
-// These filters do not describe live publication state. An "approved" card may
-// still wait for an explicit publish from the entity surface.
+// The review screen is intentionally limited to unresolved review-lane work.
+// Once a revision is agreed or no owner decision is required, publishing moves
+// to the source entity screen and the card should leave this queue.
 const STATUS_OPTIONS = [
   { value: "all", label: "Все" },
   { value: "needs_owner", label: "Требуют решения" },
-  { value: "approved", label: "Согласованы" },
   { value: "returned", label: "Возвращены" },
   { value: "in_review", label: "На проверке" }
 ];
@@ -47,8 +46,8 @@ const MODAL_PAGE_PREVIEW_ZOOM = Object.freeze({
 });
 
 function normalizeStatusFilter(value) {
-  if (value === "ready_to_publish") {
-    return "approved";
+  if (value === "ready_to_publish" || value === "approved") {
+    return "all";
   }
 
   return value;
@@ -103,10 +102,6 @@ function cardStatusClassName(card) {
 
   if (card.status.key === "returned") {
     return styles.reviewGalleryCardReturned;
-  }
-
-  if (card.status.key === "approved") {
-    return styles.reviewGalleryCardApproved;
   }
 
   return "";
@@ -323,7 +318,7 @@ export default async function ReviewQueuePage({ searchParams }) {
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
         <div className={styles.statusPanelInfo}>
-          Экран проверки нужен для согласования и возврата материалов. Публикация и снятие с публикации выполняются из карточки сущности.
+          Экран проверки показывает только те материалы, по которым еще нужно решение или возврат. После согласования карточка уходит из этой очереди, а публикация выполняется уже в карточке сущности.
         </div>
 
         <section className={styles.reviewGalleryControls}>
@@ -331,7 +326,6 @@ export default async function ReviewQueuePage({ searchParams }) {
             <div className={styles.reviewScreenStats} aria-label="Сводка по материалам">
               <span className={styles.reviewGalleryCounter}>Всего: {summary.total}</span>
               <span className={styles.reviewGalleryCounter}>Требуют решения: {summary.byStatus.needs_owner || 0}</span>
-              <span className={styles.reviewGalleryCounter}>Согласованы: {summary.byStatus.approved || 0}</span>
               <span className={styles.reviewGalleryCounter}>Возвращены: {summary.byStatus.returned || 0}</span>
               <span className={styles.reviewGalleryCounter}>На проверке: {summary.byStatus.in_review || 0}</span>
             </div>
