@@ -46,7 +46,7 @@ const OBLIGATION_STATUS_LABELS = {
   completed: "Выполнено"
 };
 
-function TruthGroup({ id, kicker = "Поисковая оптимизация / данные", title, note, children }) {
+function TruthGroup({ id, kicker = null, title, note, children }) {
   return (
     <section id={id} className={`${styles.panel} ${styles.panelMuted} ${styles.editorTruthSection} ${styles.anchorTarget}`}>
       <div className={styles.editorTruthSectionHeader}>
