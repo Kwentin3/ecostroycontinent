@@ -1808,9 +1808,9 @@
 }
 
 .mediaToolbarIntro {
-  min-width: min(100%, 320px);
+  min-width: min(100%, 360px);
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .mediaToolbarTitle {
@@ -1842,10 +1842,27 @@
 }
 
 .mediaToolbarControls {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: end;
+  flex: 1 1 420px;
+}
+
+.mediaToolbarFieldRow,
+.mediaToolbarPrimaryActions {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.mediaToolbarServiceDisclosure {
+  width: min(100%, 420px);
+}
+
+.mediaToolbarServiceBody {
+  justify-items: end;
 }
 
 .mediaFilterRow {
@@ -3078,6 +3095,21 @@
   .reviewGalleryCardFooter {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .mediaToolbarControls,
+  .mediaToolbarFieldRow,
+  .mediaToolbarPrimaryActions {
+    justify-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .mediaToolbarServiceDisclosure {
+    width: 100%;
+  }
+
+  .mediaToolbarServiceBody {
+    justify-items: stretch;
   }
 
   .editorToolbar {

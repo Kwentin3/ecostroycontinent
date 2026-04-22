@@ -5,12 +5,12 @@
 
 /* Guardrail: sources stay compact in the rail, while full selection moves into modal pickers. */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  align-items: start;
   gap: 16px;
-  padding: 18px 22px;
-  border-radius: 24px;
+  padding: 14px 18px;
+  border-radius: 20px;
   background: linear-gradient(140deg, #fffaf1 0%, #f3efe6 100%);
   border: 1px solid rgba(38, 76, 59, 0.12);
 }
@@ -87,11 +87,33 @@
 }
 
 .headerActions {
+  display: grid;
+  gap: 10px;
+  justify-items: stretch;
+  align-content: start;
+}
+
+.headerPrimaryActions,
+.headerServiceActions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  align-items: center;
   gap: 8px;
+}
+
+.headerServiceDisclosure {
+  width: 100%;
+}
+
+.headerServiceBody {
+  gap: 10px;
+}
+
+.headerServiceNote {
+  margin: 0;
+  color: #647165;
+  line-height: 1.45;
+  text-align: right;
 }
 
 .headerActions .supportCopy {
@@ -142,8 +164,8 @@
 
 .shell {
   display: grid;
-  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr) minmax(260px, 320px);
-  gap: 18px;
+  grid-template-columns: minmax(232px, 264px) minmax(0, 1fr) minmax(240px, 292px);
+  gap: 14px;
   align-items: start;
 }
 
@@ -164,9 +186,9 @@
 .rail {
   display: grid;
   gap: 14px;
-  padding: 16px;
+  padding: 14px;
   position: sticky;
-  top: 24px;
+  top: 18px;
   min-width: 0;
 }
 
@@ -227,7 +249,7 @@
 .canvasColumn {
   display: grid;
   gap: 16px;
-  padding: 18px;
+  padding: 16px;
 }
 
 .canvasTop {
@@ -267,9 +289,9 @@
 
 .sectionCard {
   display: grid;
-  gap: 14px;
-  padding: 18px;
-  border-radius: 20px;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
   border: 1px solid rgba(38, 76, 59, 0.1);
   background: #fffdf8;
 }
@@ -548,14 +570,14 @@
 .previewCard {
   display: grid;
   gap: 12px;
-  padding: 16px;
+  padding: 14px;
 }
 
 .operatorCard {
   display: grid;
-  gap: 14px;
-  padding: 16px;
-  border-radius: 20px;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
   border: 1px solid rgba(38, 76, 59, 0.1);
   background: #fffdf8;
 }
@@ -901,7 +923,7 @@
 
 @media (max-width: 1480px) {
   .shell {
-    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+    grid-template-columns: minmax(232px, 264px) minmax(0, 1fr);
   }
 
   .previewCard {
@@ -911,7 +933,8 @@
 
 @media (max-width: 860px) {
   .header {
-    padding: 18px;
+    grid-template-columns: 1fr;
+    padding: 16px;
   }
 
   .shell {
@@ -937,6 +960,15 @@
 
   .selectedActions {
     justify-content: flex-start;
+  }
+
+  .headerPrimaryActions,
+  .headerServiceActions {
+    justify-content: flex-start;
+  }
+
+  .headerServiceNote {
+    text-align: left;
   }
 
   .previewLaunchGrid {

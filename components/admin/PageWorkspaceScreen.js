@@ -1084,7 +1084,7 @@ export function PageWorkspaceScreen({
           <p className={styles.eyebrow}>Страницы · единый рабочий экран</p>
           <h1 className={styles.title}>{pageLabel}</h1>
           <p className={styles.meta}>
-            Один редактор обслуживает и отдельные страницы, и коммерческие посадки. Тип страницы меняет набор секций, но не уводит в другой экран.
+            Страница собирается из готовых сущностей в этом же экране: без второго редактора и без свободного конструктора.
           </p>
           <div className={styles.statusRow}>
             <span className={`${styles.badge} ${toneClassName(workflowStatus.tone)}`}>{workflowStatus.label}</span>
@@ -1100,41 +1100,61 @@ export function PageWorkspaceScreen({
           <p className={styles.metaCompact}>{workflowStatus.description}</p>
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={adminStyles.secondaryButton} onClick={() => handleOpenPreview(previewDevice)}>
-            Превью
-          </button>
-          <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
-            Метаданные
-          </button>
-          {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
-          {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
-          {canOpenPublishReadiness ? <Link href={publishHref} className={adminStyles.primaryButton}>{publishAction.label}</Link> : null}
-          {revision?.state === "review" && ownerApprovalPending ? (
-            <button type="button" className={adminStyles.secondaryButton} disabled>
-              Ждет согласования
+          <div className={styles.headerPrimaryActions}>
+            <button
+              type="button"
+              className={adminStyles.primaryButton}
+              onClick={handleSaveComposition}
+              disabled={saveBusy || (emptyState.isEmptyWorkspace && !canSaveFirstDraft)}
+            >
+              {saveBusy ? "Сохраняем..." : "Сохранить страницу"}
             </button>
-          ) : null}
-          {lifecycleState?.canArchive ? (
-            <button type="button" className={adminStyles.secondaryButton} onClick={handleArchivePage} disabled={Boolean(lifecycleBusy)}>
-              {lifecycleBusy === "archive" ? "Снимаем..." : "Снять с публикации"}
+            <button type="button" className={adminStyles.secondaryButton} onClick={handleSendToReview} disabled={saveBusy || Boolean(lifecycleBusy) || !revision}>
+              Передать на проверку
             </button>
-          ) : null}
-          {lifecycleState?.canDelete ? (
-            <button type="button" className={adminStyles.secondaryButton} onClick={handleDeletePage} disabled={Boolean(lifecycleBusy)}>
-              {lifecycleBusy === "delete" ? "Удаляем..." : "Удалить страницу"}
+            {canOpenPublishReadiness ? <Link href={publishHref} className={adminStyles.primaryButton}>{publishAction.label}</Link> : null}
+            <button type="button" className={adminStyles.secondaryButton} onClick={() => handleOpenPreview(previewDevice)}>
+              Превью
             </button>
-          ) : null}
-          <button
-            type="button"
-            className={adminStyles.primaryButton}
-            onClick={handleSaveComposition}
-            disabled={saveBusy || (emptyState.isEmptyWorkspace && !canSaveFirstDraft)}
-          >
-            {saveBusy ? "Сохраняем..." : "Сохранить страницу"}
-          </button>
-          <button type="button" className={adminStyles.secondaryButton} onClick={handleSendToReview} disabled={saveBusy || Boolean(lifecycleBusy) || !revision}>
-            Передать на проверку
-          </button>
+          </div>
+          <details className={`${adminStyles.compactDisclosure} ${styles.headerServiceDisclosure}`}>
+            <summary className={adminStyles.compactDisclosureSummary}>
+              <div className={adminStyles.compactDisclosureSummaryMain}>
+                <strong>Служебные действия</strong>
+                <span className={adminStyles.compactDisclosureSummaryMeta}>
+                  Метаданные, история и жизненный цикл остаются доступны, но не перегружают основной поток сборки.
+                </span>
+              </div>
+              <span className={adminStyles.compactDisclosureMarker} aria-hidden="true" />
+            </summary>
+            <div className={`${adminStyles.compactDisclosureBody} ${styles.headerServiceBody}`}>
+              <div className={styles.headerServiceActions}>
+                <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
+                  Метаданные
+                </button>
+                {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
+                {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
+                {revision?.state === "review" && ownerApprovalPending ? (
+                  <button type="button" className={adminStyles.secondaryButton} disabled>
+                    Ждет согласования
+                  </button>
+                ) : null}
+                {lifecycleState?.canArchive ? (
+                  <button type="button" className={adminStyles.secondaryButton} onClick={handleArchivePage} disabled={Boolean(lifecycleBusy)}>
+                    {lifecycleBusy === "archive" ? "Снимаем..." : "Снять с публикации"}
+                  </button>
+                ) : null}
+                {lifecycleState?.canDelete ? (
+                  <button type="button" className={adminStyles.secondaryButton} onClick={handleDeletePage} disabled={Boolean(lifecycleBusy)}>
+                    {lifecycleBusy === "delete" ? "Удаляем..." : "Удалить страницу"}
+                  </button>
+                ) : null}
+              </div>
+              <p className={styles.headerServiceNote}>
+                Редкие и инженерные действия вынесены отдельно: рабочее полотно остается про сборку страницы, а не про обслуживание.
+              </p>
+            </div>
+          </details>
         </div>
       </section>
 
@@ -1331,7 +1351,7 @@ export function PageWorkspaceScreen({
             <div className={styles.canvasTitleWrap}>
               <p className={styles.eyebrow}>Рабочее полотно</p>
               <h2 className={styles.canvasTitle}>Сборка страницы</h2>
-              <p className={styles.canvasLegend}>Секции остаются структурными и типизированными. Здесь нет второго редактора и нет свободного конструктора.</p>
+              <p className={styles.canvasLegend}>Секции остаются типовыми и собираются здесь же: после модалок вы возвращаетесь в этот же рабочий экран.</p>
             </div>
           </div>
 
@@ -1550,15 +1570,6 @@ export function PageWorkspaceScreen({
               ))}
             </dl>
             <p className={styles.operatorNote}>{currentSignal.reason}</p>
-            {false ? (
-            <div className={styles.quickActions}>
-              <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
-                Метаданные
-              </button>
-              {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
-              {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
-            </div>
-            ) : null}
           </div>
           <div className={styles.operatorCard}>
             <div className={styles.sectionHead}>

@@ -15,7 +15,7 @@ test("page workspace wide layout keeps a compact launcher rail with bounded inpu
   assert.match(css, /sources stay compact in the rail, while full selection moves into modal pickers/i);
   assert.match(
     css,
-    /\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(240px,\s*280px\)\s+minmax\(0,\s*1fr\)\s+minmax\(260px,\s*320px\);/
+    /\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(232px,\s*264px\)\s+minmax\(0,\s*1fr\)\s+minmax\(240px,\s*292px\);/
   );
   assert.match(css, /\.launcherGrid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
   assert.match(css, /\.shell > \* \{[\s\S]*min-width:\s*0;/);
@@ -30,7 +30,7 @@ test("page workspace intermediate and narrow breakpoints preserve compact rail b
 
   assert.match(
     css,
-    /@media \(max-width:\s*1480px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(240px,\s*280px\)\s+minmax\(0,\s*1fr\);[\s\S]*\.previewCard\s*\{[\s\S]*grid-column:\s*1 \/ -1;/
+    /@media \(max-width:\s*1480px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(232px,\s*264px\)\s+minmax\(0,\s*1fr\);[\s\S]*\.previewCard\s*\{[\s\S]*grid-column:\s*1 \/ -1;/
   );
   assert.match(
     css,

@@ -671,9 +671,6 @@ function MediaInspector({
               <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
             </ConfirmActionForm>
           ) : null}
-          <Link href={getRemovalSweepHref()} className={item.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
-            Центр очистки
-          </Link>
           <button
             type="button"
             className={styles.secondaryButton}
@@ -682,16 +679,34 @@ function MediaInspector({
           >
             {lifecycleBusy ? "Сохраняем..." : item.archived ? "Вернуть из архива" : "В архив"}
           </button>
-          <Link href={deleteHref} className={styles.secondaryButton}>Проверить удаление (legacy)</Link>
-          {item.isTestData ? (
-            <Link href={appendAdminReturnTo(getTestGraphTeardownHref("media_asset", item.id), returnTo)} className={styles.secondaryButton}>
-              Удалить тестовый граф
-            </Link>
-          ) : null}
-          <Link href={appendAdminReturnTo(`/admin/entities/media_asset/${item.id}/history`, returnTo)} className={styles.secondaryButton}>
-            История
-          </Link>
         </div>
+        <details className={styles.compactDisclosure}>
+          <summary className={styles.compactDisclosureSummary}>
+            <div className={styles.compactDisclosureSummaryMain}>
+              <strong>Служебные действия</strong>
+              <span className={styles.compactDisclosureSummaryMeta}>
+                Cleanup, legacy-проверка и история остаются доступны отдельно, чтобы секция безопасности не разрасталась.
+              </span>
+            </div>
+            <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+          </summary>
+          <div className={styles.compactDisclosureBody}>
+            <div className={styles.inlineActions}>
+              <Link href={getRemovalSweepHref()} className={item.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
+                Центр очистки
+              </Link>
+              <Link href={deleteHref} className={styles.secondaryButton}>Проверить удаление (legacy)</Link>
+              {item.isTestData ? (
+                <Link href={appendAdminReturnTo(getTestGraphTeardownHref("media_asset", item.id), returnTo)} className={styles.secondaryButton}>
+                  Удалить тестовый граф
+                </Link>
+              ) : null}
+              <Link href={appendAdminReturnTo(`/admin/entities/media_asset/${item.id}/history`, returnTo)} className={styles.secondaryButton}>
+                История
+              </Link>
+            </div>
+          </div>
+        </details>
       </section>
     </aside>
   );
@@ -1602,7 +1617,7 @@ export function MediaGalleryWorkspace({
             <p className={styles.eyebrow}>Рабочее место</p>
             <h3 className={styles.mediaToolbarTitle}>Медиатека</h3>
             <p className={styles.helpText}>
-              Здесь живёт библиотека медиа и встроенный слой коллекций: слева и в центре остаются карточки, справа быстрый инспектор, а большое редактирование открывается поверх того же экрана.
+              Библиотека медиа и коллекции живут в одном экране: карточки остаются в центре, справа быстрый инспектор, а большое редактирование открывается поверх того же контекста.
             </p>
             <div className={styles.mediaToolbarStats} aria-label="Сводка медиатеки">
               {summaryItems.map((item) => (
@@ -1614,38 +1629,52 @@ export function MediaGalleryWorkspace({
             </div>
           </div>
           <div className={styles.mediaToolbarControls}>
-            <label className={styles.searchLabel}>
-              <span>Поиск</span>
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className={styles.searchInput}
-                placeholder="Название, альтернативный текст, подпись, имя файла, коллекция"
-              />
-            </label>
-            <label className={styles.label}>
-              <span>Сортировка</span>
-              <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
-                <option value="newest">Сначала новые</option>
-                <option value="oldest">Сначала старые</option>
-                <option value="title">По названию</option>
-                <option value="status">По статусу</option>
-              </select>
-            </label>
-            <button type="button" className={styles.primaryButton} onClick={openCreateOverlay}>
-              Загрузить
-            </button>
-            <button type="button" className={styles.secondaryButton} onClick={() => openCollectionManager()}>
-              Коллекции
-            </button>
-            {selectedItem ? (
-              <Link href={selectedDeleteHref} className={styles.secondaryButton}>Проверить удаление (legacy)</Link>
-            ) : null}
-            {selectedTestDeleteCount > 0 ? (
-              <button type="button" className={styles.dangerButton} onClick={handleBulkDeleteTestData} disabled={deleteBusy}>
-                {deleteBusy ? "Удаляем..." : `Удалить тестовые (${selectedTestDeleteCount})`}
+            <div className={styles.mediaToolbarFieldRow}>
+              <label className={styles.searchLabel}>
+                <span>Поиск</span>
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  className={styles.searchInput}
+                  placeholder="Название, альтернативный текст, подпись, имя файла, коллекция"
+                />
+              </label>
+              <label className={styles.label}>
+                <span>Сортировка</span>
+                <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
+                  <option value="newest">Сначала новые</option>
+                  <option value="oldest">Сначала старые</option>
+                  <option value="title">По названию</option>
+                  <option value="status">По статусу</option>
+                </select>
+              </label>
+            </div>
+            <div className={styles.mediaToolbarPrimaryActions}>
+              <button type="button" className={styles.primaryButton} onClick={openCreateOverlay}>
+                Загрузить
               </button>
+              <button type="button" className={styles.secondaryButton} onClick={() => openCollectionManager()}>
+                Коллекции
+              </button>
+            </div>
+            {selectedTestDeleteCount > 0 ? (
+              <details className={`${styles.compactDisclosure} ${styles.mediaToolbarServiceDisclosure}`}>
+                <summary className={styles.compactDisclosureSummary}>
+                  <div className={styles.compactDisclosureSummaryMain}>
+                    <strong>Служебные действия</strong>
+                    <span className={styles.compactDisclosureSummaryMeta}>
+                      Cleanup-операции остаются под рукой, но не забирают место у основного сценария медиатеки.
+                    </span>
+                  </div>
+                  <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+                </summary>
+                <div className={`${styles.compactDisclosureBody} ${styles.mediaToolbarServiceBody}`}>
+                  <button type="button" className={styles.dangerButton} onClick={handleBulkDeleteTestData} disabled={deleteBusy}>
+                    {deleteBusy ? "Удаляем..." : `Удалить тестовые (${selectedTestDeleteCount})`}
+                  </button>
+                </div>
+              </details>
             ) : null}
           </div>
         </div>
