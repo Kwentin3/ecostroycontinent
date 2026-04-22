@@ -15,7 +15,7 @@ test("page workspace wide layout keeps a compact launcher rail with bounded inpu
   assert.match(css, /sources stay compact in the rail, while full selection moves into modal pickers/i);
   assert.match(
     css,
-    /\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(232px,\s*264px\)\s+minmax\(0,\s*1fr\)\s+minmax\(240px,\s*292px\);/
+    /\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(212px,\s*240px\)\s+minmax\(0,\s*1fr\)\s+minmax\(300px,\s*340px\);/
   );
   assert.match(css, /\.launcherGrid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
   assert.match(css, /\.shell > \* \{[\s\S]*min-width:\s*0;/);
@@ -30,12 +30,28 @@ test("page workspace intermediate and narrow breakpoints preserve compact rail b
 
   assert.match(
     css,
-    /@media \(max-width:\s*1480px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(232px,\s*264px\)\s+minmax\(0,\s*1fr\);[\s\S]*\.previewCard\s*\{[\s\S]*grid-column:\s*1 \/ -1;/
+    /@media \(max-width:\s*1320px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*minmax\(212px,\s*240px\)\s+minmax\(0,\s*1fr\);[\s\S]*\.previewCard\s*\{[\s\S]*grid-column:\s*1 \/ -1;/
   );
   assert.match(
     css,
     /@media \(max-width:\s*860px\)\s*\{[\s\S]*\.shell\s*\{[\s\S]*grid-template-columns:\s*1fr;[\s\S]*\.launcherGrid\s*\{[\s\S]*grid-template-columns:\s*1fr;/
   );
+});
+
+test("page workspace keeps inline live preview near the canvas and moves full audits into a lower support grid", () => {
+  const source = readUtf8(componentPath);
+  const css = readUtf8(cssPath);
+
+  assert.match(source, /previewPacket/);
+  assert.match(source, /Живое превью/);
+  assert.match(source, /Режим встроенного предпросмотра/);
+  assert.match(source, /zoom=\{inlinePreviewZoom\}/);
+  assert.match(source, /compact/);
+  assert.match(source, /supportGrid/);
+  assert.match(source, /supportCardWide/);
+  assert.match(css, /\.previewPacket\s*\{/);
+  assert.match(css, /\.previewCompactList\s*\{/);
+  assert.match(css, /\.supportGrid\s*\{/);
 });
 
 test("page workspace keeps representative source states and launcher modal flow inside the same screen", () => {

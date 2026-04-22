@@ -559,6 +559,17 @@ export function PageWorkspaceScreen({
   const galleryEmptyState = getSourceChecklistEmptyState("galleries");
   const previewOption = useMemo(() => getPreviewViewportOption(previewDevice), [previewDevice]);
   const previewZoom = previewZoomByDevice[previewDevice] || DEFAULT_PREVIEW_ZOOM_BY_DEVICE[previewDevice] || 1;
+  const inlinePreviewZoom = useMemo(() => {
+    if (previewDevice === "mobile") {
+      return 0.55;
+    }
+
+    if (previewDevice === "tablet") {
+      return 0.32;
+    }
+
+    return 0.24;
+  }, [previewDevice]);
   const themeDefinition = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey] || LANDING_PAGE_THEME_REGISTRY.earth_sand;
   const themeDirty = metadata.pageThemeKey !== savedMetadata.pageThemeKey;
   const revisionStateLabel = revision ? getRevisionStateLabel(revision.state) : "Черновика пока нет";
@@ -698,6 +709,31 @@ export function PageWorkspaceScreen({
     )
   ]), [composition.intro, composition.sections.length, emptyState.mediaReady, emptyState.sourceCount, emptyState.titleReady, requiredSectionTypes.length]);
 
+  const previewMarkerItems = useMemo(() => {
+    const issues = [...contentAuditItems, ...seoAuditItems].filter((item) => item.tone !== "healthy");
+
+    if (issues.length > 0) {
+      return issues.slice(0, 4);
+    }
+
+    return [
+      {
+        label: "Готовность",
+        tone: currentSignal.tone || "healthy",
+        detail: currentSignal.label || "Статус уточняется"
+      },
+      {
+        label: "Публикация",
+        tone: liveStatus.tone,
+        detail: liveStatus.label
+      },
+      {
+        label: "Тема",
+        tone: themeDirty ? "warning" : "healthy",
+        detail: themeDirty ? "Тема изменена, сохраните метаданные" : themeDefinition.label
+      }
+    ];
+  }, [contentAuditItems, currentSignal.label, currentSignal.tone, liveStatus.label, liveStatus.tone, seoAuditItems, themeDefinition.label, themeDirty]);
   const launcherModels = useMemo(() => {
     const items = [];
 
@@ -1552,6 +1588,83 @@ export function PageWorkspaceScreen({
         </div>
 
         <section className={`${styles.previewCard} ${adminStyles.stickyPanel}`} data-layout-zone="preview">
+          <div className={`${styles.operatorCard} ${styles.previewPacket}`}>
+            <div className={styles.previewPacketHead}>
+              <div className={styles.previewPacketCopy}>
+                <h3 className={styles.sectionTitle}>Живое превью</h3>
+                <p className={styles.sectionMeta}>
+                  Реальный shell-рендер остаётся рядом с полотном, а крупное окно нужно только для детальной проверки компоновки.
+                </p>
+              </div>
+              <button type="button" className={adminStyles.secondaryButton} onClick={() => handleOpenPreview(previewDevice)}>
+                Открыть крупно
+              </button>
+            </div>
+
+            <div className={styles.previewPacketPills}>
+              <span className={`${styles.auditTonePill} ${toneClassName(workflowStatus.tone)}`}>{workflowStatus.label}</span>
+              <span className={`${styles.auditTonePill} ${toneClassName(liveStatus.tone)}`}>{liveStatus.label}</span>
+              <span className={`${styles.auditTonePill} ${toneClassName(themeDirty ? "warning" : "healthy")}`}>
+                {themeDirty ? "Тема изменена" : themeDefinition.label}
+              </span>
+            </div>
+
+            <div className={adminStyles.previewViewportControls} role="group" aria-label="Режим встроенного предпросмотра">
+              {PREVIEW_VIEWPORT_OPTIONS.map((option) => {
+                const className = option.value === previewDevice
+                  ? `${adminStyles.previewViewportButton} ${adminStyles.previewViewportButtonActive}`
+                  : adminStyles.previewViewportButton;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={className}
+                    aria-pressed={option.value === previewDevice}
+                    onClick={() => setPreviewDevice(option.value)}
+                  >
+                    <span className={adminStyles.previewViewportButtonLabel}>{option.label}</span>
+                    <span className={adminStyles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {previewPayload ? (
+              <PreviewViewport
+                device={previewDevice}
+                zoom={inlinePreviewZoom}
+                compact
+                showToolbar={false}
+                showFrameTop={false}
+              >
+                <PagePreview
+                  page={previewPayload}
+                  globalSettings={globalSettings}
+                  previewLookupRecords={previewLookupRecords}
+                />
+              </PreviewViewport>
+            ) : (
+              <div className={`${styles.emptyWorkspaceCard} ${styles.previewInlineEmpty}`}>
+                <h3 className={styles.sectionTitle}>Предпросмотр появится после основы</h3>
+                <p className={styles.sectionMeta}>Нужны хотя бы название страницы и H1.</p>
+              </div>
+            )}
+
+            <div className={styles.previewCompactList}>
+              {previewMarkerItems.map((item) => (
+                <div key={item.label} className={styles.previewCompactItem}>
+                  <span className={styles.previewCompactLabel}>{item.label}</span>
+                  <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className={styles.operatorNote}>{getWorkspaceQuestionHint("preview")}</p>
+          </div>
+        </section>
+        {false ? (
+        <section className={`${styles.previewCard} ${adminStyles.stickyPanel}`} data-layout-zone="preview">
           <div className={styles.operatorCard}>
             <div className={styles.sectionHead}>
               <div>
@@ -1650,7 +1763,69 @@ export function PageWorkspaceScreen({
             </dl>
           </div>
         </section>
+        ) : null}
       </div>
+
+      <section className={styles.supportGrid}>
+        <div className={styles.operatorCard}>
+          <div className={styles.sectionHead}>
+            <div>
+              <h3 className={styles.sectionTitle}>Статус страницы</h3>
+              <p className={styles.sectionMeta}>Короткая сводка по публикации, версии и сохранённости изменений.</p>
+            </div>
+          </div>
+          <dl className={styles.auditList}>
+            {pageStatusItems.map((item) => (
+              <div key={item.label} className={styles.auditRow}>
+                <dt className={styles.auditLabel}>{item.label}</dt>
+                <dd className={styles.auditValue}>
+                  <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className={styles.operatorNote}>{currentSignal.reason}</p>
+        </div>
+
+        <div className={styles.operatorCard}>
+          <div className={styles.sectionHead}>
+            <div>
+              <h3 className={styles.sectionTitle}>SEO-контроль</h3>
+              <p className={styles.sectionMeta}>Быстрый аудит без открытия полной формы метаданных.</p>
+            </div>
+          </div>
+          <dl className={styles.auditList}>
+            {seoAuditItems.map((item) => (
+              <div key={item.label} className={styles.auditRow}>
+                <dt className={styles.auditLabel}>{item.label}</dt>
+                <dd className={styles.auditValue}>
+                  <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className={`${styles.operatorCard} ${styles.supportCardWide}`}>
+          <div className={styles.sectionHead}>
+            <div>
+              <h3 className={styles.sectionTitle}>Контентная готовность</h3>
+              <p className={styles.sectionMeta}>{getWorkspaceQuestionHint("readiness")}</p>
+            </div>
+          </div>
+          <dl className={styles.auditList}>
+            {contentAuditItems.map((item) => (
+              <div key={item.label} className={styles.auditRow}>
+                <dt className={styles.auditLabel}>{item.label}</dt>
+                <dd className={styles.auditValue}>
+                  <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className={styles.operatorNote}>{getPageWorkspaceVisualSettingsHint()}</p>
+        </div>
+      </section>
 
       <SourcePickerModal
         open={Boolean(pickerModel)}
