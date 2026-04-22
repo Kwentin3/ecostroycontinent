@@ -1636,6 +1636,7 @@ export function PageWorkspaceScreen({
                 zoom={inlinePreviewZoom}
                 minZoom={0.16}
                 compact
+                fullPage
                 showToolbar={false}
                 showFrameTop={false}
               >

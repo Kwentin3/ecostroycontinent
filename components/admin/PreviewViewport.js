@@ -37,14 +37,20 @@ export function PreviewViewport({
   showToolbar = true,
   showFrameTop = true,
   compact = false,
+  fullPage = false,
   children
 }) {
   const activeOption = getPreviewViewportOption(device);
   const safeZoom = Number.isFinite(zoom) ? Math.min(maxZoom, Math.max(minZoom, zoom)) : 1;
   const scaledWidth = Math.round(activeOption.width * safeZoom);
+  const sectionClassName = [
+    styles.previewViewport,
+    compact ? styles.previewViewportCompact : "",
+    fullPage ? styles.previewViewportFullPage : ""
+  ].filter(Boolean).join(" ");
 
   return (
-    <section className={compact ? `${styles.previewViewport} ${styles.previewViewportCompact}` : styles.previewViewport}>
+    <section className={sectionClassName}>
       {showToolbar ? (
         <div className={styles.previewViewportToolbar}>
           <div className={styles.previewViewportCopy}>

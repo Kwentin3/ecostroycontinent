@@ -47,6 +47,7 @@ test("page workspace keeps inline live preview near the canvas and moves full au
   assert.match(source, /Режим встроенного предпросмотра/);
   assert.match(source, /zoom=\{inlinePreviewZoom\}/);
   assert.match(source, /minZoom=\{0\.16\}/);
+  assert.match(source, /fullPage/);
   assert.match(source, /return 0\.38;/);
   assert.match(source, /return 0\.24;/);
   assert.match(source, /return 0\.18;/);

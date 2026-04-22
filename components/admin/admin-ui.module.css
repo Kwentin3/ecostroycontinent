@@ -2684,6 +2684,10 @@
   gap: var(--space-2);
 }
 
+.previewViewportFullPage .previewViewportFrame {
+  overflow: hidden;
+}
+
 .previewViewportToolbar {
   display: flex;
   justify-content: space-between;
@@ -2894,6 +2898,10 @@
   gap: 18px;
 }
 
+.previewViewportFullPage .previewViewportCanvas {
+  width: 100%;
+}
+
 .previewViewportDeviceShell {
   position: relative;
   display: grid;
@@ -2906,6 +2914,12 @@
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
+}
+
+.previewViewportFullPage .previewViewportDeviceViewport {
+  height: auto;
+  overflow: hidden;
+  aspect-ratio: auto;
 }
 
 .previewViewportScaler {
@@ -2954,6 +2968,15 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
+.previewViewportFullPage .previewViewportDeviceDesktop {
+  padding: 12px;
+}
+
+.previewViewportFullPage .previewViewportDeviceDesktop::before,
+.previewViewportFullPage .previewViewportDeviceDesktop::after {
+  display: none;
+}
+
 .previewViewportDeviceTablet {
   padding: 16px;
   border-radius: 32px;
@@ -2977,6 +3000,14 @@
   aspect-ratio: 4 / 3;
   border-radius: 22px;
   background: #fff;
+}
+
+.previewViewportFullPage .previewViewportDeviceTablet {
+  padding: 12px;
+}
+
+.previewViewportFullPage .previewViewportDeviceTablet::before {
+  display: none;
 }
 
 .previewViewportDeviceMobile {
@@ -3017,12 +3048,25 @@
   background: #fff;
 }
 
+.previewViewportFullPage .previewViewportDeviceMobile {
+  padding: 12px 10px;
+}
+
+.previewViewportFullPage .previewViewportDeviceMobile::before,
+.previewViewportFullPage .previewViewportDeviceMobile::after {
+  display: none;
+}
+
 .previewViewportSurface {
   min-height: 100%;
   border-radius: 22px;
   overflow: clip;
   box-shadow: 0 16px 40px rgba(20, 26, 22, 0.12);
   background: #fff;
+}
+
+.previewViewportFullPage .previewViewportSurface {
+  min-height: 0;
 }
 
 .previewViewportDesktop {

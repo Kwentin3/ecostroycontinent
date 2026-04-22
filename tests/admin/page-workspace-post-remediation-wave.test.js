@@ -34,12 +34,17 @@ test("standalone page keeps theme styling on the outer preview shell", () => {
 test("page workspace preview modal uses a single control center and renders viewport as a clean canvas", () => {
   const source = readFileSync(new URL("../../components/admin/PageWorkspaceScreen.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const previewViewportSource = readFileSync(new URL("../../components/admin/PreviewViewport.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const css = readFileSync(new URL("../../components/admin/admin-ui.module.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
   assert.match(source, /showToolbar=\{false\}/);
   assert.match(source, /showFrameTop=\{false\}/);
+  assert.match(source, /fullPage/);
   assert.match(source, /previewModalControlRow/);
   assert.match(source, /adminStyles\.previewViewportControls/);
+  assert.match(previewViewportSource, /fullPage = false/);
+  assert.match(previewViewportSource, /styles\.previewViewportFullPage/);
   assert.match(previewViewportSource, /data-preview-device=\{activeOption\.value\}/);
+  assert.match(css, /\.previewViewportFullPage \.previewViewportDeviceViewport\s*\{/);
 });
 
 test("entity registry page keeps SurfacePacket imported for non-page entity lists", () => {
