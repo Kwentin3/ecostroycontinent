@@ -6,11 +6,11 @@ import { FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { FIELD_LABELS } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
-function TruthGroup({ id, title, note, children }) {
+function TruthGroup({ id, title, note, kicker = null, children }) {
   return (
     <section id={id} className={`${styles.panel} ${styles.panelMuted} ${styles.editorTruthSection} ${styles.anchorTarget}`}>
       <div className={styles.editorTruthSectionHeader}>
-        <p className={styles.cockpitBlockKicker}>Поисковая оптимизация / данные</p>
+        {kicker ? <p className={styles.cockpitBlockKicker}>{kicker}</p> : null}
         <h3 className={styles.editorTruthSectionTitle}>{title}</h3>
         {note ? <p className={styles.editorTruthSectionNote}>{note}</p> : null}
       </div>
@@ -169,7 +169,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="global-settings-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки и поля, которые помогают поиску и предпросмотру.">
+        <TruthGroup id="global-settings-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Здесь редактируются метаданные карточки и поля, которые помогают поиску и предпросмотру.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -260,7 +260,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="service-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки услуги и её предпросмотр.">
+        <TruthGroup id="service-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Здесь редактируются метаданные карточки услуги и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -319,7 +319,7 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="equipment-relations" title="Использование" note="Сама техника хранит собственный truth и медиа. Использование в услугах и кейсах задаётся на стороне этих доменов и показывается здесь как входящие связи.">
+        <TruthGroup id="equipment-relations" title="Использование" note="Здесь видно, в каких услугах и кейсах уже используется эта карточка техники.">
           <ReadonlyRelationSummary
             title="Используется в услугах"
             note="Услуги выбирают технику как готовый объект: описание, медиа и характеристики подтягиваются из карточки техники."
@@ -357,7 +357,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="equipment-seo-meta" title="Поисковая оптимизация / метаданные" note="Метаданные карточки техники живут отдельно от страницы.">
+        <TruthGroup id="equipment-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Метаданные карточки техники живут отдельно от страницы.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -449,7 +449,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="case-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки кейса и её предпросмотр.">
+        <TruthGroup id="case-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Здесь редактируются метаданные карточки кейса и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -553,7 +553,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="page-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки страницы и её предпросмотр.">
+        <TruthGroup id="page-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Здесь редактируются метаданные карточки страницы и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
