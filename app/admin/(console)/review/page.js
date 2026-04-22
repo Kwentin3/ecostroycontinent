@@ -318,8 +318,24 @@ export default async function ReviewQueuePage({ searchParams }) {
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
         <div className={styles.statusPanelInfo}>
-          Экран проверки показывает только те материалы, по которым еще нужно решение или возврат. После согласования карточка уходит из этой очереди, а публикация выполняется уже в карточке сущности.
+          В очереди остаются только материалы, по которым еще нужно решение или возврат.
         </div>
+        <details className={styles.compactDisclosure}>
+          <summary className={styles.compactDisclosureSummary}>
+            <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+            <span className={styles.compactDisclosureSummaryMain}>
+              <strong>Как устроена очередь</strong>
+              <span className={styles.compactDisclosureSummaryMeta}>
+                После согласования карточка уходит из review-очереди, а публикация выполняется уже в карточке сущности.
+              </span>
+            </span>
+          </summary>
+          <div className={styles.compactDisclosureBody}>
+            <p className={styles.mutedText}>
+              Здесь остаются только незавершенные решения. Как только материал согласован или возвращен с замечанием, дальнейшая ежедневная работа снова идет из карточки сущности.
+            </p>
+          </div>
+        </details>
 
         <section className={styles.reviewGalleryControls}>
           <div className={styles.reviewScreenBar}>

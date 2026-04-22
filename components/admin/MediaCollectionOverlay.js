@@ -245,47 +245,60 @@ export function MediaCollectionOverlay({
           </div>
         ) : null}
         {selectedCollection ? (
-          <div className={styles.inlineActions}>
-            {!selectedCollection.markedForRemovalAt ? (
-              <ConfirmActionForm
-                action={getRemovalMarkHref("gallery", selectedCollection.id)}
-                confirmMessage="Пометить коллекцию на удаление? Новые ссылки на неё будут заблокированы."
-              >
-                <input
-                  type="hidden"
-                  name="redirectTo"
-                  value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
-                />
-                <input
-                  type="hidden"
-                  name="failureRedirectTo"
-                  value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
-                />
-                <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
-              </ConfirmActionForm>
-            ) : null}
-            {selectedCollection.markedForRemovalAt ? (
-              <ConfirmActionForm
-                action={getRemovalUnmarkHref("gallery", selectedCollection.id)}
-                confirmMessage="Снять пометку удаления?"
-              >
-                <input
-                  type="hidden"
-                  name="redirectTo"
-                  value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
-                />
-                <input
-                  type="hidden"
-                  name="failureRedirectTo"
-                  value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
-                />
-                <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
-              </ConfirmActionForm>
-            ) : null}
-            <Link href={getRemovalSweepHref()} className={selectedCollection.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
-              Центр очистки
-            </Link>
-          </div>
+          <details className={styles.compactDisclosure}>
+            <summary className={styles.compactDisclosureSummary}>
+              <div className={styles.compactDisclosureSummaryMain}>
+                <strong>Служебные действия</strong>
+                <span className={styles.compactDisclosureSummaryMeta}>
+                  Очистка и редкие lifecycle-операции остаются доступны, но не занимают основной поток работы с коллекцией.
+                </span>
+              </div>
+              <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+            </summary>
+            <div className={styles.compactDisclosureBody}>
+              <div className={styles.inlineActions}>
+                {!selectedCollection.markedForRemovalAt ? (
+                  <ConfirmActionForm
+                    action={getRemovalMarkHref("gallery", selectedCollection.id)}
+                    confirmMessage="Пометить коллекцию на удаление? Новые ссылки на неё будут заблокированы."
+                  >
+                    <input
+                      type="hidden"
+                      name="redirectTo"
+                      value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                    />
+                    <input
+                      type="hidden"
+                      name="failureRedirectTo"
+                      value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                    />
+                    <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
+                  </ConfirmActionForm>
+                ) : null}
+                {selectedCollection.markedForRemovalAt ? (
+                  <ConfirmActionForm
+                    action={getRemovalUnmarkHref("gallery", selectedCollection.id)}
+                    confirmMessage="Снять пометку удаления?"
+                  >
+                    <input
+                      type="hidden"
+                      name="redirectTo"
+                      value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                    />
+                    <input
+                      type="hidden"
+                      name="failureRedirectTo"
+                      value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                    />
+                    <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
+                  </ConfirmActionForm>
+                ) : null}
+                <Link href={getRemovalSweepHref()} className={selectedCollection.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
+                  Центр очистки
+                </Link>
+              </div>
+            </div>
+          </details>
         ) : null}
 
         <div className={styles.collectionOverlayLayout}>

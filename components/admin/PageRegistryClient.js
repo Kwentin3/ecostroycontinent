@@ -583,7 +583,7 @@ export function PageRegistryClient({
               <div>
                 <p className={styles.fieldLabel}>Создание страницы</p>
                 <h2 id="page-create-title" className={styles.createTitle}>Новая страница</h2>
-                <p className={styles.createLegend}>Создание остается внутри единого редактора страниц. Режим старта задает только начальный контекст, а не отдельный экран.</p>
+                <p className={styles.createLegend}>После создания открывается тот же рабочий экран страницы. Режим старта задает только исходный контекст.</p>
               </div>
               <button type="button" className={styles.menuButton} onClick={() => setCreateOpen(false)}>
                 ×
@@ -708,9 +708,17 @@ export function PageRegistryClient({
               </p>
 
               <div className={styles.createActions}>
-                <Link href={createFallbackHref} className={styles.ghostLink}>
-                  Полный fallback-маршрут
-                </Link>
+                <details className={styles.createServiceDisclosure}>
+                  <summary className={styles.createServiceSummary}>Служебно</summary>
+                  <div className={styles.createServiceBody}>
+                    <p className={styles.createServiceNote}>
+                      Резервный маршрут нужен только как страховка. В обычной работе страница создается и сразу открывается в основном редакторе.
+                    </p>
+                    <Link href={createFallbackHref} className={styles.ghostLink}>
+                      Открыть резервный маршрут
+                    </Link>
+                  </div>
+                </details>
                 <div className={styles.createButtons}>
                   <button type="button" className={styles.toggle} onClick={() => setCreateOpen(false)}>
                     Отмена

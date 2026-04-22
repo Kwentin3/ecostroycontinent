@@ -21,7 +21,7 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(source, /ENTITY_TYPES\.EQUIPMENT/);
   assert.match(source, /styles\.reviewGalleryGrid/);
   assert.match(source, /styles\.reviewGalleryCard/);
-  assert.match(source, /styles\.reviewGalleryCardApproved/);
+  assert.doesNotMatch(source, /styles\.reviewGalleryCardApproved/);
   assert.match(source, /styles\.reviewGalleryStatusFilters/);
   assert.match(source, /styles\.reviewModalLayout/);
   assert.match(source, /renderPagePreview/);

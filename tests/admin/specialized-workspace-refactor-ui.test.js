@@ -33,3 +33,33 @@ test("media workspace keeps service cleanup and legacy tools out of the main too
   assert.match(css, /\.mediaToolbarFieldRow,\s*\.mediaToolbarPrimaryActions\s*\{/);
   assert.match(css, /\.mediaToolbarServiceDisclosure\s*\{/);
 });
+
+test("media collection overlay demotes cleanup controls behind a service disclosure", () => {
+  const source = readUtf8("components/admin/MediaCollectionOverlay.js");
+
+  assert.match(source, /Служебные действия/);
+  assert.match(source, /Очистка и редкие lifecycle-операции остаются доступны/);
+  assert.match(source, /Центр очистки/);
+  assert.match(source, /getRemovalMarkHref\("gallery"/);
+});
+
+test("page registry create modal keeps the fallback route secondary", () => {
+  const source = readUtf8("components/admin/PageRegistryClient.js");
+  const css = readUtf8("components/admin/PageRegistryClient.module.css");
+
+  assert.match(source, /createServiceDisclosure/);
+  assert.match(source, /Служебно/);
+  assert.match(source, /Открыть резервный маршрут/);
+  assert.doesNotMatch(source, /Полный fallback-маршрут/);
+  assert.match(css, /\.createServiceDisclosure\s*\{/);
+  assert.match(css, /\.createServiceBody\s*\{/);
+});
+
+test("review queue keeps operator guidance compact and collapsible", () => {
+  const source = readUtf8("app/admin/(console)/review/page.js");
+
+  assert.match(source, /В очереди остаются только материалы, по которым еще нужно решение или возврат/);
+  assert.match(source, /Как устроена очередь/);
+  assert.match(source, /После согласования карточка уходит из review-очереди/);
+  assert.match(source, /compactDisclosureSummary/);
+});

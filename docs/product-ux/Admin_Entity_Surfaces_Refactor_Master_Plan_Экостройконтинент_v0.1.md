@@ -1,6 +1,6 @@
 ﻿# Admin_Entity_Surfaces_Refactor_Master_Plan_Экостройконтинент_v0.1
 
-Статус: proposed master refactor plan  
+Статус: implemented refactor baseline  
 Дата: 2026-04-22  
 Приоритет: user-friendly, лаконичность, удобство для SEO-специалиста  
 Основание:
@@ -8,6 +8,11 @@
 - owner product feedback по административным экранам;
 - [PRODUCT.AUDIT.PAGE_CREATE_FROM_EQUIPMENT.LIVE.v1.report](../reports/2026-04-22/PRODUCT.AUDIT.PAGE_CREATE_FROM_EQUIPMENT.LIVE.v1.report.md);
 - существующий UX-канон про лёгкий интерфейс для SEO-специалиста.
+
+Обновление статуса:
+- Wave 0-4 реализованы в коде и покрыты targeted UI tests.
+- Wave 5 закрыта на уровне доступной локальной валидации: тесты, сборка и MCP Playwright smoke подтверждены.
+- Полный live-проход по локальному приложению упёрся в окружение, а не в UI-слой: локальный PostgreSQL на `127.0.0.1:5433` недоступен, из-за чего публичные и auth-dependent маршруты отвечают `500`.
 
 ## 1. Короткий вывод
 
