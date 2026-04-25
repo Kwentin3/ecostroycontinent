@@ -1,0 +1,14 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - link "Войти в админку" [ref=e3] [cursor=pointer]:
+      - /url: /admin/login
+      - text: ↗
+    - generic [ref=e4]:
+      - paragraph [ref=e5]: Экостройконтинент
+      - heading "Экостройконтинент" [level=1] [ref=e6]
+      - paragraph [ref=e7]: В разработке
+    - region "Подборка изображений для режима в разработке" [ref=e8]:
+      - article [ref=e9]
+      - article [ref=e10]
+      - article [ref=e11]
+  - alert [ref=e12]
