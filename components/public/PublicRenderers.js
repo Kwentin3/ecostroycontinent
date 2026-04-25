@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { PAGE_SECTION_TYPES, PAGE_TYPES } from "../../lib/content-core/content-types.js";
+import { resolveEffectiveServiceArea } from "../../lib/content-core/geography.js";
 import { normalizePageMediaSettings } from "../../lib/content-core/page-media.js";
 import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { DEFAULT_LANDING_PAGE_THEME_KEY } from "../../lib/landing-composition/visual-semantics.js";
@@ -16,6 +17,7 @@ import { buildEquipmentCardsSectionModel } from "../../lib/public-launch/equipme
 import {
   buildBreadcrumbStructuredData,
   buildLocalBusinessStructuredData,
+  buildServiceStructuredData,
   serializeStructuredData
 } from "../../lib/public-launch/seo-structured-data.js";
 import styles from "./public-ui.module.css";
@@ -264,11 +266,12 @@ function formatServiceAreaNote(region) {
   return `Зона оказания услуг: ${normalized}${/[.!?]$/.test(normalized) ? "" : "."}`;
 }
 
-function ServiceAreaNote({ contactProjection, sectionId = "preview-service-area" }) {
-  const region = contactProjection?.publicRegion;
+function ServiceAreaNote({ serviceAreaModel, sectionId = "preview-service-area" }) {
+  const region = serviceAreaModel?.effectiveServiceArea;
   const body = formatServiceAreaNote(region);
+  const note = normalizeLegacyCopy(serviceAreaModel?.serviceAreaNote || "");
 
-  if (!contactProjection?.hasPublicRegion || !body) {
+  if (!body) {
     return null;
   }
 
@@ -281,8 +284,19 @@ function ServiceAreaNote({ contactProjection, sectionId = "preview-service-area"
       <p className={styles.eyebrow}>География работ</p>
       <h2>Зона оказания услуг</h2>
       <p className={styles.note}>{body}</p>
+      {note ? <p className={styles.note}>{note}</p> : null}
     </section>
   );
+}
+
+function CaseLocationLabel({ location }) {
+  const normalized = normalizeLegacyCopy(location || "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  return <p className={styles.note}>Локация: {normalized}</p>;
 }
 
 function EquipmentCardsSection({ model, heading }) {
@@ -400,6 +414,7 @@ export function PublicPageShell({
   currentPath = "/",
   breadcrumbs = [],
   serviceLinks = [],
+  extraStructuredData = [],
   allowStructuredData = true,
   placeholderMarker = false,
   children
@@ -421,7 +436,13 @@ export function PublicPageShell({
       contactProjection
     })
     : null;
-  const structuredDataItems = [breadcrumbStructuredData, localBusinessStructuredData].filter(Boolean);
+  const structuredDataItems = allowStructuredData
+    ? [
+        breadcrumbStructuredData,
+        localBusinessStructuredData,
+        ...(Array.isArray(extraStructuredData) ? extraStructuredData : [])
+      ].filter(Boolean)
+    : [];
 
   return (
     <div
@@ -735,6 +756,7 @@ export function PublicListPage({
             {listItems.map((item) => (
               <article key={item.entityId || item.slug} className={styles.card}>
                 <h2>{item.title}</h2>
+                <CaseLocationLabel location={item.location} />
                 <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
                 <Link className={styles.actionLink} href={`${itemHrefPrefix}/${item.slug}`}>{PUBLIC_COPY.listOpen}</Link>
               </article>
@@ -827,12 +849,18 @@ export function ServicePage({
   const currentPath = `/services/${service.slug}`;
   const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: service.h1 || service.title });
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
+  const serviceAreaModel = resolveEffectiveServiceArea({ service, globalSettings });
   const equipmentCardsModel = buildEquipmentCardsSectionModel({
     equipmentRecords: relatedEquipment,
     resolveMedia,
     resolveGallery: galleries,
     ctaAction: contactProjection.primaryAction,
     ctaLabel: service.ctaVariant || contactProjection.defaultCtaLabel
+  });
+  const serviceStructuredData = buildServiceStructuredData({
+    service,
+    currentPath,
+    effectiveServiceArea: serviceAreaModel.effectiveServiceArea
   });
 
   return (
@@ -841,6 +869,7 @@ export function ServicePage({
       currentPath={currentPath}
       breadcrumbs={trail}
       serviceLinks={serviceLinks}
+      extraStructuredData={[serviceStructuredData]}
       allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
     >
@@ -866,12 +895,13 @@ export function ServicePage({
           {service.problemsSolved ? <p>{service.problemsSolved}</p> : null}
           {service.methods ? <p>{service.methods}</p> : null}
         </section>
-        <ServiceAreaNote contactProjection={contactProjection} />
+        <ServiceAreaNote serviceAreaModel={serviceAreaModel} />
         {relatedCases.length > 0 ? (
           <section id="preview-service-related-cases" data-preview-section="related-cases" className={`${styles.grid} ${styles.previewSection}`}>
             {relatedCases.map((item) => (
               <article key={item.entityId} className={styles.card}>
                 <h3>{item.title}</h3>
+                <CaseLocationLabel location={item.location} />
                 <p>{item.result}</p>
                 <Link className={styles.actionLink} href={`/cases/${item.slug}`}>{PUBLIC_COPY.openCase}</Link>
               </article>
@@ -942,7 +972,7 @@ export function CasePage({
         >
           <p className={styles.eyebrow}>{PUBLIC_COPY.caseEyebrow}</p>
           <h1>{item.title}</h1>
-          <p>{item.location}</p>
+          <CaseLocationLabel location={item.location} />
         </section>
         <MediaHero asset={primaryMedia} sectionId="preview-case-media" sectionName="media" />
         <section id="preview-case-core" data-preview-section="case-core" className={`${styles.grid} ${styles.previewSection}`}>

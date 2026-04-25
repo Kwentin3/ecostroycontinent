@@ -3,6 +3,7 @@ import { FilterableChecklist } from "./FilterableChecklist";
 import { MediaPicker } from "./MediaPicker";
 import { RelationChipRow } from "./RelationChipRow";
 import { FIELD_HINTS } from "../../lib/admin/screen-copy.js";
+import { resolveGlobalDefaultServiceArea } from "../../lib/content-core/geography.js";
 import { FIELD_LABELS } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
@@ -112,6 +113,7 @@ export function EntityTruthSections({
   entityType,
   value,
   relationOptions,
+  globalSettings = null,
   mediaOptions,
   caseProjectTypeOptions = [],
   sourceHref = ""
@@ -204,6 +206,8 @@ export function EntityTruthSections({
   }
 
   if (entityType === "service") {
+    const inheritedServiceArea = resolveGlobalDefaultServiceArea(globalSettings);
+
     return (
       <>
         <TruthGroup id="service-seo-truth" title="Данные услуги" note="Это базовые данные услуги и её видимый заголовок." defaultOpen>
@@ -239,6 +243,23 @@ export function EntityTruthSections({
           <label className={styles.label}>
             <span>{FIELD_LABELS.methods}</span>
             <textarea name="methods" defaultValue={value.methods || ""} />
+          </label>
+        </TruthGroup>
+
+        <TruthGroup id="service-area" title="География услуги" note="Если оставить зону пустой, публичная страница услуги наследует общую зону из Global Settings.">
+          <label className={styles.label}>
+            <span>Зона оказания услуги</span>
+            <input name="serviceArea" defaultValue={value.serviceArea || ""} />
+            <p className={styles.helpText}>
+              {inheritedServiceArea
+                ? `При пустом поле будет использована общая зона: ${inheritedServiceArea}.`
+                : "Общая зона в Global Settings пока не заполнена; без неё публикация услуги должна быть заблокирована."}
+            </p>
+          </label>
+          <label className={styles.label}>
+            <span>{FIELD_LABELS.serviceAreaNote}</span>
+            <textarea name="serviceAreaNote" defaultValue={value.serviceAreaNote || ""} />
+            <p className={styles.helpText}>Только подтверждённые уточнения по зоне оказания. Не добавляйте неподтверждённые обещания о выезде, сроках или условиях.</p>
           </label>
         </TruthGroup>
 

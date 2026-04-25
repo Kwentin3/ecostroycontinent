@@ -92,6 +92,7 @@ export default async function NewEntityPage({ params, searchParams }) {
         auditItems={[]}
         obligations={[]}
         relationOptions={data.relationOptions}
+        globalSettings={data.globalSettings}
         mediaOptions={data.mediaOptions}
         caseProjectTypeOptions={data.caseProjectTypeOptions}
         workspaceMemoryCard={data.workspaceMemoryCard}

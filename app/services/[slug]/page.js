@@ -3,6 +3,7 @@
 import { PublicHoldingPage, ServicePage } from "../../../components/public/PublicRenderers";
 import { ENTITY_TYPES } from "../../../lib/content-core/content-types";
 import { resolveEquipmentRecordsForEntity } from "../../../lib/content-core/equipment-relations.js";
+import { resolveEffectiveServiceArea } from "../../../lib/content-core/geography.js";
 import {
   buildPublishedLookups,
   getPublishedGlobalSettings,
@@ -19,6 +20,17 @@ import { resolvePublicRuntimeDisplayMode } from "../../../lib/public-launch/runt
 import { buildPublicRouteMetadata } from "../../../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
+
+function buildServiceDescriptionWithArea(service, globalSettings) {
+  const description = service?.seo?.metaDescription || service?.summary || "Детальная страница услуги: объём работ, подтверждение и следующий шаг к контакту.";
+  const { effectiveServiceArea } = resolveEffectiveServiceArea({ service, globalSettings });
+
+  if (!effectiveServiceArea || description.toLowerCase().includes(effectiveServiceArea.toLowerCase())) {
+    return description;
+  }
+
+  return `${description} Зона оказания услуги: ${effectiveServiceArea}.`;
+}
 
 export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
@@ -44,7 +56,7 @@ export async function generateMetadata({ params, searchParams }) {
     pathname: `/services/${slug}`,
     placeholderMode,
     title: service?.seo?.metaTitle || service?.h1 || service?.title || "Услуга",
-    description: service?.seo?.metaDescription || service?.summary || "Детальная страница услуги: объём работ, подтверждение и следующий шаг к контакту.",
+    description: buildServiceDescriptionWithArea(service, globalSettings),
     seo: service?.seo,
     siteName
   });

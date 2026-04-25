@@ -174,6 +174,7 @@ export default async function HomePage({ searchParams }) {
               {featuredCases.map((item) => (
                 <article key={item.entityId || item.slug} className={styles.card}>
                   <h3>{item.title}</h3>
+                  {item.location ? <p className={styles.note}>Локация: {normalizeLegacyCopy(item.location)}</p> : null}
                   <p>{normalizeLegacyCopy(item.result || item.task || item.location || "Детали кейса доступны на отдельном маршруте.")}</p>
                   <div className={styles.linkRow}>
                     <Link className={styles.actionLink} href={`/cases/${item.slug}`}>Открыть страницу кейса</Link>

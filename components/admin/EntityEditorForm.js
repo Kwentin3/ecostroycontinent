@@ -123,6 +123,7 @@ export function EntityEditorForm({
   auditItems,
   obligations,
   relationOptions,
+  globalSettings = null,
   mediaOptions,
   caseProjectTypeOptions = [],
   markedForRemovalAt = null,
@@ -336,6 +337,7 @@ export function EntityEditorForm({
               entityType={entityType}
               value={value}
               relationOptions={relationOptions}
+              globalSettings={globalSettings}
               mediaOptions={mediaOptions}
               caseProjectTypeOptions={caseProjectTypeOptions}
               sourceHref={redirectTo}
