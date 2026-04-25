@@ -1,26 +1,43 @@
-import { completePublishObligation } from "../../../../../../lib/content-ops/workflow";
-import { getString } from "../../../../../../lib/admin/form-data";
-import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
-import { FEEDBACK_COPY } from "../../../../../../lib/ui-copy.js";
-import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
-import { userCanPublish } from "../../../../../../lib/auth/session";
+import { revalidatePath } from "next/cache.js";
 
-export async function POST(request, { params }) {
-  const { user, response } = await requireRouteUser(request);
+import { completePublishObligation } from "../../../../../../lib/content-ops/workflow.js";
+import { getString } from "../../../../../../lib/admin/form-data.js";
+import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
+import { FEEDBACK_COPY } from "../../../../../../lib/ui-copy.js";
+import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback.js";
+import { userCanPublish } from "../../../../../../lib/auth/session.js";
+
+export async function POST(request, { params }, deps = {}) {
+  const routeDeps = {
+    completePublishObligation,
+    getString,
+    requireRouteUser,
+    userCanPublish,
+    revalidatePath,
+    ...deps
+  };
+  const { user, response } = await routeDeps.requireRouteUser(request);
 
   if (response) {
     return response;
   }
 
-  if (!userCanPublish(user)) {
+  if (!routeDeps.userCanPublish(user)) {
     return redirectToAdmin("/admin/no-access");
   }
 
   const { obligationId } = await params;
   const formData = await request.formData();
-  const redirectTo = getString(formData, "redirectTo") || "/admin";
+  const redirectTo = routeDeps.getString(formData, "redirectTo") || "/admin";
   try {
-    await completePublishObligation(obligationId);
+    const result = await routeDeps.completePublishObligation(obligationId);
+    const revalidationPaths = result?.publishFollowUp?.revalidationPaths ?? [];
+
+    for (const path of revalidationPaths) {
+      if (path) {
+        routeDeps.revalidatePath(path);
+      }
+    }
 
     return redirectWithQuery(request, redirectTo, { message: FEEDBACK_COPY.obligationCompleted });
   } catch (error) {

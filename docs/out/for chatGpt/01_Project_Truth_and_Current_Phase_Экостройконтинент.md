@@ -1,107 +1,116 @@
-# Project Truth and Current Phase
+﻿# Project Truth and Current Phase
 
 ## Purpose
 
-Это главный briefing file: он даёт новому чату быстрый ответ на вопросы `что это за проект`, `в какой он фазе`, `что уже решено` и `что не входит в launch`.
+Этот briefing file даёт новому чату быстрый ответ:
+
+- что это за проект
+- в какой фазе он находится
+- что уже зафиксировано в каноне
+- где проходит граница launch-core
 
 ## Canonical truths
 
-- Проект: корпоративный сайт-платформа для строительной подрядной компании `Экостройконтинент`.
-- Phase 1 = narrow launch-core, а не широкий продукт.
-- Launch выигрывается индексируемостью, видимостью, proof-led контентом и конверсионной механикой, а не vanity traffic.
-- Launch truth по языкам: `RU-only`.
+- Проект: корпоративный сайт-платформа строительной компании `Экостройконтинент`.
+- `Phase 1 = narrow launch-core`, а не широкий продукт.
+- Launch выигрывается индексируемостью, proof-led контентом и конверсионной механикой, а не шириной URL.
+- Launch truth по языку: `RU-only`.
 - На запуске используется один primary region cluster.
-- Recommended current launch region: `Сочи / Большой Сочи`; `Адлер / Сириус` only as backup.
-- Стартовое ядро должно быть небольшим и сильным: примерно `5` service pages и `3` priority case directions, без раздувания.
-- `Public AI chat`, `calculator / estimate tool`, advanced filtering, CRM-lite и SEO dashboard не входят в phase 1.
-- AI остаётся assistive layer only; autonomous publish запрещён.
-- Admin first = content operations tool, not visual page builder.
+- `Public Web` = read-side only; `Admin Console` = write-side only.
+- `Service`, `Case`, `Article` — route-owning сущности; `Page` не дублирует их route truth.
+- `Publish` — явная доменная операция, а не status flip при save.
+- AI остаётся assistive only; autonomous publish запрещён.
 
 ## Current phase and posture
 
-- Текущая стадия: pre-launch execution / evidence collection.
-- Product canon уже собран; главный bottleneck сейчас не в стратегии, а в owner confirmations, evidence gaps, media gaps и production readiness.
-- Команда малая, поэтому канон deliberately lean: no enterprise theater, no premature platform sprawl.
+- Текущая стадия: pre-launch execution / remediation after launch-readiness audit.
+- Главный bottleneck: не стратегия и не новый PRD, а owner confirmations, evidence gaps, contact truth, media truth и production readiness.
+- Launch posture на дату аудита `2026-04-17`: **NO-GO** для полноценного SEO/commercial запуска до закрытия обязательных launch gates.
 
-## What is in launch
+## What is in phase-1 launch core
 
-- Public site with `/services`, `/cases`, `/blog`, `/about`, `/contacts`.
-- Proof-led service core around:
-  - `Строительство домов под ключ`
-  - `Монолитные работы`
-  - `Реконструкция и капитальный ремонт зданий`
-  - conditional service pages such as `Фасадные работы` and `Строительство гостевых домов`
-- Small supporting layer: a few FAQ clusters, a few supporting articles, trust pages.
-- Human-mediated editorial flow with `Draft -> Review -> Published`.
-- Minimal admin/CMS for content entities, media, relations and publish readiness.
+Day-1 public core:
+
+- `/`
+- `/services`
+- `/services/[slug]`
+- `/cases`
+- `/cases/[slug]`
+- `/about`
+- `/contacts`
+
+Поддерживающий слой:
+
+- `/blog` и `Article` входят в phase 1 как supporting SEO layer, но не являются обязательным day-1 gate.
+- Blog/article вводятся в live только после готовности route/entity/publish contour.
+
+Контентный принцип:
+
+- лучше 5 сильных service pages и 2-3 реальных case pages, чем широкий слабый слой.
 
 ## What is explicitly not in launch
 
-- Broad product surface.
-- English launch.
-- Autonomous AI publishing.
-- Full no-code page builder.
-- Enterprise DAM / workflow / analytics stack.
-- Broad multi-region SEO rollout.
-- Weak commercial pages without proof inventory.
+- broad product surface beyond core
+- English launch
+- autonomous AI publishing
+- full no-code page builder
+- enterprise DAM / workflow stack
+- weak or placeholder commercial pages without proof
 
 ## Public business truth as currently known
 
-- Recommended public brand name: `Экостройконтинент`.
-- Legal name for requisites/trust blocks: `ООО "ЭКОСТРОЙКОНТИНЕНТ"`.
-- Recommended public essence: строительная компания в Сочи, которая выполняет строительство домов, монолитные и связанные строительные работы под проект заказчика.
-- Public phone, messengers, email and exact contact CTA truth are not fully confirmed yet.
-- Service area wording should stay narrow and tied to one confirmed launch region.
+- Recommended public brand: `Экостройконтинент`.
+- Legal name for trust/requisites: `ООО "ЭКОСТРОЙКОНТИНЕНТ"`.
+- Primary region wording и финальный contact set должны быть подтверждены owner-решением до launch.
 
 ## Owner review boundaries
 
-- Always owner review:
-  - home page
-  - `about`
-  - all launch service pages at first publication
-  - flagship cases
-  - any claims-heavy page with pricing, timing, guarantees or sensitive commercial wording
-- Standard editorial flow is acceptable for:
-  - `contacts` after contact truth is confirmed
-  - FAQ updates
-  - supporting articles without new commercial claims
-  - routine proof-led updates
+Always owner review:
+
+- home page
+- `/about`
+- первая публикация всех launch money pages
+- flagship cases
+- любые claims-heavy surfaces (цены, сроки, гарантии, чувствительные обещания)
+
+Standard editorial flow acceptable:
+
+- `/contacts` только после подтверждения contact truth
+- supporting articles без новых коммерческих обещаний
+- routine proof-led updates
 
 ## Already accepted strategic decisions
 
 - Launch starts from a small proof-led core, not from breadth.
-- Public site must not become owner of editorial truth.
-- AI helps draft and analyze, but does not decide public truth.
-- Publish must stay explicit and human-mediated.
-- Modular monolith is acceptable; premature microservices are not required.
+- Public site не становится owner of editorial truth.
+- AI помогает, но не определяет public truth.
+- Publish остаётся explicit и human-mediated.
+- Modular monolith acceptable; premature microservices not required.
 
 ## Do not reopen by default
 
 - `Phase 1 = narrow launch-core`
 - `RU-only on launch`
-- `AI = assistive only`
+- `Public Web read-side only`
+- `Admin write-side only`
+- `AI assistive only`
 - `No autonomous publishing`
-- `Admin first as content operations, not page builder`
-- `No premature microservices`
-- `No public AI chat / calculator in phase 1`
+- `No broad phase-1 scope expansion`
 
 ## What this file owns
 
-- Project-level truth.
-- Current phase posture.
-- What is in and out of launch by default.
-- Strategic decisions already accepted.
+- project-level truth
+- phase posture
+- launch boundary framing
 
 ## What this file does not own
 
-- Detailed domain boundaries.
-- Content model details.
-- Admin implementation details.
-- Current blocker queue.
+- detailed domain boundaries
+- page-by-page contracts
+- publish gate implementation details
 
 ## Source docs used
 
 - `docs/product-ux/PRD_Экостройконтинент_v0.3.1.md`
-- `docs/product-ux/Launch_SEO_Core_Экостройконтинент_v0.1.md`
-- `docs/product-ux/Content_Inventory_and_Evidence_Register_Экостройконтинент_v0.1.md`
-- `docs/product-ux/Owner_Confirmation_Pack_Экостройконтинент_v0.1.md`
+- `docs/product-ux/Public_Launch_Domain_Canon_Экостройконтинент_v0.1.md`
+- `docs/reports/2026-04-17/AUDIT.LAUNCH_READINESS_ANAMNESIS.ECOSTROYCONTINENT.V1.report.md`

@@ -94,11 +94,11 @@ export async function POST(request, overrides = {}) {
     const currentEntity = aggregate?.entity ?? (entityId ? await routeDeps.findEntityById(entityId) : null);
 
     if (entityId && !currentEntity) {
-      return redirectWithError(request, fallbackPath, new Error("Service entity not found."));
+      return redirectWithError(request, fallbackPath, new Error("Сущность услуги не найдена."));
     }
 
     if (currentEntity && currentEntity.entityType !== ENTITY_TYPES.SERVICE) {
-      return redirectWithError(request, fallbackPath, new Error("Service landing factory is service-only."));
+      return redirectWithError(request, fallbackPath, new Error("Фабрика лендинга работает только с сущностями услуги."));
     }
 
     const baseRevision = aggregate?.activePublishedRevision ?? null;

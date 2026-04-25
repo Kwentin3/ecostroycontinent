@@ -7,7 +7,7 @@ import styles from "./admin-ui.module.css";
 const DIAGNOSTICS = {
   llm_test: {
     title: "LLM-проверка",
-    description: "Проверяет, что провайдер, структурированный вывод и локальная проверка отрабатывают end-to-end через внутренний фасад.",
+    description: "Проверяет, что провайдер, структурированный вывод и локальная проверка отрабатывают сквозным сценарием через внутренний фасад.",
     buttonLabel: "Запустить LLM-проверку"
   },
   socks5_transport_test: {

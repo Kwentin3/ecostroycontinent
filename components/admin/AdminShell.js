@@ -9,6 +9,7 @@ import styles from "./admin-ui.module.css";
 const baseNavItems = [
   { href: "/admin", label: "Главная" },
   { href: "/admin/review", label: "Проверка" },
+  { href: "/admin/removal-sweep", label: "Очистка" },
   { href: "/admin/entities/global_settings", label: "Настройки" },
   { href: "/admin/entities/media_asset", label: "Медиа" },
   { href: "/admin/entities/service", label: "Услуги" },
@@ -123,3 +124,4 @@ export async function AdminShell({ user, title, children, actions = null, breadc
     </div>
   );
 }
+

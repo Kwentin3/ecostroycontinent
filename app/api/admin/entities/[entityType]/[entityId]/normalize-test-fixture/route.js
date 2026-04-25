@@ -8,7 +8,7 @@ import {
 import { userCanPublish } from "../../../../../../../lib/auth/session.js";
 
 function makeSuccessMessage() {
-  return "Legacy test fixture помечен как test-marked объект. Теперь можно переходить в удаление тестового графа.";
+  return "Устаревший тестовый набор помечен как тестовый объект. Теперь можно переходить к удалению тестового графа.";
 }
 
 export async function POST(request, { params }, deps = {}) {
@@ -48,7 +48,7 @@ export async function POST(request, { params }, deps = {}) {
     });
 
     if (!result.executed) {
-      const reason = result.evaluation?.blockers?.[0] || "Нормализация legacy test fixture отклонена правилами безопасности.";
+      const reason = result.evaluation?.blockers?.[0] || "Нормализация устаревшего тестового набора отклонена правилами безопасности.";
 
       return redirectWithQuery(request, failureRedirectTo, {
         error: reason

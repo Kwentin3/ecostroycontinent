@@ -89,7 +89,7 @@ function buildHiddenValue(pageType, createMode, formState) {
 function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
   const previewTitle = record.previewTitle || record.title;
   const previewIntro =
-    record.previewIntro || "Page preview keeps the first-screen composition intact instead of cropping to a media tile.";
+    record.previewIntro || "Предпросмотр страницы сохраняет композицию первого экрана и не обрезает её до медиа-тайла.";
   const canRenderPreview = Boolean(record.previewPageValue && globalSettings);
 
   return (
@@ -100,12 +100,12 @@ function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
       <div className={styles.pagePreviewViewport}>
         <div className={styles.pagePreviewSurface}>
           <div className={styles.pagePreviewFrame}>
-        <div className={styles.pagePreviewTop}>
+          <div className={styles.pagePreviewTop}>
           <span className={styles.pagePreviewEyebrow}>
             {PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
           </span>
           {record.lifecycle?.hasLivePublishedRevision ? (
-            <span className={styles.pagePreviewLive}>Live</span>
+            <span className={styles.pagePreviewLive}>Опубликовано</span>
           ) : null}
         </div>
         {canRenderPreview ? (
@@ -130,7 +130,7 @@ function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
         <div className={styles.pagePreviewBody}>
           <strong className={styles.pagePreviewTitle}>{previewTitle}</strong>
           <p className={styles.pagePreviewText}>
-            {record.previewIntro || "Карточка показывает собственный page preview, а не фотографию прикрепленного медиа."}
+            {record.previewIntro || "Карточка показывает собственный предпросмотр страницы, а не фотографию прикрепленного медиа."}
           </p>
         </div>
         <div className={styles.pagePreviewFooter}>
@@ -270,7 +270,7 @@ export function PageRegistryClient({
       { label: "Частично", value: stats.partial ?? 0 },
       { label: "Готово", value: stats.ready ?? 0 },
       { label: "Нет версии", value: stats.missing ?? 0 },
-      { label: "Вне live", value: stats.inactive ?? 0 }
+      { label: "Снято с публикации", value: stats.inactive ?? 0 }
     ];
   }, [records.length, summary]);
 
@@ -583,7 +583,7 @@ export function PageRegistryClient({
               <div>
                 <p className={styles.fieldLabel}>Создание страницы</p>
                 <h2 id="page-create-title" className={styles.createTitle}>Новая страница</h2>
-                <p className={styles.createLegend}>Создание остается внутри единого редактора страниц. Режим старта задает только начальный контекст, а не отдельный экран.</p>
+                <p className={styles.createLegend}>После создания открывается тот же рабочий экран страницы. Режим старта задает только исходный контекст.</p>
               </div>
               <button type="button" className={styles.menuButton} onClick={() => setCreateOpen(false)}>
                 ×
@@ -708,9 +708,17 @@ export function PageRegistryClient({
               </p>
 
               <div className={styles.createActions}>
-                <Link href={createFallbackHref} className={styles.ghostLink}>
-                  Полный fallback-маршрут
-                </Link>
+                <details className={styles.createServiceDisclosure}>
+                  <summary className={styles.createServiceSummary}>Служебно</summary>
+                  <div className={styles.createServiceBody}>
+                    <p className={styles.createServiceNote}>
+                      Резервный маршрут нужен только как страховка. В обычной работе страница создается и сразу открывается в основном редакторе.
+                    </p>
+                    <Link href={createFallbackHref} className={styles.ghostLink}>
+                      Открыть резервный маршрут
+                    </Link>
+                  </div>
+                </details>
                 <div className={styles.createButtons}>
                   <button type="button" className={styles.toggle} onClick={() => setCreateOpen(false)}>
                     Отмена

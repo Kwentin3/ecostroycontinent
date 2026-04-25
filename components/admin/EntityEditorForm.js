@@ -1,24 +1,36 @@
 import Link from "next/link";
 
 import { ConfirmActionForm } from "./ConfirmActionForm";
-import { EntityActionabilityPanel } from "./EntityActionabilityPanel";
 import { EntityTruthSections } from "./EntityTruthSections";
 import { FilterableChecklist } from "./FilterableChecklist";
 import { EvidenceRegisterPanel } from "./EvidenceRegisterPanel";
 import { MediaPicker } from "./MediaPicker";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
-import { SurfacePacket } from "./SurfacePacket";
 import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
 import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
-import { ADMIN_COPY, FIELD_LABELS, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
-import { CHANGE_INTENT_LABEL, FIELD_HINTS, getEntityEditorLegend } from "../../lib/admin/screen-copy.js";
+import { ADMIN_COPY, FIELD_LABELS, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { CHANGE_INTENT_LABEL, FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
-import { getEntityDeletePreviewHref } from "../../lib/admin/entity-delete.js";
+import { getEntityDeletePreviewHref, isDeleteToolEntityTypeSupported } from "../../lib/admin/entity-delete.js";
 import { isAgentTestCreationOrigin } from "../../lib/admin/entity-origin.js";
-import { getLegacyTestFixtureNormalizationHref } from "../../lib/admin/legacy-test-fixture-normalization.js";
-import { getTestGraphTeardownHref } from "../../lib/admin/test-graph-teardown.js";
-import { getLiveDeactivationHref } from "../../lib/admin/live-deactivation.js";
+import {
+  getLegacyTestFixtureNormalizationHref,
+  isLegacyTestFixtureNormalizationEntityTypeSupported
+} from "../../lib/admin/legacy-test-fixture-normalization.js";
+import {
+  getRemovalMarkHref,
+  getRemovalSweepHref,
+  getRemovalUnmarkHref,
+  isRemovalQuarantineEntityTypeSupported
+} from "../../lib/admin/removal-quarantine.js";
+import { getTestGraphTeardownHref, isTestGraphTeardownEntityTypeSupported } from "../../lib/admin/test-graph-teardown.js";
+import { getLiveDeactivationHref, isLiveDeactivationEntityTypeSupported } from "../../lib/admin/live-deactivation.js";
+import {
+  getLivePublicationStatusModel,
+  getPublishActionCopy,
+  getWorkingRevisionStatusModel
+} from "../../lib/admin/workflow-status.js";
 import { userCanPublishRevision } from "../../lib/auth/session.js";
 import styles from "./admin-ui.module.css";
 
@@ -34,7 +46,7 @@ const OBLIGATION_STATUS_LABELS = {
   completed: "Выполнено"
 };
 
-function TruthGroup({ id, kicker = "Поисковая оптимизация / данные", title, note, children }) {
+function TruthGroup({ id, kicker = null, title, note, children }) {
   return (
     <section id={id} className={`${styles.panel} ${styles.panelMuted} ${styles.editorTruthSection} ${styles.anchorTarget}`}>
       <div className={styles.editorTruthSectionHeader}>
@@ -113,33 +125,42 @@ export function EntityEditorForm({
   relationOptions,
   mediaOptions,
   caseProjectTypeOptions = [],
+  markedForRemovalAt = null,
   user,
   message,
   error
 }) {
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const historyHref = entityId ? `/admin/entities/${entityType}/${entityId}/history` : "";
-  const canDeletePreview = Boolean(entityId && (entityType === ENTITY_TYPES.SERVICE || entityType === ENTITY_TYPES.CASE));
+  const canUseRemovalQuarantine = Boolean(entityId && isRemovalQuarantineEntityTypeSupported(entityType));
+  const canDeletePreview = Boolean(entityId && isDeleteToolEntityTypeSupported(entityType));
   const canDeleteEntity = false; // Entity delete now always goes through the explicit preview screen.
   const canPublish = user.role === "superadmin";
+  const isMarkedForRemoval = Boolean(markedForRemovalAt);
   const canLiveDeactivate = Boolean(
     entityId
     && canPublish
     && activePublishedRevision
     && !isAgentTestCreationOrigin(entityCreationOrigin)
-    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+    && isLiveDeactivationEntityTypeSupported(entityType)
   );
   const canTeardownTestGraph = Boolean(
     entityId
     && isAgentTestCreationOrigin(entityCreationOrigin)
-    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+    && isTestGraphTeardownEntityTypeSupported(entityType)
   );
   const canNormalizeLegacyTestFixture = Boolean(
     entityId
     && canPublish
     && !isAgentTestCreationOrigin(entityCreationOrigin)
-    && [ENTITY_TYPES.PAGE, ENTITY_TYPES.SERVICE, ENTITY_TYPES.CASE].includes(entityType)
+    && isLegacyTestFixtureNormalizationEntityTypeSupported(entityType)
   );
+  const reviewHref = currentRevision ? `/admin/review/${currentRevision.id}` : "";
+  const publishHref = currentRevision ? `/admin/revisions/${currentRevision.id}/publish` : "";
+  const canOpenReview = Boolean(currentRevision && currentRevision.state === "review" && reviewHref);
+  // Publish stays on the entity surface on purpose. Review grants approval for
+  // the candidate revision, but the live pointer changes only through the
+  // explicit publish action opened from this screen.
   const canOpenPublishReadiness = Boolean(
     currentRevision
     && currentRevision.state === "review"
@@ -147,124 +168,163 @@ export function EntityEditorForm({
     && (!currentRevision.ownerReviewRequired || currentRevision.ownerApprovalStatus === "approved")
   );
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
-  const showActionabilityPanel = [
-    ENTITY_TYPES.GLOBAL_SETTINGS,
-    ENTITY_TYPES.SERVICE,
-    ENTITY_TYPES.CASE,
-    ENTITY_TYPES.PAGE
-  ].includes(entityType);
   const surfaceTitle = entityType === "global_settings" ? "Глобальные настройки" : getPayloadLabel(value);
   const readinessBlocking = readiness ? readiness.results.filter((result) => result.severity === "blocking").length : 0;
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
-  const currentStateLabel = currentRevision ? getRevisionStateLabel(currentRevision.state) : "Новый черновик";
+  const workflowStatus = getWorkingRevisionStatusModel({ currentRevision, activePublishedRevision });
+  const liveStatus = getLivePublicationStatusModel({ currentRevision, activePublishedRevision });
+  const publishAction = getPublishActionCopy({ activePublishedRevision });
   const mediaPreviewSrc = entityType === "media_asset" && entityId ? `/api/admin/media/${entityId}/preview` : null;
-  const showCompactGuide = showActionabilityPanel;
+  const editorFormId = entityId ? `entity-editor-${entityType}-${entityId}` : `entity-editor-${entityType}-new`;
+  const showMaintenanceTools = Boolean(
+    canUseRemovalQuarantine
+    || canTeardownTestGraph
+    || canNormalizeLegacyTestFixture
+    || canLiveDeactivate
+    || canDeletePreview
+    || canDeleteEntity
+  );
   const surfaceSummary = entityType === "media_asset"
-    ? "Сначала загрузите файл, затем уточните метаданные карточки и при необходимости оставьте заметку к версии. Этот экран остаётся источником медиа для остальных карточек."
+    ? "Загрузите файл и заполните карточку без лишних служебных действий на первом экране."
     : entityType === "gallery"
-      ? "Коллекция собирает уже загруженные медиафайлы. Новый файл добавляйте в разделе Медиа, а здесь собирайте подборку."
-      : "Основное заполняется слева, готовность и история остаются справа. Новый файл добавляйте через раздел Медиа, а не в каждой карточке отдельно.";
-  const surfaceBullets = [
-    `Состояние: ${currentRevision ? currentStateLabel : "новый черновик"}`,
-    readiness ? `Блокеров: ${readinessBlocking}` : "Проверка готовности ещё не запускалась",
-    readiness ? `Предупреждений: ${readinessWarnings}` : "Предупреждения появятся после сохранения",
-    activePublishedRevision ? `Опубликованная версия №${activePublishedRevision.revisionNumber}` : "Опубликованной версии пока нет"
-  ];
-  const compactGuideSummary = entityType === ENTITY_TYPES.GLOBAL_SETTINGS
-    ? "Короткая памятка по глобальным настройкам. Основная работа идёт ниже в форме."
-    : entityType === ENTITY_TYPES.SERVICE
-      ? "Короткая памятка по услуге. Заполнение и связи редактируются ниже."
-      : entityType === ENTITY_TYPES.CASE
-        ? "Короткая памятка по кейсу. Основные поля и связи редактируются ниже."
-        : "Короткая памятка по странице. Основные поля редактируются ниже.";
+      ? "Соберите подборку из уже загруженных медиа и выберите главный кадр."
+      : "Основные поля и связи редактируются здесь, а проверка и служебные детали остаются вторичным слоем.";
 
   return (
     <div className={styles.split}>
       <div className={styles.stack}>
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
-        {showActionabilityPanel ? (
-          <EntityActionabilityPanel
-            entityType={entityType}
-            readiness={readiness}
-            currentRevision={currentRevision}
-            activePublishedRevision={activePublishedRevision}
-          />
+        <section className={`${styles.panel} ${styles.editorHero}`}>
+          <div className={styles.editorHeroHeader}>
+            <div className={styles.editorHeroCopy}>
+              <p className={styles.eyebrow}>Редактирование</p>
+              <h2 className={styles.sectionTitle}>{surfaceTitle}</h2>
+              <p className={styles.editorHeroSummary}>{surfaceSummary}</p>
+            </div>
+            <div className={styles.editorHeroMeta}>
+              <span className={styles.badge}>{currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"}</span>
+              <span className={styles.badge}>Статус: {workflowStatus.label}</span>
+              <span className={styles.badge}>Публикация: {liveStatus.label}</span>
+              <span className={styles.badge}>
+                {readiness ? `Блокеров ${readinessBlocking}, предупреждений ${readinessWarnings}` : "Готовность появится после сохранения"}
+              </span>
+              {isAgentTestCreationOrigin(entityCreationOrigin) ? (
+                <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
+              ) : null}
+              {!activePublishedRevision && currentRevision?.state === "published" ? (
+                <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Вне live</span>
+              ) : null}
+            </div>
+          </div>
+        </section>
+        <section className={`${styles.panel} ${styles.editorToolbar}`}>
+          <button form={editorFormId} type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
+          {canSubmit && currentRevision?.state === "draft" ? (
+            <button
+              form={editorFormId}
+              type="submit"
+              formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
+              className={styles.secondaryButton}
+            >
+              {ADMIN_COPY.sendForReview}
+            </button>
+          ) : null}
+          {canOpenReview ? (
+            <Link href={reviewHref} className={styles.secondaryButton}>
+              Открыть проверку
+            </Link>
+          ) : null}
+          {canOpenPublishReadiness ? (
+            <Link href={publishHref} className={styles.secondaryButton}>
+              {publishAction.label}
+            </Link>
+          ) : null}
+          {entityId ? <Link href={historyHref} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
+        </section>
+        {isMarkedForRemoval ? (
+          <section className={styles.statusPanelInfo}>
+            Объект помечен на удаление. Новые ссылки на него блокируются, а финальная очистка запускается из центра очистки.
+          </section>
         ) : null}
-        {showCompactGuide ? (
+        {showMaintenanceTools ? (
           <details className={styles.compactDisclosure}>
             <summary className={styles.compactDisclosureSummary}>
               <span className={styles.compactDisclosureMarker} aria-hidden="true" />
               <span className={styles.compactDisclosureSummaryMain}>
-                <strong>Рабочая карточка</strong>
-                <span className={styles.compactDisclosureSummaryMeta}>{compactGuideSummary}</span>
-              </span>
-              <span className={styles.compactDisclosureSummaryStats}>
-                <span className={styles.badge}>{currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"}</span>
+                <strong>Служебные действия</strong>
+                <span className={styles.compactDisclosureSummaryMeta}>
+                  Редкие и обслуживающие действия убраны из основного рабочего потока.
+                </span>
               </span>
             </summary>
             <div className={styles.compactDisclosureBody}>
-              <p className={styles.surfacePacketLegend}>{getEntityEditorLegend(entityType)}</p>
+              <div className={styles.inlineActions}>
+                {canUseRemovalQuarantine && !isMarkedForRemoval ? (
+                  <ConfirmActionForm
+                    action={getRemovalMarkHref(entityType, entityId)}
+                    confirmMessage="Пометить объект на удаление? Новые ссылки на него будут заблокированы."
+                  >
+                    <input type="hidden" name="redirectTo" value={redirectTo} />
+                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                    <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
+                  </ConfirmActionForm>
+                ) : null}
+                {canUseRemovalQuarantine && isMarkedForRemoval ? (
+                  <ConfirmActionForm
+                    action={getRemovalUnmarkHref(entityType, entityId)}
+                    confirmMessage="Снять пометку удаления?"
+                  >
+                    <input type="hidden" name="redirectTo" value={redirectTo} />
+                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                    <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
+                  </ConfirmActionForm>
+                ) : null}
+                {canUseRemovalQuarantine ? (
+                  <Link href={getRemovalSweepHref()} className={styles.secondaryButton}>
+                    Центр очистки
+                  </Link>
+                ) : null}
+                {canTeardownTestGraph ? (
+                  <Link href={getTestGraphTeardownHref(entityType, entityId)} className={styles.secondaryButton}>
+                    Удалить тестовый граф
+                  </Link>
+                ) : null}
+                {canNormalizeLegacyTestFixture ? (
+                  <Link href={getLegacyTestFixtureNormalizationHref(entityType, entityId)} className={styles.secondaryButton}>
+                    Пометить как тестовые
+                  </Link>
+                ) : null}
+                {canLiveDeactivate ? (
+                  <Link href={getLiveDeactivationHref(entityType, entityId)} className={styles.secondaryButton}>
+                    Снять с публикации
+                  </Link>
+                ) : null}
+                {canDeletePreview ? (
+                  <Link href={getEntityDeletePreviewHref(entityType, entityId)} className={styles.secondaryButton}>
+                    Безопасно убрать (legacy)
+                  </Link>
+                ) : null}
+                {canDeleteEntity ? (
+                  <ConfirmActionForm
+                    action={`/api/admin/entities/${entityType}/delete`}
+                    confirmMessage="Удалить эту сущность? Действие необратимо."
+                  >
+                    <input type="hidden" name="entityId" value={entityId} />
+                    <input type="hidden" name="redirectTo" value={`/admin/entities/${entityType}`} />
+                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                    <button type="submit" className={styles.dangerButton}>Удалить</button>
+                  </ConfirmActionForm>
+                ) : null}
+              </div>
             </div>
           </details>
-        ) : (
-          <SurfacePacket
-            eyebrow="Рабочая карточка"
-            title={surfaceTitle}
-            summary={surfaceSummary}
-            legend={getEntityEditorLegend(entityType)}
-            bullets={surfaceBullets}
-            meta={[currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"]}
-          >
-            {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
-          </SurfacePacket>
-        )}
-        {entityId || canDeleteEntity ? (
-          <div className={styles.inlineActions}>
-            {entityId ? <Link href={historyHref} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
-            {isAgentTestCreationOrigin(entityCreationOrigin) ? (
-              <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
-            ) : null}
-            {!activePublishedRevision && currentRevision?.state === "published" ? (
-              <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Р’РЅРµ live</span>
-            ) : null}
-            {canTeardownTestGraph ? (
-              <Link href={getTestGraphTeardownHref(entityType, entityId)} className={styles.secondaryButton}>
-                Удалить тестовый граф
-              </Link>
-            ) : null}
-            {canNormalizeLegacyTestFixture ? (
-              <Link href={getLegacyTestFixtureNormalizationHref(entityType, entityId)} className={styles.secondaryButton}>
-                Пометить как тестовые
-              </Link>
-            ) : null}
-            {canLiveDeactivate ? (
-              <Link href={getLiveDeactivationHref(entityType, entityId)} className={styles.secondaryButton}>
-                Р’С‹РІРµСЃС‚Рё РёР· Р¶РёРІРѕРіРѕ РєРѕРЅС‚СѓСЂР°
-              </Link>
-            ) : null}
-            {canDeletePreview ? (
-              <Link href={getEntityDeletePreviewHref(entityType, entityId)} className={styles.dangerButton}>
-                Удалить
-              </Link>
-            ) : null}
-            {canDeleteEntity ? (
-              <ConfirmActionForm
-                action={`/api/admin/entities/${entityType}/delete`}
-                confirmMessage="Удалить эту сущность? Действие необратимо."
-              >
-                <input type="hidden" name="entityId" value={entityId} />
-                <input type="hidden" name="redirectTo" value={`/admin/entities/${entityType}`} />
-                <input type="hidden" name="failureRedirectTo" value={redirectTo} />
-                <button type="submit" className={styles.dangerButton}>Удалить</button>
-              </ConfirmActionForm>
-            ) : null}
-          </div>
         ) : null}
         {entityType === "media_asset" ? renderMediaUpload(redirectTo) : null}
         <section className={styles.panel}>
-          <form action={`/api/admin/entities/${entityType}/save`} method="post" className={styles.formGrid}>
+          <form id={editorFormId} action={`/api/admin/entities/${entityType}/save`} method="post" className={styles.formGrid}>
             <input type="hidden" name="entityId" value={entityId || ""} />
+            <input type="hidden" name="returnTo" value={redirectTo} />
             {!entityId && entityCreationOrigin ? <input type="hidden" name="creationOrigin" value={entityCreationOrigin} /> : null}
             <label className={styles.label}>
               <span>{CHANGE_INTENT_LABEL}</span>
@@ -574,31 +634,6 @@ export function EntityEditorForm({
             {entityType !== "media_asset" ? <HiddenSeoFields value={value} /> : null}
             </>)}
 
-            <div className={styles.inlineActions}>
-              <button type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
-              {false && entityType === ENTITY_TYPES.SERVICE && canSubmit ? (
-                <button
-                  type="submit"
-                  formAction="/api/admin/entities/service/landing-factory/generate"
-                  className={styles.secondaryButton}
-                >
-                  Сгенерировать черновик
-                </button>
-              ) : null}
-              {canSubmit && currentRevision?.state === "draft" ? (
-                <button
-                  type="submit"
-                  formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
-                  className={styles.secondaryButton}
-                >
-                  {ADMIN_COPY.sendForReview}
-                </button>
-              ) : null}
-              {canOpenPublishReadiness ? (
-                <Link href={`/admin/revisions/${currentRevision.id}/publish`} className={styles.secondaryButton}>Проверить перед публикацией</Link>
-              ) : null}
-              {entityId ? <Link href={`/admin/entities/${entityType}/${entityId}/history`} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
-            </div>
           </form>
         </section>
         {obligations?.length ? (
@@ -621,7 +656,7 @@ export function EntityEditorForm({
           </section>
         ) : null}
       </div>
-      <div className={`${styles.stack} ${styles.stickyPanel} ${styles.editorRail}`}>
+      <div className={`${styles.stack} ${styles.editorRail}`}>
         <ReadinessPanel
           readiness={readiness}
           entityType={entityType}
@@ -638,22 +673,31 @@ export function EntityEditorForm({
           readiness={readiness}
           obligations={obligations}
           scope="editor"
+          title="Что проверить в данных"
         />
-        {activePublishedRevision ? (
-          <section className={styles.panel}>
-            <h3>{ADMIN_COPY.publishedRevision}</h3>
-            <p className={styles.mutedText}>Версия №{activePublishedRevision.revisionNumber}</p>
-          </section>
-        ) : (
-          <section className={styles.panel}>
-            <h3>{ADMIN_COPY.publishedRevision}</h3>
-            <p className={styles.mutedText}>{ADMIN_COPY.noPublishedRevision}</p>
-          </section>
-        )}
-        <section className={styles.panel}>
-          <h3>{ADMIN_COPY.auditTimeline}</h3>
-          <TimelineList items={auditItems} />
-        </section>
+        <details className={styles.compactDisclosure}>
+          <summary className={styles.compactDisclosureSummary}>
+            <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+            <span className={styles.compactDisclosureSummaryMain}>
+              <strong>Публикация и история</strong>
+              <span className={styles.compactDisclosureSummaryMeta}>
+                {activePublishedRevision ? `Опубликована версия №${activePublishedRevision.revisionNumber}` : ADMIN_COPY.noPublishedRevision}
+              </span>
+            </span>
+            <span className={styles.compactDisclosureSummaryStats}>
+              <span className={styles.badge}>{auditItems?.length || 0} событий</span>
+            </span>
+          </summary>
+          <div className={styles.compactDisclosureBody}>
+            <div className={styles.editorRailInfo}>
+              <strong>{ADMIN_COPY.publishedRevision}</strong>
+              <p className={styles.mutedText}>
+                {activePublishedRevision ? `Версия №${activePublishedRevision.revisionNumber}` : ADMIN_COPY.noPublishedRevision}
+              </p>
+            </div>
+            <TimelineList items={auditItems} />
+          </div>
+        </details>
       </div>
     </div>
   );

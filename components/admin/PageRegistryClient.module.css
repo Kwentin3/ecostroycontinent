@@ -608,6 +608,39 @@
   flex-wrap: wrap;
 }
 
+.createServiceDisclosure {
+  display: grid;
+  gap: 8px;
+  min-width: min(100%, 240px);
+}
+
+.createServiceSummary {
+  cursor: pointer;
+  list-style: none;
+  color: #667267;
+  font-size: 0.88rem;
+}
+
+.createServiceSummary::-webkit-details-marker {
+  display: none;
+}
+
+.createServiceBody {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  background: #f7f3ea;
+}
+
+.createServiceNote {
+  margin: 0;
+  color: #667267;
+  line-height: 1.45;
+  font-size: 0.88rem;
+}
+
 .ghostLink {
   color: #234535;
   text-decoration: none;
@@ -640,5 +673,9 @@
 
   .createActions {
     align-items: stretch;
+  }
+
+  .createServiceDisclosure {
+    width: 100%;
   }
 }

@@ -1,14 +1,43 @@
+import { buildRelationSelectionModel } from "../../lib/admin/relation-navigation.js";
 import { FilterableChecklist } from "./FilterableChecklist";
 import { MediaPicker } from "./MediaPicker";
+import { RelationChipRow } from "./RelationChipRow";
 import { FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { FIELD_LABELS } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
-function TruthGroup({ id, title, note, children }) {
+function TruthGroup({
+  id,
+  title,
+  note,
+  kicker = null,
+  collapsible = true,
+  defaultOpen = false,
+  children
+}) {
+  if (collapsible) {
+    return (
+      <details id={id} className={`${styles.compactDisclosure} ${styles.editorSectionDisclosure}`} open={defaultOpen}>
+        <summary className={`${styles.compactDisclosureSummary} ${styles.editorSectionDisclosureSummary}`}>
+          <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+          <span className={styles.compactDisclosureSummaryMain}>
+            {kicker ? <span className={styles.cockpitBlockKicker}>{kicker}</span> : null}
+            <strong className={styles.editorSectionDisclosureTitle}>{title}</strong>
+            {note ? <span className={styles.compactDisclosureSummaryMeta}>{note}</span> : null}
+          </span>
+        </summary>
+        <div className={`${styles.compactDisclosureBody} ${styles.editorSectionDisclosureBody}`}>
+          <h3 className={styles.visuallyHidden}>{title}</h3>
+          <div className={styles.formGrid}>{children}</div>
+        </div>
+      </details>
+    );
+  }
+
   return (
     <section id={id} className={`${styles.panel} ${styles.panelMuted} ${styles.editorTruthSection} ${styles.anchorTarget}`}>
       <div className={styles.editorTruthSectionHeader}>
-        <p className={styles.cockpitBlockKicker}>Поисковая оптимизация / данные</p>
+        {kicker ? <p className={styles.cockpitBlockKicker}>{kicker}</p> : null}
         <h3 className={styles.editorTruthSectionTitle}>{title}</h3>
         {note ? <p className={styles.editorTruthSectionNote}>{note}</p> : null}
       </div>
@@ -53,6 +82,32 @@ function SeoMetaFields({ value }) {
   );
 }
 
+function ReadonlyRelationSummary({
+  title,
+  note,
+  entityType,
+  options = [],
+  sourceHref = "",
+  emptyLabel
+}) {
+  const selectionModel = buildRelationSelectionModel({
+    entityType,
+    options,
+    selectedIds: options.map((option) => option.id),
+    returnTo: sourceHref,
+    emptyLabel
+  });
+
+  return (
+    <RelationChipRow
+      title={title}
+      note={note}
+      items={selectionModel.items}
+      emptyLabel={emptyLabel}
+    />
+  );
+}
+
 export function EntityTruthSections({
   entityType,
   value,
@@ -64,7 +119,7 @@ export function EntityTruthSections({
   if (entityType === "global_settings") {
     return (
       <>
-        <TruthGroup id="global-settings-brand-truth" title="Брендовые данные" note="Это публичное имя и юридическая основа карточки.">
+        <TruthGroup id="global-settings-brand-truth" title="Брендовые данные" note="Это публичное имя и юридическая основа карточки." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.publicBrandName}</span>
@@ -77,7 +132,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="global-settings-contact-truth" title="Контактные данные" note="Контакты должны быть подтверждены до публикации.">
+        <TruthGroup id="global-settings-contact-truth" title="Контактные данные" note="Контакты должны быть подтверждены до публикации." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.primaryPhone}</span>
@@ -141,7 +196,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="global-settings-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки и поля, которые помогают поиску и предпросмотру.">
+        <TruthGroup id="global-settings-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Здесь редактируются метаданные карточки и поля, которые помогают поиску и предпросмотру.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -151,7 +206,7 @@ export function EntityTruthSections({
   if (entityType === "service") {
     return (
       <>
-        <TruthGroup id="service-seo-truth" title="Данные услуги" note="Это базовые данные услуги и её видимый заголовок.">
+        <TruthGroup id="service-seo-truth" title="Данные услуги" note="Это базовые данные услуги и её видимый заголовок." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.slug}</span>
@@ -172,7 +227,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="service-core" title="Суть услуги" note="Что входит в услугу и какие задачи она закрывает.">
+        <TruthGroup id="service-core" title="Суть услуги" note="Что входит в услугу и какие задачи она закрывает." defaultOpen>
           <label className={styles.label}>
             <span>{FIELD_LABELS.serviceScope}</span>
             <textarea name="serviceScope" defaultValue={value.serviceScope || ""} required />
@@ -194,7 +249,15 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="service-relations" title="Связи" note="Связанные кейсы и галереи делают карточку собранной.">
+        <TruthGroup id="service-relations" title="Связи" note="Услуга собирается из доказательств, галереи и готовых объектов техники.">
+          <FilterableChecklist
+            legend="Связанная техника"
+            name="equipmentIds"
+            options={relationOptions.equipment}
+            selectedIds={Array.isArray(value.equipmentIds) ? value.equipmentIds : ((relationOptions.reverseEquipment || []).map((item) => item.id))}
+            entityType="equipment"
+            sourceHref={sourceHref}
+          />
           <FilterableChecklist
             legend="Связанные кейсы"
             name="relatedCaseIds"
@@ -224,7 +287,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="service-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки услуги и её предпросмотр.">
+        <TruthGroup id="service-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Здесь редактируются метаданные карточки услуги и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -234,10 +297,10 @@ export function EntityTruthSections({
   if (entityType === "equipment") {
     return (
       <>
-        <TruthGroup id="equipment-seo-truth" title="Данные техники" note="Это базовая карточка техники, которая потом может стать источником для страницы.">
+        <TruthGroup id="equipment-seo-truth" title="Данные техники" note="Это базовая карточка техники, которая потом может стать источником для страницы." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
-              <span>Slug</span>
+              <span>Короткий адрес</span>
               <input name="slug" defaultValue={value.slug || ""} required />
             </label>
             <label className={styles.label}>
@@ -255,7 +318,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="equipment-core" title="Коммерческое описание" note="Карточка должна объяснять, что это за техника и для каких задач она подходит.">
+        <TruthGroup id="equipment-core" title="Коммерческое описание" note="Карточка должна объяснять, что это за техника и для каких задач она подходит." defaultOpen>
           <label className={styles.label}>
             <span>Краткое описание</span>
             <textarea name="shortSummary" defaultValue={value.shortSummary || ""} required />
@@ -283,22 +346,22 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="equipment-relations" title="Связи" note="Техника может быть связана с услугами, кейсами и коллекциями без копирования truth в текст страницы.">
-          <FilterableChecklist
-            legend="Связанные услуги"
-            name="serviceIds"
-            options={relationOptions.services}
-            selectedIds={value.serviceIds || []}
+        <TruthGroup id="equipment-relations" title="Использование" note="Здесь видно, в каких услугах и кейсах уже используется эта карточка техники.">
+          <ReadonlyRelationSummary
+            title="Используется в услугах"
+            note="Услуги выбирают технику как готовый объект: описание, медиа и характеристики подтягиваются из карточки техники."
             entityType="service"
+            options={relationOptions.referencingServices || []}
             sourceHref={sourceHref}
+            emptyLabel="Эта техника пока не выбрана ни в одной услуге."
           />
-          <FilterableChecklist
-            legend="Связанные кейсы"
-            name="relatedCaseIds"
-            options={relationOptions.cases}
-            selectedIds={value.relatedCaseIds || []}
+          <ReadonlyRelationSummary
+            title="Используется в кейсах"
+            note="Кейсы показывают, где эта техника была применена как подтверждённый объект, а не как свободный текст."
             entityType="case"
+            options={relationOptions.referencingCases || []}
             sourceHref={sourceHref}
+            emptyLabel="Эта техника пока не привязана ни к одному кейсу."
           />
           <FilterableChecklist
             legend="Коллекции"
@@ -321,7 +384,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="equipment-seo-meta" title="Поисковая оптимизация / метаданные" note="Метаданные карточки техники живут отдельно от страницы.">
+        <TruthGroup id="equipment-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Метаданные карточки техники живут отдельно от страницы.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -331,7 +394,7 @@ export function EntityTruthSections({
   if (entityType === "case") {
     return (
       <>
-        <TruthGroup id="case-seo-truth" title="Данные кейса" note="Это базовые данные кейса и его видимый заголовок.">
+        <TruthGroup id="case-seo-truth" title="Данные кейса" note="Это базовые данные кейса и его видимый заголовок." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.slug}</span>
@@ -360,7 +423,7 @@ export function EntityTruthSections({
           ) : null}
         </TruthGroup>
 
-        <TruthGroup id="case-core" title="Суть кейса" note="Задача, объём и результат должны быть понятны без догадок.">
+        <TruthGroup id="case-core" title="Суть кейса" note="Задача, объём и результат должны быть понятны без догадок." defaultOpen>
           <label className={styles.label}>
             <span>{FIELD_LABELS.task}</span>
             <textarea name="task" defaultValue={value.task || ""} required />
@@ -375,13 +438,21 @@ export function EntityTruthSections({
           </label>
         </TruthGroup>
 
-        <TruthGroup id="case-relations" title="Связи" note="Кейсу нужны связанные услуги и коллекции, чтобы он был контекстным.">
+        <TruthGroup id="case-relations" title="Связи" note="Кейс связывается с услугами, коллекциями и техникой, которая реально использовалась на объекте.">
           <FilterableChecklist
             legend="Связанные услуги"
             name="serviceIds"
             options={relationOptions.services}
             selectedIds={value.serviceIds || []}
             entityType="service"
+            sourceHref={sourceHref}
+          />
+          <FilterableChecklist
+            legend="Техника в кейсе"
+            name="equipmentIds"
+            options={relationOptions.equipment}
+            selectedIds={Array.isArray(value.equipmentIds) ? value.equipmentIds : ((relationOptions.reverseEquipment || []).map((item) => item.id))}
+            entityType="equipment"
             sourceHref={sourceHref}
           />
           <FilterableChecklist
@@ -405,7 +476,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="case-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки кейса и её предпросмотр.">
+        <TruthGroup id="case-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Здесь редактируются метаданные карточки кейса и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>
@@ -415,7 +486,7 @@ export function EntityTruthSections({
   if (entityType === "page") {
     return (
       <>
-        <TruthGroup id="page-route-truth" title="Маршрут" note="Канонический адрес и тип страницы должны быть ясными.">
+        <TruthGroup id="page-route-truth" title="Маршрут" note="Канонический адрес и тип страницы должны быть ясными." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>{FIELD_LABELS.slug}</span>
@@ -431,7 +502,7 @@ export function EntityTruthSections({
           </div>
         </TruthGroup>
 
-        <TruthGroup id="page-seo-truth" title="Поисковая оптимизация / заголовки" note="Заголовок страницы и H1 должны совпадать с операторским замыслом.">
+        <TruthGroup id="page-seo-truth" title="Поисковая оптимизация / заголовки" note="Заголовок страницы и H1 должны совпадать с операторским замыслом." defaultOpen>
           <div className={styles.gridTwo}>
             <label className={styles.label}>
               <span>Название</span>
@@ -509,7 +580,7 @@ export function EntityTruthSections({
           />
         </TruthGroup>
 
-        <TruthGroup id="page-seo-meta" title="Поисковая оптимизация / метаданные" note="Здесь редактируются метаданные карточки страницы и её предпросмотр.">
+        <TruthGroup id="page-seo-meta" kicker="SEO" title="Метаданные и предпросмотр" note="Здесь редактируются метаданные карточки страницы и её предпросмотр.">
           <SeoMetaFields value={value} />
         </TruthGroup>
       </>

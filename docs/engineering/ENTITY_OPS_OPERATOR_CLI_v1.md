@@ -1,32 +1,45 @@
-# Entity Ops Operator CLI v1
+﻿# Entity Ops Operator CLI v1
 
 ## Purpose
 
-`entity-ops` is a bounded operator CLI for creating and updating draft entities through the existing admin runtime.
+`entity-ops` is a bounded admin-runtime CLI for operator and agent work.
 
-It intentionally uses:
+It is intentionally not a raw database shell and not a publish shortcut.
+
+The tool covers four narrow operation families through one stable entrypoint:
+
+- `entity`: create, update, upsert, and delete draft entities through the canonical admin save/delete routes.
+- `media`: create or patch media assets through the dedicated media library API.
+- `display_mode`: switch the persisted public display mode through the superadmin control route.
+- `removal`: mark, unmark, and purge entities through the bounded removal-quarantine and sweep routes.
+
+## Why this tool exists
+
+The project already has guarded write-side routes, role checks, workflow boundaries, and runtime validation. `entity-ops` keeps those guarantees while giving the operator and the internal agent one compact, scriptable control surface.
+
+## What it intentionally uses
 
 - `/api/admin/login`
 - `/api/admin/entities/[entityType]/lookup`
 - `/api/admin/entities/[entityType]/save`
 - `/api/admin/entities/[entityType]/delete`
+- `/api/admin/media/library/create`
+- `/api/admin/media/library/[entityId]`
+- `/api/public/display-mode`
+- `/api/admin/system/display-mode`
+- `/api/admin/entities/[entityType]/[entityId]/mark-removal`
+- `/api/admin/entities/[entityType]/[entityId]/unmark-removal`
+- `/api/admin/removal-sweep/purge`
 
-It intentionally does **not** use raw SQL, direct draft mutation, or publish shortcuts.
+## What it intentionally does not use
 
-## Why this tool exists
-
-The project already has a strong admin write-side with RBAC, draft revisions, owner-review rules, and audit events.
-
-The CLI keeps those guarantees while making batch content work faster for the operator and for the agent:
-
-- login is explicit;
-- lookup is authenticated and bounded;
-- save goes through the canonical draft flow;
-- delivery works both locally and on the server runtime.
+- raw SQL
+- direct draft mutation
+- direct bucket mutation
+- publish or owner-review bypasses
+- generic maintenance dispatch
 
 ## Runtime contract
-
-The CLI reads env from the active Node process.
 
 Recommended local invocation:
 
@@ -34,7 +47,7 @@ Recommended local invocation:
 npm run entity:ops -- --input .\var\entity-batch.json
 ```
 
-Equivalent explicit invocation:
+Explicit invocation:
 
 ```powershell
 node --env-file=.env scripts/entity-ops.mjs --input .\var\entity-batch.json
@@ -58,23 +71,67 @@ If `ENTITY_OPS_USERNAME` / `ENTITY_OPS_PASSWORD` are omitted, the tool falls bac
 
 ## Default safety posture
 
-The CLI is `dry-run` by default.
+- The CLI is `dry-run` by default.
+- `--execute` is required for mutation.
+- Health probe and login always run first.
+- Entity delete still goes through lookup and the bounded delete route.
+- Display mode still respects the runtime confirmation rule for `published_only`.
+- Removal purge still goes through the bounded sweep route; the CLI does not bypass graph safety.
 
-Use `--execute` only when the preview is acceptable:
+Example:
 
 ```powershell
 npm run entity:ops -- --input .\var\entity-batch.json --execute
 ```
 
+## CLI arguments
+
+```text
+node --env-file=.env scripts/entity-ops.mjs --input <file> [--kind <kind>] [--entity-type <type>] [--mode <mode>] [--execute]
+```
+
+Supported overrides:
+
+- `--kind`: `entity`, `media`, `display_mode`, `removal`
+- `--entity-type`: default entity type for entries that need one
+- `--mode`: default mode for the selected kind
+- `--base-url`
+- `--username`
+- `--password`
+- `--change-intent`
+- `--creation-origin`
+- `--format`: `text` or `json`
+- `--json`: shorthand for `--format json`
+- `--report`: write a JSON report to a file
+- `--execute`: apply the operations
+
 ## Input contract
 
 The tool accepts `JSON` or `JSONL`.
 
-The simplest `JSON` batch:
+Windows note:
+
+- input files are decoded safely from UTF-8, UTF-8 with BOM, UTF-16LE, or UTF-16BE
+- PowerShell-generated batch files do not need manual recoding before use
+- `--json` is recommended when the caller wants machine-readable stdout and wants to avoid console-format ambiguity
+
+When `fields` is omitted, non-reserved top-level keys become save fields.
+
+### 1. Entity operations
+
+Supported modes:
+
+- `create`
+- `update`
+- `upsert`
+- `delete`
+
+Example:
 
 ```json
 [
   {
+    "kind": "entity",
     "entityType": "service",
     "mode": "upsert",
     "slug": "vyvoz-grunta",
@@ -85,6 +142,7 @@ The simplest `JSON` batch:
     "ctaVariant": "call"
   },
   {
+    "kind": "entity",
     "entityType": "page",
     "mode": "update",
     "match": {
@@ -102,46 +160,192 @@ The simplest `JSON` batch:
 
 Notes:
 
-- `entityType` supports the current admin first-slice entity families.
-- `mode` supports `create`, `update`, `upsert`, `delete`.
 - `match` may contain `entityId`, `slug`, or `pageType`.
-- When `fields` is omitted, all non-reserved top-level keys are treated as save fields.
-- Field names must match the existing admin save route contract.
 - `delete` resolves the target through lookup first and then calls the bounded admin delete route in `responseMode=json`.
-- Multiline list fields such as `keySpecs` and `usageScenarios` may be expressed as JSON arrays; the CLI serializes them into the newline form expected by the admin route.
+- Multiline list fields such as `keySpecs`, `usageScenarios`, and `equipmentSpecs` may be expressed as JSON arrays; the CLI serializes them into the newline form expected by the admin route.
+
+### 2. Media operations
+
+Supported modes:
+
+- `create`
+- `update`
+- `upsert`
+
+`media` uses the dedicated media library routes, not the generic entity save route.
+
+Typical use cases:
+
+- upload a new file from disk
+- patch media metadata safely
+- replace a binary on a draft media asset
+- update collection membership during a media patch
+
+Example:
+
+```json
+[
+  {
+    "kind": "media",
+    "mode": "create",
+    "filePath": ".\\var\\media\\excavator.jpg",
+    "changeIntent": "Upload source media for equipment card",
+    "creationOrigin": "agent_test",
+    "fields": {
+      "title": "Гусеничный экскаватор ZAUBERG EX-210C",
+      "alt": "Гусеничный экскаватор ZAUBERG EX-210C на карьере",
+      "caption": "Рабочий вес 20,1 т, вместимость ковша 1,0 м3."
+    }
+  },
+  {
+    "kind": "media",
+    "mode": "update",
+    "entityId": "entity_06107869-2e15-43ca-b251-11d7505519e3",
+    "collectionIds": ["entity_gallery_1"],
+    "fields": {
+      "title": "Гусеничный экскаватор ZAUBERG EX-210C",
+      "sourceNote": "Источник: карточка товара ZAUBERG",
+      "ownershipNote": "Перед публикацией проверить права на использование."
+    }
+  }
+]
+```
+
+Media notes:
+
+- `create` requires `filePath`.
+- `upsert` can create only if the target does not exist and `filePath` is supplied.
+- `update` may also use `filePath` to send a replacement binary through the canonical media patch route.
+- `collectionIds` are treated as a membership update and cause `collectionsTouched=true` to be sent.
+
+### 3. Display mode operations
+
+Supported mode:
+
+- `set`
+
+Example:
+
+```json
+[
+  {
+    "kind": "display_mode",
+    "displayMode": "mixed_placeholder",
+    "reason": "Verify placeholder contour after admin refactor"
+  }
+]
+```
+
+Safety note:
+
+- `published_only` still requires `confirmPublishedOnly: true`.
+
+Example:
+
+```json
+[
+  {
+    "kind": "display_mode",
+    "displayMode": "published_only",
+    "reason": "Return the site to published-only mode",
+    "confirmPublishedOnly": true
+  }
+]
+```
+
+### 4. Removal operations
+
+Supported modes:
+
+- `mark`
+- `unmark`
+- `purge`
+
+Example:
+
+```json
+[
+  {
+    "kind": "removal",
+    "entityType": "case",
+    "mode": "mark",
+    "match": {
+      "entityId": "entity_case_1"
+    },
+    "removalNote": "test graph cleanup"
+  },
+  {
+    "kind": "removal",
+    "entityType": "case",
+    "mode": "purge",
+    "match": {
+      "entityId": "entity_case_1"
+    }
+  }
+]
+```
+
+Removal notes:
+
+- `mark` and `unmark` resolve the entity first and then use the bounded runtime routes.
+- `purge` refuses to run in planning if the root entity is not marked for removal.
+- The CLI does not replace the graph-safety logic inside the removal sweep route.
 
 ## Output
 
-The tool prints:
+The tool supports two stdout modes:
 
-- execution mode;
-- total operations;
-- summary counters;
-- per-entity result lines;
-- preview diff keys in dry-run and execute mode.
+- `text`: human-readable summary for operators
+- `json`: machine-readable report for agents and automation
 
-Optional JSON report:
+Text mode prints:
+
+- execution mode
+- total operations
+- summary counters
+- per-operation result lines
+- preview diff keys in dry-run and execute mode
+- route messages for redirect-backed actions
+- current display mode after a successful mode switch
+- uploaded local file path for media create/update operations
+
+Optional JSON report file:
 
 ```powershell
 npm run entity:ops -- --input .\var\entity-batch.json --report .\var\entity-ops-report.json
 ```
 
-## Delivery flow
+Machine-readable stdout:
 
-Recommended path for production delivery:
+```powershell
+npm run entity:ops -- --input .\var\entity-batch.json --json
+```
 
-1. Merge or push the code to `main`.
-2. Let `build-and-publish.yml` publish the new image to GHCR.
-3. Dispatch `deploy-phase1.yml` with the pinned image digest.
-4. Verify `/api/health` through Traefik.
-5. Run `entity-ops` against the deployed runtime with the server env file.
+## Recommended delivery flow
+
+1. Run local dry-run against a small controlled input.
+2. Run local execute smoke only on disposable or tightly bounded targets.
+3. Push the code.
+4. Build and publish the runtime image.
+5. Deploy the pinned image to the server.
+6. Verify `/api/health`.
+7. Run `entity-ops` against the deployed runtime with the server env file.
 
 ## Verification checklist
 
 1. `npm test`
 2. `npm run build`
-3. Local dry-run with a small batch
-4. Local execute smoke against a controlled entity
+3. Local dry-run against each newly used operation kind
+4. Local execute smoke against controlled targets
 5. GitHub delivery
 6. Server deploy
 7. Server dry-run or execute smoke against the deployed runtime
+
+## Explicit non-goals
+
+- autonomous publish
+- owner-review automation
+- raw DB cleanup
+- raw storage cleanup
+- generic forensics shell
+- mixed verification/mutation mega-script

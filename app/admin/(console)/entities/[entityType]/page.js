@@ -209,6 +209,7 @@ export default async function EntityListPage({ params, searchParams }) {
             initialCompose={initialCompose}
             initialFilterKey={testOnly ? "test-only" : "all"}
             currentUsername={user.username}
+            currentUserRole={user.role}
             initialMessage={query?.message ? normalizeLegacyCopy(query.message) : ""}
             initialError={query?.error ? normalizeLegacyCopy(query.error) : ""}
             workspaceContextHref={workspaceContextHref}
@@ -325,7 +326,7 @@ export default async function EntityListPage({ params, searchParams }) {
             <SurfacePacket
             eyebrow="Реестр страниц"
             title="Страницы"
-            summary="Это единый вход в page workflow: обзор страниц, поиск нужной и переход в основной рабочий экран без хопа в отдельную AI-поверхность."
+            summary="Это единый вход в page workflow: обзор страниц, поиск нужной и переход в основной рабочий экран без хопа в отдельную ИИ-поверхность."
             legend={getEntityListLegend(normalizedType)}
             bullets={[
               ...viewModel.bullets,
@@ -467,6 +468,7 @@ export default async function EntityListPage({ params, searchParams }) {
                         <strong>{row.entityLabel}</strong>
                         <span className={styles.mutedText}>{row.entityTypeLabel}</span>
                         {row.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
+                        {row.isMarkedForRemoval ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
                       </div>
                     </td>
                     <td>

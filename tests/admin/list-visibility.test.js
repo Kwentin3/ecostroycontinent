@@ -273,7 +273,7 @@ test("list surface view model prioritizes blockers and keeps row summaries compa
     "Частично: 0",
     "Готово: 1",
     "Нет версии: 0",
-    "Вне live: 1"
+    "Снято с публикации: 1"
   ]);
   assert.match(viewModel.summaryNote, /блокирующие строки и строки с доказательствами/);
 });

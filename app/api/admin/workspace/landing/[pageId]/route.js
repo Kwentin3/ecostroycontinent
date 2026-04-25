@@ -29,6 +29,6 @@ export async function POST(request, { params }, overrides = {}) {
   return routeDeps.redirectWithError(
     request,
     fallbackPath,
-    new Error("AI-верстка больше не поддерживает отдельный write-path. Откройте страницу в домене «Страницы» и продолжайте работу там.")
+    new Error("ИИ-верстка больше не поддерживает отдельный путь записи. Откройте страницу в домене «Страницы» и продолжайте работу там.")
   );
 }

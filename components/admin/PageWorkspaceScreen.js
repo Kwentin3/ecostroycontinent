@@ -44,6 +44,11 @@ import {
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import { getWorkspaceQuestionHint } from "../../lib/admin/question-model.js";
 import { getOwnerApprovalStatusLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import {
+  getLivePublicationStatusModel,
+  getPublishActionCopy,
+  getWorkingRevisionStatusModel
+} from "../../lib/admin/workflow-status.js";
 import { PageMetadataModal } from "./PageMetadataModal";
 import { PreviewViewport } from "./PreviewViewport";
 import adminStyles from "./admin-ui.module.css";
@@ -170,18 +175,18 @@ function moveSection(sections = [], type, direction) {
 
 function getMediaRecommendationSummary(pageType) {
   if (pageType === PAGE_TYPES.SERVICE_LANDING) {
-    return "Split-обложка, ровная доказательная галерея и группировка по коллекциям.";
+    return "Раздельная обложка, ровная доказательная галерея и группировка по коллекциям.";
   }
 
   if (pageType === PAGE_TYPES.EQUIPMENT_LANDING) {
-    return "Крупный hero-кадр, один ведущий фотоакцент и поддерживающие галереи по коллекциям.";
+    return "Крупный главный кадр, один ведущий фотоакцент и поддерживающие галереи по коллекциям.";
   }
 
   if (pageType === PAGE_TYPES.CONTACTS) {
-    return "Спокойная подача без визуального перегруза: базовый hero и вторичная лента фотографий.";
+    return "Спокойная подача без визуального перегруза: базовый главный блок и вторичная лента фотографий.";
   }
 
-  return "Баланс текста и визуала: split-обложка, акцентный первый кадр и галереи по коллекциям.";
+  return "Баланс текста и визуала: раздельная обложка, акцентный первый кадр и галереи по коллекциям.";
 }
 
 function SourceChecklistLegacy({ title, items, selectedIds, onToggle, emptyState = null }) {
@@ -458,7 +463,6 @@ export function PageWorkspaceScreen({
   });
   const [lifecycleState, setLifecycleState] = useState(lifecycle);
   const [lifecycleBusy, setLifecycleBusy] = useState("");
-  const [lifecycleMenuOpen, setLifecycleMenuOpen] = useState(false);
   const [activePicker, setActivePicker] = useState("");
   const [pickerQuery, setPickerQuery] = useState("");
   const previewDialogRef = useRef(null);
@@ -555,6 +559,17 @@ export function PageWorkspaceScreen({
   const galleryEmptyState = getSourceChecklistEmptyState("galleries");
   const previewOption = useMemo(() => getPreviewViewportOption(previewDevice), [previewDevice]);
   const previewZoom = previewZoomByDevice[previewDevice] || DEFAULT_PREVIEW_ZOOM_BY_DEVICE[previewDevice] || 1;
+  const inlinePreviewZoom = useMemo(() => {
+    if (previewDevice === "mobile") {
+      return 0.38;
+    }
+
+    if (previewDevice === "tablet") {
+      return 0.24;
+    }
+
+    return 0.18;
+  }, [previewDevice]);
   const themeDefinition = LANDING_PAGE_THEME_REGISTRY[metadata.pageThemeKey] || LANDING_PAGE_THEME_REGISTRY.earth_sand;
   const themeDirty = metadata.pageThemeKey !== savedMetadata.pageThemeKey;
   const revisionStateLabel = revision ? getRevisionStateLabel(revision.state) : "Черновика пока нет";
@@ -570,6 +585,15 @@ export function PageWorkspaceScreen({
     : "Согласование не требуется";
   const ownerApprovalPending = Boolean(revision?.ownerReviewRequired && revision.ownerApprovalStatus === "pending");
   const canOpenPublishReadiness = Boolean(publishHref && revision?.state === "review");
+  const activePublishedRevision = lifecycleState?.hasLivePublishedRevision
+    ? {
+      id: revision?.state === "published" ? revision.id : "__live__",
+      revisionNumber: revision?.state === "published" ? revision.revisionNumber : null
+    }
+    : null;
+  const workflowStatus = getWorkingRevisionStatusModel({ currentRevision: revision, activePublishedRevision });
+  const liveStatus = getLivePublicationStatusModel({ currentRevision: revision, activePublishedRevision });
+  const publishAction = getPublishActionCopy({ activePublishedRevision });
   const recommendedMediaSettings = useMemo(() => getDefaultPageMediaSettings(metadata.pageType), [metadata.pageType]);
   const usingRecommendedMediaSettings = useMemo(
     () => arePageMediaSettingsEqual(composition.mediaSettings, recommendedMediaSettings),
@@ -582,9 +606,14 @@ export function PageWorkspaceScreen({
   const selectedGalleryItems = galleryItems.filter((item) => (composition.sourceRefs.galleryIds || []).includes(item.id));
   const pageStatusItems = useMemo(() => ([
     {
-      label: "Состояние",
-      tone: currentSignal.tone || "unknown",
-      detail: currentSignal.label || "Статус пока не определён"
+      label: "Рабочий статус",
+      tone: workflowStatus.tone,
+      detail: workflowStatus.label
+    },
+    {
+      label: "Публикация",
+      tone: liveStatus.tone,
+      detail: liveStatus.label
     },
     {
       label: "Версия",
@@ -592,14 +621,14 @@ export function PageWorkspaceScreen({
       detail: revision ? `Версия №${revision.revisionNumber} · ${revisionStateLabel}` : "Черновик ещё не сохранён"
     },
     {
-      label: "Тип страницы",
-      tone: "unknown",
-      detail: PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType
-    },
-    {
       label: "Согласование",
       tone: revision?.ownerReviewRequired ? ownerApprovalTone : "unknown",
       detail: ownerApprovalLabel
+    },
+    {
+      label: "Готовность контента",
+      tone: currentSignal.tone || "unknown",
+      detail: currentSignal.label || "Статус пока не определён"
     },
     {
       label: "Изменения",
@@ -607,38 +636,52 @@ export function PageWorkspaceScreen({
       detail: compositionDirty || metadataDirty ? "Есть несохранённые правки" : "Все изменения сохранены"
     },
     {
-      label: "Публикация",
-      tone: lifecycleState?.hasLivePublishedRevision ? "healthy" : "unknown",
-      detail: lifecycleState?.hasLivePublishedRevision ? "Страница опубликована" : "Живой версии пока нет"
+      label: "Тип страницы",
+      tone: "unknown",
+      detail: PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType
     }
-  ]), [compositionDirty, currentSignal.label, currentSignal.tone, lifecycleState?.hasLivePublishedRevision, metadata.pageType, metadataDirty, ownerApprovalLabel, ownerApprovalTone, revision, revisionStateLabel]);
+  ]), [
+    compositionDirty,
+    currentSignal.label,
+    currentSignal.tone,
+    liveStatus.label,
+    liveStatus.tone,
+    metadata.pageType,
+    metadataDirty,
+    ownerApprovalLabel,
+    ownerApprovalTone,
+    revision,
+    revisionStateLabel,
+    workflowStatus.label,
+    workflowStatus.tone
+  ]);
   const seoAuditItems = useMemo(() => ([
     buildPresenceAudit(
-      "Slug",
+      "Короткий адрес",
       Boolean(metadata.slug.trim()),
       `/${metadata.slug.trim()}`,
       "Маршрут не задан"
     ),
-    buildLengthAudit("H1", composition.h1, {
+    buildLengthAudit("Основной заголовок", composition.h1, {
       min: 10,
       max: 90,
-      emptyText: "H1 не заполнен",
-      shortText: "H1 слишком короткий",
-      longText: "H1 слишком длинный"
+      emptyText: "Основной заголовок не заполнен",
+      shortText: "Основной заголовок слишком короткий",
+      longText: "Основной заголовок слишком длинный"
     }),
-    buildLengthAudit("Meta title", metadata.seo?.metaTitle || "", {
+    buildLengthAudit("Заголовок для поиска", metadata.seo?.metaTitle || "", {
       min: 35,
       max: 65,
-      emptyText: "Meta title не заполнен",
-      shortText: "Meta title короткий",
-      longText: "Meta title длинный"
+      emptyText: "Заголовок для поиска не заполнен",
+      shortText: "Заголовок для поиска короткий",
+      longText: "Заголовок для поиска длинный"
     }),
-    buildLengthAudit("Meta description", metadata.seo?.metaDescription || "", {
+    buildLengthAudit("Описание для поиска", metadata.seo?.metaDescription || "", {
       min: 80,
       max: 170,
-      emptyText: "Meta description не заполнен",
-      shortText: "Meta description короткий",
-      longText: "Meta description длинный"
+      emptyText: "Описание для поиска не заполнено",
+      shortText: "Описание для поиска короткое",
+      longText: "Описание для поиска длинное"
     }),
     buildPresenceAudit(
       "Главное медиа",
@@ -666,6 +709,31 @@ export function PageWorkspaceScreen({
     )
   ]), [composition.intro, composition.sections.length, emptyState.mediaReady, emptyState.sourceCount, emptyState.titleReady, requiredSectionTypes.length]);
 
+  const previewMarkerItems = useMemo(() => {
+    const issues = [...contentAuditItems, ...seoAuditItems].filter((item) => item.tone !== "healthy");
+
+    if (issues.length > 0) {
+      return issues.slice(0, 4);
+    }
+
+    return [
+      {
+        label: "Готовность",
+        tone: currentSignal.tone || "healthy",
+        detail: currentSignal.label || "Статус уточняется"
+      },
+      {
+        label: "Публикация",
+        tone: liveStatus.tone,
+        detail: liveStatus.label
+      },
+      {
+        label: "Тема",
+        tone: themeDirty ? "warning" : "healthy",
+        detail: themeDirty ? "Тема изменена, сохраните метаданные" : themeDefinition.label
+      }
+    ];
+  }, [contentAuditItems, currentSignal.label, currentSignal.tone, liveStatus.label, liveStatus.tone, seoAuditItems, themeDefinition.label, themeDirty]);
   const launcherModels = useMemo(() => {
     const items = [];
 
@@ -957,7 +1025,6 @@ export function PageWorkspaceScreen({
     }
 
     setLifecycleBusy("archive");
-    setLifecycleMenuOpen(false);
     setError("");
     setStatus("");
 
@@ -1003,7 +1070,6 @@ export function PageWorkspaceScreen({
     }
 
     setLifecycleBusy("delete");
-    setLifecycleMenuOpen(false);
     setError("");
     setStatus("");
 
@@ -1054,75 +1120,77 @@ export function PageWorkspaceScreen({
           <p className={styles.eyebrow}>Страницы · единый рабочий экран</p>
           <h1 className={styles.title}>{pageLabel}</h1>
           <p className={styles.meta}>
-            Один редактор обслуживает и отдельные страницы, и коммерческие посадки. Тип страницы меняет набор секций, но не уводит в другой экран.
+            Страница собирается из готовых сущностей в этом же экране: без второго редактора и без свободного конструктора.
           </p>
           <div className={styles.statusRow}>
-            <span className={`${styles.badge} ${toneClassName(currentSignal.tone)}`}>{currentSignal.label}</span>
+            <span className={`${styles.badge} ${toneClassName(workflowStatus.tone)}`}>{workflowStatus.label}</span>
+            <span className={`${styles.badge} ${toneClassName(liveStatus.tone)}`}>{liveStatus.label}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{revision ? `Версия №${revision.revisionNumber} · ${revisionStateLabel}` : "Черновика пока нет"}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType}</span>
             {revision?.ownerReviewRequired ? (
               <span className={`${styles.badge} ${toneClassName(ownerApprovalTone)}`}>{ownerApprovalLabel}</span>
             ) : null}
-            {lifecycleState?.hasLivePublishedRevision ? (
-              <span className={`${styles.badge} ${styles.tonehealthy}`}>В публикации</span>
-            ) : null}
             {compositionDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Есть несохраненные изменения</span> : null}
             {metadataDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Есть несохраненные метаданные</span> : null}
           </div>
-          <p className={styles.metaCompact}>{currentSignal.reason}</p>
+          <p className={styles.metaCompact}>{workflowStatus.description}</p>
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={adminStyles.secondaryButton} onClick={() => handleOpenPreview(previewDevice)}>
-            Превью
-          </button>
-          <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
-            Метаданные
-          </button>
-          {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
-          {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
-          {canOpenPublishReadiness ? <Link href={publishHref} className={adminStyles.secondaryButton}>К публикации</Link> : null}
-          {revision?.state === "review" && ownerApprovalPending ? (
-            <button type="button" className={adminStyles.secondaryButton} disabled>
-              Ждет согласования
+          <div className={styles.headerPrimaryActions}>
+            <button
+              type="button"
+              className={adminStyles.primaryButton}
+              onClick={handleSaveComposition}
+              disabled={saveBusy || (emptyState.isEmptyWorkspace && !canSaveFirstDraft)}
+            >
+              {saveBusy ? "Сохраняем..." : "Сохранить страницу"}
             </button>
-          ) : null}
-          {lifecycleState?.canArchive || lifecycleState?.canDelete ? (
-            <div className={styles.lifecycleWrap}>
-              <button
-                type="button"
-                className={adminStyles.secondaryButton}
-                onClick={() => setLifecycleMenuOpen((current) => !current)}
-                disabled={Boolean(lifecycleBusy)}
-              >
-                Жизненный цикл
-              </button>
-              {lifecycleMenuOpen ? (
-                <div className={styles.lifecycleMenu}>
-                  {lifecycleState?.canArchive ? (
-                    <button type="button" className={styles.lifecycleAction} onClick={handleArchivePage} disabled={Boolean(lifecycleBusy)}>
-                      Снять с публикации
-                    </button>
-                  ) : null}
-                  {lifecycleState?.canDelete ? (
-                    <button type="button" className={styles.lifecycleDanger} onClick={handleDeletePage} disabled={Boolean(lifecycleBusy)}>
-                      Удалить страницу
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
+            <button type="button" className={adminStyles.secondaryButton} onClick={handleSendToReview} disabled={saveBusy || Boolean(lifecycleBusy) || !revision}>
+              Передать на проверку
+            </button>
+            {canOpenPublishReadiness ? <Link href={publishHref} className={adminStyles.primaryButton}>{publishAction.label}</Link> : null}
+            <button type="button" className={adminStyles.secondaryButton} onClick={() => handleOpenPreview(previewDevice)}>
+              Превью
+            </button>
+          </div>
+          <details className={`${adminStyles.compactDisclosure} ${styles.headerServiceDisclosure}`}>
+            <summary className={adminStyles.compactDisclosureSummary}>
+              <div className={adminStyles.compactDisclosureSummaryMain}>
+                <strong>Служебные действия</strong>
+                <span className={adminStyles.compactDisclosureSummaryMeta}>
+                  Метаданные, история и жизненный цикл остаются доступны, но не перегружают основной поток сборки.
+                </span>
+              </div>
+              <span className={adminStyles.compactDisclosureMarker} aria-hidden="true" />
+            </summary>
+            <div className={`${adminStyles.compactDisclosureBody} ${styles.headerServiceBody}`}>
+              <div className={styles.headerServiceActions}>
+                <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
+                  Метаданные
+                </button>
+                {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
+                {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
+                {revision?.state === "review" && ownerApprovalPending ? (
+                  <button type="button" className={adminStyles.secondaryButton} disabled>
+                    Ждет согласования
+                  </button>
+                ) : null}
+                {lifecycleState?.canArchive ? (
+                  <button type="button" className={adminStyles.secondaryButton} onClick={handleArchivePage} disabled={Boolean(lifecycleBusy)}>
+                    {lifecycleBusy === "archive" ? "Снимаем..." : "Снять с публикации"}
+                  </button>
+                ) : null}
+                {lifecycleState?.canDelete ? (
+                  <button type="button" className={adminStyles.secondaryButton} onClick={handleDeletePage} disabled={Boolean(lifecycleBusy)}>
+                    {lifecycleBusy === "delete" ? "Удаляем..." : "Удалить страницу"}
+                  </button>
+                ) : null}
+              </div>
+              <p className={styles.headerServiceNote}>
+                Редкие и инженерные действия вынесены отдельно: рабочее полотно остается про сборку страницы, а не про обслуживание.
+              </p>
             </div>
-          ) : null}
-          <button
-            type="button"
-            className={adminStyles.primaryButton}
-            onClick={handleSaveComposition}
-            disabled={saveBusy || (emptyState.isEmptyWorkspace && !canSaveFirstDraft)}
-          >
-            {saveBusy ? "Сохраняем..." : "Сохранить страницу"}
-          </button>
-          <button type="button" className={adminStyles.secondaryButton} onClick={handleSendToReview} disabled={saveBusy || Boolean(lifecycleBusy) || !revision}>
-            Передать на проверку
-          </button>
+          </details>
         </div>
       </section>
 
@@ -1319,7 +1387,7 @@ export function PageWorkspaceScreen({
             <div className={styles.canvasTitleWrap}>
               <p className={styles.eyebrow}>Рабочее полотно</p>
               <h2 className={styles.canvasTitle}>Сборка страницы</h2>
-              <p className={styles.canvasLegend}>Секции остаются структурными и типизированными. Здесь нет второго редактора и нет свободного конструктора.</p>
+              <p className={styles.canvasLegend}>Секции остаются типовыми и собираются здесь же: после модалок вы возвращаетесь в этот же рабочий экран.</p>
             </div>
           </div>
 
@@ -1520,6 +1588,85 @@ export function PageWorkspaceScreen({
         </div>
 
         <section className={`${styles.previewCard} ${adminStyles.stickyPanel}`} data-layout-zone="preview">
+          <div className={`${styles.operatorCard} ${styles.previewPacket}`}>
+            <div className={styles.previewPacketHead}>
+              <div className={styles.previewPacketCopy}>
+                <h3 className={styles.sectionTitle}>Живое превью</h3>
+                <p className={styles.sectionMeta}>
+                  Реальный shell-рендер остаётся рядом с полотном, а крупное окно нужно только для детальной проверки компоновки.
+                </p>
+              </div>
+              <button type="button" className={adminStyles.secondaryButton} onClick={() => handleOpenPreview(previewDevice)}>
+                Открыть крупно
+              </button>
+            </div>
+
+            <div className={styles.previewPacketPills}>
+              <span className={`${styles.auditTonePill} ${toneClassName(workflowStatus.tone)}`}>{workflowStatus.label}</span>
+              <span className={`${styles.auditTonePill} ${toneClassName(liveStatus.tone)}`}>{liveStatus.label}</span>
+              <span className={`${styles.auditTonePill} ${toneClassName(themeDirty ? "warning" : "healthy")}`}>
+                {themeDirty ? "Тема изменена" : themeDefinition.label}
+              </span>
+            </div>
+
+            <div className={adminStyles.previewViewportControls} role="group" aria-label="Режим встроенного предпросмотра">
+              {PREVIEW_VIEWPORT_OPTIONS.map((option) => {
+                const className = option.value === previewDevice
+                  ? `${adminStyles.previewViewportButton} ${adminStyles.previewViewportButtonActive}`
+                  : adminStyles.previewViewportButton;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={className}
+                    aria-pressed={option.value === previewDevice}
+                    onClick={() => setPreviewDevice(option.value)}
+                  >
+                    <span className={adminStyles.previewViewportButtonLabel}>{option.label}</span>
+                    <span className={adminStyles.previewViewportButtonMeta}>{formatPreviewViewportWidth(option.width)}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {previewPayload ? (
+              <PreviewViewport
+                device={previewDevice}
+                zoom={inlinePreviewZoom}
+                minZoom={0.16}
+                compact
+                fullPage
+                showToolbar={false}
+                showFrameTop={false}
+              >
+                <PagePreview
+                  page={previewPayload}
+                  globalSettings={globalSettings}
+                  previewLookupRecords={previewLookupRecords}
+                />
+              </PreviewViewport>
+            ) : (
+              <div className={`${styles.emptyWorkspaceCard} ${styles.previewInlineEmpty}`}>
+                <h3 className={styles.sectionTitle}>Предпросмотр появится после основы</h3>
+                <p className={styles.sectionMeta}>Нужны хотя бы название страницы и H1.</p>
+              </div>
+            )}
+
+            <div className={styles.previewCompactList}>
+              {previewMarkerItems.map((item) => (
+                <div key={item.label} className={styles.previewCompactItem}>
+                  <span className={styles.previewCompactLabel}>{item.label}</span>
+                  <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className={styles.operatorNote}>{getWorkspaceQuestionHint("preview")}</p>
+          </div>
+        </section>
+        {false ? (
+        <section className={`${styles.previewCard} ${adminStyles.stickyPanel}`} data-layout-zone="preview">
           <div className={styles.operatorCard}>
             <div className={styles.sectionHead}>
               <div>
@@ -1538,15 +1685,6 @@ export function PageWorkspaceScreen({
               ))}
             </dl>
             <p className={styles.operatorNote}>{currentSignal.reason}</p>
-            {false ? (
-            <div className={styles.quickActions}>
-              <button type="button" className={adminStyles.secondaryButton} onClick={() => setMetadataOpen(true)} disabled={metadataBusy}>
-                Метаданные
-              </button>
-              {historyHref ? <Link href={historyHref} className={adminStyles.secondaryButton}>История</Link> : null}
-              {currentReviewHref ? <Link href={currentReviewHref} className={adminStyles.secondaryButton}>Проверка</Link> : null}
-            </div>
-            ) : null}
           </div>
           <div className={styles.operatorCard}>
             <div className={styles.sectionHead}>
@@ -1627,7 +1765,69 @@ export function PageWorkspaceScreen({
             </dl>
           </div>
         </section>
+        ) : null}
       </div>
+
+      <section className={styles.supportGrid}>
+        <div className={styles.operatorCard}>
+          <div className={styles.sectionHead}>
+            <div>
+              <h3 className={styles.sectionTitle}>Статус страницы</h3>
+              <p className={styles.sectionMeta}>Короткая сводка по публикации, версии и сохранённости изменений.</p>
+            </div>
+          </div>
+          <dl className={styles.auditList}>
+            {pageStatusItems.map((item) => (
+              <div key={item.label} className={styles.auditRow}>
+                <dt className={styles.auditLabel}>{item.label}</dt>
+                <dd className={styles.auditValue}>
+                  <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className={styles.operatorNote}>{currentSignal.reason}</p>
+        </div>
+
+        <div className={styles.operatorCard}>
+          <div className={styles.sectionHead}>
+            <div>
+              <h3 className={styles.sectionTitle}>SEO-контроль</h3>
+              <p className={styles.sectionMeta}>Быстрый аудит без открытия полной формы метаданных.</p>
+            </div>
+          </div>
+          <dl className={styles.auditList}>
+            {seoAuditItems.map((item) => (
+              <div key={item.label} className={styles.auditRow}>
+                <dt className={styles.auditLabel}>{item.label}</dt>
+                <dd className={styles.auditValue}>
+                  <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className={`${styles.operatorCard} ${styles.supportCardWide}`}>
+          <div className={styles.sectionHead}>
+            <div>
+              <h3 className={styles.sectionTitle}>Контентная готовность</h3>
+              <p className={styles.sectionMeta}>{getWorkspaceQuestionHint("readiness")}</p>
+            </div>
+          </div>
+          <dl className={styles.auditList}>
+            {contentAuditItems.map((item) => (
+              <div key={item.label} className={styles.auditRow}>
+                <dt className={styles.auditLabel}>{item.label}</dt>
+                <dd className={styles.auditValue}>
+                  <span className={`${styles.auditTonePill} ${toneClassName(item.tone)}`}>{item.detail}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className={styles.operatorNote}>{getPageWorkspaceVisualSettingsHint()}</p>
+        </div>
+      </section>
 
       <SourcePickerModal
         open={Boolean(pickerModel)}

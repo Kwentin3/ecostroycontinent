@@ -9,15 +9,19 @@ import { userCanEditContent } from "../../../../../../lib/auth/session.js";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
 import { getEntityAggregate } from "../../../../../../lib/content-core/repository.js";
 import { ENTITY_TYPES, PAGE_CREATE_MODES, PAGE_TYPES } from "../../../../../../lib/content-core/content-types.js";
-import { saveDraft } from "../../../../../../lib/content-core/service.js";
+import { listEntityCards, saveDraft } from "../../../../../../lib/content-core/service.js";
+import { assertPageTypeAllowedForLaunchOwnership } from "../../../../../../lib/public-launch/ownership.js";
 
 function getWorkingRevisionPayload(aggregate) {
   const currentDraft = aggregate?.revisions?.find((revision) => revision.state === "draft");
   return currentDraft?.payload || aggregate?.activePublishedRevision?.payload || null;
 }
 
-async function buildPageCreatePayload(formPayload, formData) {
+async function buildPageCreatePayload(formPayload, formData, deps = {}) {
   const createMode = getString(formData, "createMode") || PAGE_CREATE_MODES.STANDALONE;
+  const assertLaunchOwnership = deps.assertPageTypeAllowedForLaunchOwnership || (() => {});
+  const loadEntityAggregate = deps.getEntityAggregate || getEntityAggregate;
+  const listCards = deps.listEntityCards || listEntityCards;
 
   if (createMode === PAGE_CREATE_MODES.CLONE_ADAPT) {
     const cloneFromPageId = getString(formData, "cloneFromPageId");
@@ -26,12 +30,17 @@ async function buildPageCreatePayload(formPayload, formData) {
       throw new Error("Для режима копии нужно выбрать исходную страницу.");
     }
 
-    const cloneAggregate = await getEntityAggregate(cloneFromPageId);
+    const cloneAggregate = await loadEntityAggregate(cloneFromPageId);
     const clonePayload = getWorkingRevisionPayload(cloneAggregate);
 
     if (!clonePayload) {
       throw new Error("Не удалось прочитать исходную страницу для копии.");
     }
+
+    assertLaunchOwnership({
+      nextPageType: clonePayload.pageType || formPayload.pageType || PAGE_TYPES.ABOUT,
+      previousPageType: ""
+    });
 
     return {
       ...clonePayload,
@@ -49,13 +58,18 @@ async function buildPageCreatePayload(formPayload, formData) {
   }
 
   if (createMode === PAGE_CREATE_MODES.FROM_SERVICE) {
+    assertLaunchOwnership({
+      nextPageType: PAGE_TYPES.SERVICE_LANDING,
+      previousPageType: ""
+    });
+
     const primaryServiceId = getString(formData, "primaryServiceId");
 
     if (!primaryServiceId) {
       throw new Error("Для страницы услуги нужно выбрать источник «Услуга».");
     }
 
-    const serviceAggregate = await getEntityAggregate(primaryServiceId);
+    const serviceAggregate = await loadEntityAggregate(primaryServiceId);
     const servicePayload = getWorkingRevisionPayload(serviceAggregate);
 
     if (!servicePayload) {
@@ -88,18 +102,31 @@ async function buildPageCreatePayload(formPayload, formData) {
   }
 
   if (createMode === PAGE_CREATE_MODES.FROM_EQUIPMENT) {
+    assertLaunchOwnership({
+      nextPageType: PAGE_TYPES.EQUIPMENT_LANDING,
+      previousPageType: ""
+    });
+
     const primaryEquipmentId = getString(formData, "primaryEquipmentId");
 
     if (!primaryEquipmentId) {
       throw new Error("Для страницы техники нужно выбрать источник «Техника».");
     }
 
-    const equipmentAggregate = await getEntityAggregate(primaryEquipmentId);
+    const equipmentAggregate = await loadEntityAggregate(primaryEquipmentId);
     const equipmentPayload = getWorkingRevisionPayload(equipmentAggregate);
 
     if (!equipmentPayload) {
       throw new Error("Не удалось прочитать выбранную технику.");
     }
+
+    const caseCards = await listCards(ENTITY_TYPES.CASE);
+    const derivedCaseIds = Array.from(new Set([
+      ...(equipmentPayload.relatedCaseIds || []),
+      ...caseCards
+        .filter((card) => (card.latestRevision?.payload?.equipmentIds || []).includes(primaryEquipmentId))
+        .map((card) => card.entity.id)
+    ]));
 
     return {
       ...formPayload,
@@ -114,7 +141,7 @@ async function buildPageCreatePayload(formPayload, formData) {
       sourceRefs: {
         primaryServiceId: "",
         primaryEquipmentId,
-        caseIds: equipmentPayload.relatedCaseIds || [],
+        caseIds: derivedCaseIds,
         galleryIds: equipmentPayload.galleryIds || []
       },
       targeting: {
@@ -126,9 +153,15 @@ async function buildPageCreatePayload(formPayload, formData) {
     };
   }
 
+  const standalonePageType = formPayload.pageType || PAGE_TYPES.ABOUT;
+  assertLaunchOwnership({
+    nextPageType: standalonePageType,
+    previousPageType: ""
+  });
+
   return {
     ...formPayload,
-    pageType: formPayload.pageType || PAGE_TYPES.ABOUT
+    pageType: standalonePageType
   };
 }
 
@@ -137,6 +170,9 @@ export async function POST(request, { params }, deps = {}) {
     requireRouteUser,
     userCanEditContent,
     saveDraft,
+    getEntityAggregate,
+    listEntityCards,
+    assertPageTypeAllowedForLaunchOwnership,
     ...deps
   };
   const { user, response } = await routeDeps.requireRouteUser(request);
@@ -164,7 +200,7 @@ export async function POST(request, { params }, deps = {}) {
 
   try {
     const payload = entityType === ENTITY_TYPES.PAGE
-      ? await buildPageCreatePayload(buildEntityPayload(entityType, formData), formData)
+      ? await buildPageCreatePayload(buildEntityPayload(entityType, formData), formData, routeDeps)
       : buildEntityPayload(entityType, formData);
     const result = await routeDeps.saveDraft({
       entityType,

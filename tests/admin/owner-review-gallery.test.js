@@ -40,8 +40,12 @@ function buildQueueItem({
 test("owner review status model prioritizes materials that still need owner decision", () => {
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "pending" }).key, "needs_owner");
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "rejected" }).key, "returned");
-  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" }).key, "approved");
-  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "in_review");
+  const approvedStatus = getOwnerReviewStatusModel({ ownerReviewRequired: true, ownerApprovalStatus: "approved" });
+
+  assert.equal(approvedStatus.key, "approved");
+  assert.match(approvedStatus.label, /Согласовано/);
+  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "approved" }).key, "approved");
+  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "approved");
 });
 
 test("owner review gallery cards sort attention-first and keep page-specific preview fields", () => {
@@ -122,14 +126,20 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
   assert.equal(cards[1].status.key, "needs_owner");
   assert.equal(cards[2].status.key, "returned");
   assert.equal(cards[2].mediaUrl, "/api/admin/media/media_1/preview");
-  assert.equal(cards[3].status.key, "approved");
-  assert.equal(cards[4].status.key, "in_review");
-  assert.match(cards[3].summary, /Объект сдан в срок/);
-  assert.match(cards[4].summary, /Свяжитесь с нами/);
-  assert.equal(cards[4].previewTitle, "Контакты");
-  assert.equal(cards[4].previewThemeKey, "forest_contrast");
-  assert.equal(cards[4].previewHeroLayout, "split");
-  assert.equal(cards[4].pageType, "contacts");
+  const caseCard = cards.find((card) => card.entityType === ENTITY_TYPES.CASE);
+  const pageCard = cards.find((card) => card.entityType === ENTITY_TYPES.PAGE);
+
+  assert.ok(caseCard);
+  assert.ok(pageCard);
+  assert.equal(caseCard.status.key, "approved");
+  assert.match(caseCard.status.label, /Согласовано/);
+  assert.match(caseCard.summary, /Объект сдан в срок/);
+  assert.equal(pageCard.status.key, "approved");
+  assert.match(pageCard.summary, /Свяжитесь с нами/);
+  assert.equal(pageCard.previewTitle, "Контакты");
+  assert.equal(pageCard.previewThemeKey, "forest_contrast");
+  assert.equal(pageCard.previewHeroLayout, "split");
+  assert.equal(pageCard.pageType, "contacts");
 
   const equipmentCard = cards.find((card) => card.entityType === ENTITY_TYPES.EQUIPMENT);
   const serviceCard = cards.find((card) => card.entityType === ENTITY_TYPES.SERVICE);
@@ -167,6 +177,7 @@ test("owner review gallery filters by status, type, and compact text content", (
   ]);
 
   assert.equal(filterOwnerReviewGalleryCards(cards, { status: "needs_owner" }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { status: "approved" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { type: ENTITY_TYPES.CASE }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "монолитные" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "склад" }).length, 1);

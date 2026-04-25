@@ -117,6 +117,38 @@ test("entity save route can redirect freshly created page into the unified works
   assert.equal(response.headers.get("location"), "http://localhost:3000/admin/entities/page/page_77?message=%D0%A7%D0%B5%D1%80%D0%BD%D0%BE%D0%B2%D0%B8%D0%BA+%D1%81%D0%BE%D1%85%D1%80%D0%B0%D0%BD%D1%91%D0%BD.");
 });
 
+test("entity save route blocks legacy page creation mode when launch ownership guard is active", async () => {
+  const response = await POST(
+    buildRequest({
+      title: "Service page from source",
+      h1: "Service page from source",
+      createMode: "from_service",
+      primaryServiceId: "service_1",
+      redirectMode: "page_workspace",
+      failureRedirectTo: "/admin/entities/page?create=1"
+    }),
+    { params: { entityType: "page" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      assertPageTypeAllowedForLaunchOwnership: () => {
+        throw new Error("Launch ownership guard blocks legacy pageType \"service_landing\".");
+      },
+      saveDraft: async () => {
+        throw new Error("saveDraft should not be called when ownership guard blocks the mode.");
+      }
+    }
+  );
+
+  assert.equal(response.status, 303);
+  const location = new URL(response.headers.get("location"));
+
+  assert.equal(location.pathname, "/admin/entities/page");
+  assert.equal(location.searchParams.get("create"), "1");
+  assert.equal(location.searchParams.get("createMode"), "from_service");
+  assert.equal(location.searchParams.get("error"), "Launch ownership guard blocks legacy pageType \"service_landing\".");
+});
+
 test("entity save route returns JSON payload for operator mode", async () => {
   const response = await POST(
     buildRequest({
@@ -246,4 +278,73 @@ test("entity save route returns registry-native fallback when page creation fail
     response.headers.get("location"),
     "http://localhost:3000/admin/entities/page?create=1&error=page+type+collision&createPageType=contacts&createMode=standalone&createTitle=Contact+center"
   );
+});
+
+test("entity save route builds equipment landing from equipment-owned and case-owned links", async () => {
+  let captured = null;
+  const response = await POST(
+    buildRequest({
+      createMode: "from_equipment",
+      primaryEquipmentId: "equipment_1",
+      responseMode: "json"
+    }),
+    { params: { entityType: "page" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_1" }, response: null }),
+      userCanEditContent: () => true,
+      assertPageTypeAllowedForLaunchOwnership: () => {},
+      getEntityAggregate: async (entityId) => {
+        assert.equal(entityId, "equipment_1");
+        return {
+          activePublishedRevision: {
+            payload: {
+              slug: "crawler-excavator",
+              title: "Crawler Excavator",
+              shortSummary: "Heavy-duty machine",
+              primaryMediaAssetId: "media_equipment_1",
+              capabilitySummary: "Digs foundations",
+              keySpecs: ["21 t", "bucket 1.2 m3"],
+              galleryIds: ["gallery_1"],
+              relatedCaseIds: ["case_legacy", "case_duplicate"]
+            }
+          }
+        };
+      },
+      listEntityCards: async (entityType) => {
+        assert.equal(entityType, "case");
+        return [
+          {
+            entity: { id: "case_duplicate" },
+            latestRevision: { payload: { equipmentIds: ["equipment_1"] } }
+          },
+          {
+            entity: { id: "case_new" },
+            latestRevision: { payload: { equipmentIds: ["equipment_1", "equipment_2"] } }
+          },
+          {
+            entity: { id: "case_other" },
+            latestRevision: { payload: { equipmentIds: ["equipment_9"] } }
+          }
+        ];
+      },
+      saveDraft: async (input) => {
+        captured = input;
+        return {
+          entity: { id: "page_equipment_1", entityType: "page" },
+          revision: { id: "rev_page_equipment_1", state: "draft" },
+          changedFields: ["sourceRefs", "equipmentSpecs"]
+        };
+      }
+    }
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.ok, true);
+  assert.equal(captured.payload.pageType, "equipment_landing");
+  assert.equal(captured.payload.seedSlug, "crawler-excavator");
+  assert.equal(captured.payload.sourceRefs.primaryEquipmentId, "equipment_1");
+  assert.deepEqual(captured.payload.sourceRefs.caseIds, ["case_legacy", "case_duplicate", "case_new"]);
+  assert.deepEqual(captured.payload.sourceRefs.galleryIds, ["gallery_1"]);
+  assert.deepEqual(captured.payload.equipmentSpecs, ["21 t", "bucket 1.2 m3"]);
 });

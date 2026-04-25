@@ -12,6 +12,7 @@
     "db:cleanup:test-data": "node scripts/cleanup-test-data.mjs",
     "entity:ops": "node --env-file=.env scripts/entity-ops.mjs",
     "test": "node --experimental-specifier-resolution=node --test tests/**/*.test.js",
+    "smoke:public-admin": "node scripts/smoke-public-admin.mjs",
     "proof:admin:first-slice": "node scripts/proof-admin-first-slice.mjs",
     "proof:seo:surface": "node scripts/proof-seo-surface.mjs"
   },
