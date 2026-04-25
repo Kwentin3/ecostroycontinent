@@ -754,6 +754,140 @@
   gap: 18px;
 }
 
+.equipmentSection {
+  display: grid;
+  gap: 18px;
+}
+
+.equipmentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.equipmentCard {
+  padding: 0;
+  align-content: start;
+  min-width: 0;
+}
+
+.equipmentMedia {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  padding: 12px 12px 0;
+  min-width: 0;
+}
+
+.equipmentMedia img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: calc(var(--section-radius) - 8px);
+  border: 1px solid var(--media-frame-border);
+  background: var(--media-frame-bg);
+}
+
+.equipmentCardBody {
+  padding: var(--section-padding);
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.equipmentCardHeader {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.equipmentType {
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--section-tinted-bg);
+  color: var(--page-muted-ink);
+  border: 1px solid var(--section-tinted-border);
+  font-size: 0.84rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.equipmentSummary {
+  margin: 0;
+  color: var(--page-ink);
+}
+
+.equipmentMode {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: calc(var(--section-radius) - 10px);
+  background: var(--section-plain-bg);
+  border: 1px solid var(--section-plain-border);
+}
+
+.equipmentMode span {
+  color: var(--page-muted-ink);
+}
+
+.equipmentMode strong {
+  color: var(--page-heading-ink);
+}
+
+.equipmentDetails {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.equipmentDetails h4 {
+  margin: 0;
+  color: var(--page-heading-ink);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.equipmentDetails ul {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.equipmentDetails li {
+  overflow-wrap: anywhere;
+}
+
+.equipmentGallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 10px;
+}
+
+.equipmentGallery figure {
+  margin: 0;
+  overflow: hidden;
+  border-radius: calc(var(--section-radius) - 12px);
+  border: 1px solid var(--media-frame-border);
+  background: var(--media-frame-bg);
+}
+
+.equipmentGallery img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
 .card {
   display: grid;
   gap: 12px;

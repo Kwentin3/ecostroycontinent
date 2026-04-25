@@ -12,6 +12,7 @@ import {
 } from "../../lib/public-launch/navigation.js";
 import { buildPublicContactProjection } from "../../lib/public-launch/contact-projection.js";
 import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
+import { buildEquipmentCardsSectionModel } from "../../lib/public-launch/equipment-card-model.js";
 import {
   buildBreadcrumbStructuredData,
   buildLocalBusinessStructuredData,
@@ -247,6 +248,96 @@ function ContactAction({
   }
 
   return <a className={className} href={href}>{label}</a>;
+}
+
+function EquipmentCardsSection({ model, heading }) {
+  if (!model?.cards?.length) {
+    return null;
+  }
+
+  return (
+    <section
+      id="preview-service-related-equipment"
+      data-preview-section="related-equipment"
+      className={`${styles.equipmentSection} ${styles.previewSection}`}
+    >
+      {heading ? <h2>{heading}</h2> : null}
+      <div className={styles.equipmentGrid}>
+        {model.cards.map((card) => (
+          <article key={card.key} className={`${styles.card} ${styles.equipmentCard}`}>
+            {card.primaryMedia ? (
+              <figure className={styles.equipmentMedia}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={card.primaryMedia.previewUrl}
+                  alt={card.primaryMedia.alt || card.title || card.equipmentType || PUBLIC_COPY.imageFallback}
+                  loading="lazy"
+                  decoding="async"
+                />
+                {card.primaryMedia.caption ? (
+                  <figcaption className={styles.mediaCaption}>{card.primaryMedia.caption}</figcaption>
+                ) : null}
+              </figure>
+            ) : null}
+            <div className={styles.equipmentCardBody}>
+              <div className={styles.equipmentCardHeader}>
+                {card.equipmentType ? <span className={styles.equipmentType}>{card.equipmentType}</span> : null}
+                {card.title ? <h3>{card.title}</h3> : null}
+              </div>
+              {card.summary ? <p className={styles.equipmentSummary}>{card.summary}</p> : null}
+              {card.operatorMode ? (
+                <p className={styles.equipmentMode}>
+                  <span>Режим работы</span>
+                  <strong>{card.operatorMode}</strong>
+                </p>
+              ) : null}
+              {card.keySpecs.length > 0 ? (
+                <section className={styles.equipmentDetails} aria-labelledby={`${card.key}-specs`}>
+                  <h4 id={`${card.key}-specs`}>Характеристики</h4>
+                  <ul>
+                    {card.keySpecs.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}
+                  </ul>
+                </section>
+              ) : null}
+              {card.usageScenarios.length > 0 ? (
+                <section className={styles.equipmentDetails} aria-labelledby={`${card.key}-usage`}>
+                  <h4 id={`${card.key}-usage`}>Где применяется</h4>
+                  <ul>
+                    {card.usageScenarios.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}
+                  </ul>
+                </section>
+              ) : null}
+              {card.galleryAssets.length > 0 ? (
+                <section className={styles.equipmentDetails} aria-labelledby={`${card.key}-gallery`}>
+                  <h4 id={`${card.key}-gallery`}>Галерея</h4>
+                  <div className={styles.equipmentGallery}>
+                    {card.galleryAssets.map((asset) => (
+                      <figure key={asset.entityId || asset.previewUrl}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={asset.previewUrl}
+                          alt={asset.alt || card.title || card.equipmentType || PUBLIC_COPY.imageFallback}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </figure>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+              {card.action ? (
+                <ContactAction
+                  action={card.action}
+                  className={styles.actionLink}
+                  defaultLabel={PUBLIC_COPY.ctaFallback}
+                />
+              ) : null}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function StructuredDataScripts({ items }) {
@@ -700,6 +791,13 @@ export function ServicePage({
   const currentPath = `/services/${service.slug}`;
   const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: service.h1 || service.title });
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
+  const equipmentCardsModel = buildEquipmentCardsSectionModel({
+    equipmentRecords: relatedEquipment,
+    resolveMedia,
+    resolveGallery: galleries,
+    ctaAction: contactProjection.primaryAction,
+    ctaLabel: service.ctaVariant || contactProjection.defaultCtaLabel
+  });
 
   return (
     <PublicPageShell
@@ -743,17 +841,10 @@ export function ServicePage({
             ))}
           </section>
         ) : null}
-        {relatedEquipment.length > 0 ? (
-          <section id="preview-service-related-equipment" data-preview-section="related-equipment" className={`${styles.grid} ${styles.previewSection}`}>
-            <h2>Техника для выполнения услуги</h2>
-            {relatedEquipment.map((item) => (
-              <article key={item.entityId} className={styles.card}>
-                <h3>{item.title}</h3>
-                <p>{item.capabilitySummary || item.shortSummary || item.equipmentType}</p>
-              </article>
-            ))}
-          </section>
-        ) : null}
+        <EquipmentCardsSection
+          model={equipmentCardsModel}
+          heading="Техника для выполнения услуги"
+        />
         <GallerySection
           title={PUBLIC_COPY.galleryHeading}
           galleries={service.galleryIds || []}
