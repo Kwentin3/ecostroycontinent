@@ -1,0 +1,68 @@
+{
+  "promptId": "PUBLIC.LOCAL_CONTEXT.SEO_ADDRESS.AUDIT.CONTEXTUAL.V1",
+  "date": "2026-04-25",
+  "runtime": {
+    "baseUrl": "https://ecostroycontinent.ru",
+    "health": {
+      "status": "ok",
+      "service": "next-app",
+      "nodeEnv": "production",
+      "databaseConfigured": true
+    },
+    "displayMode": {
+      "mode": "under_construction",
+      "placeholderFallbackEnabled": false,
+      "underConstruction": true,
+      "indexingSuppressed": true
+    },
+    "deployedImage": "ghcr.io/kwentin3/ecostroycontinent-app@sha256:2d4ae05c5e14129a4c6c9a3e901bbb94fe5287747855c6518f898629ddf7c141",
+    "codeCommit": "70dc92553980158159cd7f3dc6412c48a07ea401"
+  },
+  "liveGlobalSettingsReadOnly": {
+    "publicBrandName": "Экостройконтинент",
+    "legalName": "ООО \"ЭКОСТРОЙКОНТИНЕНТ\"",
+    "serviceArea": "Сочи и Большой Сочи",
+    "primaryRegion": "Сочи",
+    "organizationCity": "Сочи",
+    "organizationCountry": "RU",
+    "contactTruthConfirmed": false,
+    "addressFieldsPresent": false,
+    "coordinatesPresent": false
+  },
+  "canonDecision": {
+    "selectedModel": "B",
+    "meaning": "No confirmed physical address is published; render service area only.",
+    "addressInvented": false
+  },
+  "playwright": {
+    "publicRoutes": [
+      { "path": "/", "status": 200, "holding": true, "schemaCount": 0 },
+      { "path": "/services", "status": 200, "holding": true, "schemaCount": 0 },
+      { "path": "/services/arenda-tehniki", "status": 200, "holding": true, "schemaCount": 0 },
+      { "path": "/contacts", "status": 200, "holding": true, "schemaCount": 0 },
+      { "path": "/cases", "status": 200, "holding": true, "schemaCount": 0 }
+    ],
+    "consoleErrors": [
+      "favicon.ico returned 404"
+    ],
+    "screenshots": [
+      "contacts-under-construction.png",
+      "service-arenda-tehniki-under-construction-mobile.png",
+      "post-deploy-service-arenda-tehniki-under-construction.png"
+    ]
+  },
+  "checks": {
+    "targetedTests": "node --experimental-specifier-resolution=node --test tests/public-contact-projection.test.js tests/public-seo-structured-data.test.js tests/public-placeholder-layer.test.js -> 14 passed",
+    "allTests": "npm test -> 366 passed",
+    "build": "npm run build -> passed",
+    "equipmentDomain": "/equipment returned 404; app/equipment absent"
+  },
+  "safety": {
+    "directProductionSqlWrites": false,
+    "directProductionWriteApiCalls": false,
+    "displayModeChanged": false,
+    "routesChanged": false,
+    "addressInvented": false,
+    "destructiveOperations": false
+  }
+}
