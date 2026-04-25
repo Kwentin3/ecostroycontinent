@@ -9,7 +9,7 @@ test("contact projection uses direct channel actions only when contact truth is 
     contactTruthConfirmed: true,
     primaryPhone: "+7 (999) 123-45-67",
     publicEmail: "hello@example.com",
-    serviceArea: "Moscow",
+    serviceArea: "Сочи и Большой Сочи",
     activeMessengers: ["telegram"]
   }, { currentPath: "/" });
 
@@ -17,6 +17,8 @@ test("contact projection uses direct channel actions only when contact truth is 
   assert.equal(projection.primaryAction.kind, "call");
   assert.match(projection.primaryAction.href, /^tel:/);
   assert.equal(projection.displayPhone, "+7 (999) 123-45-67");
+  assert.equal(projection.publicRegion, "Сочи и Большой Сочи");
+  assert.equal(projection.hasPublicRegion, true);
   assert.equal(projection.bindingMode, "confirmed_truth");
   assert.match(projection.consistencyToken, /confirmed_truth\|ready\|/);
 });
@@ -35,8 +37,23 @@ test("contact projection falls back to route CTA when contact truth is not confi
   assert.equal(projection.primaryAction.label, "Связаться");
   assert.equal(projection.displayPhone, "Контактные данные еще не подтверждены.");
   assert.equal(projection.displayEmail, "Публичная почта еще не подтверждена.");
+  assert.equal(projection.publicRegion, "");
+  assert.equal(projection.hasPublicRegion, false);
   assert.equal(projection.bindingMode, "fallback_projection");
   assert.match(projection.consistencyToken, /fallback_projection\|pending_confirmation\|/);
+});
+
+test("contact projection exposes service area without requiring a physical address", () => {
+  const projection = buildPublicContactProjection({
+    contactTruthConfirmed: false,
+    serviceArea: "Сочи и Большой Сочи",
+    primaryRegion: "Сочи"
+  }, { currentPath: "/services/arenda-tehniki" });
+
+  assert.equal(projection.publicRegion, "Сочи и Большой Сочи");
+  assert.equal(projection.displayRegion, "Сочи и Большой Сочи");
+  assert.equal(projection.hasPublicRegion, true);
+  assert.equal(projection.readiness.code, "pending_confirmation");
 });
 
 test("stage4a wiring uses shared contact projection helper on home and public renderer", () => {
@@ -47,6 +64,8 @@ test("stage4a wiring uses shared contact projection helper on home and public re
   assert.match(homeSource, /contactProjection\.primaryAction/);
   assert.match(rendererSource, /buildPublicContactProjection/);
   assert.match(rendererSource, /ContactAction/);
+  assert.match(rendererSource, /ServiceAreaNote/);
+  assert.match(rendererSource, /contactProjection\.hasPublicRegion/);
   assert.match(rendererSource, /contact-request/);
   assert.match(rendererSource, /data-contact-binding-mode/);
   assert.match(rendererSource, /data-contact-consistency-token/);

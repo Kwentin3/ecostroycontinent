@@ -14,6 +14,7 @@ import {
   getPlaceholderCaseBySlug,
   getPlaceholderCases,
   getPlaceholderContactsPage,
+  getPlaceholderGlobalSettings,
   getPlaceholderServiceBySlug,
   getPlaceholderServices
 } from "../lib/public-launch/placeholder-fixtures.js";
@@ -64,6 +65,15 @@ test("placeholder fixtures expose route stubs for services, cases and standalone
   assert.equal(contacts.pageType, "contacts");
   assert.ok(getPlaceholderServiceBySlug(services[0].slug));
   assert.ok(getPlaceholderCaseBySlug(cases[0].slug));
+});
+
+test("placeholder local signals stay aligned with the Sochi launch cluster", () => {
+  const globalSettings = getPlaceholderGlobalSettings();
+  const cases = getPlaceholderCases();
+
+  assert.equal(globalSettings.serviceArea, "Сочи и Большой Сочи");
+  assert.equal(globalSettings.primaryRegion, "Сочи");
+  assert.equal(cases.some((item) => /Москва|Московская область/.test(item.location || "")), false);
 });
 
 test("public placeholder layer wiring is present in routes and proxy", () => {

@@ -50,7 +50,7 @@ test("local business schema is rendered only for confirmed truth", () => {
     globalSettings: {
       publicBrandName: "Экостройконтинент",
       organization: {
-        city: "Москва",
+        city: "Сочи",
         country: "RU"
       }
     },
@@ -58,8 +58,8 @@ test("local business schema is rendered only for confirmed truth", () => {
       truthConfirmed: true,
       phone: "+7 (999) 000-00-00",
       email: "mail@example.test",
-      serviceArea: "Москва и Московская область",
-      primaryRegion: "Москва"
+      serviceArea: "Сочи и Большой Сочи",
+      primaryRegion: "Сочи"
     }
   });
 
@@ -68,7 +68,8 @@ test("local business schema is rendered only for confirmed truth", () => {
   assert.equal(factual.payload.name, "Экостройконтинент");
   assert.equal(factual.payload.telephone, "+7 (999) 000-00-00");
   assert.equal(factual.payload.email, "mail@example.test");
-  assert.equal(factual.payload.areaServed, "Москва и Московская область");
+  assert.equal(factual.payload.areaServed, "Сочи и Большой Сочи");
+  assert.equal(Object.hasOwn(factual.payload, "address"), false);
 });
 
 test("structured data serialization escapes angle brackets", () => {

@@ -108,7 +108,7 @@ export default async function HomePage({ searchParams }) {
           <p className={styles.eyebrow}>Публичное ядро запуска</p>
           <h1>{resolvedGlobalSettings?.publicBrandName || "Экостройконтинент"}</h1>
           <p>Главная служит опорной страницей доверия и навигации для услуг, страниц подтверждений и контактных действий.</p>
-          <p className={styles.note}>{contactProjection.displayRegion}</p>
+          {contactProjection.hasPublicRegion ? <p className={styles.note}>{contactProjection.publicRegion}</p> : null}
           <p className={styles.note}>{contactProjection.readiness.message}</p>
           <div className={styles.linkRow}>
             {contactProjection.primaryAction?.href ? (

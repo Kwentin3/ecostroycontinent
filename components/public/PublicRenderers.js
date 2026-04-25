@@ -250,6 +250,41 @@ function ContactAction({
   return <a className={className} href={href}>{label}</a>;
 }
 
+function formatServiceAreaNote(region) {
+  const normalized = typeof region === "string" ? region.trim() : "";
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (/^работаем\b/i.test(normalized)) {
+    return /[.!?]$/.test(normalized) ? normalized : `${normalized}.`;
+  }
+
+  return `Зона оказания услуг: ${normalized}${/[.!?]$/.test(normalized) ? "" : "."}`;
+}
+
+function ServiceAreaNote({ contactProjection, sectionId = "preview-service-area" }) {
+  const region = contactProjection?.publicRegion;
+  const body = formatServiceAreaNote(region);
+
+  if (!contactProjection?.hasPublicRegion || !body) {
+    return null;
+  }
+
+  return (
+    <section
+      id={sectionId}
+      data-preview-section="service-area"
+      className={`${styles.card} ${styles.previewSection}`}
+    >
+      <p className={styles.eyebrow}>География работ</p>
+      <h2>Зона оказания услуг</h2>
+      <p className={styles.note}>{body}</p>
+    </section>
+  );
+}
+
 function EquipmentCardsSection({ model, heading }) {
   if (!model?.cards?.length) {
     return null;
@@ -415,7 +450,7 @@ export function PublicPageShell({
         </nav>
         <div className={styles.publicShellMeta}>
           <span>{contactProjection.displayPhone}</span>
-          <span>{contactProjection.displayRegion}</span>
+          {contactProjection.hasPublicRegion ? <span>{contactProjection.publicRegion}</span> : null}
         </div>
       </header>
       {quickServiceLinks.length > 0 ? (
@@ -449,6 +484,7 @@ export function PublicPageShell({
         <div className={styles.publicShellMeta}>
           <span>{contactProjection.displayEmail}</span>
           <span>{contactProjection.displayPhone}</span>
+          {contactProjection.hasPublicRegion ? <span>{contactProjection.publicRegion}</span> : null}
         </div>
       </footer>
     </div>
@@ -495,7 +531,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             <h2>{section.title || "Контакты"}</h2>
             {section.body ? <p>{section.body}</p> : null}
             <p>{contactProjection?.displayPhone || PUBLIC_COPY.contactInfoFallback}</p>
-            <p>{contactProjection?.displayRegion || PUBLIC_COPY.serviceAreaFallback}</p>
+            {contactProjection?.hasPublicRegion ? <p>{contactProjection.publicRegion}</p> : null}
             <p className={styles.note}>{contactProjection?.readiness?.message}</p>
             <div className={styles.linkRow}>
               <ContactAction
@@ -830,6 +866,7 @@ export function ServicePage({
           {service.problemsSolved ? <p>{service.problemsSolved}</p> : null}
           {service.methods ? <p>{service.methods}</p> : null}
         </section>
+        <ServiceAreaNote contactProjection={contactProjection} />
         {relatedCases.length > 0 ? (
           <section id="preview-service-related-cases" data-preview-section="related-cases" className={`${styles.grid} ${styles.previewSection}`}>
             {relatedCases.map((item) => (
@@ -1055,7 +1092,7 @@ export function StandalonePage({
           <section id="contact-request" data-preview-section="contact-request" className={`${styles.card} ${styles.previewSection}`}>
             <h2>Контактное действие</h2>
             <p className={styles.note}>{contactProjection.readiness.message}</p>
-            <p className={styles.note}>{contactProjection.displayRegion}</p>
+            {contactProjection.hasPublicRegion ? <p className={styles.note}>{contactProjection.publicRegion}</p> : null}
             <div className={styles.linkRow}>
               <ContactAction action={contactProjection.primaryAction} className={styles.actionLink} defaultLabel={PUBLIC_COPY.ctaFallback} />
               {contactProjection.secondaryActions.map((action) => (
