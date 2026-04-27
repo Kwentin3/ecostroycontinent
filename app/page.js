@@ -1,16 +1,19 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
-import { PublicHoldingPage, PublicPageShell } from "../components/public/PublicRenderers";
+import { EquipmentCardsSection, PublicHoldingPage, PublicPageShell } from "../components/public/PublicRenderers";
 import styles from "../components/public/public-ui.module.css";
+import { ENTITY_TYPES } from "../lib/content-core/content-types";
+import { resolveEquipmentRecordsForEntity } from "../lib/content-core/equipment-relations.js";
 import {
-  getPublishedCases,
+  buildPublishedLookups,
   getPublishedGlobalSettings,
+  getPublishedServiceBySlug,
   getPublishedServices
 } from "../lib/read-side/public-content";
-import { normalizeLegacyCopy } from "../lib/ui-copy";
+import { buildEquipmentCardsSectionModel } from "../lib/public-launch/equipment-card-model.js";
 import {
-  getPlaceholderCases,
   getPlaceholderGlobalSettings,
+  getPlaceholderServiceBySlug,
   getPlaceholderServices
 } from "../lib/public-launch/placeholder-fixtures";
 import { buildPublicContactProjection } from "../lib/public-launch/contact-projection";
@@ -19,36 +22,62 @@ import { buildPublicRouteMetadata } from "../lib/public-launch/seo-metadata";
 
 export const dynamic = "force-dynamic";
 
+const PRIMARY_SERVICE_SLUG = "arenda-tehniki";
+
+function isInternalHref(href) {
+  return typeof href === "string" && (href.startsWith("/") || href.startsWith("#"));
+}
+
+function ActionLink({ action, className, fallbackLabel }) {
+  if (!action?.href) {
+    return null;
+  }
+
+  const label = action.label || fallbackLabel;
+
+  if (isInternalHref(action.href)) {
+    return <Link className={className} href={action.href}>{label}</Link>;
+  }
+
+  return <a className={className} href={action.href}>{label}</a>;
+}
+
+function pickPrimaryService({ publishedRentalService, services, placeholderMode }) {
+  if (publishedRentalService) {
+    return publishedRentalService;
+  }
+
+  const firstPublishedService = Array.isArray(services)
+    ? services.find((service) => service?.slug && service?.title)
+    : null;
+
+  if (firstPublishedService) {
+    return firstPublishedService;
+  }
+
+  return placeholderMode ? getPlaceholderServiceBySlug(PRIMARY_SERVICE_SLUG) : null;
+}
+
 export async function generateMetadata({ searchParams }) {
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
   const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled || runtimeDisplayMode.underConstruction;
   const globalSettings = await getPublishedGlobalSettings();
   const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
-  const title = runtimeDisplayMode.underConstruction
-    ? `${siteName} — сайт в режиме подготовки`
-    : `${siteName} — услуги и кейсы`;
-  const description = runtimeDisplayMode.underConstruction
-    ? "Публичный контур временно переведён в режим подготовки."
-    : "Главная как опорная страница доверия и навигации для услуг, кейсов и контактного действия.";
+  const rentalService = runtimeDisplayMode.underConstruction
+    ? null
+    : await getPublishedServiceBySlug(PRIMARY_SERVICE_SLUG);
+
   return buildPublicRouteMetadata({
     pathname: "/",
     placeholderMode,
-    title,
-    description,
+    title: runtimeDisplayMode.underConstruction
+      ? `${siteName} — сайт в режиме подготовки`
+      : rentalService?.seo?.metaTitle || "Аренда спецтехники с оператором | Экостройконтинент",
+    description: runtimeDisplayMode.underConstruction
+      ? "Публичный контур временно переведён в режим подготовки."
+      : rentalService?.seo?.metaDescription || "Аренда спецтехники для земляных, погрузочных и планировочных работ. С оператором и без, договор, НДС, безналичный расчёт.",
     siteName
   });
-}
-
-function pickHighlights(items, limit = 3) {
-  if (!Array.isArray(items) || items.length === 0) {
-    return [];
-  }
-
-  return items.filter((item) => item?.slug && item?.title).slice(0, limit);
-}
-
-function isInternalHref(href) {
-  return typeof href === "string" && (href.startsWith("/") || href.startsWith("#"));
 }
 
 export default async function HomePage({ searchParams }) {
@@ -73,31 +102,45 @@ export default async function HomePage({ searchParams }) {
     );
   }
 
-  const [globalSettings, services, cases] = await Promise.all([
+  const [globalSettings, services, lookups, publishedRentalService] = await Promise.all([
     getPublishedGlobalSettings(),
     getPublishedServices(),
-    getPublishedCases()
+    buildPublishedLookups(),
+    getPublishedServiceBySlug(PRIMARY_SERVICE_SLUG)
   ]);
 
-  const usingPlaceholderServices = placeholderMode && services.length === 0;
-  const usingPlaceholderCases = placeholderMode && cases.length === 0;
-  const usingPlaceholderGlobalSettings = placeholderMode && !globalSettings;
-
-  const resolvedServices = usingPlaceholderServices ? getPlaceholderServices() : services;
-  const resolvedCases = usingPlaceholderCases ? getPlaceholderCases() : cases;
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
-  const featuredServices = pickHighlights(resolvedServices, 3);
-  const featuredCases = pickHighlights(resolvedCases, 2);
+  const resolvedServices = services.length > 0 ? services : (placeholderMode ? getPlaceholderServices() : []);
+  const primaryService = pickPrimaryService({
+    publishedRentalService,
+    services: resolvedServices,
+    placeholderMode
+  });
   const contactProjection = buildPublicContactProjection(resolvedGlobalSettings, { currentPath: "/" });
-  const placeholderMarker = usingPlaceholderServices || usingPlaceholderCases || usingPlaceholderGlobalSettings;
+  const relatedEquipment = primaryService
+    ? resolveEquipmentRecordsForEntity({
+        payload: primaryService,
+        equipmentRecords: lookups.equipment,
+        entityType: ENTITY_TYPES.SERVICE,
+        entityId: primaryService.entityId
+      })
+    : [];
+  const equipmentCardsModel = buildEquipmentCardsSectionModel({
+    equipmentRecords: relatedEquipment,
+    resolveMedia: (id) => lookups.mediaMap.get(id) || null,
+    resolveGallery: (id) => lookups.galleryMap.get(id) || null,
+    ctaAction: contactProjection.primaryAction,
+    ctaLabel: primaryService?.ctaVariant || contactProjection.defaultCtaLabel
+  });
 
   return (
     <PublicPageShell
       globalSettings={resolvedGlobalSettings}
+      themeClassName={styles.themeGraphiteIndustrial}
       currentPath="/"
       serviceLinks={resolvedServices}
       allowStructuredData={!placeholderMode}
-      placeholderMarker={placeholderMarker}
+      placeholderMarker={placeholderMode && !primaryService}
     >
       <main className={styles.page}>
         <section
@@ -105,91 +148,80 @@ export default async function HomePage({ searchParams }) {
           data-preview-section="hero"
           className={`${styles.hero} ${styles.previewSection} ${styles.sectionToneTinted} ${styles.textEmphasisStrong}`}
         >
-          <p className={styles.eyebrow}>Публичное ядро запуска</p>
-          <h1>{resolvedGlobalSettings?.publicBrandName || "Экостройконтинент"}</h1>
-          <p>Главная служит опорной страницей доверия и навигации для услуг, страниц подтверждений и контактных действий.</p>
-          {contactProjection.hasPublicRegion ? <p className={styles.note}>{contactProjection.publicRegion}</p> : null}
-          <p className={styles.note}>{contactProjection.readiness.message}</p>
+          <p className={styles.eyebrow}>Экостройконтинент</p>
+          <h1>{primaryService?.h1 || "Аренда спецтехники с оператором и без"}</h1>
+          <p>{primaryService?.summary || "Подбираем технику под земляные, погрузочные и планировочные работы."}</p>
+          <div className={styles.grid}>
+            <article className={styles.card}>
+              <h3>От 100 моточасов</h3>
+              <p>Минимальный срок аренды помогает планировать выезд техники под реальные строительные задачи.</p>
+            </article>
+            <article className={styles.card}>
+              <h3>С оператором и без</h3>
+              <p>Предоставляем собственную технику под задачи объекта и условия площадки.</p>
+            </article>
+            <article className={styles.card}>
+              <h3>Договор и НДС</h3>
+              <p>Работаем по договору, принимаем безналичный расчёт и даём закрывающие документы.</p>
+            </article>
+          </div>
           <div className={styles.linkRow}>
-            {contactProjection.primaryAction?.href ? (
-              isInternalHref(contactProjection.primaryAction.href) ? (
-                <Link className={styles.actionLink} href={contactProjection.primaryAction.href}>
-                  {contactProjection.primaryAction.label}
-                </Link>
-              ) : (
-                <a className={styles.actionLink} href={contactProjection.primaryAction.href}>
-                  {contactProjection.primaryAction.label}
-                </a>
-              )
-            ) : null}
-            <Link className={styles.actionLink} href="/services">Открыть услуги</Link>
-            <Link className={styles.actionLinkSecondary} href="/cases">Посмотреть кейсы</Link>
+            <ActionLink
+              action={contactProjection.primaryAction}
+              className={styles.actionLink}
+              fallbackLabel="Оставить заявку"
+            />
+            <Link className={styles.actionLinkSecondary} href="#preview-home-equipment">Выбрать технику</Link>
           </div>
         </section>
 
         <section
-          id="preview-home-services"
-          data-preview-section="home-services"
-          className={`${styles.stack} ${styles.previewSection}`}
+          id="preview-home-service"
+          data-preview-section="home-service"
+          className={`${styles.grid} ${styles.previewSection}`}
         >
-          <section className={`${styles.card} ${styles.sectionTonePlain}`}>
-            <p className={styles.eyebrow}>Вход в услуги</p>
-            <h2>Ключевые маршруты услуг</h2>
-            <p className={styles.note}>Главная ведет к отдельным страницам услуг вместо того, чтобы подменять их.</p>
-          </section>
-          {featuredServices.length > 0 ? (
-            <section className={styles.grid}>
-              {featuredServices.map((service) => (
-                <article key={service.entityId || service.slug} className={styles.card}>
-                  <h3>{service.title}</h3>
-                  <p>{normalizeLegacyCopy(service.summary || service.serviceScope || "Детали услуги доступны на отдельном маршруте.")}</p>
-                  <div className={styles.linkRow}>
-                    <Link className={styles.actionLink} href={`/services/${service.slug}`}>Открыть страницу услуги</Link>
-                  </div>
-                </article>
-              ))}
-            </section>
-          ) : (
-            <section className={`${styles.card} ${styles.sectionTonePlain}`}>
-              <p className={styles.note}>В этом режиме пока нет опубликованных услуг.</p>
-              <div className={styles.linkRow}>
-                <Link className={styles.actionLink} href="/services">Открыть каталог услуг</Link>
-              </div>
-            </section>
-          )}
+          <article className={styles.card}>
+            <p className={styles.eyebrow}>Что входит</p>
+            <h2>Подача, ГСМ и доставка на объект</h2>
+            <p>{primaryService?.serviceScope}</p>
+          </article>
+          <article className={styles.card}>
+            <p className={styles.eyebrow}>Работы</p>
+            <h2>Котлованы, траншеи, грунт и планировка</h2>
+            <p>{primaryService?.problemsSolved}</p>
+          </article>
         </section>
 
         <section
-          id="preview-home-proof"
-          data-preview-section="home-proof"
-          className={`${styles.stack} ${styles.previewSection}`}
+          id="preview-home-workflow"
+          data-preview-section="home-workflow"
+          className={`${styles.card} ${styles.previewSection} ${styles.sectionTonePlain}`}
         >
-          <section className={`${styles.card} ${styles.sectionToneTinted}`}>
-            <p className={styles.eyebrow}>Слой подтверждений</p>
-            <h2>Кейсы как вход в подтверждения</h2>
-            <p className={styles.note}>Каталог кейсов остаётся маршрутом подтверждений, связанным с услугами.</p>
-          </section>
-          {featuredCases.length > 0 ? (
-            <section className={styles.grid}>
-              {featuredCases.map((item) => (
-                <article key={item.entityId || item.slug} className={styles.card}>
-                  <h3>{item.title}</h3>
-                  {item.location ? <p className={styles.note}>Локация: {normalizeLegacyCopy(item.location)}</p> : null}
-                  <p>{normalizeLegacyCopy(item.result || item.task || item.location || "Детали кейса доступны на отдельном маршруте.")}</p>
-                  <div className={styles.linkRow}>
-                    <Link className={styles.actionLink} href={`/cases/${item.slug}`}>Открыть страницу кейса</Link>
-                  </div>
-                </article>
-              ))}
-            </section>
-          ) : (
-            <section className={`${styles.card} ${styles.sectionTonePlain}`}>
-              <p className={styles.note}>В этом режиме пока нет опубликованных кейсов.</p>
-              <div className={styles.linkRow}>
-                <Link className={styles.actionLink} href="/cases">Открыть каталог кейсов</Link>
-              </div>
-            </section>
-          )}
+          <p className={styles.eyebrow}>Как работаем</p>
+          <h2>От заявки до выезда техники</h2>
+          <p>{primaryService?.methods}</p>
+        </section>
+
+        <section
+          id="preview-home-equipment"
+          data-preview-section="home-equipment"
+          className={styles.previewSection}
+        >
+          <EquipmentCardsSection
+            model={equipmentCardsModel}
+            heading="Техника для аренды"
+          />
+        </section>
+
+        <section
+          id="preview-home-geography"
+          data-preview-section="home-geography"
+          className={`${styles.card} ${styles.previewSection} ${styles.sectionToneTinted}`}
+        >
+          <p className={styles.eyebrow}>География</p>
+          <h2>Работаем по городам и регионам РФ</h2>
+          <p>{primaryService?.serviceArea || resolvedGlobalSettings?.serviceArea}</p>
+          {primaryService?.serviceAreaNote ? <p className={styles.note}>{primaryService.serviceAreaNote}</p> : null}
         </section>
 
         <section
@@ -197,34 +229,17 @@ export default async function HomePage({ searchParams }) {
           data-preview-section="home-next-step"
           className={`${styles.card} ${styles.previewSection} ${styles.sectionToneEmphasis}`}
         >
-          <h2>Следующий шаг</h2>
-          <p className={styles.ctaCopy}>
-            После выбора услуги или кейса пользователь должен сразу видеть понятный путь к контакту.
-          </p>
+          <h2>Оставить заявку на аренду спецтехники</h2>
+          <p className={styles.ctaCopy}>{contactProjection.defaultCtaDescription}</p>
           <div className={styles.linkRow}>
-            {contactProjection.primaryAction?.href ? (
-              isInternalHref(contactProjection.primaryAction.href) ? (
-                <Link className={styles.actionLink} href={contactProjection.primaryAction.href}>
-                  {contactProjection.primaryAction.label}
-                </Link>
-              ) : (
-                <a className={styles.actionLink} href={contactProjection.primaryAction.href}>
-                  {contactProjection.primaryAction.label}
-                </a>
-              )
-            ) : null}
-            {contactProjection.secondaryActions.length > 0 ? (
-              isInternalHref(contactProjection.secondaryActions[0].href) ? (
-                <Link className={styles.actionLinkSecondary} href={contactProjection.secondaryActions[0].href}>
-                  {contactProjection.secondaryActions[0].label}
-                </Link>
-              ) : (
-                <a className={styles.actionLinkSecondary} href={contactProjection.secondaryActions[0].href}>
-                  {contactProjection.secondaryActions[0].label}
-                </a>
-              )
-            ) : null}
-            <Link className={styles.actionLinkSecondary} href="/contacts">Открыть контакты</Link>
+            <ActionLink
+              action={contactProjection.primaryAction}
+              className={styles.actionLink}
+              fallbackLabel="Уточнить стоимость"
+            />
+            <Link className={styles.actionLinkSecondary} href={`/services/${primaryService?.slug || PRIMARY_SERVICE_SLUG}`}>
+              Открыть услугу
+            </Link>
           </div>
         </section>
       </main>

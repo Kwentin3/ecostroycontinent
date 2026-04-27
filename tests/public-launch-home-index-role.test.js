@@ -6,14 +6,16 @@ function readSource(relativePath) {
   return readFileSync(new URL(relativePath, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 }
 
-test("home route behaves as launch hub and is not admin-centric", () => {
+test("home route behaves as service rental landing and is not admin-centric", () => {
   const homeSource = readSource("../app/page.js");
 
-  assert.match(homeSource, /getPublishedCases/);
-  assert.match(homeSource, /getPlaceholderCases/);
-  assert.match(homeSource, /href="\/services"/);
-  assert.match(homeSource, /href="\/cases"/);
-  assert.match(homeSource, /href="\/contacts"/);
+  assert.match(homeSource, /PRIMARY_SERVICE_SLUG = "arenda-tehniki"/);
+  assert.match(homeSource, /getPublishedServiceBySlug/);
+  assert.match(homeSource, /buildEquipmentCardsSectionModel/);
+  assert.match(homeSource, /EquipmentCardsSection/);
+  assert.match(homeSource, /href=\{`\/services\/\$\{/);
+  assert.match(homeSource, /href="#preview-home-equipment"/);
+  assert.doesNotMatch(homeSource, /href="\/cases"/);
   assert.equal(homeSource.includes("/admin/login"), false);
 });
 

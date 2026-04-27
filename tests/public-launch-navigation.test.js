@@ -59,7 +59,7 @@ test("public nav model keeps launch-core menu entries stable", () => {
 
   assert.deepEqual(
     navItems.map((item) => item.href),
-    ["/", "/services", "/cases", "/about", "/contacts"]
+    ["/", "/services", "/about", "/contacts"]
   );
 });
 

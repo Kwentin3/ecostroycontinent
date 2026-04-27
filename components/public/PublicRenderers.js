@@ -346,7 +346,7 @@ function CaseLocationLabel({ location }) {
   return <p className={styles.note}>Локация: {normalized}</p>;
 }
 
-function EquipmentCardsSection({ model, heading }) {
+export function EquipmentCardsSection({ model, heading }) {
   if (!model?.cards?.length) {
     return null;
   }
@@ -972,7 +972,7 @@ export function ServicePage({
                 defaultLabel={PUBLIC_COPY.ctaFallback}
               />
             ))}
-            <Link className={styles.actionLink} href="/cases">Смотреть кейсы</Link>
+            {relatedCases.length > 0 ? <Link className={styles.actionLink} href="/cases">Смотреть кейсы</Link> : null}
             <Link className={styles.actionLinkSecondary} href="/contacts">Связаться</Link>
           </div>
         </section>
