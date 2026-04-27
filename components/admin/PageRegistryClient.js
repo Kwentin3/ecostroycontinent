@@ -228,7 +228,7 @@ export function PageRegistryClient({
   equipmentOptions = []
 }) {
   const [records, setRecords] = useState(() => normalizePageRegistryRecords(initialRecords));
-  const [viewMode, setViewMode] = useState("cards");
+  const [viewMode, setViewMode] = useState("list");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -506,11 +506,11 @@ export function PageRegistryClient({
             Новая страница
           </button>
           <div className={styles.toggleRow}>
-            <button type="button" className={`${styles.toggle} ${viewMode === "cards" ? styles.toggleActive : ""}`} onClick={() => setViewMode("cards")}>
-              Карточки
-            </button>
             <button type="button" className={`${styles.toggle} ${viewMode === "list" ? styles.toggleActive : ""}`} onClick={() => setViewMode("list")}>
               Список
+            </button>
+            <button type="button" className={`${styles.toggle} ${viewMode === "cards" ? styles.toggleActive : ""}`} onClick={() => setViewMode("cards")}>
+              Превью
             </button>
           </div>
         </div>

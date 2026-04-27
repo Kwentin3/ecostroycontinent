@@ -105,8 +105,9 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 380px));
   gap: 16px;
+  align-items: start;
 }
 
 .card {
@@ -138,8 +139,9 @@
 }
 
 .preview {
-  min-height: 196px;
-  aspect-ratio: 4 / 3;
+  min-height: 150px;
+  max-height: 220px;
+  aspect-ratio: 16 / 9;
   border-radius: 18px;
   overflow: hidden;
   background: linear-gradient(135deg, #efe7d8 0%, #f7f3ea 100%);

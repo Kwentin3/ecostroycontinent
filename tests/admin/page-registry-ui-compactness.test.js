@@ -14,6 +14,8 @@ test("page registry keeps compact stats and page-owned preview scaffolding", () 
   const css = readUtf8(cssPath);
 
   assert.match(source, /summary = null/);
+  assert.match(source, /useState\("list"\)/);
+  assert.match(source, />\s*Превью\s*</);
   assert.match(source, /homeLandingSurface = null/);
   assert.match(source, /registryStats = useMemo/);
   assert.match(source, /styles\.statsRow/);
@@ -25,6 +27,8 @@ test("page registry keeps compact stats and page-owned preview scaffolding", () 
   assert.match(source, /previewHeroLayoutClassName/);
   assert.match(source, /previewPageValue/);
   assert.match(css, /\.statsRow\s*\{/);
+  assert.match(css, /grid-template-columns:\s*repeat\(auto-fill,\s*minmax\(min\(100%,\s*280px\),\s*380px\)\)/);
+  assert.match(css, /max-height:\s*220px/);
   assert.match(css, /\.pagePreviewViewport\s*\{/);
   assert.match(css, /\.pagePreviewSurface\s*\{/);
   assert.match(css, /\.pagePreviewFrame\s*\{/);
