@@ -13,9 +13,11 @@ test("home route behaves as service rental landing and is not admin-centric", ()
   assert.match(homeSource, /getPublishedServiceBySlug/);
   assert.match(homeSource, /buildEquipmentCardsSectionModel/);
   assert.match(homeSource, /EquipmentCardsSection/);
+  assert.match(homeSource, /hasPublishedCases/);
+  assert.match(homeSource, /showCasesNav=\{hasPublishedCases\}/);
+  assert.match(homeSource, /preview-home-cases/);
   assert.match(homeSource, /href=\{`\/services\/\$\{/);
   assert.match(homeSource, /href="#preview-home-equipment"/);
-  assert.doesNotMatch(homeSource, /href="\/cases"/);
   assert.equal(homeSource.includes("/admin/login"), false);
 });
 
@@ -24,10 +26,14 @@ test("services and cases indexes declare detail-entry and next-step contracts", 
   const casesIndex = readSource("../app/cases/page.js");
 
   assert.match(servicesIndex, /itemHrefPrefix="\/services"/);
+  assert.match(servicesIndex, /getPublishedCases/);
+  assert.match(servicesIndex, /showCasesNav=\{hasPublishedCases\}/);
   assert.match(servicesIndex, /nextStepTitle=/);
   assert.match(servicesIndex, /nextStepPrimaryHref="\/contacts"/);
+  assert.match(servicesIndex, /nextStepSecondaryHref=\{hasPublishedCases \? "\/cases" : ""\}/);
 
   assert.match(casesIndex, /itemHrefPrefix="\/cases"/);
+  assert.match(casesIndex, /showCasesNav/);
   assert.match(casesIndex, /nextStepTitle=/);
   assert.match(casesIndex, /nextStepPrimaryHref="\/services"/);
 });

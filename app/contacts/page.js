@@ -87,6 +87,7 @@ export default async function ContactsPage({ searchParams }) {
   const resolvedServiceLinks = lookups.services.length > 0
     ? lookups.services
     : (placeholderMode ? getPlaceholderServices() : []);
+  const hasPublishedCases = lookups.cases.some((item) => item?.slug && item?.title);
 
   return (
     <StandalonePage
@@ -99,6 +100,7 @@ export default async function ContactsPage({ searchParams }) {
       serviceLinks={resolvedServiceLinks}
       allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
+      showCasesNav={hasPublishedCases}
     />
   );
 }

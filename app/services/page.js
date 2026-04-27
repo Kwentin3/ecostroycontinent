@@ -1,5 +1,6 @@
 ﻿import { PublicHoldingPage, PublicListPage } from "../../components/public/PublicRenderers";
 import {
+  getPublishedCases,
   getPublishedGlobalSettings,
   getPublishedServices
 } from "../../lib/read-side/public-content";
@@ -50,14 +51,16 @@ export default async function ServicesPage({ searchParams }) {
     );
   }
 
-  const [services, globalSettings] = await Promise.all([
+  const [services, cases, globalSettings] = await Promise.all([
     getPublishedServices(),
+    getPublishedCases(),
     getPublishedGlobalSettings()
   ]);
 
   const usingPlaceholder = placeholderMode && services.length === 0;
   const resolvedServices = usingPlaceholder ? getPlaceholderServices() : services;
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
+  const hasPublishedCases = cases.some((item) => item?.slug && item?.title);
 
   return (
       <PublicListPage
@@ -71,16 +74,17 @@ export default async function ServicesPage({ searchParams }) {
       serviceLinks={resolvedServices}
       allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
+      showCasesNav={hasPublishedCases}
       emptyTitle="Каталог услуг пока пуст"
       emptyDescription="Опубликованные страницы услуг ещё не готовы для этого режима."
-      emptyActionHref="/cases"
-      emptyActionLabel="Перейти в раздел кейсов"
+      emptyActionHref={hasPublishedCases ? "/cases" : "/contacts"}
+      emptyActionLabel={hasPublishedCases ? "Перейти в раздел кейсов" : "Связаться"}
       nextStepTitle="Следующий шаг"
       nextStepDescription="Выберите услугу для перехода к деталям или сразу откройте контактный маршрут."
       nextStepPrimaryHref="/contacts"
       nextStepPrimaryLabel="Связаться"
-      nextStepSecondaryHref="/cases"
-      nextStepSecondaryLabel="Смотреть кейсы"
+      nextStepSecondaryHref={hasPublishedCases ? "/cases" : ""}
+      nextStepSecondaryLabel={hasPublishedCases ? "Смотреть кейсы" : ""}
       nextStepTone="tinted"
     />
   );

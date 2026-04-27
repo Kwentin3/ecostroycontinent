@@ -116,6 +116,10 @@ export default async function HomePage({ searchParams }) {
     services: resolvedServices,
     placeholderMode
   });
+  const publishedCases = Array.isArray(lookups.cases)
+    ? lookups.cases.filter((item) => item?.slug && item?.title)
+    : [];
+  const hasPublishedCases = publishedCases.length > 0;
   const contactProjection = buildPublicContactProjection(resolvedGlobalSettings, { currentPath: "/" });
   const relatedEquipment = primaryService
     ? resolveEquipmentRecordsForEntity({
@@ -141,6 +145,7 @@ export default async function HomePage({ searchParams }) {
       serviceLinks={resolvedServices}
       allowStructuredData={!placeholderMode}
       placeholderMarker={placeholderMode && !primaryService}
+      showCasesNav={hasPublishedCases}
     >
       <main className={styles.page}>
         <section
@@ -212,6 +217,29 @@ export default async function HomePage({ searchParams }) {
             heading="Техника для аренды"
           />
         </section>
+
+        {hasPublishedCases ? (
+          <section
+            id="preview-home-cases"
+            data-preview-section="home-cases"
+            className={styles.previewSection}
+          >
+            <p className={styles.eyebrow}>Опыт работ</p>
+            <h2>Кейсы по спецтехнике</h2>
+            <div className={styles.grid}>
+              {publishedCases.slice(0, 3).map((item) => (
+                <article key={item.entityId || item.slug} className={styles.card}>
+                  <h3>{item.title}</h3>
+                  {item.location ? <p className={styles.note}>{item.location}</p> : null}
+                  <p>{item.summary || item.result || item.task}</p>
+                  <Link className={styles.actionLink} href={`/cases/${item.slug}`}>
+                    Смотреть кейс
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section
           id="preview-home-geography"

@@ -115,6 +115,7 @@ export default async function CaseDetailPage({ params, searchParams }) {
       serviceLinks={resolvedServiceLinks}
       allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
+      showCasesNav
     />
   );
 }

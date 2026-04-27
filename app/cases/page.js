@@ -78,6 +78,7 @@ export default async function CasesPage({ searchParams }) {
       serviceLinks={resolvedServices}
       allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
+      showCasesNav
       emptyTitle="Кейсы пока не опубликованы"
       emptyDescription="Пока нет готовых к публикации кейсов в текущем режиме."
       emptyActionHref="/services"

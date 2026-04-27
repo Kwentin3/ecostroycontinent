@@ -464,9 +464,10 @@ export function PublicPageShell({
   extraStructuredData = [],
   allowStructuredData = true,
   placeholderMarker = false,
+  showCasesNav = true,
   children
 }) {
-  const navItems = getPublicNavItems();
+  const navItems = getPublicNavItems({ includeCases: showCasesNav });
   const activeSection = resolvePublicNavSection(currentPath);
   const quickServiceLinks = buildServiceQuickLinks(serviceLinks, { limit: 8 });
   const resolvedBreadcrumbs = Array.isArray(breadcrumbs) ? breadcrumbs : [];
@@ -762,7 +763,8 @@ export function PublicListPage({
   nextStepSecondaryHref = "",
   nextStepSecondaryLabel = "",
   nextStepTone = "plain",
-  allowStructuredData = true
+  allowStructuredData = true,
+  showCasesNav = true
 }) {
   const trail = Array.isArray(breadcrumbs)
     ? breadcrumbs
@@ -780,6 +782,7 @@ export function PublicListPage({
       serviceLinks={serviceLinks}
       allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
+      showCasesNav={showCasesNav}
     >
       <main className={styles.page}>
         <section
@@ -883,7 +886,8 @@ export function ServicePage({
   globalSettings,
   serviceLinks = [],
   allowStructuredData = true,
-  placeholderMarker = false
+  placeholderMarker = false,
+  showCasesNav = true
 }) {
   const primaryMedia = resolveMedia && service.primaryMediaAssetId ? resolveMedia(service.primaryMediaAssetId) : null;
   const currentPath = `/services/${service.slug}`;
@@ -912,6 +916,7 @@ export function ServicePage({
       extraStructuredData={[serviceStructuredData]}
       allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
+      showCasesNav={showCasesNav}
     >
       <main className={styles.page}>
         <section
@@ -990,7 +995,8 @@ export function CasePage({
   globalSettings,
   serviceLinks = [],
   allowStructuredData = true,
-  placeholderMarker = false
+  placeholderMarker = false,
+  showCasesNav = true
 }) {
   const primaryMedia = resolveMedia && item.primaryMediaAssetId ? resolveMedia(item.primaryMediaAssetId) : null;
   const trail = buildPublicBreadcrumbs({ pathname: `/cases/${item.slug}`, pageTitle: item.title });
@@ -1003,6 +1009,7 @@ export function CasePage({
       serviceLinks={serviceLinks}
       allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
+      showCasesNav={showCasesNav}
     >
       <main className={styles.page}>
         <section
@@ -1081,7 +1088,8 @@ export function StandalonePage({
   resolveMedia,
   serviceLinks = [],
   allowStructuredData = true,
-  placeholderMarker = false
+  placeholderMarker = false,
+  showCasesNav = true
 }) {
   const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
   const pageThemeClassName = getThemeClassName(page.pageThemeKey);
@@ -1108,6 +1116,7 @@ export function StandalonePage({
       serviceLinks={serviceLinks}
       allowStructuredData={allowStructuredData}
       placeholderMarker={placeholderMarker}
+      showCasesNav={showCasesNav}
     >
       <main className={styles.page}>
         <section
