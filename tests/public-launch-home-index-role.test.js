@@ -13,9 +13,13 @@ test("home route behaves as service rental landing and is not admin-centric", ()
   assert.match(homeSource, /getPublishedServiceBySlug/);
   assert.match(homeSource, /buildEquipmentCardsSectionModel/);
   assert.match(homeSource, /EquipmentCardsSection/);
+  assert.match(homeSource, /rotateItemsByDay/);
+  assert.match(homeSource, /hasMoreServices/);
+  assert.match(homeSource, /preview-home-services/);
   assert.match(homeSource, /hasPublishedCases/);
   assert.match(homeSource, /showCasesNav=\{hasPublishedCases\}/);
   assert.match(homeSource, /preview-home-cases/);
+  assert.match(homeSource, /preview-home-empty/);
   assert.match(homeSource, /href=\{`\/services\/\$\{/);
   assert.match(homeSource, /href="#preview-home-equipment"/);
   assert.equal(homeSource.includes("/admin/login"), false);

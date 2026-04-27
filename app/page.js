@@ -58,24 +58,54 @@ function pickPrimaryService({ publishedRentalService, services, placeholderMode 
   return placeholderMode ? getPlaceholderServiceBySlug(PRIMARY_SERVICE_SLUG) : null;
 }
 
+function getRenderableItems(items) {
+  return Array.isArray(items)
+    ? items.filter((item) => item?.slug && item?.title)
+    : [];
+}
+
+function rotateItemsByDay(items, now = new Date()) {
+  const renderableItems = getRenderableItems(items);
+
+  if (renderableItems.length < 2) {
+    return renderableItems;
+  }
+
+  const daySeed = Math.floor(now.getTime() / 86400000);
+  const offset = daySeed % renderableItems.length;
+
+  return [
+    ...renderableItems.slice(offset),
+    ...renderableItems.slice(0, offset)
+  ];
+}
+
 export async function generateMetadata({ searchParams }) {
   const runtimeDisplayMode = await resolvePublicRuntimeDisplayMode(await searchParams);
   const placeholderMode = runtimeDisplayMode.placeholderFallbackEnabled || runtimeDisplayMode.underConstruction;
-  const globalSettings = await getPublishedGlobalSettings();
+  const [globalSettings, publishedRentalService, services] = await Promise.all([
+    getPublishedGlobalSettings(),
+    runtimeDisplayMode.underConstruction ? Promise.resolve(null) : getPublishedServiceBySlug(PRIMARY_SERVICE_SLUG),
+    runtimeDisplayMode.underConstruction ? Promise.resolve([]) : getPublishedServices()
+  ]);
   const siteName = globalSettings?.publicBrandName || "Экостройконтинент";
-  const rentalService = runtimeDisplayMode.underConstruction
+  const metadataService = runtimeDisplayMode.underConstruction
     ? null
-    : await getPublishedServiceBySlug(PRIMARY_SERVICE_SLUG);
+    : pickPrimaryService({
+        publishedRentalService,
+        services,
+        placeholderMode: false
+      });
 
   return buildPublicRouteMetadata({
     pathname: "/",
     placeholderMode,
     title: runtimeDisplayMode.underConstruction
       ? `${siteName} — сайт в режиме подготовки`
-      : rentalService?.seo?.metaTitle || "Аренда спецтехники с оператором | Экостройконтинент",
+      : metadataService?.seo?.metaTitle || "Аренда спецтехники с оператором | Экостройконтинент",
     description: runtimeDisplayMode.underConstruction
       ? "Публичный контур временно переведён в режим подготовки."
-      : rentalService?.seo?.metaDescription || "Аренда спецтехники для земляных, погрузочных и планировочных работ. С оператором и без, договор, НДС, безналичный расчёт.",
+      : metadataService?.seo?.metaDescription || "Аренда спецтехники для земляных, погрузочных и планировочных работ. С оператором и без, договор, НДС, безналичный расчёт.",
     siteName
   });
 }
@@ -110,15 +140,20 @@ export default async function HomePage({ searchParams }) {
   ]);
 
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
-  const resolvedServices = services.length > 0 ? services : (placeholderMode ? getPlaceholderServices() : []);
+  const resolvedServices = getRenderableItems(services).length > 0
+    ? getRenderableItems(services)
+    : (placeholderMode ? getPlaceholderServices() : []);
   const primaryService = pickPrimaryService({
     publishedRentalService,
     services: resolvedServices,
     placeholderMode
   });
-  const publishedCases = Array.isArray(lookups.cases)
-    ? lookups.cases.filter((item) => item?.slug && item?.title)
+  const secondaryServices = primaryService
+    ? resolvedServices.filter((item) => item.entityId !== primaryService.entityId && item.slug !== primaryService.slug)
     : [];
+  const rotatingServices = rotateItemsByDay(secondaryServices).slice(0, 3);
+  const hasMoreServices = rotatingServices.length > 0;
+  const publishedCases = rotateItemsByDay(lookups.cases).slice(0, 3);
   const hasPublishedCases = publishedCases.length > 0;
   const contactProjection = buildPublicContactProjection(resolvedGlobalSettings, { currentPath: "/" });
   const relatedEquipment = primaryService
@@ -136,6 +171,35 @@ export default async function HomePage({ searchParams }) {
     ctaAction: contactProjection.primaryAction,
     ctaLabel: primaryService?.ctaVariant || contactProjection.defaultCtaLabel
   });
+
+  if (!primaryService) {
+    return (
+      <PublicPageShell
+        globalSettings={resolvedGlobalSettings}
+        themeClassName={styles.themeGraphiteIndustrial}
+        currentPath="/"
+        serviceLinks={resolvedServices}
+        allowStructuredData={!placeholderMode}
+        placeholderMarker={placeholderMode}
+        showCasesNav={hasPublishedCases}
+      >
+        <main className={styles.page}>
+          <section
+            id="preview-home-empty"
+            data-preview-section="home-empty"
+            className={`${styles.hero} ${styles.previewSection} ${styles.sectionToneTinted} ${styles.textEmphasisStrong}`}
+          >
+            <p className={styles.eyebrow}>Экостройконтинент</p>
+            <h1>Услуги готовятся к публикации</h1>
+            <p>Главная витрина появится после публикации первой услуги и связанных материалов.</p>
+            <div className={styles.linkRow}>
+              <Link className={styles.actionLink} href="/contacts">Открыть контакты</Link>
+            </div>
+          </section>
+        </main>
+      </PublicPageShell>
+    );
+  }
 
   return (
     <PublicPageShell
@@ -217,6 +281,28 @@ export default async function HomePage({ searchParams }) {
             heading="Техника для аренды"
           />
         </section>
+
+        {hasMoreServices ? (
+          <section
+            id="preview-home-services"
+            data-preview-section="home-services"
+            className={styles.previewSection}
+          >
+            <p className={styles.eyebrow}>Другие услуги</p>
+            <h2>Дополнительные направления работ</h2>
+            <div className={styles.grid}>
+              {rotatingServices.map((item) => (
+                <article key={item.entityId || item.slug} className={styles.card}>
+                  <h3>{item.title}</h3>
+                  <p>{item.summary || item.serviceScope || item.problemsSolved}</p>
+                  <Link className={styles.actionLink} href={`/services/${item.slug}`}>
+                    Открыть услугу
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {hasPublishedCases ? (
           <section

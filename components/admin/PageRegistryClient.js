@@ -162,11 +162,58 @@ function renderCanonicalRegistryPageCardPreview(record, previewLookupRecords, gl
   );
 }
 
+function renderHomeLandingSurface(surface) {
+  if (!surface) {
+    return null;
+  }
+
+  const stats = [
+    surface.serviceCount > 0 ? `${surface.serviceCount} услуг` : "",
+    surface.equipmentCount > 0 ? `${surface.equipmentCount} единиц техники` : "",
+    surface.caseCount > 0 ? `${surface.caseCount} кейсов` : ""
+  ].filter(Boolean);
+
+  return (
+    <section className={styles.systemSurfaces} aria-labelledby="home-landing-surface-title">
+      <div className={styles.systemSurfaceIntro}>
+        <span className={styles.fieldLabel}>Системные витрины</span>
+        <h3 id="home-landing-surface-title" className={styles.title}>Главная страница</h3>
+        <p className={styles.meta}>
+          Главная не хранит копию текста в разделе страниц, а собирается из опубликованных услуг, техники и кейсов.
+        </p>
+      </div>
+      <article className={styles.systemCard}>
+        <div>
+          <span className={`${styles.badge} ${surface.ready ? styles.tonehealthy : styles.tonewarning}`}>
+            {surface.ready ? "Готова к показу" : "Нужна опубликованная услуга"}
+          </span>
+          <h4 className={styles.systemCardTitle}>{surface.title}</h4>
+          <p className={styles.meta}>{surface.description}</p>
+          {stats.length > 0 ? (
+            <div className={styles.systemStats} aria-label="Состав главной витрины">
+              {stats.map((item) => <span key={item}>{item}</span>)}
+            </div>
+          ) : null}
+        </div>
+        <div className={styles.systemActions}>
+          <Link href={surface.editHref} className={styles.primaryButton}>
+            {surface.editLabel}
+          </Link>
+          <Link href={surface.publicHref} className={styles.menuItem}>
+            Открыть /
+          </Link>
+        </div>
+      </article>
+    </section>
+  );
+}
+
 export function PageRegistryClient({
   initialRecords,
   summary = null,
   previewLookupRecords = null,
   globalSettings = null,
+  homeLandingSurface = null,
   metadataSaveBasePath = "/api/admin/entities/page",
   createFallbackHref = "/admin/entities/page/new",
   initialCreateOpen = false,
@@ -471,6 +518,8 @@ export function PageRegistryClient({
 
       {actionMessage ? <div className={styles.feedbackInfo}>{actionMessage}</div> : null}
       {actionError ? <div className={styles.feedbackError}>{actionError}</div> : null}
+
+      {renderHomeLandingSurface(homeLandingSurface)}
 
       {filteredRecords.length === 0 ? (
         <div className={styles.empty}>Под эти фильтры страницы не найдены. Снимите фильтр или создайте новую страницу.</div>

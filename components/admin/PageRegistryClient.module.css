@@ -538,6 +538,64 @@
   color: #8c3a2b;
 }
 
+.systemSurfaces {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  background: #f7fbf8;
+}
+
+.systemSurfaceIntro {
+  display: grid;
+  gap: 6px;
+}
+
+.systemCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  background: #fffdf8;
+}
+
+.systemCardTitle {
+  margin: 10px 0 0;
+  color: #22382d;
+  font-size: 1.04rem;
+}
+
+.systemStats,
+.systemActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.systemStats {
+  margin-top: 12px;
+}
+
+.systemStats span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef5f0;
+  color: #295040;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.systemActions {
+  justify-content: flex-end;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -669,6 +727,15 @@
 
   .listRow {
     grid-template-columns: 1fr;
+  }
+
+  .systemCard {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .systemActions {
+    justify-content: flex-start;
   }
 
   .createActions {

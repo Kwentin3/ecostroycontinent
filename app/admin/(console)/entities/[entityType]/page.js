@@ -101,6 +101,38 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
   });
 }
 
+function isPublishedCard(card) {
+  return Boolean(card?.entity?.activePublishedRevisionId);
+}
+
+function buildHomeLandingSurface({ serviceCards = [], equipmentCards = [], caseCards = [] } = {}) {
+  const publishedServices = serviceCards.filter(isPublishedCard);
+  const publishedEquipment = equipmentCards.filter(isPublishedCard);
+  const publishedCases = caseCards.filter(isPublishedCard);
+  const primaryService = publishedServices.find((card) => card.latestRevision?.payload?.slug === "arenda-tehniki")
+    || publishedServices[0]
+    || serviceCards[0]
+    || null;
+  const primaryServiceTitle = getPayloadLabel(primaryService?.latestRevision?.payload) || "услугу";
+  const hasPublishedService = publishedServices.length > 0;
+
+  return {
+    ready: hasPublishedService,
+    title: hasPublishedService ? `Главная: ${primaryServiceTitle}` : "Главная витрина",
+    description: hasPublishedService
+      ? `Первый экран берёт контекст из «${primaryServiceTitle}». Новые опубликованные услуги и кейсы автоматически появляются вторичными блоками.`
+      : "Опубликуйте первую услугу, чтобы главная собрала первый экран, условия, технику и CTA.",
+    serviceCount: publishedServices.length,
+    equipmentCount: publishedEquipment.length,
+    caseCount: publishedCases.length,
+    editHref: primaryService?.entity?.id
+      ? `/admin/entities/service/${primaryService.entity.id}`
+      : "/admin/entities/service",
+    editLabel: primaryService?.entity?.id ? "Редактировать ведущую услугу" : "Открыть услуги",
+    publicHref: "/"
+  };
+}
+
 export default async function EntityListPage({ params, searchParams }) {
   const { entityType } = await params;
   const user = await requireEditorUser();
@@ -286,9 +318,10 @@ export default async function EntityListPage({ params, searchParams }) {
   const currentListPath = `/admin/entities/${normalizedType}${deleteToolEnabled && testOnly ? "?testOnly=1" : ""}`;
 
   if (normalizedType === ENTITY_TYPES.PAGE) {
-    const [serviceCards, equipmentCards, pagePreviewPayload] = await Promise.all([
+    const [serviceCards, equipmentCards, caseCards, pagePreviewPayload] = await Promise.all([
       listEntityCards(ENTITY_TYPES.SERVICE),
       listEntityCards(ENTITY_TYPES.EQUIPMENT),
+      listEntityCards(ENTITY_TYPES.CASE),
       loadAdminPagePreviewPayload()
     ]);
     const lifecyclePairs = await Promise.all(cards.map(async (card) => {
@@ -307,6 +340,11 @@ export default async function EntityListPage({ params, searchParams }) {
     }));
     const pageRecords = buildPageRegistryRecords(cards, viewModel.rows, new Map(lifecyclePairs));
     const createState = buildRegistryCreateState(query);
+    const homeLandingSurface = buildHomeLandingSurface({
+      serviceCards,
+      equipmentCards,
+      caseCards
+    });
 
     return (
       <AdminShell
@@ -341,6 +379,7 @@ export default async function EntityListPage({ params, searchParams }) {
               summary={viewModel.summary}
               previewLookupRecords={pagePreviewPayload.previewLookupRecords}
               globalSettings={pagePreviewPayload.globalSettings}
+              homeLandingSurface={homeLandingSurface}
               metadataSaveBasePath="/api/admin/entities/page"
               initialCreateOpen={createState.open}
               initialCreateTitle={createState.title}
