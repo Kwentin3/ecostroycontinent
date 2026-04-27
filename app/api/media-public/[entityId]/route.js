@@ -1,3 +1,5 @@
+import { getAppConfig } from "../../../../lib/config";
+import { resolvePublicMediaDelivery } from "../../../../lib/media/public-delivery";
 import { readMediaFile } from "../../../../lib/media/storage";
 import { getPublishedMediaAsset } from "../../../../lib/read-side/public-content";
 
@@ -7,6 +9,15 @@ export async function GET(_request, { params }) {
 
   if (!asset) {
     return new Response("Не найдено", { status: 404 });
+  }
+
+  const delivery = await resolvePublicMediaDelivery({
+    asset,
+    config: getAppConfig()
+  });
+
+  if (delivery.mode === "cdn" && delivery.url) {
+    return Response.redirect(delivery.url, 302);
   }
 
   try {

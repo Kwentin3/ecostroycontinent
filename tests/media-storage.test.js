@@ -118,6 +118,87 @@ test("s3 media config does not require MEDIA_STORAGE_DIR to be set", async () =>
   assert.match(config.mediaStorageDir, /var[\\/]+media$/);
 });
 
+test("s3 media config allows app proxy delivery without a CDN base URL", async () => {
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "--eval",
+      [
+        'import { getAppConfig } from "./lib/config.js";',
+        "const config = getAppConfig();",
+        "console.log(JSON.stringify({",
+        "  mediaStorageMode: config.mediaStorageMode,",
+        "  mediaDeliveryMode: config.mediaDeliveryMode,",
+        "  mediaPublicBaseUrl: config.mediaPublicBaseUrl",
+        "}));"
+      ].join(" ")
+    ],
+    {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        NODE_ENV: "test",
+        MEDIA_STORAGE_MODE: "s3",
+        MEDIA_STORAGE_DIR: "",
+        MEDIA_S3_BUCKET: "ecostroycontinent-media-ru3-20260324",
+        MEDIA_S3_REGION: "ru-3",
+        MEDIA_S3_ENDPOINT_URL: "https://s3.ru-3.storage.selcloud.ru",
+        MEDIA_S3_ACCESS_KEY_ID: "test-access",
+        MEDIA_S3_SECRET_ACCESS_KEY: "test-secret",
+        MEDIA_PUBLIC_BASE_URL: "",
+        MEDIA_DELIVERY_MODE: "app_proxy"
+      }
+    }
+  );
+
+  const config = JSON.parse(stdout);
+
+  assert.equal(config.mediaStorageMode, "s3");
+  assert.equal(config.mediaDeliveryMode, "app_proxy");
+  assert.equal(config.mediaPublicBaseUrl, "");
+});
+
+test("s3 media config requires a CDN base URL for CDN delivery modes", async () => {
+  let error;
+
+  try {
+    await execFileAsync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "--eval",
+        [
+          'import { getAppConfig } from "./lib/config.js";',
+          "getAppConfig();"
+        ].join(" ")
+      ],
+      {
+        cwd: repoRoot,
+        env: {
+          ...process.env,
+          NODE_ENV: "test",
+          MEDIA_STORAGE_MODE: "s3",
+          MEDIA_STORAGE_DIR: "",
+          MEDIA_S3_BUCKET: "ecostroycontinent-media-ru3-20260324",
+          MEDIA_S3_REGION: "ru-3",
+          MEDIA_S3_ENDPOINT_URL: "https://s3.ru-3.storage.selcloud.ru",
+          MEDIA_S3_ACCESS_KEY_ID: "test-access",
+          MEDIA_S3_SECRET_ACCESS_KEY: "test-secret",
+          MEDIA_PUBLIC_BASE_URL: "",
+          MEDIA_DELIVERY_MODE: "auto"
+        }
+      }
+    );
+  } catch (thrown) {
+    error = thrown;
+  }
+
+  assert.ok(error, "expected getAppConfig() to fail when CDN delivery is requested without a CDN base URL");
+  assert.match(error.stderr, /MEDIA_STORAGE_MODE=s3 requires:/);
+  assert.match(error.stderr, /MEDIA_PUBLIC_BASE_URL/);
+});
+
 test("s3 media config does not fall back to AWS_* env vars", async () => {
   let error;
 

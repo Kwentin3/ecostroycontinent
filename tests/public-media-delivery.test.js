@@ -1,0 +1,78 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import {
+  clearPublicMediaDeliveryProbeCache,
+  getAppProxyMediaUrl,
+  getCdnMediaUrl,
+  resolvePublicMediaDelivery
+} from "../lib/media/public-delivery.js";
+
+const asset = {
+  entityId: "media_123",
+  storageKey: "media/asset 123.webp"
+};
+
+const s3Config = {
+  mediaStorageMode: "s3",
+  mediaPublicBaseUrl: "https://cdn.example.test",
+  mediaDeliveryMode: "auto"
+};
+
+test("public media delivery keeps a stable app proxy URL for page markup", () => {
+  assert.equal(getAppProxyMediaUrl(" media asset "), "/api/media-public/media%20asset");
+  assert.equal(getAppProxyMediaUrl(""), "");
+  assert.equal(getCdnMediaUrl({ storageKey: asset.storageKey }, s3Config), "https://cdn.example.test/media/asset%20123.webp");
+});
+
+test("public media delivery streams through the app in app_proxy mode", async () => {
+  const delivery = await resolvePublicMediaDelivery({
+    asset,
+    config: { ...s3Config, mediaDeliveryMode: "app_proxy" },
+    fetchImpl: async () => {
+      throw new Error("cdn should not be probed in app_proxy mode");
+    }
+  });
+
+  assert.deepEqual(delivery, {
+    mode: "app_proxy",
+    url: "/api/media-public/media_123",
+    fallbackUrl: "https://cdn.example.test/media/asset%20123.webp"
+  });
+});
+
+test("public media delivery redirects to CDN only when auto probe succeeds", async () => {
+  clearPublicMediaDeliveryProbeCache();
+  const delivery = await resolvePublicMediaDelivery({
+    asset,
+    config: s3Config,
+    now: 1000,
+    fetchImpl: async (url, options) => {
+      assert.equal(url, "https://cdn.example.test/media/asset%20123.webp");
+      assert.equal(options.method, "HEAD");
+      return { ok: true };
+    }
+  });
+
+  assert.deepEqual(delivery, {
+    mode: "cdn",
+    url: "https://cdn.example.test/media/asset%20123.webp",
+    fallbackUrl: "/api/media-public/media_123"
+  });
+});
+
+test("public media delivery falls back to app proxy when CDN probe fails", async () => {
+  clearPublicMediaDeliveryProbeCache();
+  const delivery = await resolvePublicMediaDelivery({
+    asset,
+    config: s3Config,
+    now: 2000,
+    fetchImpl: async () => ({ ok: false })
+  });
+
+  assert.deepEqual(delivery, {
+    mode: "app_proxy",
+    url: "/api/media-public/media_123",
+    fallbackUrl: "https://cdn.example.test/media/asset%20123.webp"
+  });
+});
