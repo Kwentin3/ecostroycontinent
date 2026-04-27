@@ -252,6 +252,53 @@ function ContactAction({
   return <a className={className} href={href}>{label}</a>;
 }
 
+function PublicContactMeta({ contactProjection, includeRegion = true }) {
+  const contactItems = Array.isArray(contactProjection?.publicContactItems)
+    ? contactProjection.publicContactItems
+    : [];
+  const metaItems = [
+    ...contactItems,
+    includeRegion && contactProjection?.hasPublicRegion
+      ? {
+          key: "region",
+          label: contactProjection.publicRegion
+        }
+      : null
+  ].filter(Boolean);
+
+  if (metaItems.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={styles.publicShellMeta}>
+      {metaItems.map((item) => {
+        if (item.href) {
+          return <a key={item.key} href={item.href}>{item.label}</a>;
+        }
+
+        return <span key={item.key}>{item.label}</span>;
+      })}
+    </div>
+  );
+}
+
+function ContactDetailsItems({ contactProjection }) {
+  const contactItems = Array.isArray(contactProjection?.publicContactItems)
+    ? contactProjection.publicContactItems
+    : [];
+
+  if (contactItems.length === 0) {
+    return <p>{contactProjection?.displayPhone || PUBLIC_COPY.contactInfoFallback}</p>;
+  }
+
+  return contactItems.map((item) => (
+    <p key={item.key}>
+      {item.href ? <a href={item.href}>{item.label}</a> : item.label}
+    </p>
+  ));
+}
+
 function formatServiceAreaNote(region) {
   const normalized = typeof region === "string" ? region.trim() : "";
 
@@ -469,10 +516,7 @@ export function PublicPageShell({
             </Link>
           ))}
         </nav>
-        <div className={styles.publicShellMeta}>
-          <span>{contactProjection.displayPhone}</span>
-          {contactProjection.hasPublicRegion ? <span>{contactProjection.publicRegion}</span> : null}
-        </div>
+        <PublicContactMeta contactProjection={contactProjection} />
       </header>
       {quickServiceLinks.length > 0 ? (
         <details className={styles.servicesQuickAccess}>
@@ -502,11 +546,7 @@ export function PublicPageShell({
             </Link>
           ))}
         </nav>
-        <div className={styles.publicShellMeta}>
-          <span>{contactProjection.displayEmail}</span>
-          <span>{contactProjection.displayPhone}</span>
-          {contactProjection.hasPublicRegion ? <span>{contactProjection.publicRegion}</span> : null}
-        </div>
+        <PublicContactMeta contactProjection={contactProjection} />
       </footer>
     </div>
   );
@@ -551,7 +591,7 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
           >
             <h2>{section.title || "Контакты"}</h2>
             {section.body ? <p>{section.body}</p> : null}
-            <p>{contactProjection?.displayPhone || PUBLIC_COPY.contactInfoFallback}</p>
+            <ContactDetailsItems contactProjection={contactProjection} />
             {contactProjection?.hasPublicRegion ? <p>{contactProjection.publicRegion}</p> : null}
             <p className={styles.note}>{contactProjection?.readiness?.message}</p>
             <div className={styles.linkRow}>

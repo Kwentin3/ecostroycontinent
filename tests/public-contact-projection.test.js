@@ -56,6 +56,30 @@ test("contact projection exposes service area without requiring a physical addre
   assert.equal(projection.readiness.code, "pending_confirmation");
 });
 
+test("contact projection supports confirmed email-only public contacts", () => {
+  const projection = buildPublicContactProjection({
+    contactTruthConfirmed: true,
+    primaryPhone: "",
+    publicEmail: "ecostroycontinet@gmail.com",
+    serviceArea: "Краснодарский край",
+    activeMessengers: []
+  }, { currentPath: "/services/arenda-tehniki" });
+
+  assert.equal(projection.readiness.code, "ready");
+  assert.equal(projection.primaryAction.kind, "email");
+  assert.equal(projection.primaryAction.href, "mailto:ecostroycontinet@gmail.com");
+  assert.equal(projection.phone, "");
+  assert.equal(projection.email, "ecostroycontinet@gmail.com");
+  assert.deepEqual(projection.publicContactItems, [
+    {
+      key: "email",
+      kind: "email",
+      label: "ecostroycontinet@gmail.com",
+      href: "mailto:ecostroycontinet@gmail.com"
+    }
+  ]);
+});
+
 test("stage4a wiring uses shared contact projection helper on home and public renderer", () => {
   const homeSource = readFileSync(new URL("../app/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const rendererSource = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
@@ -64,6 +88,8 @@ test("stage4a wiring uses shared contact projection helper on home and public re
   assert.match(homeSource, /contactProjection\.primaryAction/);
   assert.match(rendererSource, /buildPublicContactProjection/);
   assert.match(rendererSource, /ContactAction/);
+  assert.match(rendererSource, /PublicContactMeta/);
+  assert.match(rendererSource, /publicContactItems/);
   assert.match(rendererSource, /ServiceAreaNote/);
   assert.match(rendererSource, /contactProjection\.hasPublicRegion/);
   assert.match(rendererSource, /contact-request/);
