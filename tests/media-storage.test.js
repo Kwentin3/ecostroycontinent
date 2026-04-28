@@ -7,7 +7,12 @@ import assert from "node:assert/strict";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
-import { createMediaStorageAdapter, createMediaStorageKey, getMediaDeliveryUrl } from "../lib/media/storage.js";
+import {
+  createFallbackMediaStorageAdapter,
+  createMediaStorageAdapter,
+  createMediaStorageKey,
+  getMediaDeliveryUrl
+} from "../lib/media/storage.js";
 
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -49,6 +54,51 @@ test("local media storage adapter can report whether a storage key exists", asyn
 
   await adapter.deleteMediaFile(storageKey);
   assert.equal(await adapter.hasMediaFile(storageKey), false);
+});
+
+test("media storage fallback preserves writes when the primary storage denies access", async () => {
+  const mediaStorageDir = await fs.mkdtemp(path.join(os.tmpdir(), "ecostroy-media-fallback-"));
+  const fallbackAdapter = createMediaStorageAdapter({
+    mediaStorageMode: "local",
+    mediaStorageDir
+  });
+  const primaryOperations = [];
+  const accessDenied = new Error("Access Denied");
+  accessDenied.name = "AccessDenied";
+  accessDenied.$metadata = { httpStatusCode: 403 };
+  const primaryAdapter = {
+    async storeMediaFile() {
+      primaryOperations.push("store");
+      throw accessDenied;
+    },
+    async readMediaFile() {
+      primaryOperations.push("read");
+      throw accessDenied;
+    },
+    async deleteMediaFile() {
+      primaryOperations.push("delete");
+      throw accessDenied;
+    },
+    async hasMediaFile() {
+      primaryOperations.push("has");
+      throw accessDenied;
+    }
+  };
+  const adapter = createFallbackMediaStorageAdapter(primaryAdapter, fallbackAdapter);
+  const storageKey = `media/${crypto.randomUUID()}.png`;
+
+  await adapter.storeMediaFile({
+    storageKey,
+    bytes: Buffer.from("fallback-bytes"),
+    contentType: "image/png"
+  });
+
+  assert.equal((await adapter.readMediaFile(storageKey)).toString("utf8"), "fallback-bytes");
+  assert.equal(await adapter.hasMediaFile(storageKey), true);
+
+  await adapter.deleteMediaFile(storageKey);
+  assert.equal(await adapter.hasMediaFile(storageKey), false);
+  assert.deepEqual(primaryOperations, ["store", "read", "has", "delete", "has"]);
 });
 
 test("media delivery URL resolves to the public delivery host from storage key in s3 mode and falls back to the app route in local mode", () => {

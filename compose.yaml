@@ -37,6 +37,8 @@ services:
       BOOTSTRAP_SUPERADMIN_ACCESS_TOKEN: ${BOOTSTRAP_SUPERADMIN_ACCESS_TOKEN}
     ports:
       - "127.0.0.1:${PORT}:3000"
+    volumes:
+      - media_data:/app/var/media
 
   sql:
     image: postgres:16-alpine
@@ -55,3 +57,4 @@ services:
 
 volumes:
   sql_data:
+  media_data:
