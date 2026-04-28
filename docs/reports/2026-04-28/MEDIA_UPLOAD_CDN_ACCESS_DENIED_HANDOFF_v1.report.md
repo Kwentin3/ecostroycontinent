@@ -144,3 +144,30 @@ Post-copy verification:
 - browser image probes showed non-zero natural dimensions for every rendered image and `broken=0`
 
 Future cleanup can migrate these legacy DB `storageKey` values into the `media/` prefix, but do not do that by metadata rewrite alone. Copy the object first, verify app-proxy delivery, then update content revisions through an audited content operation or an explicitly documented maintenance migration.
+
+## Fallback Volume Media Backfill
+
+A second live admin check found that media uploaded during the temporary fallback window was not in S3. The affected records were 13 draft `media_asset` entities created on 2026-04-28 with `storageKey` values under `media/...jpg`.
+
+Root cause for those files:
+
+- fallback uploads wrote binaries into Docker volume `repo_media_data`
+- volume path on the VM: `/var/lib/docker/volumes/repo_media_data/_data/media/...`
+- the current production `compose.yaml` no longer mounts that volume into `repo-app-1`
+- after fallback was disabled, the app looked only in S3, so those draft media previews would fail unless the objects were copied to the bucket
+
+Backfill performed:
+
+- copied all 13 files from `repo_media_data` into `ecostroycontinent-media-ru3-20260428`
+- kept the same `storageKey` values, so no database rewrite was needed
+- did not delete `repo_media_data`; leave it as a short-term safety copy until operators intentionally remove it
+
+Post-copy verification:
+
+- S3 verification across all media assets: `total=18`, `missingCount=0`
+- today's prefixed media objects in S3: `copiedTodayCount=13`
+- Playwright opened `/admin/entities/media_asset`
+- admin media preview requests returned `200` for all rendered cards
+- browser image probe on the admin screen returned `imageCount=19`, `brokenCount=0`
+
+Operational note: when running multi-step SSH scripts that include `docker compose exec`, redirect each `exec` stdin from `/dev/null`; otherwise the first exec can consume the rest of the SSH script. This caused an initially silent no-op during the backfill attempt.
