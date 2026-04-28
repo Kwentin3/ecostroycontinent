@@ -39,10 +39,12 @@ Systemd surfaces:
 
 CDN surfaces:
 
-- CDN resource name: `ecostroycontinent-media-cdn`
-- CDN resource id: `fa6a2ae8-bf2b-4ef8-9ef8-86cf1957bcfd`
-- Default CDN domain: `fa6a2ae8-bf2b-4ef8-9ef8-86cf1957bcfd.selcdn.net`
-- Current public bucket origin: `https://5136cb12-b86a-4094-9a63-f17da3df1443.selstorage.ru`
+- CDN resource name: `ecostroycontinent-media-cdn-v3`
+- CDN resource id: `bab68f25-17dd-402e-9a8e-70a294915a47`
+- Default CDN domain: `bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net`
+- Current public bucket origin: `https://media.ecostroycontinent.ru`
+- Current media bucket: `ecostroycontinent-media-ru3-20260428`
+- Origin Host header: `media.ecostroycontinent.ru`
 
 ## 3. Check Container State
 
@@ -182,24 +184,28 @@ fail2ban-client status sshd
 Check CDN resource state from the operator machine:
 
 ```powershell
-$token = '<account-scoped IAM token>'
-curl.exe -H "X-Auth-Token: $token" https://api.selectel.ru/cdn/v2/projects/8a10b267-f953-42f5-883f-25251b0e57c4/resources/fa6a2ae8-bf2b-4ef8-9ef8-86cf1957bcfd
+$token = '<project-scoped IAM token>'
+$projectId = '8a10b267-f953-42f5-883f-25251b0e57c4'
+$resourceId = 'bab68f25-17dd-402e-9a8e-70a294915a47'
+curl.exe -H "X-Auth-Token: $token" -H "X-Project-Id: $projectId" https://api.selectel.ru/cdn/v3/resources/$resourceId/status
+curl.exe -H "X-Auth-Token: $token" -H "X-Project-Id: $projectId" https://api.selectel.ru/cdn/v3/resources/$resourceId
 ```
 
 Check origin object directly:
 
 ```powershell
-curl.exe https://5136cb12-b86a-4094-9a63-f17da3df1443.selstorage.ru/cdn-probe.txt
+curl.exe -I https://media.ecostroycontinent.ru/840b8fa9-fd07-4113-9c9c-59a3bfe46d41.webp
+curl.exe -I https://media.ecostroycontinent.ru/media/03daa15f-1b58-4633-b5ab-b805418ef0ae.jpg
 ```
 
 Check CDN object:
 
 ```powershell
-curl.exe https://fa6a2ae8-bf2b-4ef8-9ef8-86cf1957bcfd.selcdn.net/cdn-probe.txt
+curl.exe -I https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/840b8fa9-fd07-4113-9c9c-59a3bfe46d41.webp
 ```
 
 ```powershell
-curl.exe http://fa6a2ae8-bf2b-4ef8-9ef8-86cf1957bcfd.selcdn.net/cdn-probe.txt
+curl.exe -I https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/03daa15f-1b58-4633-b5ab-b805418ef0ae.jpg
 ```
 
 Expected current factual behavior:

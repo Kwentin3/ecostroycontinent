@@ -224,6 +224,32 @@ test("s3 media config allows app proxy delivery without a CDN base URL", async (
   assert.equal(config.mediaPublicBaseUrl, "");
 });
 
+test("media delivery URL keeps app proxy mode on the app route even when a CDN base URL exists", () => {
+  const config = {
+    mediaStorageMode: "s3",
+    mediaPublicBaseUrl: "https://cdn.example.test",
+    mediaDeliveryMode: "app_proxy"
+  };
+
+  assert.equal(
+    getMediaDeliveryUrl({ entityId: "media_123", storageKey: "media/asset 123.webp" }, config),
+    "/api/media/media_123"
+  );
+});
+
+test("media delivery URL derives a CDN URL only for CDN-capable modes", () => {
+  const config = {
+    mediaStorageMode: "s3",
+    mediaPublicBaseUrl: "https://cdn.example.test/",
+    mediaDeliveryMode: "auto"
+  };
+
+  assert.equal(
+    getMediaDeliveryUrl({ entityId: "media_123", storageKey: "media/asset 123.webp" }, config),
+    "https://cdn.example.test/media/asset%20123.webp"
+  );
+});
+
 test("s3 media config requires a CDN base URL for CDN delivery modes", async () => {
   let error;
 
