@@ -1,5 +1,6 @@
 import { getAppConfig } from "../../../../lib/config";
-import { readMediaFile, getMediaDeliveryUrl } from "../../../../lib/media/storage";
+import { resolvePublicMediaDelivery } from "../../../../lib/media/public-delivery";
+import { readMediaFile } from "../../../../lib/media/storage";
 import { getPublishedMediaAsset } from "../../../../lib/read-side/public-content";
 
 export async function GET(_request, { params }) {
@@ -12,13 +13,13 @@ export async function GET(_request, { params }) {
   }
 
   if (config.mediaStorageMode === "s3") {
-    const publicUrl = getMediaDeliveryUrl({
-      entityId: asset.entityId,
-      storageKey: asset.storageKey
-    }, config);
+    const delivery = await resolvePublicMediaDelivery({
+      asset,
+      config
+    });
 
-    if (publicUrl) {
-      return Response.redirect(publicUrl, 302);
+    if (delivery.mode === "cdn" && delivery.url) {
+      return Response.redirect(delivery.url, 302);
     }
   }
 

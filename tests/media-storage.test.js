@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
-import { createMediaStorageAdapter, getMediaDeliveryUrl } from "../lib/media/storage.js";
+import { createMediaStorageAdapter, createMediaStorageKey, getMediaDeliveryUrl } from "../lib/media/storage.js";
 
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -76,6 +76,21 @@ test("media delivery URL resolves to the public delivery host from storage key i
 
   assert.equal(publicUrl, "https://cdn.example.test/media/asset-123.jpg");
   assert.equal(localUrl, "/api/media/entity_123");
+});
+
+test("media storage keys are created under the bounded media prefix", () => {
+  assert.equal(
+    createMediaStorageKey("Facade Photo.JPG", { id: "asset_123" }),
+    "media/asset_123.jpg"
+  );
+  assert.equal(
+    createMediaStorageKey("no-extension", { id: "asset_456" }),
+    "media/asset_456"
+  );
+  assert.equal(
+    createMediaStorageKey("nested\\photo.PNG", { id: "asset_789" }),
+    "media/asset_789.png"
+  );
 });
 
 test("s3 media config does not require MEDIA_STORAGE_DIR to be set", async () => {

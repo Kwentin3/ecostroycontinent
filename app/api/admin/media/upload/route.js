@@ -1,11 +1,9 @@
-import path from "node:path";
-
 import { getString } from "../../../../../lib/admin/form-data";
 import { requireRouteUser } from "../../../../../lib/admin/route-helpers";
 import { redirectToAdmin, redirectWithQuery } from "../../../../../lib/admin/operation-feedback";
 import { userCanEditContent } from "../../../../../lib/auth/session";
 import { saveDraft } from "../../../../../lib/content-core/service";
-import { storeMediaFile } from "../../../../../lib/media/storage";
+import { createMediaStorageKey, storeMediaFile } from "../../../../../lib/media/storage";
 import { FEEDBACK_COPY } from "../../../../../lib/ui-copy.js";
 
 function buildTitleFromFilename(filename) {
@@ -41,7 +39,7 @@ export async function POST(request) {
     return redirectWithQuery(request, redirectTo, { error: FEEDBACK_COPY.chooseFile });
   }
 
-  const storageKey = `${crypto.randomUUID()}${path.extname(file.name)}`;
+  const storageKey = createMediaStorageKey(file.name);
   const bytes = Buffer.from(await file.arrayBuffer());
 
   await storeMediaFile({

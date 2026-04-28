@@ -23,13 +23,16 @@ function buildRequest(fields = {}) {
 
 test("media create route marks explicit agent-test uploads", async () => {
   let captured = null;
+  let stored = null;
   const response = await POST(
     buildRequest({ creationOrigin: "agent_test", title: "Media test" }),
     null,
     {
       requireRouteUser: async () => ({ user: { id: "user_1", username: "roman" }, response: null }),
       userCanEditContent: () => true,
-      storeMediaFile: async () => {},
+      storeMediaFile: async (input) => {
+        stored = input;
+      },
       deleteMediaFile: async () => {},
       saveDraft: async (input) => {
         captured = input;
@@ -43,6 +46,8 @@ test("media create route marks explicit agent-test uploads", async () => {
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
   assert.equal(captured.creationOrigin, "agent_test");
+  assert.match(stored.storageKey, /^media\/[0-9a-f-]+\.png$/);
+  assert.equal(captured.payload.storageKey, stored.storageKey);
 });
 
 test("media create route keeps normal uploads unmarked", async () => {
