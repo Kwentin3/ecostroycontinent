@@ -31,6 +31,8 @@ const THEME_CLASS_NAMES = Object.freeze({
   concrete_blueprint: styles.themeConcreteBlueprint
 });
 
+const DEFAULT_PUBLIC_SITE_THEME_KEY = "graphite_industrial";
+
 const SURFACE_TONE_CLASS_NAMES = Object.freeze({
   plain: styles.sectionTonePlain,
   tinted: styles.sectionToneTinted,
@@ -82,6 +84,8 @@ const UNDER_CONSTRUCTION_MOSAIC_TILES = Object.freeze([
 function getThemeClassName(pageThemeKey) {
   return THEME_CLASS_NAMES[pageThemeKey || DEFAULT_LANDING_PAGE_THEME_KEY] ?? styles.themeEarthSand;
 }
+
+const DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME = getThemeClassName(DEFAULT_PUBLIC_SITE_THEME_KEY);
 
 function getSurfaceToneClassName(surfaceTone = "plain") {
   return SURFACE_TONE_CLASS_NAMES[surfaceTone] ?? SURFACE_TONE_CLASS_NAMES.plain;
@@ -457,7 +461,7 @@ function StructuredDataScripts({ items }) {
 
 export function PublicPageShell({
   globalSettings,
-  themeClassName = "",
+  themeClassName = DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME,
   currentPath = "/",
   breadcrumbs = [],
   serviceLinks = [],
@@ -467,6 +471,7 @@ export function PublicPageShell({
   showCasesNav = true,
   children
 }) {
+  const resolvedThemeClassName = themeClassName || DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME;
   const navItems = getPublicNavItems({ includeCases: showCasesNav });
   const activeSection = resolvePublicNavSection(currentPath);
   const quickServiceLinks = buildServiceQuickLinks(serviceLinks, { limit: 8 });
@@ -494,7 +499,7 @@ export function PublicPageShell({
 
   return (
     <div
-      className={`${styles.publicShell} ${themeClassName}`}
+      className={[styles.publicShell, resolvedThemeClassName].filter(Boolean).join(" ")}
       data-contact-binding-mode={contactProjection.bindingMode}
       data-contact-readiness={contactProjection.readiness.code}
       data-contact-consistency-token={contactProjection.consistencyToken}
@@ -502,7 +507,6 @@ export function PublicPageShell({
       <StructuredDataScripts items={structuredDataItems} />
       <header className={styles.publicShellHeader}>
         <div className={styles.publicShellBrand}>
-          <p className={styles.publicShellEyebrow}>Публичный сайт</p>
           <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
         </div>
         <nav className={styles.publicShellNav} aria-label="Главная навигация">

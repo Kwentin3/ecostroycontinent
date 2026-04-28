@@ -50,3 +50,12 @@ test("public list renderer supports empty-state and next-step sections", () => {
   assert.match(rendererSource, /nextStepPrimaryHref/);
   assert.match(rendererSource, /nextStepSecondaryHref/);
 });
+
+test("public route shells keep the launch theme when a route has no pageThemeKey", () => {
+  const rendererSource = readSource("../components/public/PublicRenderers.js");
+
+  assert.match(rendererSource, /DEFAULT_PUBLIC_SITE_THEME_KEY = "graphite_industrial"/);
+  assert.match(rendererSource, /themeClassName = DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME/);
+  assert.match(rendererSource, /resolvedThemeClassName = themeClassName \|\| DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME/);
+  assert.match(rendererSource, /className=\{\[styles\.publicShell, resolvedThemeClassName\]\.filter\(Boolean\)\.join\(" "\)\}/);
+});

@@ -77,9 +77,14 @@ test("public renderers include global nav shell, breadcrumbs and quick-access se
   assert.match(source, /servicesQuickAccess/);
   assert.match(source, /publicShellFooterNav/);
   assert.match(source, /buildPublicBreadcrumbs/);
+  assert.equal(source.includes("Публичный сайт"), false);
 
   assert.match(css, /\.publicShellNav\s*\{/);
   assert.match(css, /\.publicShellNavLinkActive\s*\{/);
+  assert.match(css, /\.publicShellBrand\s*\{/);
+  assert.match(css, /\.publicShellBrand strong\s*\{/);
+  assert.match(css, /\.publicShellMeta a\s*\{/);
+  assert.match(css, /\.publicShellMeta a:focus-visible/);
   assert.match(css, /\.servicesQuickAccess\s*\{/);
   assert.match(css, /\.breadcrumbs\s*\{/);
   assert.match(css, /\.publicShellFooterNav\s*\{/);

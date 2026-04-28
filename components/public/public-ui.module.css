@@ -130,10 +130,51 @@
   color: var(--shell-meta-ink);
 }
 
+.publicShellMeta a {
+  color: var(--page-link);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition:
+    color 140ms ease,
+    text-decoration-color 140ms ease;
+}
+
+.publicShellMeta a:hover {
+  color: var(--page-link-hover);
+}
+
+.publicShellMeta a:focus-visible,
+.publicShellNavLink:focus-visible,
+.publicShellFooterLink:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus-ring);
+}
+
 .publicShellBrand {
   display: grid;
-  gap: 6px;
   min-width: 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--shell-panel-border);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03)),
+    var(--shell-panel-bg);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.publicShellBrand strong {
+  display: block;
+  font-size: 1.55rem;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .publicShellNav {
@@ -1031,6 +1072,10 @@
   text-align: left;
 }
 
+:global([data-preview-device="mobile"]) .publicShellBrand strong {
+  font-size: 1.35rem;
+}
+
 :global([data-preview-device="mobile"]) .publicShellNav,
 :global([data-preview-device="mobile"]) .publicShellFooterNav {
   justify-content: flex-start;
@@ -1288,6 +1333,10 @@
 
   .publicShellMeta {
     text-align: left;
+  }
+
+  .publicShellBrand strong {
+    font-size: 1.35rem;
   }
 
   .publicShellNav,
