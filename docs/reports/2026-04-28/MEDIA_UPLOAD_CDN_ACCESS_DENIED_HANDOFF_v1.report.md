@@ -121,3 +121,26 @@ Production verification after restart:
 - the uploaded image preview rendered from the app
 
 The temporary Playwright smoke asset and temporary superadmin were deleted after the run; verification queries returned zero remaining media entity rows, media revision rows, and temporary user rows.
+
+## Legacy Published Image Backfill
+
+After the bucket switch, live uploads worked but existing public images were broken. Playwright on the public home page showed five `<img>` elements pointing to `/api/media-public/entity_...`; all five requests returned `404`, and browser image dimensions were `naturalWidth=0`.
+
+The published media records still referenced legacy root-level storage keys from before the `media/` prefix hardening. Those objects were not present in the new bucket. The old bucket `ecostroycontinent-media-ru3-20260327-probe1` still denies list/head-style bucket checks, but exact `GetObject` by known key worked for the five published assets.
+
+Copied the five published legacy objects from `ecostroycontinent-media-ru3-20260327-probe1` into `ecostroycontinent-media-ru3-20260428` under the same keys:
+
+- `840b8fa9-fd07-4113-9c9c-59a3bfe46d41.webp`
+- `98e9ae65-72a2-4ce1-97ae-9a06c1351b38.jpeg`
+- `ccb5ce58-d5f2-4847-95e9-70049cb5913c.jpg`
+- `73bebb8a-f173-4f9a-abc2-a01c1b94ce9d.jpg`
+- `a87ea14e-43d7-4e64-b738-efbcf21a8a34.jpeg`
+
+Post-copy verification:
+
+- direct public app-proxy requests for all five media entities returned `200`
+- Playwright on `/` showed all five image requests as `200`
+- Playwright on `/services/arenda-tehniki` showed all five image requests as `200`
+- browser image probes showed non-zero natural dimensions for every rendered image and `broken=0`
+
+Future cleanup can migrate these legacy DB `storageKey` values into the `media/` prefix, but do not do that by metadata rewrite alone. Copy the object first, verify app-proxy delivery, then update content revisions through an audited content operation or an explicitly documented maintenance migration.
