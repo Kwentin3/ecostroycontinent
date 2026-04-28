@@ -45,6 +45,8 @@ CDN surfaces:
 - Current public bucket origin: `https://media.ecostroycontinent.ru`
 - Current media bucket: `ecostroycontinent-media-ru3-20260428`
 - Origin Host header: `media.ecostroycontinent.ru`
+- Production delivery mode: `app_proxy` until all CDN edge probes are stable
+- Known CDN blocker as of 2026-04-28: some Selectel edge nodes return cached `403 HIT`
 
 ## 3. Check Container State
 
@@ -211,10 +213,10 @@ curl.exe -I https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/03daa1
 Expected current factual behavior:
 
 - bucket origin object returns `200 OK`
-- CDN object path over `HTTP` returns `200 OK`
-- CDN object path over `HTTPS` returns `200 OK`
+- CDN object path may return `200 OK` from some edge nodes and cached `403` from others
 - CDN root `/` may return `403`
 - bucket root `/` may return `404`
+- production app delivery must stay on `MEDIA_DELIVERY_MODE=app_proxy` until CDN edge sampling is clean
 
 ## 12. Retention / Cleanup
 
