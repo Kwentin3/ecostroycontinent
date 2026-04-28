@@ -96,4 +96,28 @@ Direct S3 probes with the production media credentials returned:
 
 Backup S3 credentials still list the backups bucket successfully, so the endpoint/network path is working. The broken boundary is specific to the media bucket credentials or provider-side media bucket policy.
 
-Important correction for future agents: the code-level `media/` prefix fix is deployed and still correct as an application invariant, but it is not sufficient to restore upload while the production media S3 access key has no write/list permission on the configured media bucket. The next repair must rotate/restore media bucket credentials or policy in Selectel, then update `/opt/ecostroycontinent/runtime/.env` and restart/deploy the app. Do not switch media writes to the backup bucket as a shortcut.
+Important correction for future agents: the code-level `media/` prefix fix is deployed and still correct as an application invariant, but it is not sufficient to restore upload while the production media S3 access key has no write/list permission on the configured media bucket. Do not switch media writes to the backup bucket as a shortcut.
+
+## Selectel Repair Follow-Up
+
+The updated Selectel service-user password for `codex` was enough to issue account and project IAM tokens, but that user still could not manage service-user S3 credentials through IAM API endpoints. Direct repair of the old media bucket remained blocked: `ecostroycontinent-media-ru3-20260327-probe1` still returned `403` for bucket/object checks with the production media key and was not safely editable with the available roles.
+
+The practical repair was to create a fresh media bucket that the existing media S3 key can own and write:
+
+- new production bucket: `ecostroycontinent-media-ru3-20260428`
+- server env backup: `/opt/ecostroycontinent/runtime/.env.bak-media-s3-restore-20260428T185327Z`
+- production env now uses `MEDIA_S3_BUCKET=ecostroycontinent-media-ru3-20260428`
+- production fallback was disabled with `MEDIA_S3_LOCAL_FALLBACK_ENABLED=false`
+- delivery stays on app proxy: `MEDIA_DELIVERY_MODE=app_proxy`, empty `MEDIA_PUBLIC_BASE_URL`
+
+S3 CRUD on the new bucket succeeded for create/head/put/list/get/delete. Direct public S3 URL reads still returned `403`, so CDN/direct-public delivery is intentionally not marked fixed. Images are served through the app proxy until CDN/public object delivery is repaired separately.
+
+Production verification after restart:
+
+- `/api/health` returned ok through the production host
+- inside `repo-app-1`, a storage smoke wrote and read from the new bucket with fallback disabled
+- live Playwright admin upload succeeded on `https://ecostroycontinent.ru/admin/entities/media_asset`
+- the admin UI showed `Медиафайл загружен и появился в медиатеке.`
+- the uploaded image preview rendered from the app
+
+The temporary Playwright smoke asset and temporary superadmin were deleted after the run; verification queries returned zero remaining media entity rows, media revision rows, and temporary user rows.
