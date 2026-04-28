@@ -67,3 +67,33 @@ Observed outcomes after the handoff-test addition:
 - full suite: 382/382 passed
 - production build succeeded
 - standalone health returned HTTP 200
+
+## Live Playwright Follow-Up
+
+After deployment, a live Playwright smoke against `https://ecostroycontinent.ru/admin/entities/media_asset?compose=upload` still reproduced the user-facing failure.
+
+Observed browser path:
+
+- temporary production superadmin was created for the smoke and deleted after the run
+- login succeeded
+- image file selection succeeded
+- the UI posted to `/api/admin/media/library/create`
+- the API returned HTTP 500 with body error `Access Denied`
+
+This narrows the current production failure to the runtime S3 write boundary, not to the admin UI, session handling, or stale app image.
+
+Runtime checks inside `repo-app-1` confirmed the deployed image contains the prefix fix:
+
+- `lib/media/storage.js` has `createMediaStorageKey(..., prefix = "media")`
+- `lib/admin/infra-health.js` probes `media/__health/sidebar/...`
+
+Direct S3 probes with the production media credentials returned:
+
+- current media bucket: `ecostroycontinent-media-ru3-20260327-probe1`
+- `HeadBucket`: `403`
+- `ListObjectsV2`: `AccessDenied:403`
+- `PutObject` under root, `__health/`, `media/`, `uploads/`, and `public/media/`: all `AccessDenied:403`
+
+Backup S3 credentials still list the backups bucket successfully, so the endpoint/network path is working. The broken boundary is specific to the media bucket credentials or provider-side media bucket policy.
+
+Important correction for future agents: the code-level `media/` prefix fix is deployed and still correct as an application invariant, but it is not sufficient to restore upload while the production media S3 access key has no write/list permission on the configured media bucket. The next repair must rotate/restore media bucket credentials or policy in Selectel, then update `/opt/ecostroycontinent/runtime/.env` and restart/deploy the app. Do not switch media writes to the backup bucket as a shortcut.
