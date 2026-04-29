@@ -9,6 +9,7 @@ import {
   buildFieldPreviewDiff,
   buildMediaCreateFormData,
   buildMediaUpdateFormData,
+  buildPageWorkspaceRequestBody,
   buildRemovalActionFormData,
   buildRemovalPurgeFormData,
   normalizeEntityOperations,
@@ -50,6 +51,38 @@ test("entity ops normalizes flexible entries into explicit operations", () => {
   assert.equal(operations[1].match.pageType, "about");
 });
 
+test("entity ops derives create matcher from slug to avoid accidental duplicate creates", () => {
+  const [operation] = normalizeEntityOperations([{
+    entityType: "service",
+    mode: "create",
+    slug: "soil-removal",
+    title: "Soil removal",
+    h1: "Soil removal",
+    summary: "Summary",
+    serviceScope: "Scope",
+    ctaVariant: "call"
+  }]);
+
+  assert.equal(operation.mode, "create");
+  assert.equal(operation.match.slug, "soil-removal");
+});
+
+test("entity ops rejects unsupported entity save fields instead of silently dropping them", () => {
+  assert.throws(
+    () => normalizeEntityOperations([{
+      entityType: "service",
+      slug: "soil-removal",
+      title: "Soil removal",
+      h1: "Soil removal",
+      summary: "Summary",
+      serviceScope: "Scope",
+      ctaVariant: "call",
+      unsupportedField: "ignored before refactor"
+    }]),
+    /Unsupported field\(s\) for service at index 0: unsupportedField/
+  );
+});
+
 test("entity ops normalizes media operation with collection membership and file path", () => {
   const [operation] = normalizeEntityOperations([{
     kind: "media",
@@ -83,6 +116,29 @@ test("entity ops normalizes display mode operation", () => {
   assert.equal(operation.mode, "set");
   assert.equal(operation.displayMode, "mixed_placeholder");
   assert.equal(operation.reason, "Verify placeholder contour");
+});
+
+test("entity ops normalizes page workspace operations with nested composition", () => {
+  const [operation] = normalizeEntityOperations([{
+    kind: "page_workspace",
+    mode: "save_composition",
+    match: {
+      pageType: "about"
+    },
+    composition: {
+      title: "About company",
+      sourceRefs: {
+        caseIds: ["case_1"]
+      }
+    },
+    changeIntent: "Update page composition"
+  }]);
+
+  assert.equal(operation.kind, ENTITY_OPS_KINDS.PAGE_WORKSPACE);
+  assert.equal(operation.entityType, "page");
+  assert.equal(operation.mode, "save_composition");
+  assert.equal(operation.match.pageType, "about");
+  assert.deepEqual(operation.composition.sourceRefs.caseIds, ["case_1"]);
 });
 
 test("entity ops normalizes removal maintenance operation", () => {
@@ -194,13 +250,39 @@ test("entity ops builds multipart form data for media update route", () => {
 
 test("entity ops builds multipart form data for delete route", () => {
   const formData = buildEntityDeleteFormData({
+    testOnly: true,
     match: {
       entityId: "entity_1"
     }
   });
 
   assert.equal(formData.get("responseMode"), "json");
+  assert.equal(formData.get("testOnly"), "true");
   assert.deepEqual(formData.getAll("entityId"), ["entity_1"]);
+});
+
+test("entity ops builds JSON body for page workspace route", () => {
+  const body = buildPageWorkspaceRequestBody({
+    mode: "save_metadata",
+    changeIntent: "Patch metadata",
+    metadata: {
+      slug: "about",
+      seo: {
+        metaTitle: "About"
+      }
+    }
+  });
+
+  assert.deepEqual(body, {
+    action: "save_metadata",
+    changeIntent: "Patch metadata",
+    metadata: {
+      slug: "about",
+      seo: {
+        metaTitle: "About"
+      }
+    }
+  });
 });
 
 test("entity ops builds form data for display mode route", () => {

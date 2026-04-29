@@ -10,6 +10,7 @@ The tool covers four narrow operation families through one stable entrypoint:
 
 - `entity`: create, update, upsert, and delete draft entities through the canonical admin save/delete routes.
 - `media`: create or patch media assets through the dedicated media library API.
+- `page_workspace`: save page composition/metadata or submit a page draft through the unified Page Workspace API.
 - `display_mode`: switch the persisted public display mode through the superadmin control route.
 - `removal`: mark, unmark, and purge entities through the bounded removal-quarantine and sweep routes.
 
@@ -23,6 +24,7 @@ The project already has guarded write-side routes, role checks, workflow boundar
 - `/api/admin/entities/[entityType]/lookup`
 - `/api/admin/entities/[entityType]/save`
 - `/api/admin/entities/[entityType]/delete`
+- `/api/admin/entities/page/[pageId]/workspace`
 - `/api/admin/media/library/create`
 - `/api/admin/media/library/[entityId]`
 - `/api/public/display-mode`
@@ -74,7 +76,9 @@ If `ENTITY_OPS_USERNAME` / `ENTITY_OPS_PASSWORD` are omitted, the tool falls bac
 - The CLI is `dry-run` by default.
 - `--execute` is required for mutation.
 - Health probe and login always run first.
+- Entity input rejects unknown save fields instead of silently sending values the admin route cannot persist.
 - Entity delete still goes through lookup and the bounded delete route.
+- Page Workspace actions still resolve the page first and then use the bounded JSON workspace route.
 - Display mode still respects the runtime confirmation rule for `published_only`.
 - Removal purge still goes through the bounded sweep route; the CLI does not bypass graph safety.
 
@@ -92,7 +96,7 @@ node --env-file=.env scripts/entity-ops.mjs --input <file> [--kind <kind>] [--en
 
 Supported overrides:
 
-- `--kind`: `entity`, `media`, `display_mode`, `removal`
+- `--kind`: `entity`, `media`, `page_workspace`, `display_mode`, `removal`
 - `--entity-type`: default entity type for entries that need one
 - `--mode`: default mode for the selected kind
 - `--base-url`
@@ -161,8 +165,10 @@ Example:
 Notes:
 
 - `match` may contain `entityId`, `slug`, or `pageType`.
+- `create` derives a lookup matcher from `slug` or page `pageType` when possible and refuses to overwrite an existing match.
 - `delete` resolves the target through lookup first and then calls the bounded admin delete route in `responseMode=json`.
-- Multiline list fields such as `keySpecs`, `usageScenarios`, and `equipmentSpecs` may be expressed as JSON arrays; the CLI serializes them into the newline form expected by the admin route.
+- Multiline list fields such as `keySpecs` and `usageScenarios` may be expressed as JSON arrays; the CLI serializes them into the newline form expected by the admin route.
+- Unknown entity fields are rejected at input normalization time. Use `page_workspace` for nested page composition payloads such as `sourceRefs`, `mediaSettings`, `targeting`, or `sections`.
 
 ### 2. Media operations
 
@@ -218,7 +224,58 @@ Media notes:
 - `update` may also use `filePath` to send a replacement binary through the canonical media patch route.
 - `collectionIds` are treated as a membership update and cause `collectionsTouched=true` to be sent.
 
-### 3. Display mode operations
+### 3. Page Workspace operations
+
+Supported modes:
+
+- `save_composition`
+- `save_metadata`
+- `send_to_review`
+
+`page_workspace` uses the unified page workspace route and sends JSON, not multipart form data. This is the correct path for nested page composition objects.
+
+Example:
+
+```json
+[
+  {
+    "kind": "page_workspace",
+    "mode": "save_composition",
+    "match": {
+      "pageType": "about"
+    },
+    "changeIntent": "Update about page source proof block",
+    "composition": {
+      "title": "О компании",
+      "sourceRefs": {
+        "caseIds": ["entity_case_1"],
+        "galleryIds": ["entity_gallery_1"]
+      }
+    }
+  },
+  {
+    "kind": "page_workspace",
+    "mode": "save_metadata",
+    "match": {
+      "pageType": "about"
+    },
+    "metadata": {
+      "slug": "about",
+      "seo": {
+        "metaTitle": "О компании"
+      }
+    }
+  }
+]
+```
+
+Page Workspace notes:
+
+- `pageId`, `entityId`, `match.slug`, or `match.pageType` is required.
+- Dry-run shows the changed workspace keys before execution.
+- `send_to_review` does not publish and does not bypass owner review.
+
+### 4. Display mode operations
 
 Supported mode:
 
@@ -253,7 +310,7 @@ Example:
 ]
 ```
 
-### 4. Removal operations
+### 5. Removal operations
 
 Supported modes:
 
