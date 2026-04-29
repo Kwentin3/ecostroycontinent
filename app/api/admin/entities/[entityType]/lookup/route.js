@@ -25,6 +25,9 @@ function summarizeRevision(revision) {
     revisionNumber: revision.revisionNumber,
     state: revision.state,
     payload: revision.payload,
+    ownerReviewRequired: Boolean(revision.ownerReviewRequired),
+    ownerApprovalStatus: revision.ownerApprovalStatus ?? "not_required",
+    previewStatus: revision.previewStatus ?? null,
     updatedAt: revision.updatedAt ?? revision.updated_at ?? null,
     publishedAt: revision.publishedAt ?? revision.published_at ?? null
   };

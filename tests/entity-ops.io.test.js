@@ -69,6 +69,38 @@ test("entity ops serializes text report with extended runtime fields", () => {
   assert.match(output, /message: Медиа обновлено/);
 });
 
+test("entity ops serializes relation and revision runtime fields", () => {
+  const output = formatEntityOpsTextReport({
+    execute: true,
+    total: 1,
+    summary: { relationsChanged: 1 },
+    items: [{
+      ok: true,
+      action: "relation_append",
+      kind: "relation",
+      entityType: "service",
+      label: "attach equipment",
+      entityId: "service_1",
+      revisionId: "rev_service_1",
+      relationField: "equipmentIds",
+      resolvedIds: ["equipment_1", "equipment_2"],
+      previewDiff: {},
+      latestRevision: {
+        state: "draft"
+      },
+      activePublishedRevision: {
+        id: "rev_service_live"
+      }
+    }]
+  });
+
+  assert.match(output, /revision: rev_service_1/);
+  assert.match(output, /relation: equipmentIds/);
+  assert.match(output, /resolvedIds: equipment_1, equipment_2/);
+  assert.match(output, /latestState: draft/);
+  assert.match(output, /publishedRevision: rev_service_live/);
+});
+
 test("entity ops serializes json report for machine-readable stdout", () => {
   const json = serializeEntityOpsReport({
     execute: true,

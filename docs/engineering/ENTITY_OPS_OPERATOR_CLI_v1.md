@@ -6,11 +6,14 @@
 
 It is intentionally not a raw database shell and not a publish shortcut.
 
-The tool covers four narrow operation families through one stable entrypoint:
+The tool covers narrow operation families through one stable entrypoint:
 
 - `entity`: create, update, upsert, and delete draft entities through the canonical admin save/delete routes.
-- `media`: create or patch media assets through the dedicated media library API.
+- `media`: create or patch media assets through the dedicated media library API, from local files or a bounded `sourceUrl` download.
 - `page_workspace`: save page composition/metadata or submit a page draft through the unified Page Workspace API.
+- `workflow`: submit a resolved revision to review, approve owner-required review, or publish a review revision through existing workflow routes.
+- `relation`: append, remove, or replace supported relation fields after resolving referenced entities through lookup.
+- `resolve`: read entity/revision context without mutation.
 - `display_mode`: switch the persisted public display mode through the superadmin control route.
 - `removal`: mark, unmark, and purge entities through the bounded removal-quarantine and sweep routes.
 
@@ -25,6 +28,9 @@ The project already has guarded write-side routes, role checks, workflow boundar
 - `/api/admin/entities/[entityType]/save`
 - `/api/admin/entities/[entityType]/delete`
 - `/api/admin/entities/page/[pageId]/workspace`
+- `/api/admin/revisions/[revisionId]/submit`
+- `/api/admin/revisions/[revisionId]/owner-action`
+- `/api/admin/revisions/[revisionId]/publish`
 - `/api/admin/media/library/create`
 - `/api/admin/media/library/[entityId]`
 - `/api/public/display-mode`
@@ -78,7 +84,11 @@ If `ENTITY_OPS_USERNAME` / `ENTITY_OPS_PASSWORD` are omitted, the tool falls bac
 - Health probe and login always run first.
 - Entity input rejects unknown save fields instead of silently sending values the admin route cannot persist.
 - Entity delete still goes through lookup and the bounded delete route.
+- Media `sourceUrl` downloads are converted into the same multipart `File` shape as local uploads and still use media library routes.
 - Page Workspace actions still resolve the page first and then use the bounded JSON workspace route.
+- Workflow publish and owner approval require explicit confirmation flags in input; the CLI calls the runtime workflow routes and does not bypass permissions.
+- Relation operations resolve references through lookup, compute the next relation value, then send a full merged entity payload to the admin save route because that route validates full drafts.
+- Resolve operations are read-only and return entity/revision context even without `--execute`.
 - Display mode still respects the runtime confirmation rule for `published_only`.
 - Removal purge still goes through the bounded sweep route; the CLI does not bypass graph safety.
 
@@ -96,7 +106,7 @@ node --env-file=.env scripts/entity-ops.mjs --input <file> [--kind <kind>] [--en
 
 Supported overrides:
 
-- `--kind`: `entity`, `media`, `page_workspace`, `display_mode`, `removal`
+- `--kind`: `entity`, `media`, `page_workspace`, `workflow`, `relation`, `resolve`, `display_mode`, `removal`
 - `--entity-type`: default entity type for entries that need one
 - `--mode`: default mode for the selected kind
 - `--base-url`
@@ -183,6 +193,7 @@ Supported modes:
 Typical use cases:
 
 - upload a new file from disk
+- upload a new file from an HTTP(S) image URL
 - patch media metadata safely
 - replace a binary on a draft media asset
 - update collection membership during a media patch
@@ -191,6 +202,19 @@ Example:
 
 ```json
 [
+  {
+    "kind": "media",
+    "mode": "create",
+    "sourceUrl": "https://example.com/media/shantui-se420lcw.jpg",
+    "filename": "shantui-se420lcw.jpg",
+    "changeIntent": "Upload sourced media for equipment card",
+    "creationOrigin": "operator_content_sync",
+    "fields": {
+      "title": "SHANTUI SE420LCW",
+      "alt": "Экскаватор SHANTUI SE420LCW",
+      "caption": "Медиа для карточки техники SHANTUI SE420LCW."
+    }
+  },
   {
     "kind": "media",
     "mode": "create",
@@ -219,9 +243,11 @@ Example:
 
 Media notes:
 
-- `create` requires `filePath`.
-- `upsert` can create only if the target does not exist and `filePath` is supplied.
-- `update` may also use `filePath` to send a replacement binary through the canonical media patch route.
+- `create` requires `filePath` or `sourceUrl`.
+- `sourceUrl` may also be written as `url`; `filename` is optional when the URL path or response content type gives a safe image filename.
+- `filePath` and `sourceUrl` are mutually exclusive in one operation.
+- `upsert` can create only if the target does not exist and a binary source is supplied.
+- `update` may also use `filePath` or `sourceUrl` to send a replacement binary through the canonical media patch route.
 - `collectionIds` are treated as a membership update and cause `collectionsTouched=true` to be sent.
 
 ### 3. Page Workspace operations
@@ -275,7 +301,125 @@ Page Workspace notes:
 - Dry-run shows the changed workspace keys before execution.
 - `send_to_review` does not publish and does not bypass owner review.
 
-### 4. Display mode operations
+### 4. Workflow operations
+
+Supported modes:
+
+- `submit_to_review`
+- `approve_owner`
+- `publish`
+
+Example:
+
+```json
+[
+  {
+    "kind": "workflow",
+    "mode": "submit_to_review",
+    "revisionId": "rev_equipment_1",
+    "returnTo": "/admin/entities/equipment"
+  },
+  {
+    "kind": "workflow",
+    "entityType": "equipment",
+    "mode": "approve_owner",
+    "match": {
+      "slug": "shantui-se420lcw"
+    },
+    "comment": "Owner approved for launch content sync.",
+    "confirmOwnerApproval": true
+  },
+  {
+    "kind": "workflow",
+    "entityType": "equipment",
+    "mode": "publish",
+    "match": {
+      "slug": "shantui-se420lcw"
+    },
+    "confirmPublish": true
+  }
+]
+```
+
+Workflow notes:
+
+- A workflow operation may target `revisionId` directly without `entityType`, or resolve the latest revision by `entityId`, `match.slug`, or page `match.pageType`.
+- `entityType` is required only when the CLI needs to resolve an entity before choosing the latest revision.
+- `publish` requires `confirmPublish: true`.
+- `approve_owner` requires `confirmOwnerApproval: true`.
+- Owner-required revisions must be owner-approved before publish; the CLI blocks earlier instead of attempting a runtime publish.
+
+### 5. Relation operations
+
+Supported modes:
+
+- `append`
+- `remove`
+- `replace`
+
+Supported relation fields:
+
+- `service`: `equipmentIds`, `relatedCaseIds`, `galleryIds`
+- `equipment`: `serviceIds`, `relatedCaseIds`, `galleryIds`
+- `case`: `serviceIds`, `equipmentIds`, `galleryIds`
+- `gallery`: `assetIds`, `relatedEntityIds`
+
+Example:
+
+```json
+[
+  {
+    "kind": "relation",
+    "entityType": "service",
+    "mode": "append",
+    "match": {
+      "slug": "arenda-spectehniki"
+    },
+    "field": "equipmentIds",
+    "refs": [
+      { "slug": "shantui-se420lcw" },
+      { "slug": "hyundai-hx520l" }
+    ],
+    "changeIntent": "Attach new equipment cards to the rental service"
+  }
+]
+```
+
+Relation notes:
+
+- `ids` / `values` accept already-known entity IDs.
+- `refs` resolve by lookup before mutation. For common fields the referenced entity type is inferred: for example `equipmentIds` resolves `equipment`.
+- Object refs may override type with `entityType` or use nested `match`.
+- The CLI merges the current payload and relation change before saving, so admin validation receives a full entity draft rather than a partial relation-only form.
+
+### 6. Resolve operations
+
+Supported mode:
+
+- `entity`
+
+Example:
+
+```json
+[
+  {
+    "kind": "resolve",
+    "entityType": "service",
+    "match": {
+      "slug": "arenda-spectehniki"
+    },
+    "includePayload": true
+  }
+]
+```
+
+Resolve notes:
+
+- `resolve` is read-only.
+- It works without `--execute` and does not count as a dry-run mutation.
+- Use it to recover entity IDs, latest revision state, active published revision, and payload shape before building mutation batches.
+
+### 7. Display mode operations
 
 Supported mode:
 
@@ -310,7 +454,7 @@ Example:
 ]
 ```
 
-### 5. Removal operations
+### 8. Removal operations
 
 Supported modes:
 
@@ -363,8 +507,11 @@ Text mode prints:
 - per-operation result lines
 - preview diff keys in dry-run and execute mode
 - route messages for redirect-backed actions
+- revision IDs and workflow target state where available
+- relation field names and resolved reference IDs for relation operations
+- latest and published revision summaries for resolve operations
 - current display mode after a successful mode switch
-- uploaded local file path for media create/update operations
+- uploaded local file path or source URL for media create/update operations
 
 Optional JSON report file:
 
@@ -398,11 +545,33 @@ npm run entity:ops -- --input .\var\entity-batch.json --json
 6. Server deploy
 7. Server dry-run or execute smoke against the deployed runtime
 
+## Context recovery for a new chat
+
+Current verdict: keep `entity-ops` as the strategic content control surface and add only narrow runtime-backed primitives when repeated operator work exposes a real gap.
+
+This refactor was introduced after the SHANTUI SE420LCW / HYUNDAI HX520L content task showed three missing primitives:
+
+- media assets needed to be created from researched image URLs without a separate one-off download script
+- newly created equipment needed a safe way to attach itself to the existing rental service relation
+- content batches needed a runtime-backed path to submit, approve, publish, and resolve IDs/revisions without raw DB shortcuts
+
+The CLI is still deliberately not a full CMS graph compiler. It does not decide dependencies, invent publish order, or perform hidden owner-review bypasses. For unusual migrations, one-off scripts remain acceptable as an escape hatch, but the default path for repeated content operations should be `entity-ops` plus dry-run JSON reports.
+
+Implementation map:
+
+- `scripts/entity-ops.mjs`: CLI argument surface and report writing.
+- `lib/entity-ops/input.js`: input normalization, field allowlists, and form/body builders.
+- `lib/entity-ops/runner.js`: dry-run planning and execution routing.
+- `lib/entity-ops/client.js`: authenticated HTTP client for admin runtime routes.
+- `lib/entity-ops/io.js`: input decoding and text/JSON report formatting.
+- `app/api/admin/entities/[entityType]/lookup/route.js`: lookup payload that exposes enough revision state for workflow planning.
+
 ## Explicit non-goals
 
-- autonomous publish
-- owner-review automation
+- unconfirmed or autonomous publish
+- owner-review bypass automation
 - raw DB cleanup
 - raw storage cleanup
 - generic forensics shell
 - mixed verification/mutation mega-script
+- dependency-aware graph publishing

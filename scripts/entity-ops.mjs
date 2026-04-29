@@ -18,7 +18,7 @@ function printHelp() {
 
 Options:
   --input <file>           JSON or JSONL batch file
-  --kind <kind>            Default kind: entity | media | page_workspace | display_mode | removal
+  --kind <kind>            Default kind: entity | media | page_workspace | workflow | relation | resolve | display_mode | removal
   --entity-type <type>     Default entity type for entries without entityType
   --mode <mode>            Default mode for the selected kind
   --base-url <url>         Override APP_BASE_URL / ENTITY_OPS_BASE_URL

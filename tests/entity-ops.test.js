@@ -7,11 +7,15 @@ import {
   buildEntityDeleteFormData,
   buildEntitySaveFormData,
   buildFieldPreviewDiff,
+  buildMergedEntitySaveFields,
   buildMediaCreateFormData,
   buildMediaUpdateFormData,
   buildPageWorkspaceRequestBody,
   buildRemovalActionFormData,
   buildRemovalPurgeFormData,
+  buildWorkflowOwnerActionFormData,
+  buildWorkflowPublishFormData,
+  buildWorkflowSubmitFormData,
   normalizeEntityOperations,
   parseEntityOpsDocument
 } from "../lib/entity-ops/input.js";
@@ -105,6 +109,37 @@ test("entity ops normalizes media operation with collection membership and file 
   assert.equal(operation.fields.title, "Excavator");
 });
 
+test("entity ops normalizes media create from sourceUrl", () => {
+  const [operation] = normalizeEntityOperations([{
+    kind: "media",
+    mode: "create",
+    sourceUrl: "https://example.com/excavator.jpg",
+    filename: "source-excavator.jpg",
+    fields: {
+      title: "Excavator",
+      sourceNote: "Vendor page"
+    }
+  }]);
+
+  assert.equal(operation.kind, ENTITY_OPS_KINDS.MEDIA);
+  assert.equal(operation.sourceUrl, "https://example.com/excavator.jpg");
+  assert.equal(operation.filename, "source-excavator.jpg");
+  assert.equal(operation.filePath, "");
+  assert.equal(operation.fields.sourceNote, "Vendor page");
+});
+
+test("entity ops rejects media operation with both local file and sourceUrl", () => {
+  assert.throws(
+    () => normalizeEntityOperations([{
+      kind: "media",
+      mode: "create",
+      filePath: "./image.jpg",
+      sourceUrl: "https://example.com/image.jpg"
+    }]),
+    /cannot use both filePath and sourceUrl/
+  );
+});
+
 test("entity ops normalizes display mode operation", () => {
   const [operation] = normalizeEntityOperations([{
     kind: "display_mode",
@@ -139,6 +174,92 @@ test("entity ops normalizes page workspace operations with nested composition", 
   assert.equal(operation.mode, "save_composition");
   assert.equal(operation.match.pageType, "about");
   assert.deepEqual(operation.composition.sourceRefs.caseIds, ["case_1"]);
+});
+
+test("entity ops normalizes workflow operation with explicit publish confirmation", () => {
+  const [operation] = normalizeEntityOperations([{
+    kind: "workflow",
+    entityType: "equipment",
+    mode: "publish",
+    match: {
+      slug: "hyundai-hx520l"
+    },
+    confirmPublish: true
+  }]);
+
+  assert.equal(operation.kind, ENTITY_OPS_KINDS.WORKFLOW);
+  assert.equal(operation.entityType, "equipment");
+  assert.equal(operation.mode, "publish");
+  assert.equal(operation.match.slug, "hyundai-hx520l");
+  assert.equal(operation.confirmPublish, true);
+});
+
+test("entity ops normalizes workflow operation by direct revisionId without entityType", () => {
+  const [operation] = normalizeEntityOperations([{
+    kind: "workflow",
+    mode: "submit_to_review",
+    revisionId: "rev_direct_1"
+  }]);
+
+  assert.equal(operation.kind, ENTITY_OPS_KINDS.WORKFLOW);
+  assert.equal(operation.entityType, "");
+  assert.equal(operation.revisionId, "rev_direct_1");
+  assert.deepEqual(operation.match, {});
+  assert.equal(operation.label, "rev_direct_1");
+});
+
+test("entity ops normalizes relation operation with refs resolved later", () => {
+  const [operation] = normalizeEntityOperations([{
+    kind: "relation",
+    entityType: "service",
+    mode: "append",
+    match: {
+      slug: "arenda-tehniki"
+    },
+    field: "equipmentIds",
+    refs: [
+      { slug: "shantui-se420lcw" },
+      { entityType: "equipment", match: { slug: "hyundai-hx520l" } }
+    ]
+  }]);
+
+  assert.equal(operation.kind, ENTITY_OPS_KINDS.RELATION);
+  assert.equal(operation.entityType, "service");
+  assert.equal(operation.field, "equipmentIds");
+  assert.equal(operation.refs[0].entityType, "equipment");
+  assert.equal(operation.refs[0].match.slug, "shantui-se420lcw");
+  assert.equal(operation.refs[1].match.slug, "hyundai-hx520l");
+});
+
+test("entity ops rejects empty string relation refs before lookup", () => {
+  assert.throws(
+    () => normalizeEntityOperations([{
+      kind: "relation",
+      entityType: "service",
+      mode: "append",
+      match: {
+        slug: "arenda-tehniki"
+      },
+      field: "equipmentIds",
+      refs: [""]
+    }]),
+    /needs a non-empty entityId/
+  );
+});
+
+test("entity ops normalizes read-only resolve operation", () => {
+  const [operation] = normalizeEntityOperations([{
+    kind: "resolve",
+    entityType: "service",
+    match: {
+      slug: "arenda-tehniki"
+    }
+  }]);
+
+  assert.equal(operation.kind, ENTITY_OPS_KINDS.RESOLVE);
+  assert.equal(operation.mode, "entity");
+  assert.equal(operation.includePayload, true);
+  assert.equal(operation.match.slug, "arenda-tehniki");
 });
 
 test("entity ops normalizes removal maintenance operation", () => {
@@ -285,6 +406,23 @@ test("entity ops builds JSON body for page workspace route", () => {
   });
 });
 
+test("entity ops builds form data for workflow routes", () => {
+  const submitFormData = buildWorkflowSubmitFormData({
+    returnTo: "/admin/entities/service/entity_1"
+  });
+  const ownerFormData = buildWorkflowOwnerActionFormData({
+    comment: "Owner approved",
+    returnTo: "/admin/review/rev_1"
+  });
+  const publishFormData = buildWorkflowPublishFormData();
+
+  assert.equal(submitFormData.get("returnTo"), "/admin/entities/service/entity_1");
+  assert.equal(ownerFormData.get("action"), "approve");
+  assert.equal(ownerFormData.get("comment"), "Owner approved");
+  assert.equal(ownerFormData.get("errorReturnTo"), "/admin/review/rev_1");
+  assert.equal([...publishFormData.keys()].length, 0);
+});
+
 test("entity ops builds form data for display mode route", () => {
   const formData = buildDisplayModeFormData({
     displayMode: "published_only",
@@ -345,6 +483,27 @@ test("entity ops preview diff reads SEO values from nested payload shape", () =>
   );
 
   assert.deepEqual(diff, {});
+});
+
+test("entity ops builds full entity save fields when changing a relation", () => {
+  const fields = buildMergedEntitySaveFields("service", {
+    slug: "arenda-tehniki",
+    title: "Аренда спецтехники",
+    h1: "Аренда спецтехники",
+    summary: "Summary",
+    serviceScope: "Scope",
+    ctaVariant: "call",
+    equipmentIds: ["equipment_old"],
+    seo: {
+      metaTitle: "Meta"
+    }
+  }, {
+    equipmentIds: ["equipment_old", "equipment_new"]
+  });
+
+  assert.equal(fields.title, "Аренда спецтехники");
+  assert.equal(fields.metaTitle, "Meta");
+  assert.deepEqual(fields.equipmentIds, ["equipment_old", "equipment_new"]);
 });
 
 test("entity ops config falls back to seed superadmin credentials", () => {

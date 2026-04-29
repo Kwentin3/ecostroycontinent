@@ -292,3 +292,372 @@ test("entity ops runner creates media asset from local file path", async () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   }
 });
+
+test("entity ops runner creates media asset from source URL", async () => {
+  const originalFetch = global.fetch;
+  const fetchCalls = [];
+  let uploadedFile = null;
+  let uploadedTitle = "";
+
+  try {
+    global.fetch = async (url, options = {}) => {
+      fetchCalls.push({
+        url,
+        redirect: options.redirect
+      });
+
+      return new Response(Buffer.from("remote-image"), {
+        status: 200,
+        headers: {
+          "content-type": "image/jpeg"
+        }
+      });
+    };
+
+    const operations = normalizeEntityOperations([{
+      kind: "media",
+      mode: "create",
+      sourceUrl: "https://cdn.example.test/shantui",
+      filename: "shantui-se420lcw.jpg",
+      fields: {
+        title: "SHANTUI SE420LCW media"
+      }
+    }]);
+    const client = {
+      ...createBaseClient(),
+      createMediaAsset: async (formData) => {
+        uploadedFile = formData.get("file");
+        uploadedTitle = formData.get("title");
+
+        return {
+          ok: true,
+          item: { id: "media_remote_1" },
+          message: "Media uploaded"
+        };
+      }
+    };
+
+    const report = await runEntityOperations(client, operations, {
+      execute: true
+    });
+
+    assert.equal(report.ok, true);
+    assert.equal(report.summary.created, 1);
+    assert.deepEqual(fetchCalls, [{
+      url: "https://cdn.example.test/shantui",
+      redirect: "follow"
+    }]);
+    assert.equal(uploadedFile.name, "shantui-se420lcw.jpg");
+    assert.equal(uploadedFile.type, "image/jpeg");
+    assert.equal(await uploadedFile.text(), "remote-image");
+    assert.equal(uploadedTitle, "SHANTUI SE420LCW media");
+    assert.equal(report.items[0].filePath, "https://cdn.example.test/shantui");
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("entity ops runner publishes review revision through workflow route", async () => {
+  const operations = normalizeEntityOperations([{
+    kind: "workflow",
+    entityType: "equipment",
+    mode: "publish",
+    match: {
+      slug: "shantui-se420lcw"
+    },
+    confirmPublish: true
+  }]);
+  const calls = [];
+  const client = {
+    ...createBaseClient(),
+    lookupEntity: async (entityType, match) => {
+      calls.push({ type: "lookup", entityType, match });
+
+      return {
+        matched: true,
+        entity: {
+          id: "equipment_1"
+        },
+        latestRevision: {
+          id: "rev_equipment_1",
+          state: "review",
+          ownerReviewRequired: false,
+          ownerApprovalStatus: "not_required",
+          payload: {
+            slug: "shantui-se420lcw"
+          }
+        }
+      };
+    },
+    publishRevision: async (revisionId, formData) => {
+      calls.push({
+        type: "publish",
+        revisionId,
+        formDataType: formData.constructor.name
+      });
+
+      return {
+        location: "https://example.test/admin/entities/equipment/equipment_1?message=published",
+        message: "Published"
+      };
+    }
+  };
+
+  const report = await runEntityOperations(client, operations, {
+    execute: true
+  });
+
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.published, 1);
+  assert.deepEqual(calls, [
+    {
+      type: "lookup",
+      entityType: "equipment",
+      match: { slug: "shantui-se420lcw" }
+    },
+    {
+      type: "publish",
+      revisionId: "rev_equipment_1",
+      formDataType: "FormData"
+    }
+  ]);
+  assert.equal(report.items[0].revisionId, "rev_equipment_1");
+  assert.equal(report.items[0].location, "https://example.test/admin/entities/equipment/equipment_1?message=published");
+});
+
+test("entity ops runner submits direct revisionId workflow without entity lookup", async () => {
+  const operations = normalizeEntityOperations([{
+    kind: "workflow",
+    mode: "submit_to_review",
+    revisionId: "rev_direct_1",
+    returnTo: "/admin/review"
+  }]);
+  let submitCall = null;
+  const client = {
+    ...createBaseClient(),
+    submitRevisionForReview: async (revisionId, formData) => {
+      submitCall = {
+        revisionId,
+        returnTo: formData.get("returnTo")
+      };
+
+      return {
+        location: "https://example.test/admin/review/rev_direct_1",
+        message: "Ready"
+      };
+    }
+  };
+
+  const report = await runEntityOperations(client, operations, {
+    execute: true
+  });
+
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.submitted, 1);
+  assert.deepEqual(submitCall, {
+    revisionId: "rev_direct_1",
+    returnTo: "/admin/review"
+  });
+  assert.equal(report.items[0].entityType, "");
+  assert.equal(report.items[0].revisionId, "rev_direct_1");
+});
+
+test("entity ops runner blocks workflow publish without explicit confirmation", async () => {
+  const operations = normalizeEntityOperations([{
+    kind: "workflow",
+    entityType: "equipment",
+    mode: "publish",
+    match: {
+      slug: "hyundai-hx520l"
+    }
+  }]);
+  let publishCalled = false;
+  const client = {
+    ...createBaseClient(),
+    lookupEntity: async () => ({
+      matched: true,
+      entity: {
+        id: "equipment_2"
+      },
+      latestRevision: {
+        id: "rev_equipment_2",
+        state: "review",
+        ownerReviewRequired: false,
+        ownerApprovalStatus: "not_required"
+      }
+    }),
+    publishRevision: async () => {
+      publishCalled = true;
+    }
+  };
+
+  const report = await runEntityOperations(client, operations, {
+    execute: true
+  });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.summary.blocked, 1);
+  assert.equal(publishCalled, false);
+  assert.equal(report.items[0].reason, "publish requires confirmPublish=true.");
+});
+
+test("entity ops runner appends relation refs by slug and saves a full entity payload", async () => {
+  const operations = normalizeEntityOperations([{
+    kind: "relation",
+    entityType: "service",
+    mode: "append",
+    match: {
+      slug: "arenda-spectehniki"
+    },
+    field: "equipmentIds",
+    refs: [
+      { slug: "shantui-se420lcw" },
+      { slug: "hyundai-hx520l" }
+    ],
+    changeIntent: "Attach new excavator cards to rental service"
+  }]);
+  const lookups = [];
+  const savedFields = {};
+  const client = {
+    ...createBaseClient(),
+    lookupEntity: async (entityType, match) => {
+      lookups.push({ entityType, match });
+
+      if (entityType === "service") {
+        return {
+          matched: true,
+          entity: {
+            id: "service_1"
+          },
+          latestRevision: {
+            payload: {
+              slug: "arenda-spectehniki",
+              title: "Equipment rental",
+              h1: "Equipment rental",
+              summary: "We match equipment to the task.",
+              serviceScope: "Excavators and dump trucks",
+              ctaVariant: "call",
+              equipmentIds: ["equipment_existing"],
+              seo: {
+                metaTitle: "Equipment rental in Sochi"
+              }
+            }
+          }
+        };
+      }
+
+      if (match.slug === "shantui-se420lcw") {
+        return {
+          matched: true,
+          entity: {
+            id: "equipment_shantui"
+          }
+        };
+      }
+
+      return {
+        matched: true,
+        entity: {
+          id: "equipment_hyundai"
+        }
+      };
+    },
+    saveEntity: async (entityType, formData) => {
+      savedFields.entityType = entityType;
+      savedFields.entityId = formData.get("entityId");
+      savedFields.changeIntent = formData.get("changeIntent");
+      savedFields.title = formData.get("title");
+      savedFields.h1 = formData.get("h1");
+      savedFields.summary = formData.get("summary");
+      savedFields.serviceScope = formData.get("serviceScope");
+      savedFields.ctaVariant = formData.get("ctaVariant");
+      savedFields.metaTitle = formData.get("metaTitle");
+      savedFields.equipmentIds = formData.getAll("equipmentIds");
+
+      return {
+        ok: true,
+        entity: { id: "service_1" },
+        changedFields: ["equipmentIds"],
+        message: "Saved"
+      };
+    }
+  };
+
+  const report = await runEntityOperations(client, operations, {
+    execute: true
+  });
+
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.relationsChanged, 1);
+  assert.deepEqual(lookups, [
+    { entityType: "service", match: { slug: "arenda-spectehniki" } },
+    { entityType: "equipment", match: { slug: "shantui-se420lcw" } },
+    { entityType: "equipment", match: { slug: "hyundai-hx520l" } }
+  ]);
+  assert.deepEqual(savedFields, {
+    entityType: "service",
+    entityId: "service_1",
+    changeIntent: "Attach new excavator cards to rental service",
+    title: "Equipment rental",
+    h1: "Equipment rental",
+    summary: "We match equipment to the task.",
+    serviceScope: "Excavators and dump trucks",
+    ctaVariant: "call",
+    metaTitle: "Equipment rental in Sochi",
+    equipmentIds: ["equipment_existing", "equipment_shantui", "equipment_hyundai"]
+  });
+  assert.equal(report.items[0].relationField, "equipmentIds");
+  assert.deepEqual(report.items[0].resolvedIds, ["equipment_shantui", "equipment_hyundai"]);
+  assert.deepEqual(report.items[0].previewDiff.equipmentIds.after, [
+    "equipment_existing",
+    "equipment_shantui",
+    "equipment_hyundai"
+  ]);
+});
+
+test("entity ops runner resolves entity context without execute", async () => {
+  const operations = normalizeEntityOperations([{
+    kind: "resolve",
+    entityType: "service",
+    match: {
+      slug: "arenda-spectehniki"
+    }
+  }]);
+  const client = {
+    ...createBaseClient(),
+    lookupEntity: async () => ({
+      matched: true,
+      entity: {
+        id: "service_1",
+        entityType: "service"
+      },
+      latestRevision: {
+        id: "rev_service_1",
+        state: "draft",
+        payload: {
+          slug: "arenda-spectehniki",
+          equipmentIds: ["equipment_existing"]
+        }
+      },
+      activePublishedRevision: {
+        id: "rev_service_live",
+        state: "published",
+        payload: {
+          slug: "arenda-spectehniki"
+        }
+      }
+    })
+  };
+
+  const report = await runEntityOperations(client, operations, {
+    execute: false
+  });
+
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.resolved, 1);
+  assert.equal(report.summary.dryRun, undefined);
+  assert.equal(report.items[0].action, "resolve");
+  assert.equal(report.items[0].entity.id, "service_1");
+  assert.equal(report.items[0].latestRevision.id, "rev_service_1");
+  assert.deepEqual(report.items[0].payload.equipmentIds, ["equipment_existing"]);
+});

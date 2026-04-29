@@ -34,6 +34,9 @@ test("entity lookup route finds entity by slug", async () => {
             id: "rev_1",
             revisionNumber: 3,
             state: "draft",
+            ownerReviewRequired: true,
+            ownerApprovalStatus: "pending",
+            previewStatus: "ready",
             payload: { slug: "soil-removal", title: "Soil removal" }
           }
         ],
@@ -53,6 +56,9 @@ test("entity lookup route finds entity by slug", async () => {
   assert.equal(payload.matched, true);
   assert.equal(payload.entity.id, "service_1");
   assert.equal(payload.latestRevision.payload.slug, "soil-removal");
+  assert.equal(payload.latestRevision.ownerReviewRequired, true);
+  assert.equal(payload.latestRevision.ownerApprovalStatus, "pending");
+  assert.equal(payload.latestRevision.previewStatus, "ready");
 });
 
 test("entity lookup route returns unmatched payload when entity is missing", async () => {

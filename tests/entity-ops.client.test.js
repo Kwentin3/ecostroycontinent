@@ -150,3 +150,87 @@ test("entity ops client surfaces redirect-backed removal errors", async () => {
     global.fetch = originalFetch;
   }
 });
+
+test("entity ops client posts workflow actions with session cookie", async () => {
+  const originalFetch = global.fetch;
+  const calls = [];
+
+  try {
+    global.fetch = async (url, options) => {
+      calls.push({
+        url,
+        method: options.method,
+        cookie: options.headers.get("cookie"),
+        formKeys: [...options.body.keys()]
+      });
+
+      return new Response("", {
+        status: 303,
+        headers: {
+          location: "/admin/review/rev_1?message=Workflow+done"
+        }
+      });
+    };
+
+    const client = createClient();
+    client.cookieJar = "session=abc123";
+
+    const submitForm = new FormData();
+    submitForm.set("returnTo", "/admin/entities/equipment/equipment_1");
+    const ownerForm = new FormData();
+    ownerForm.set("action", "approve");
+    const publishForm = new FormData();
+
+    const submit = await client.submitRevisionForReview("rev_1", submitForm);
+    const owner = await client.approveOwnerAction("rev_1", ownerForm);
+    const publish = await client.publishRevision("rev_1", publishForm);
+
+    assert.equal(submit.message, "Workflow done");
+    assert.equal(owner.message, "Workflow done");
+    assert.equal(publish.message, "Workflow done");
+    assert.deepEqual(calls, [
+      {
+        url: "https://example.com/api/admin/revisions/rev_1/submit",
+        method: "POST",
+        cookie: "session=abc123",
+        formKeys: ["returnTo"]
+      },
+      {
+        url: "https://example.com/api/admin/revisions/rev_1/owner-action",
+        method: "POST",
+        cookie: "session=abc123",
+        formKeys: ["action"]
+      },
+      {
+        url: "https://example.com/api/admin/revisions/rev_1/publish",
+        method: "POST",
+        cookie: "session=abc123",
+        formKeys: []
+      }
+    ]);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("entity ops client treats no-access redirects as workflow failures", async () => {
+  const originalFetch = global.fetch;
+
+  try {
+    global.fetch = async () => new Response("", {
+      status: 303,
+      headers: {
+        location: "/admin/no-access"
+      }
+    });
+
+    const client = createClient();
+
+    await assert.rejects(
+      () => client.publishRevision("rev_1", new FormData()),
+      /no-access/
+    );
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
