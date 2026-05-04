@@ -216,3 +216,121 @@ Latest committed/pushed tooling commit:
    - `npm run yandex:check-webmaster`
 5. Store `YANDEX_WEBMASTER_HOST_ID` if Webmaster returns a host match.
 6. Create/update this report with final token exchange, goals and Webmaster result.
+
+## Follow-Up Completion: Owner Code Exchanged
+
+Time: 2026-05-04, after owner placed `YANDEX_OAUTH_AUTH_CODE` in ignored local `.env`.
+
+Final status: `metrica_ready_webmaster_host_missing`.
+
+### Token Exchange
+
+Action:
+
+- The one-time code was copied to a root-only temp file on the Selectel VM.
+- A guarded server-side exchange was executed from the deployed runtime image.
+- The guard verified granted scopes before writing any token to server env.
+
+Result:
+
+- `token_received`: yes
+- `token_stored`: yes
+- `YANDEX_METRICA_OAUTH_TOKEN`: present in `/opt/ecostroycontinent/runtime/.env`
+- `YANDEX_WEBMASTER_OAUTH_TOKEN`: present in `/opt/ecostroycontinent/runtime/.env`
+- `YANDEX_OAUTH_REFRESH_TOKEN`: present in `/opt/ecostroycontinent/runtime/.env`
+- Granted scopes: `metrika:read`, `metrika:write`, `webmaster:hostinfo`, `webmaster:verify`
+- Full access token, refresh token and authorization code were not printed and were not written to this report.
+
+After env update, `repo-app-1` was recreated through the canonical runner compose checkout so the container received the new env.
+
+### Metrica Check
+
+Command:
+
+- `docker exec repo-app-1 npm run yandex:check-metrica`
+
+Result:
+
+- `status`: `ok`
+- `counter_id`: `109037342`
+- counter name: `Экостройконтинент`
+- counter status: `Active`
+- permission: `own`
+- site: `ecostroycontinent.ru`
+
+### Metrica Goal Bootstrap
+
+First attempt result:
+
+- `bootstrap-metrica-goals` returned HTTP 400 for every goal.
+- Root cause: the Management API accepts JS goal `"type": "action"`, but the condition type for the JS event example is `"exact"`, not `"action"`.
+- Official reference used: https://yandex.com/dev/metrika/en/management/addgoal-example
+
+Fix:
+
+- Commit: `f2bf8ac fix: align Yandex Metrica JS goal conditions`
+- Updated `requiredGoalToPayload()` to create conditions with `"type": "exact"`.
+- Existing-goal diff accepts both `"exact"` and legacy `"action"` condition types to avoid accidental duplicates.
+
+Validation:
+
+- `npm test -- tests/yandex-bootstrap-tooling.test.js` -> pass, `454/454`
+- `npm run build` -> pass
+- Build run: https://github.com/Kwentin3/ecostroycontinent/actions/runs/25335524602
+- Deploy run: https://github.com/Kwentin3/ecostroycontinent/actions/runs/25335632631
+- Image: `ghcr.io/kwentin3/ecostroycontinent-app@sha256:d67a6185f915f7cbf49c0fa1b6ae517d2402aaefd772c97b2eccac913264c950`
+
+Final bootstrap result:
+
+- `status`: `ok`
+- created goals: `11`
+- failed goals: `0`
+- needs_review: `0`
+- missing: `0`
+
+Created Metrica goals:
+
+- `click_to_call` -> `556869891`
+- `click_to_telegram` -> `556869892`
+- `click_to_whatsapp` -> `556869893`
+- `form_start` -> `556869894`
+- `form_submit` -> `556869895`
+- `cta_click` -> `556869896`
+- `contact_link_click` -> `556869897`
+- `gallery_open` -> `556869898`
+- `faq_expand` -> `556869899`
+- `case_card_click` -> `556869900`
+- `service_link_click` -> `556869901`
+
+Post-bootstrap `check-metrica`:
+
+- `existing_goals_count`: `11`
+- all required goals already existed
+- `missing`: `[]`
+
+### Webmaster Check
+
+Command:
+
+- `docker exec repo-app-1 npm run yandex:check-webmaster`
+
+Result:
+
+- `status`: `ok`
+- token has Webmaster API access
+- `hosts_count`: `0`
+- `YANDEX_WEBMASTER_HOST_ID`: not stored because no matching host was returned
+
+Next owner action:
+
+- Add `https://ecostroycontinent.ru/` to Yandex Webmaster under the same account and verify ownership.
+- Rerun `npm run yandex:check-webmaster`.
+- If `suggested_env.YANDEX_WEBMASTER_HOST_ID` appears, store it in `/opt/ecostroycontinent/runtime/.env` and recreate `repo-app-1`.
+
+### Final Security Notes
+
+- No secrets were committed.
+- `.env` remained ignored.
+- The report contains no OAuth token, refresh token, authorization code or client secret.
+- Server env now contains tokens only in `/opt/ecostroycontinent/runtime/.env`.
+- Public/UI/read model were not changed to expose any token.
