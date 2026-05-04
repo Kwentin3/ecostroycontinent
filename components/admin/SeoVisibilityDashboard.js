@@ -40,12 +40,12 @@ function sourceTone(status) {
 
 function sourceLabel(source) {
   return {
-    first_party_events: "First-party events",
+    first_party_events: "Внутренние события",
     yandex_metrica: "Яндекс Метрика",
     yandex_webmaster: "Яндекс Вебмастер",
     google_search_console: "Google Search Console",
-    lead_domain: "Lead domain",
-    content_core: "Content Core"
+    lead_domain: "Домен лидов",
+    content_core: "Контентное ядро"
   }[source] || source;
 }
 
@@ -75,6 +75,39 @@ function typeLabel(type) {
     case: "Кейс",
     page: "Страница"
   }[type] || "Маршрут";
+}
+
+function publishStatusLabel(status) {
+  return {
+    published: "Опубликовано",
+    draft: "Черновик",
+    review: "На проверке"
+  }[status] || "Нет данных";
+}
+
+function recommendationStatusLabel(status) {
+  return {
+    new: "Новая",
+    accepted: "Принята",
+    in_progress: "В работе",
+    done: "Готово",
+    dismissed: "Отклонена",
+    not_needed: "Не требуется"
+  }[status] || status || "Нет данных";
+}
+
+function attributionSafetyLabel(value) {
+  return {
+    clean_single_change: "Одиночное изменение",
+    mixed_change: "Смешанное изменение",
+    tracking_changed_nearby: "Менялся трекинг",
+    insufficient_after_period: "Мало данных после публикации",
+    source_stale: "Источник устарел",
+    source_missing: "Источник отсутствует",
+    lead_domain_missing: "Лиды недоступны",
+    not_attributable: "Нельзя атрибутировать",
+    unknown: "Неизвестно"
+  }[value] || "Неизвестно";
 }
 
 function metricValue(key, metric) {
@@ -199,7 +232,7 @@ function PagesTable({ pages, selectedPagePath, period }) {
       <section className={styles.panel}>
         <div className={styles.emptyBox}>
           <h3>Страницы не найдены</h3>
-          <p className={styles.muted}>Нет опубликованных страниц Content Core или агрегированных URL за период.</p>
+          <p className={styles.muted}>Нет опубликованных страниц контентного ядра или агрегированных адресов за период.</p>
         </div>
       </section>
     );
@@ -248,7 +281,7 @@ function PagesTable({ pages, selectedPagePath, period }) {
                 </td>
                 <td>{typeLabel(page.entity_type)}</td>
                 <td>{priorityLabel(page.priority || page.commercial_priority)}</td>
-                <td><span className={styles.statusText}>{page.publish_status}</span></td>
+                <td><span className={styles.statusText}>{publishStatusLabel(page.publish_status)}</span></td>
                 <td>{page.indexation_state}</td>
                 <td>{formatNumber(page.impressions)}</td>
                 <td>{formatNumber(page.clicks)}</td>
@@ -258,7 +291,7 @@ function PagesTable({ pages, selectedPagePath, period }) {
                 <td>{page.proof_path_summary?.summary}</td>
                 <td>{page.primary_issue}</td>
                 <td>{page.recommended_next_action}</td>
-                <td>{page.recommendation_status}</td>
+                <td>{recommendationStatusLabel(page.recommendation_status)}</td>
               </tr>
             ))}
           </tbody>
@@ -301,20 +334,20 @@ function PageDetail({ detail }) {
           <p className={styles.muted}>{detail.page_identity.page_path}</p>
         </div>
         <span className={`${styles.badge} ${styles.badgeInfo}`}>
-          {detail.before_after_summary.attribution_safety}
+          {attributionSafetyLabel(detail.before_after_summary.attribution_safety)}
         </span>
       </div>
       <div className={styles.detailColumns}>
         <DetailList
           items={[
             ["Тип", typeLabel(detail.page_identity.entity_type)],
-            ["Revision", detail.current_published_revision?.revision_id || "нет данных"],
-            ["Title", detail.seo_fields_summary?.title || "не указан"],
-            ["Description", detail.seo_fields_summary?.description || "не указан"],
+            ["Ревизия", detail.current_published_revision?.revision_id || "нет данных"],
+            ["Заголовок title", detail.seo_fields_summary?.title || "не указан"],
+            ["Описание description", detail.seo_fields_summary?.description || "не указан"],
             ["H1", detail.seo_fields_summary?.h1 || "не указан"],
-            ["Indexation", detail.indexation_summary.indexation_state],
-            ["Sitemap", detail.indexation_summary.sitemap_state],
-            ["Canonical", detail.indexation_summary.canonical_state]
+            ["Индексация", detail.indexation_summary.indexation_state],
+            ["Карта сайта", detail.indexation_summary.sitemap_state],
+            ["Канонический адрес", detail.indexation_summary.canonical_state]
           ]}
         />
         <DetailList
@@ -324,11 +357,11 @@ function PageDetail({ detail }) {
             ["CTR", formatPercent(detail.visibility_summary.ctr)],
             ["Визиты", formatNumber(detail.traffic_summary.visits)],
             ["Мобильный трафик", formatPercent(detail.traffic_summary.mobile_share)],
-            ["click_to_call", formatNumber(detail.intent_events_summary.click_to_call)],
+            ["Клик по телефону", formatNumber(detail.intent_events_summary.click_to_call)],
             ["Telegram", formatNumber(detail.intent_events_summary.click_to_telegram)],
             ["WhatsApp", formatNumber(detail.intent_events_summary.click_to_whatsapp)],
-            ["form_start", formatNumber(detail.intent_events_summary.form_start)],
-            ["form_submit", formatNumber(detail.intent_events_summary.form_submit)]
+            ["Начали форму", formatNumber(detail.intent_events_summary.form_start)],
+            ["Отправили форму", formatNumber(detail.intent_events_summary.form_submit)]
           ]}
         />
       </div>
@@ -351,7 +384,7 @@ function SemanticClickMap({ items }) {
   return (
     <section className={styles.detailPanel} aria-labelledby="semantic-click-map">
       <div className={styles.detailHeader}>
-        <h3 id="semantic-click-map">Semantic click map</h3>
+        <h3 id="semantic-click-map">Семантическая карта кликов</h3>
         <p className={styles.muted}>Не pixel heatmap: только смысловые элементы страницы.</p>
       </div>
       <div className={styles.clickMap}>
@@ -381,7 +414,7 @@ function Recommendations({ recommendations }) {
   return (
     <section className={styles.panel} aria-labelledby="recommendations">
       <div className={styles.panelHeader}>
-        <h3 id="recommendations">Backlog рекомендаций</h3>
+        <h3 id="recommendations">Очередь рекомендаций</h3>
         <p className={styles.muted}>Рекомендация не публикует контент и не доказывает эффект.</p>
       </div>
       <div className={styles.recommendations}>
@@ -418,7 +451,7 @@ function Diagnostics({ readModel }) {
     <section className={styles.panel} aria-labelledby="source-diagnostics">
       <div className={styles.panelHeader}>
         <h3 id="source-diagnostics">Диагностика данных</h3>
-        <p className={styles.muted}>UI и будущий LLM видят одинаковые stale/not_configured состояния.</p>
+        <p className={styles.muted}>Интерфейс и будущий копилот видят одинаковые состояния источников.</p>
       </div>
       <div className={styles.diagnostics}>
         {Object.entries(states).map(([source, item]) => (
@@ -430,7 +463,7 @@ function Diagnostics({ readModel }) {
               </span>
             </div>
             <p className={styles.smallText}>
-              rows: {formatNumber(item.rows_imported)} · unmapped: {formatNumber(item.unmapped_url_count)}
+              строк импортировано: {formatNumber(item.rows_imported)} · несопоставленных URL: {formatNumber(item.unmapped_url_count)}
             </p>
             {item.safe_error_message ? <p className={styles.muted}>{item.safe_error_message}</p> : null}
           </article>

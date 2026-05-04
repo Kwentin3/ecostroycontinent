@@ -110,6 +110,20 @@ const currentRows = [
   }
 ];
 
+function hasUnsafeReadModelKey(value) {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  return Object.entries(value).some(([key, nested]) => {
+    if (["anonymous_id", "session_id", "user_agent", "ip_address", "form_values", "raw_events"].includes(key)) {
+      return true;
+    }
+
+    return hasUnsafeReadModelKey(nested);
+  });
+}
+
 test("daily aggregate pure summarizer excludes admin/bot/preview traffic from business metrics", () => {
   const rows = summarizeAnalyticsEvents([
     {
@@ -193,6 +207,7 @@ test("read model returns contract sections and treats lead domain as unavailable
   assert.equal(readModel.page_list[0].page_path, "/services/stroitelstvo-domov-pod-klyuch");
   assert.equal(readModel.semantic_click_map.some((item) => item.element_id === "proof_gallery_open"), true);
   assert.equal(readModel.recommendations.some((item) => item.issue_type === "unmapped_analytics_url"), true);
+  assert.equal(hasUnsafeReadModelKey(readModel), false);
 });
 
 test("LLM context packet is task-specific and excludes raw data surfaces", async () => {

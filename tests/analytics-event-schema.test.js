@@ -48,6 +48,24 @@ test("analytics event validation accepts allowed first-party event payload", () 
   assert.equal(typeof result.event.event_fingerprint, "string");
 });
 
+test("analytics event validation works without cookies or client anonymous id", () => {
+  const result = validateAnalyticsEventPayload({
+    event_type: "page_view",
+    page_path: "/services/stroitelstvo-domov-pod-klyuch",
+    metadata: {
+      analytics_id: "page",
+      section_id: "page"
+    }
+  }, {
+    request: requestWithHeaders()
+  });
+
+  assert.equal(result.ok, true);
+  assert.match(result.event.anonymous_id, /^anon_server_/);
+  assert.match(result.event.session_id, /^session_server_/);
+  assert.equal(result.event.is_excluded, false);
+});
+
 test("analytics event validation rejects unknown event_type", () => {
   const result = validateAnalyticsEventPayload(validPayload({ event_type: "lead_created" }));
 
@@ -63,11 +81,20 @@ test("analytics event validation rejects form values and sensitive metadata", ()
       token: "sk-test-secret"
     }
   }));
+  const arbitraryDumpResult = validateAnalyticsEventPayload(validPayload({
+    metadata: {
+      analytics_id: "hero_primary_cta",
+      section_id: "hero",
+      arbitrary_payload_dump: "anything"
+    }
+  }));
 
   assert.equal(rootResult.ok, false);
   assert.match(rootResult.errors.join(" "), /not allowed/);
   assert.equal(metadataResult.ok, false);
   assert.match(metadataResult.errors.join(" "), /not allowed/);
+  assert.equal(arbitraryDumpResult.ok, false);
+  assert.match(arbitraryDumpResult.errors.join(" "), /not allowed/);
 });
 
 test("analytics exclusion marks admin users, bots, preview and QA traffic", () => {

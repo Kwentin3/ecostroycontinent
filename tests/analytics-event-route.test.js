@@ -62,6 +62,51 @@ test("event endpoint stores valid event and returns terminal accepted response",
   assert.equal(capturedEvent.published_revision_id, "revision_service_1");
 });
 
+test("event endpoint accepts payload without anonymous id and caps oversized bodies", async () => {
+  let capturedEvent = null;
+
+  const response = await POST(buildRequest({
+    event_type: "page_view",
+    page_path: "/services/stroitelstvo-domov-pod-klyuch",
+    metadata: {
+      analytics_id: "page",
+      section_id: "page"
+    }
+  }), {}, {
+    getCurrentUser: async () => null,
+    resolveRouteEntity: async () => ({
+      page_path: "/services/stroitelstvo-domov-pod-klyuch",
+      entity_type: "service",
+      entity_id: "service_1",
+      page_kind: "service_detail",
+      published_revision_id: "revision_service_1",
+      resolution_status: "resolved"
+    }),
+    recordAnalyticsEvent: async (event) => {
+      capturedEvent = event;
+      return { stored: true, id: "analytics_event_anonless" };
+    },
+    recordUnmappedUrlDiagnostic: async () => ({ id: "noop" })
+  });
+  const tooLarge = await POST(new Request("http://localhost/api/analytics/events", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": String(20 * 1024)
+    },
+    body: "{}"
+  }), {}, {
+    getCurrentUser: async () => {
+      throw new Error("oversized payload should stop before auth lookup");
+    }
+  });
+
+  assert.equal(response.status, 202);
+  assert.match(capturedEvent.anonymous_id, /^anon_server_/);
+  assert.match(capturedEvent.session_id, /^session_server_/);
+  assert.equal(tooLarge.status, 413);
+});
+
 test("event endpoint excludes admin user behavior from business aggregates", async () => {
   let capturedEvent = null;
 

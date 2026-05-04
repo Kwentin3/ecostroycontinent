@@ -12,10 +12,11 @@ test("admin visibility UI route is wired to read model and action-first Russian 
   assert.match(pageSource, /buildSeoDashboardReadModel/);
   assert.match(pageSource, /activeHref="\/admin\/visibility"/);
   assert.match(componentSource, /Что делать сейчас/);
-  assert.match(componentSource, /Semantic click map/);
-  assert.match(componentSource, /Lead domain не готов|Lead domain/);
+  assert.match(componentSource, /Семантическая карта кликов/);
+  assert.match(componentSource, /Домен лидов/);
   assert.match(componentSource, /Google Search Console/);
-  assert.match(componentSource, /Backlog рекомендаций/);
+  assert.match(componentSource, /Очередь рекомендаций/);
+  assert.equal(/First-party|Lead domain|Content Core|Backlog|Semantic click map|Revision|Indexation|rows:|unmapped:/.test(componentSource), false);
   assert.match(rendererSource, /data-analytics-id/);
   assert.match(rendererSource, /AnalyticsTracker/);
 });

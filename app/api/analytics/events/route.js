@@ -10,6 +10,7 @@ const JSON_HEADERS = {
   "X-Content-Type-Options": "nosniff",
   "X-Robots-Tag": "noindex, nofollow"
 };
+const MAX_EVENT_BODY_BYTES = 16 * 1024;
 
 function json(body, status) {
   return NextResponse.json(body, {
@@ -27,6 +28,11 @@ export async function POST(request, _context, deps = {}) {
     recordUnmappedUrlDiagnostic,
     ...deps
   };
+  const contentLength = Number(request.headers.get("content-length") || 0);
+
+  if (contentLength > MAX_EVENT_BODY_BYTES) {
+    return json({ ok: false, error: "PAYLOAD_TOO_LARGE", message: "Событие слишком большое." }, 413);
+  }
 
   let payload;
 
