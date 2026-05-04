@@ -171,7 +171,7 @@ YANDEX_WEBMASTER_OAUTH_TOKEN=
     "type": "action",
     "conditions": [
       {
-        "type": "action",
+        "type": "exact",
         "url": "click_to_call"
       }
     ]

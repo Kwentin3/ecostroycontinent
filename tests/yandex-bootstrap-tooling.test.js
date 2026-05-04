@@ -78,7 +78,7 @@ test("Metrica goal diff avoids duplicates by action condition or existing name",
       id: 101,
       name: "Phone click",
       type: "action",
-      conditions: [{ type: "action", url: "click_to_call" }]
+      conditions: [{ type: "exact", url: "click_to_call" }]
     },
     {
       id: 102,
@@ -129,7 +129,7 @@ test("Metrica bootstrap creates only missing goals and does not duplicate existi
       id: 101,
       name: "Phone click",
       type: "action",
-      conditions: [{ type: "action", url: "click_to_call" }]
+      conditions: [{ type: "exact", url: "click_to_call" }]
     },
     {
       id: 102,
@@ -155,7 +155,7 @@ test("Metrica bootstrap creates only missing goals and does not duplicate existi
       id: 200 + index,
       name: goalName,
       type: "action",
-      conditions: [{ type: "action", url: goalName }]
+      conditions: [{ type: "exact", url: goalName }]
     }));
 
     assert.match(url, /\/goals$/);

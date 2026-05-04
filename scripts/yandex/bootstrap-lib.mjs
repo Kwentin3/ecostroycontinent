@@ -411,7 +411,7 @@ export function requiredGoalToPayload(goalId) {
       type: "action",
       conditions: [
         {
-          type: "action",
+          type: "exact",
           url: goalId
         }
       ]
@@ -426,7 +426,7 @@ export function goalActionConditions(goal) {
 
   return goal.conditions
     .filter((condition) => condition && typeof condition === "object")
-    .filter((condition) => condition.type === "action" && typeof condition.url === "string")
+    .filter((condition) => ["exact", "action"].includes(condition.type) && typeof condition.url === "string")
     .map((condition) => condition.url);
 }
 
