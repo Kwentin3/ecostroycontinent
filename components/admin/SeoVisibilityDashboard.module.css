@@ -1,0 +1,372 @@
+.dashboard {
+  --seo-bg: #f6f4ee;
+  --seo-panel: #ffffff;
+  --seo-muted: #647269;
+  --seo-border: #d8d1c5;
+  --seo-green: #24513d;
+  --seo-amber: #8a5a00;
+  --seo-red: #8b2e2e;
+  --seo-blue: #285c7d;
+  display: grid;
+  gap: 18px;
+}
+
+.topBar,
+.panel,
+.detailPanel,
+.tablePanel {
+  border: 1px solid var(--seo-border);
+  border-radius: 8px;
+  background: var(--seo-panel);
+  box-shadow: 0 12px 28px rgba(31, 42, 34, 0.07);
+}
+
+.topBar {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.topBarHeader,
+.panelHeader,
+.detailHeader,
+.diagnosticRow,
+.recommendationRow {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.titleStack {
+  display: grid;
+  gap: 4px;
+}
+
+.titleStack h3,
+.panelHeader h3,
+.detailHeader h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.2;
+}
+
+.subtitle,
+.muted,
+.metricHint,
+.smallText {
+  margin: 0;
+  color: var(--seo-muted);
+  line-height: 1.45;
+}
+
+.periodTabs,
+.sourceBadges,
+.actions,
+.chips,
+.metaList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.periodLink,
+.button,
+.secondaryButton,
+.disabledButton,
+.chip,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--seo-border);
+  padding: 6px 10px;
+  color: #22352b;
+  background: #fff;
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.2;
+}
+
+.periodLinkActive,
+.button {
+  border-color: var(--seo-green);
+  background: var(--seo-green);
+  color: #fff;
+}
+
+.secondaryButton {
+  border-color: rgba(36, 81, 61, 0.2);
+  background: rgba(36, 81, 61, 0.07);
+  color: var(--seo-green);
+}
+
+.disabledButton {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.badgeOk {
+  border-color: rgba(36, 81, 61, 0.2);
+  background: #e5f2ea;
+  color: var(--seo-green);
+}
+
+.badgeWarn {
+  border-color: rgba(138, 90, 0, 0.18);
+  background: #fff3d8;
+  color: var(--seo-amber);
+}
+
+.badgeBad {
+  border-color: rgba(139, 46, 46, 0.18);
+  background: #fde8e5;
+  color: var(--seo-red);
+}
+
+.badgeInfo {
+  border-color: rgba(40, 92, 125, 0.18);
+  background: #e7f0f6;
+  color: var(--seo-blue);
+}
+
+.warningBox,
+.emptyBox {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid rgba(138, 90, 0, 0.18);
+  border-radius: 8px;
+  background: #fff8e8;
+}
+
+.actionGrid,
+.metricGrid,
+.sourceGrid,
+.detailGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.actionGrid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.metricGrid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.sourceGrid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.detailGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  align-items: start;
+}
+
+.panel,
+.detailPanel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.actionCard,
+.metricCard,
+.sourceCard,
+.clickMapItem,
+.diagnosticCard {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid rgba(36, 81, 61, 0.12);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfaf6;
+}
+
+.actionCardHigh {
+  border-color: rgba(139, 46, 46, 0.22);
+  background: #fff7f5;
+}
+
+.actionCardMedium {
+  border-color: rgba(138, 90, 0, 0.22);
+  background: #fffaf0;
+}
+
+.actionTitle,
+.metricValue,
+.sourceValue {
+  margin: 0;
+  color: #1f2a22;
+  font-weight: 750;
+}
+
+.actionTitle {
+  font-size: 1rem;
+}
+
+.metricValue {
+  font-size: 1.55rem;
+}
+
+.sourceValue {
+  font-size: 1.25rem;
+}
+
+.tablePanel {
+  overflow: hidden;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--seo-border);
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.88rem;
+}
+
+.table th {
+  background: #f8f5ee;
+  color: #405047;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.pageLink {
+  color: var(--seo-green);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.pageLink:hover,
+.pageLink:focus-visible,
+.periodLink:focus-visible,
+.button:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 3px solid rgba(36, 81, 61, 0.2);
+  outline-offset: 2px;
+}
+
+.statusText {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #eee8dd;
+  color: #405047;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.detailColumns {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.definitionList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.definitionList div {
+  display: grid;
+  gap: 2px;
+}
+
+.definitionList dt {
+  color: var(--seo-muted);
+  font-size: 0.78rem;
+}
+
+.definitionList dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 650;
+}
+
+.clickMap {
+  display: grid;
+  gap: 8px;
+}
+
+.clickMapItem {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.clickBar {
+  grid-column: 1 / -1;
+  height: 7px;
+  border-radius: 999px;
+  background: #e8e1d6;
+  overflow: hidden;
+}
+
+.clickBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--seo-green);
+}
+
+.recommendations {
+  display: grid;
+  gap: 10px;
+}
+
+.recommendationRow {
+  padding: 12px;
+  border: 1px solid var(--seo-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.diagnostics {
+  display: grid;
+  gap: 10px;
+}
+
+.diagnosticCard {
+  background: #fff;
+}
+
+@media (max-width: 1180px) {
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .topBarHeader,
+  .panelHeader,
+  .detailHeader {
+    display: grid;
+  }
+
+  .metricGrid,
+  .sourceGrid,
+  .actionGrid {
+    grid-template-columns: 1fr;
+  }
+}

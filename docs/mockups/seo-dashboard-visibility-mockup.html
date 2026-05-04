@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Видимость - мокап SEO-дашборда</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-2: #f9fafc;
+      --text: #172033;
+      --muted: #667085;
+      --line: #dfe5ef;
+      --green: #16803c;
+      --green-bg: #e9f8ee;
+      --blue: #155eef;
+      --blue-bg: #eaf1ff;
+      --amber: #b45f06;
+      --amber-bg: #fff3dc;
+      --red: #b42318;
+      --red-bg: #fff0ed;
+      --gray-bg: #eef1f6;
+      --shadow: 0 12px 30px rgba(21, 31, 53, 0.08);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.45;
+    }
+
+    button, input { font: inherit; }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      min-height: 36px;
+      border-radius: 7px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: #b8c3d6; background: #fbfcff; }
+    button:focus-visible, a:focus-visible { outline: 3px solid rgba(21, 94, 239, 0.25); outline-offset: 2px; }
+    button[aria-pressed="true"], .primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .secondary { background: var(--surface-2); }
+
+    .page {
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow { color: var(--muted); font-size: 13px; margin: 0 0 4px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(28px, 4vw, 42px); margin-bottom: 4px; letter-spacing: 0; }
+    h2 { font-size: 20px; margin-bottom: 12px; }
+    h3 { font-size: 16px; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); margin-bottom: 0; }
+
+    .toolbar, .periods, .badges, .actions, .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toolbar {
+      justify-content: flex-end;
+      max-width: 760px;
+    }
+
+    .badge, .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .ok { color: var(--green); background: var(--green-bg); border-color: #c7edd2; }
+    .warn { color: var(--amber); background: var(--amber-bg); border-color: #ffe0a3; }
+    .bad { color: var(--red); background: var(--red-bg); border-color: #ffd3cc; }
+    .neutral { color: #475467; background: var(--gray-bg); border-color: #d7deeb; }
+    .info { color: var(--blue); background: var(--blue-bg); border-color: #c9d9ff; }
+
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .section { margin-top: 16px; }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+    .section-head p { color: var(--muted); margin: 2px 0 0; }
+
+    .priority-list { display: grid; gap: 12px; }
+    .priority-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--blue);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--surface-2);
+    }
+    .priority-card.high { border-left-color: var(--red); }
+    .priority-card.medium { border-left-color: var(--amber); }
+    .priority-card h3 { margin-bottom: 6px; }
+    .micro { color: var(--muted); font-size: 13px; }
+    .metric-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 9px 0; }
+    .metric-row strong { display: block; font-size: 18px; }
+    .metric-row span { color: var(--muted); font-size: 12px; }
+
+    .metric-card strong {
+      display: block;
+      font-size: 26px;
+      margin: 8px 0 2px;
+      letter-spacing: 0;
+    }
+    .metric-card small { display: block; color: var(--muted); min-height: 36px; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 1080px; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #f0f4fa; color: #475467; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    td { font-size: 13px; }
+    tr:last-child td { border-bottom: 0; }
+    .path { color: var(--muted); font-size: 12px; word-break: break-word; }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kv { border: 1px solid var(--line); border-radius: 7px; padding: 10px; background: var(--surface-2); }
+    .kv span { display: block; color: var(--muted); font-size: 12px; }
+    .kv strong { display: block; margin-top: 2px; }
+
+    .proof-list, .diagnostic-list, .click-map, .source-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .proof-list li, .diagnostic-list li, .click-map li, .source-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-2);
+    }
+
+    .bar {
+      height: 8px;
+      background: #e8edf5;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .bar i { display: block; height: 100%; background: var(--blue); border-radius: inherit; }
+
+    .copilot {
+      border: 1px solid #bfd2ff;
+      background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
+    }
+    .copilot-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .answer {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 14px;
+    }
+    .answer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+    .answer-grid div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; padding: 10px; }
+    .answer-grid strong { display: block; margin-bottom: 4px; }
+    .answer ul { margin: 0; padding-left: 18px; }
+
+    .notice {
+      border: 1px solid #ffe0a3;
+      background: var(--amber-bg);
+      color: #7a4100;
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .state-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .state-box {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 11px;
+      background: var(--surface-2);
+    }
+    .state-box strong { display: block; margin-bottom: 4px; }
+
+    .empty-demo {
+      border: 1px dashed #c3ccdc;
+      border-radius: var(--radius);
+      padding: 14px;
+      background: #fbfcff;
+    }
+
+    @media (max-width: 1100px) {
+      .topbar, .grid-2 { grid-template-columns: 1fr; }
+      .toolbar { justify-content: flex-start; }
+      .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3, .state-strip, .answer-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .page { width: min(100% - 20px, 1480px); padding-top: 14px; }
+      .grid-4, .grid-3, .state-strip, .answer-grid, .detail-grid { grid-template-columns: 1fr; }
+      .priority-card { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .actions button, .copilot-buttons button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Админка / Видимость</p>
+        <h1>Видимость</h1>
+        <p class="subtitle">Трафик, поисковая видимость, обращения и рекомендации</p>
+      </div>
+      <div class="toolbar" aria-label="Панель управления источниками">
+        <div class="periods" aria-label="Период отчёта">
+          <button type="button" data-period="7">7 дней</button>
+          <button type="button" data-period="28" aria-pressed="true">28 дней</button>
+          <button type="button" data-period="90">90 дней</button>
+        </div>
+        <div class="badges">
+          <span class="badge ok">Яндекс Метрика: ok</span>
+          <span class="badge ok">Яндекс Вебмастер: ok</span>
+          <span class="badge warn">Google Search Console: не подключен</span>
+          <span class="badge ok">First-party события: ok</span>
+        </div>
+        <button type="button" class="primary">Проверить источники</button>
+        <button type="button" class="secondary">Настройки интеграций</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <h2>Что делать сейчас</h2>
+          <p>Приоритеты за выбранный период: где теряем клики, контактные действия или доказательства на странице.</p>
+        </div>
+        <span class="badge info" id="periodLabel">Период: 28 дней</span>
+      </div>
+      <div class="priority-list">
+        <article class="priority-card high">
+          <div>
+            <h3>Страница “Строительство домов под ключ” получает трафик, но почти не даёт обращений</h3>
+            <p class="micro">Сигнал: трафик есть, контактных действий мало, proof path слабый.</p>
+            <div class="metric-row">
+              <div><strong>312</strong><span>визитов</span></div>
+              <div><strong>1</strong><span>контактное действие</span></div>
+              <div><strong>Высокий</strong><span>приоритет</span></div>
+            </div>
+            <p><strong>Следующее действие:</strong> проверить CTA и доказательства на первом экране.</p>
+          </div>
+          <div class="actions">
+            <button type="button">Открыть страницу</button>
+            <button type="button" class="primary">Создать рекомендацию</button>
+          </div>
+        </article>
+        <article class="priority-card high">
+          <div>
+            <h3>Низкий CTR по странице “Монолитные работы”</h3>
+            <div class="metric-row">
+              <div><strong>1 240</strong><span>показов</span></div>
+              <div><strong>18</strong><span>кликов</span></div>
+              <div><strong>1,45%</strong><span>CTR</span></div>
+            </div>
+            <p><strong>Следующее действие:</strong> проверить title, description и H1 на соответствие запросам.</p>
+          </div>
+          <div class="actions">
+            <button type="button">Посмотреть запросы</button>
+          </div>
+        </article>
+        <article class="priority-card medium">
+          <div>
+            <h3>У страницы услуги нет связанного кейса</h3>
+            <p class="micro">Тип: proof gap. Пользователи открывают галерею, но не переходят к обращению.</p>
+            <p><strong>Следующее действие:</strong> запросить кейс, фото или подтверждённые факты у владельца.</p>
+          </div>
+          <div class="actions">
+            <button type="button">Сформулировать запрос владельцу</button>
+          </div>
+        </article>
+        <article class="priority-card medium">
+          <div>
+            <h3>3 URL из Метрики не сопоставлены с сущностями сайта</h3>
+            <p class="micro">Возможны старые адреса, query string, canonical mismatch или проблема redirect.</p>
+            <p><strong>Следующее действие:</strong> проверить нормализацию URL и карту публичных маршрутов.</p>
+          </div>
+          <div class="actions">
+            <button type="button">Открыть диагностику</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section grid grid-4" aria-label="Обзорные метрики">
+      <article class="card metric-card"><span class="micro">Визиты</span><strong>5 840</strong><small>+12% к прошлому периоду. Метрика обновлена 2 часа назад.</small></article>
+      <article class="card metric-card"><span class="micro">Органический трафик</span><strong>3 210</strong><small>Яндекс даёт 74% органики; Google не подключён как поисковый контур.</small></article>
+      <article class="card metric-card"><span class="micro">Показы в Яндексе</span><strong>18 640</strong><small>Яндекс Вебмастер обновлён сегодня в 07:10.</small></article>
+      <article class="card metric-card"><span class="micro">Клики из поиска</span><strong>486</strong><small>Есть страницы с высоким показом и CTR ниже 2%.</small></article>
+      <article class="card metric-card"><span class="micro">CTR</span><strong>2,61%</strong><small>Среднее по Яндексу; для услуг нужен разбор по странице.</small></article>
+      <article class="card metric-card"><span class="micro">Контактные действия</span><strong>42</strong><small>Считаются first-party события: звонки, мессенджеры, формы.</small></article>
+      <article class="card metric-card"><span class="micro">Заявки / лиды</span><strong>Пока нет</strong><small>Lead domain не готов. Лиды отделены от контактных действий.</small></article>
+      <article class="card metric-card"><span class="micro">Визит -> контакт</span><strong>0,72%</strong><small>Данных достаточно для гипотез, но не для обещаний роста.</small></article>
+    </section>
+
+    <section class="section grid grid-2">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <h2>Страницы</h2>
+            <p>Рабочий список SEO-специалиста: проблема, доказательство и следующее действие в одной строке.</p>
+          </div>
+          <span class="badge warn">1 источник not_configured</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Страница</th>
+                <th>Тип</th>
+                <th>Приоритет</th>
+                <th>Публикация</th>
+                <th>Показы</th>
+                <th>Клики</th>
+                <th>CTR</th>
+                <th>Визиты</th>
+                <th>Контакты</th>
+                <th>Proof path</th>
+                <th>Проблема</th>
+                <th>Следующее действие</th>
+                <th>Рекомендация</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Строительство домов под ключ</strong><div class="path">/services/stroitelstvo-domov-pod-klyuch</div></td>
+                <td>Услуга</td>
+                <td><span class="pill bad">Высокий</span></td>
+                <td>Published</td>
+                <td>2 100</td>
+                <td>64</td>
+                <td>3,05%</td>
+                <td>420</td>
+                <td>2</td>
+                <td>нет кейса / есть галерея / нет FAQ</td>
+                <td>Трафик есть, обращений мало</td>
+                <td>Усилить CTA и proof path</td>
+                <td><span class="pill info">new</span></td>
+              </tr>
+              <tr>
+                <td><strong>Монолитные работы</strong><div class="path">/services/monolitnye-raboty</div></td>
+                <td>Услуга</td>
+                <td><span class="pill bad">Высокий</span></td>
+                <td>Published</td>
+                <td>1 240</td>
+                <td>18</td>
+                <td>1,45%</td>
+                <td>126</td>
+                <td>1</td>
+                <td>есть кейс / нет FAQ / CTA ниже первого экрана</td>
+                <td>Низкий CTR</td>
+                <td>Проверить title/description/H1</td>
+                <td><span class="pill warn">accepted</span></td>
+              </tr>
+              <tr>
+                <td><strong>Дом в Сочи</strong><div class="path">/cases/dom-v-sochi</div></td>
+                <td>Кейс</td>
+                <td><span class="pill warn">Средний</span></td>
+                <td>Published</td>
+                <td>680</td>
+                <td>31</td>
+                <td>4,56%</td>
+                <td>210</td>
+                <td>3</td>
+                <td>галерея сильная / нет перехода к услуге</td>
+                <td>Интерес к галерее не ведёт к услуге</td>
+                <td>Добавить связанный CTA</td>
+                <td><span class="pill warn">in_progress</span></td>
+              </tr>
+              <tr>
+                <td><strong>Контакты</strong><div class="path">/contacts</div></td>
+                <td>Страница</td>
+                <td><span class="pill warn">Средний</span></td>
+                <td>Published</td>
+                <td>390</td>
+                <td>22</td>
+                <td>5,64%</td>
+                <td>520</td>
+                <td>4</td>
+                <td>нет формы / есть телефон / есть мессенджеры</td>
+                <td>Много переходов в контакты, мало форм</td>
+                <td>Проверить контактный блок</td>
+                <td><span class="pill neutral">new</span></td>
+              </tr>
+              <tr>
+                <td><strong>Реконструкция здания в Адлере</strong><div class="path">/cases/rekonstruktsiya-zdaniya-v-adlere</div></td>
+                <td>Кейс</td>
+                <td><span class="pill neutral">Низкий</span></td>
+                <td>Published</td>
+                <td>280</td>
+                <td>14</td>
+                <td>5,00%</td>
+                <td>94</td>
+                <td>2</td>
+                <td>есть галерея / есть услуга / нет FAQ</td>
+                <td>Данных мало</td>
+                <td>Наблюдать до следующей проверки</td>
+                <td><span class="pill neutral">dismissed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <aside class="card" aria-label="Карточка выбранной страницы">
+        <h2>Выбранная страница</h2>
+        <h3>Строительство домов под ключ</h3>
+        <p class="path">/services/stroitelstvo-domov-pod-klyuch</p>
+        <div class="detail-grid">
+          <div class="kv"><span>Тип</span><strong>Service</strong></div>
+          <div class="kv"><span>Статус</span><strong>Published</strong></div>
+          <div class="kv"><span>published revision id</span><strong>rev_service_0048</strong></div>
+          <div class="kv"><span>Индексация</span><strong>индексируется</strong></div>
+          <div class="kv"><span>Sitemap</span><strong>есть</strong></div>
+          <div class="kv"><span>Canonical</span><strong>ok</strong></div>
+        </div>
+
+        <div class="section">
+          <h3>SEO-поля</h3>
+          <div class="kv"><span>title</span><strong>Строительство домов под ключ в Сочи</strong></div>
+          <div class="kv"><span>description</span><strong>Проектирование и строительство частных домов в Большом Сочи.</strong></div>
+          <div class="kv"><span>H1</span><strong>Строительство домов под ключ</strong></div>
+        </div>
+
+        <div class="section detail-grid">
+          <div class="kv"><span>Показы</span><strong>2 100</strong></div>
+          <div class="kv"><span>Клики</span><strong>64</strong></div>
+          <div class="kv"><span>CTR</span><strong>3,05%</strong></div>
+          <div class="kv"><span>Визиты</span><strong>420</strong></div>
+          <div class="kv"><span>Мобильный трафик</span><strong>80%</strong></div>
+          <div class="kv"><span>click_to_call</span><strong>0</strong></div>
+          <div class="kv"><span>click_to_telegram</span><strong>1</strong></div>
+          <div class="kv"><span>form_start / form_submit</span><strong>2 / 0</strong></div>
+        </div>
+
+        <div class="section">
+          <h3>Proof path</h3>
+          <ul class="proof-list">
+            <li><span>Кейс</span><span class="pill bad">нет</span></li>
+            <li><span>Галерея</span><span class="pill ok">есть</span></li>
+            <li><span>FAQ</span><span class="pill bad">нет</span></li>
+            <li><span>CTA</span><span class="pill ok">есть</span></li>
+            <li><span>Отзывы</span><span class="pill bad">нет</span></li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h3>Диагностика</h3>
+          <ul class="diagnostic-list">
+            <li><span>Есть трафик, но почти нет контактных действий</span><span class="pill bad">сигнал</span></li>
+            <li><span>Proof path слабый</span><span class="pill warn">проверить</span></li>
+            <li><span>80% трафика с мобильных</span><span class="pill info">важно</span></li>
+          </ul>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section grid grid-2">
+      <div class="card">
+        <h2>Semantic Click Map</h2>
+        <p class="micro">Не пиксельная тепловая карта, а смысловые события страницы. Люди смотрят галерею, но редко доходят до обращения.</p>
+        <ul class="click-map">
+          <li><div>CTA увидели<div class="bar"><i style="width: 100%"></i></div></div><strong>210</strong></li>
+          <li><div>CTA кликнули<div class="bar"><i style="width: 2%"></i></div></div><strong>3</strong></li>
+          <li><div>Телефон<div class="bar"><i style="width: 0%"></i></div></div><strong>0</strong></li>
+          <li><div>Telegram<div class="bar"><i style="width: 1%"></i></div></div><strong>1</strong></li>
+          <li><div>WhatsApp<div class="bar"><i style="width: 1%"></i></div></div><strong>1</strong></li>
+          <li><div>Галерею открыли<div class="bar"><i style="width: 23%"></i></div></div><strong>48</strong></li>
+          <li><div>FAQ раскрыли<div class="bar"><i style="width: 0%"></i></div></div><strong>0</strong></li>
+          <li><div>Кейс открыли<div class="bar"><i style="width: 0%"></i></div></div><strong>0</strong></li>
+          <li><div>До блока контактов дошли<div class="bar"><i style="width: 26%"></i></div></div><strong>26%</strong></li>
+        </ul>
+      </div>
+
+      <div class="card copilot">
+        <div class="section-head">
+          <div>
+            <h2>Копилот</h2>
+            <p>Контекстный помощник для объяснений и черновиков. Не публикует и не меняет контент.</p>
+          </div>
+          <span class="badge info">confidence: medium</span>
+        </div>
+        <div class="copilot-buttons" aria-label="Контекстные действия копилота">
+          <button type="button" data-answer="page" aria-pressed="true">Объяснить страницу</button>
+          <button type="button" data-answer="why">Почему есть трафик, но нет обращений?</button>
+          <button type="button" data-answer="next">Предложить следующие действия</button>
+          <button type="button" data-answer="draft">Создать черновик рекомендации</button>
+          <button type="button" data-answer="owner">Сформулировать запрос владельцу</button>
+          <button type="button" data-answer="before">Сравнить до/после</button>
+        </div>
+        <div class="answer" id="copilotAnswer">
+          <p><strong>Краткий вывод:</strong> по странице видно, что трафик есть, но контактных действий мало. Это не доказывает, что проблема именно в CTA, но является сильным сигналом к проверке.</p>
+          <div class="answer-grid">
+            <div><strong>Факты</strong><ul><li>420 визитов за 28 дней</li><li>2 контактных действия</li><li>80% трафика с мобильных</li></ul></div>
+            <div><strong>Гипотезы</strong><ul><li>CTA слишком слабый или низко расположен</li><li>Не хватает кейса рядом с первым CTA</li></ul></div>
+            <div><strong>Действия</strong><ul><li>Поднять телефон и мессенджеры выше</li><li>Добавить кейс, FAQ и подписи к галерее</li></ul></div>
+            <div><strong>Ограничения</strong><ul><li>Лиды пока не подключены</li><li>Причинность проверяется после публикации</li></ul></div>
+          </div>
+          <p class="micro" style="margin-top: 12px;">Evidence used: first_party_aggregate, yandex_metrica, yandex_webmaster, content_core. Ответ является объяснением и черновиком, не командой на публикацию.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section card">
+      <div class="section-head">
+        <div>
+          <h2>Backlog рекомендаций</h2>
+          <p>Задачи для SEO-специалиста и владельца материалов. Статусы показывают работу, а не автопубликацию.</p>
+        </div>
+        <button type="button">Экспортировать список</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Рекомендация</th>
+              <th>Страница</th>
+              <th>Доказательство</th>
+              <th>Приоритет</th>
+              <th>Владелец</th>
+              <th>Статус</th>
+              <th>Следующая проверка</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Поднять CTA выше на странице услуги</td><td>Строительство домов под ключ</td><td>420 визитов, 2 контакта</td><td><span class="pill bad">Высокий</span></td><td>SEO-специалист</td><td><span class="pill info">new</span></td><td>2026-05-14</td></tr>
+            <tr><td>Добавить кейс к услуге</td><td>Фасадные работы</td><td>нет связанного кейса</td><td><span class="pill bad">Высокий</span></td><td>Владелец</td><td><span class="pill warn">accepted</span></td><td>2026-05-12</td></tr>
+            <tr><td>Переписать title/description</td><td>Монолитные работы</td><td>1 240 показов, CTR 1,45%</td><td><span class="pill bad">Высокий</span></td><td>SEO-специалист</td><td><span class="pill warn">in_progress</span></td><td>2026-05-10</td></tr>
+            <tr><td>Добавить FAQ по срокам и этапам</td><td>Реконструкция и капитальный ремонт зданий</td><td>FAQ отсутствует, мобильный трафик 76%</td><td><span class="pill warn">Средний</span></td><td>Редактор</td><td><span class="pill neutral">done</span></td><td>2026-05-20</td></tr>
+            <tr><td>Проверить мобильную кнопку звонка</td><td>Контакты</td><td>много переходов, мало форм</td><td><span class="pill warn">Средний</span></td><td>Администратор</td><td><span class="pill neutral">dismissed</span></td><td>не требуется</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section grid grid-2">
+      <div class="card">
+        <h2>Источники трафика</h2>
+        <p class="micro">Yandex-first порядок: Яндекс показан первым, Google остаётся вторым контуром после подключения.</p>
+        <div class="source-list">
+          <div class="source-row"><strong>organic_yandex</strong><span>2 370 визитов / 24 контакта / 1,01% / +16%</span></div>
+          <div class="source-row"><strong>direct</strong><span>1 180 / 7 / 0,59% / +4%</span></div>
+          <div class="source-row"><strong>referral</strong><span>620 / 3 / 0,48% / -8%</span></div>
+          <div class="source-row"><strong>telegram</strong><span>510 / 5 / 0,98% / +22%</span></div>
+          <div class="source-row"><strong>whatsapp</strong><span>240 / 2 / 0,83% / +6%</span></div>
+          <div class="source-row"><strong>maps_or_business_directory</strong><span>360 / 1 / 0,28% / stale</span></div>
+          <div class="source-row"><strong>organic_google</strong><span>410 / 0 / 0% / не полный контур</span></div>
+          <div class="source-row"><strong>unknown</strong><span>150 / 0 / 0% / требует разметки</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Состояние источников данных</h2>
+        <div class="state-strip">
+          <div class="state-box"><strong>First-party events</strong><span class="badge ok">ok</span><p class="micro">Обновлено 20 минут назад.</p></div>
+          <div class="state-box"><strong>Яндекс Метрика</strong><span class="badge ok">ok</span><p class="micro">Последний импорт: 2 часа назад.</p></div>
+          <div class="state-box"><strong>Яндекс Вебмастер</strong><span class="badge ok">ok</span><p class="micro">Индексация и показы доступны.</p></div>
+          <div class="state-box"><strong>Google Search Console</strong><span class="badge warn">not_configured</span><p class="micro">Не участвует в выводах по видимости.</p></div>
+          <div class="state-box"><strong>Lead domain</strong><span class="badge warn">not_ready</span><p class="micro">Лиды не считаются как обращения.</p></div>
+        </div>
+        <div class="notice">Данные по лидам пока недоступны. Конверсия считается по контактным действиям: звонок, мессенджер, отправка формы.</div>
+        <div class="empty-demo section">
+          <h3>Пример empty / stale состояния</h3>
+          <p><strong>Google Search Console не подключён.</strong> Сравнение с Google и запросы Google скрыты до настройки источника.</p>
+          <p><strong>maps_or_business_directory stale.</strong> Последняя успешная загрузка была 5 дней назад, выводы по этому источнику ограничены.</p>
+          <p><strong>Unmapped URL warning:</strong> 3 URL из Метрики не сопоставлены с сущностями сайта. Возможны старые адреса, query string или проблема canonical/redirect.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const periodLabel = document.querySelector("#periodLabel");
+    document.querySelectorAll("[data-period]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-period]").forEach((item) => item.setAttribute("aria-pressed", "false"));
+        button.setAttribute("aria-pressed", "true");
+        periodLabel.textContent = `Период: ${button.dataset.period} дней`;
+      });
+    });
+
+    const answers = {
+      page: "По странице видно, что трафик есть, но контактных действий мало. Это не доказывает, что проблема именно в CTA, но является сильным сигналом к проверке.",
+      why: "Главный разрыв находится между интересом и обращением: 420 визитов, 48 открытий галереи и только 2 контактных действия. Возможные причины: слабый первый CTA, недостаточно доказательств рядом с CTA, отсутствие кейса и FAQ.",
+      next: "Следующие действия: поднять телефон и мессенджеры выше, добавить связанный кейс, добавить FAQ по срокам и этапам, проверить мобильный контактный блок, затем назначить дату проверки после публикации.",
+      draft: "Черновик рекомендации: усилить первый экран страницы услуги. Доказательство: 420 визитов и 2 контактных действия за 28 дней. Гипотеза: пользователю не хватает быстрого контакта и proof path до принятия решения.",
+      owner: "Запрос владельцу: нужны фото или кейс по строительству дома в Большом Сочи, подтверждённые этапы работ, ограничения по срокам и факты, которые можно безопасно использовать в FAQ и подписях к галерее.",
+      before: "Сравнение до/после пока ограничено: последняя рекомендация ещё не опубликована, базовая точка есть только за текущие 28 дней. Не стоит делать вывод о результате до следующей проверки."
+    };
+
+    document.querySelectorAll("[data-answer]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-answer]").forEach((item) => item.setAttribute("aria-pressed", "false"));
+        button.setAttribute("aria-pressed", "true");
+        document.querySelector("#copilotAnswer > p").innerHTML = `<strong>Краткий вывод:</strong> ${answers[button.dataset.answer]}`;
+      });
+    });
+  </script>
+</body>
+</html>

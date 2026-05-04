@@ -20,6 +20,7 @@ import {
   buildServiceStructuredData,
   serializeStructuredData
 } from "../../lib/public-launch/seo-structured-data.js";
+import { AnalyticsTracker } from "./AnalyticsTracker.js";
 import styles from "./public-ui.module.css";
 
 const THEME_CLASS_NAMES = Object.freeze({
@@ -80,6 +81,50 @@ const UNDER_CONSTRUCTION_MOSAIC_TILES = Object.freeze([
     imageUrl: "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=900&q=80"
   }
 ]);
+
+function getContactAnalyticsEvent(href = "") {
+  if (href.startsWith("tel:")) {
+    return "click_to_call";
+  }
+
+  if (/t\.me|telegram/i.test(href)) {
+    return "click_to_telegram";
+  }
+
+  if (/wa\.me|whatsapp/i.test(href)) {
+    return "click_to_whatsapp";
+  }
+
+  if (href === "/contacts" || href.startsWith("/contacts#")) {
+    return "contact_link_click";
+  }
+
+  return "cta_click";
+}
+
+function analyticsProps({
+  id,
+  event,
+  section,
+  entityType = "",
+  entityId = "",
+  targetType = "",
+  targetId = "",
+  navItem = "",
+  view = ""
+}) {
+  return {
+    "data-analytics-id": id,
+    "data-analytics-event": event,
+    "data-analytics-section": section,
+    "data-analytics-entity-type": entityType,
+    "data-analytics-entity-id": entityId,
+    "data-analytics-target-type": targetType,
+    "data-analytics-target-id": targetId,
+    "data-analytics-nav-item": navItem,
+    "data-analytics-view": view || undefined
+  };
+}
 
 function getThemeClassName(pageThemeKey) {
   return THEME_CLASS_NAMES[pageThemeKey || DEFAULT_LANDING_PAGE_THEME_KEY] ?? styles.themeEarthSand;
@@ -185,6 +230,9 @@ function GallerySection({
     <section
       id={sectionId}
       data-preview-section={sectionName}
+      data-analytics-id={`${sectionId}-gallery`}
+      data-analytics-section={sectionName}
+      data-analytics-view="gallery_open"
       className={getSectionClassName([styles.gallerySection, styles.previewSection], sectionLike)}
     >
       {title ? <h3>{title}</h3> : null}
@@ -248,12 +296,20 @@ function ContactAction({
 
   const label = action.label || defaultLabel;
   const href = action.href;
+  const props = analyticsProps({
+    id: action.key ? `contact_${action.key}` : `contact_${getContactAnalyticsEvent(href)}`,
+    event: getContactAnalyticsEvent(href),
+    section: "contact-action",
+    targetType: href.startsWith("/") ? "page" : "contact_channel",
+    targetId: href.startsWith("/") ? href : getContactAnalyticsEvent(href),
+    view: "cta_view"
+  });
 
   if (href.startsWith("/") || href.startsWith("#")) {
-    return <Link className={className} href={href}>{label}</Link>;
+    return <Link className={className} href={href} {...props}>{label}</Link>;
   }
 
-  return <a className={className} href={href}>{label}</a>;
+  return <a className={className} href={href} {...props}>{label}</a>;
 }
 
 function PublicContactMeta({ contactProjection, includeRegion = true }) {
@@ -278,7 +334,21 @@ function PublicContactMeta({ contactProjection, includeRegion = true }) {
     <div className={styles.publicShellMeta}>
       {metaItems.map((item) => {
         if (item.href) {
-          return <a key={item.key} href={item.href}>{item.label}</a>;
+          return (
+            <a
+              key={item.key}
+              href={item.href}
+              {...analyticsProps({
+                id: `header_contact_${item.key}`,
+                event: getContactAnalyticsEvent(item.href),
+                section: "public-shell-contact",
+                targetType: "contact_channel",
+                targetId: item.key
+              })}
+            >
+              {item.label}
+            </a>
+          );
         }
 
         return <span key={item.key}>{item.label}</span>;
@@ -298,7 +368,20 @@ function ContactDetailsItems({ contactProjection }) {
 
   return contactItems.map((item) => (
     <p key={item.key}>
-      {item.href ? <a href={item.href}>{item.label}</a> : item.label}
+      {item.href ? (
+        <a
+          href={item.href}
+          {...analyticsProps({
+            id: `contact_details_${item.key}`,
+            event: getContactAnalyticsEvent(item.href),
+            section: "contact-details",
+            targetType: "contact_channel",
+            targetId: item.key
+          })}
+        >
+          {item.label}
+        </a>
+      ) : item.label}
     </p>
   ));
 }
@@ -505,6 +588,7 @@ export function PublicPageShell({
       data-contact-consistency-token={contactProjection.consistencyToken}
     >
       <StructuredDataScripts items={structuredDataItems} />
+      <AnalyticsTracker />
       <header className={styles.publicShellHeader}>
         <div className={styles.publicShellBrand}>
           <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
@@ -516,6 +600,14 @@ export function PublicPageShell({
               href={item.href}
               className={`${styles.publicShellNavLink} ${activeSection === item.key ? styles.publicShellNavLinkActive : ""}`.trim()}
               aria-current={activeSection === item.key ? "page" : undefined}
+              {...analyticsProps({
+                id: `nav_${item.key}`,
+                event: item.href === "/contacts" ? "contact_link_click" : "service_link_click",
+                section: "main-nav",
+                targetType: "page",
+                targetId: item.href,
+                navItem: item.key
+              })}
             >
               {item.label}
             </Link>
@@ -529,7 +621,18 @@ export function PublicPageShell({
           <ul>
             {quickServiceLinks.map((item) => (
               <li key={item.key}>
-                <Link href={item.href}>{item.label}</Link>
+                <Link
+                  href={item.href}
+                  {...analyticsProps({
+                    id: `quick_service_${item.key}`,
+                    event: "service_link_click",
+                    section: "quick-services",
+                    targetType: "service",
+                    targetId: item.key
+                  })}
+                >
+                  {item.label}
+                </Link>
               </li>
             ))}
           </ul>
@@ -546,7 +649,19 @@ export function PublicPageShell({
         <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
         <nav className={styles.publicShellFooterNav} aria-label="Навигация в подвале">
           {navItems.map((item) => (
-            <Link key={`footer-${item.key}`} href={item.href} className={styles.publicShellFooterLink}>
+            <Link
+              key={`footer-${item.key}`}
+              href={item.href}
+              className={styles.publicShellFooterLink}
+              {...analyticsProps({
+                id: `footer_${item.key}`,
+                event: item.href === "/contacts" ? "contact_link_click" : "service_link_click",
+                section: "footer-nav",
+                targetType: "page",
+                targetId: item.href,
+                navItem: item.key
+              })}
+            >
               {item.label}
             </Link>
           ))}
@@ -706,7 +821,19 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
                   <article key={item.entityId} className={getSectionClassName(styles.card, section)}>
                     <h3>{item.title}</h3>
                     <p>{item.result}</p>
-                    <Link className={styles.actionLink} href={`/cases/${item.slug}`}>{PUBLIC_COPY.openCase}</Link>
+                    <Link
+                      className={styles.actionLink}
+                      href={`/cases/${item.slug}`}
+                      {...analyticsProps({
+                        id: `proof_case_${item.entityId || item.slug}`,
+                        event: "case_card_click",
+                        section: "proof-cases",
+                        targetType: "case",
+                        targetId: item.entityId || item.slug
+                      })}
+                    >
+                      {PUBLIC_COPY.openCase}
+                    </Link>
                   </article>
                 ))}
               </section>
@@ -805,7 +932,19 @@ export function PublicListPage({
                 <h2>{item.title}</h2>
                 <CaseLocationLabel location={item.location} />
                 <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
-                <Link className={styles.actionLink} href={`${itemHrefPrefix}/${item.slug}`}>{PUBLIC_COPY.listOpen}</Link>
+                <Link
+                  className={styles.actionLink}
+                  href={`${itemHrefPrefix}/${item.slug}`}
+                  {...analyticsProps({
+                    id: `list_${item.entityId || item.slug}`,
+                    event: itemHrefPrefix === "/cases" ? "case_card_click" : "service_link_click",
+                    section: "public-list",
+                    targetType: itemHrefPrefix === "/cases" ? "case" : "service",
+                    targetId: item.entityId || item.slug
+                  })}
+                >
+                  {PUBLIC_COPY.listOpen}
+                </Link>
               </article>
             ))}
           </section>
@@ -952,7 +1091,21 @@ export function ServicePage({
                 <h3>{item.title}</h3>
                 <CaseLocationLabel location={item.location} />
                 <p>{item.result}</p>
-                <Link className={styles.actionLink} href={`/cases/${item.slug}`}>{PUBLIC_COPY.openCase}</Link>
+                <Link
+                  className={styles.actionLink}
+                  href={`/cases/${item.slug}`}
+                  {...analyticsProps({
+                    id: `service_related_case_${item.entityId || item.slug}`,
+                    event: "case_card_click",
+                    section: "related-cases",
+                    entityType: "service",
+                    entityId: service.entityId || "",
+                    targetType: "case",
+                    targetId: item.entityId || item.slug
+                  })}
+                >
+                  {PUBLIC_COPY.openCase}
+                </Link>
               </article>
             ))}
           </section>
@@ -981,8 +1134,38 @@ export function ServicePage({
                 defaultLabel={PUBLIC_COPY.ctaFallback}
               />
             ))}
-            {relatedCases.length > 0 ? <Link className={styles.actionLink} href="/cases">Смотреть кейсы</Link> : null}
-            <Link className={styles.actionLinkSecondary} href="/contacts">Связаться</Link>
+            {relatedCases.length > 0 ? (
+              <Link
+                className={styles.actionLink}
+                href="/cases"
+                {...analyticsProps({
+                  id: "service_next_cases",
+                  event: "case_card_click",
+                  section: "next-steps",
+                  entityType: "service",
+                  entityId: service.entityId || "",
+                  targetType: "page",
+                  targetId: "/cases"
+                })}
+              >
+                Смотреть кейсы
+              </Link>
+            ) : null}
+            <Link
+              className={styles.actionLinkSecondary}
+              href="/contacts"
+              {...analyticsProps({
+                id: "service_next_contacts",
+                event: "contact_link_click",
+                section: "next-steps",
+                entityType: "service",
+                entityId: service.entityId || "",
+                targetType: "page",
+                targetId: "/contacts"
+              })}
+            >
+              Связаться
+            </Link>
           </div>
         </section>
       </main>
@@ -1046,7 +1229,21 @@ export function CasePage({
               <article key={service.entityId} className={styles.card}>
                 <h3>{service.title}</h3>
                 <p>{service.summary}</p>
-                <Link className={styles.actionLink} href={`/services/${service.slug}`}>{PUBLIC_COPY.openService}</Link>
+                <Link
+                  className={styles.actionLink}
+                  href={`/services/${service.slug}`}
+                  {...analyticsProps({
+                    id: `case_related_service_${service.entityId || service.slug}`,
+                    event: "service_link_click",
+                    section: "related-services",
+                    entityType: "case",
+                    entityId: item.entityId || "",
+                    targetType: "service",
+                    targetId: service.entityId || service.slug
+                  })}
+                >
+                  {PUBLIC_COPY.openService}
+                </Link>
               </article>
             ))}
           </section>
@@ -1073,8 +1270,36 @@ export function CasePage({
           <h2>Следующий шаг</h2>
           <p className={styles.note}>Выберите релевантную услугу или перейдите к контакту для запроса.</p>
           <div className={styles.linkRow}>
-            <Link className={styles.actionLink} href="/services">Перейти к услугам</Link>
-            <Link className={styles.actionLinkSecondary} href="/contacts">Оставить заявку</Link>
+            <Link
+              className={styles.actionLink}
+              href="/services"
+              {...analyticsProps({
+                id: "case_next_services",
+                event: "service_link_click",
+                section: "next-steps",
+                entityType: "case",
+                entityId: item.entityId || "",
+                targetType: "page",
+                targetId: "/services"
+              })}
+            >
+              Перейти к услугам
+            </Link>
+            <Link
+              className={styles.actionLinkSecondary}
+              href="/contacts"
+              {...analyticsProps({
+                id: "case_next_contacts",
+                event: "contact_link_click",
+                section: "next-steps",
+                entityType: "case",
+                entityId: item.entityId || "",
+                targetType: "page",
+                targetId: "/contacts"
+              })}
+            >
+              Оставить заявку
+            </Link>
           </div>
         </section>
       </main>
@@ -1186,7 +1411,19 @@ export function StandalonePage({
                   defaultLabel={PUBLIC_COPY.ctaFallback}
                 />
               ))}
-              <Link className={styles.actionLinkSecondary} href="/services">Открыть услуги</Link>
+              <Link
+                className={styles.actionLinkSecondary}
+                href="/services"
+                {...analyticsProps({
+                  id: "contacts_open_services",
+                  event: "service_link_click",
+                  section: "contact-request",
+                  targetType: "page",
+                  targetId: "/services"
+                })}
+              >
+                Открыть услуги
+              </Link>
             </div>
             <p id="contact-messengers" className={styles.note}>
               {contactProjection.messengers.length > 0
