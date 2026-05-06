@@ -1,0 +1,3017 @@
+{
+  "version": "0.1",
+  "generated_at": "2026-04-30T09:30:00+03:00",
+  "timezone": "Europe/Moscow",
+  "period": {
+    "label": "28 дней",
+    "start": "2026-04-02",
+    "end": "2026-04-29"
+  },
+  "comparison_period": {
+    "label": "предыдущие 28 дней",
+    "start": "2026-03-05",
+    "end": "2026-04-01"
+  },
+  "contract_scope": [
+    "source_health",
+    "overview",
+    "traffic_sources",
+    "search_visibility",
+    "page_list",
+    "selected_page_detail",
+    "semantic_click_map",
+    "recommendations",
+    "evidence_items",
+    "analytics_history",
+    "classified_content_changes",
+    "published_change_history",
+    "tracking_change_history"
+  ],
+  "privacy_filters_applied": [
+    "no_form_values",
+    "no_personal_data",
+    "no_raw_events",
+    "admin_bot_qa_excluded",
+    "external_queries_aggregate_only"
+  ],
+  "excluded_traffic_policy": {
+    "admin": "excluded_from_business_aggregates",
+    "bot": "excluded_from_business_aggregates",
+    "qa": "flagged_and_excluded_when_identified",
+    "preview": "excluded_from_business_aggregates",
+    "system_import": "not_counted_as_public_behavior",
+    "notes": "Mock policy for fixture; exact QA rules are future implementation decision."
+  },
+  "data_freshness": {
+    "first_party_events": "ok",
+    "yandex_metrica": "ok",
+    "yandex_webmaster": "ok",
+    "google_search_console": "not_configured",
+    "lead_domain": "not_ready",
+    "content_core": "ok"
+  },
+  "sources": [
+    {
+      "source_id": "first_party_events",
+      "display_name": "First-party события",
+      "source_kind": "internal",
+      "status": "ok",
+      "last_successful_at": "2026-04-30T09:10:00+03:00",
+      "last_attempted_at": "2026-04-30T09:10:00+03:00",
+      "imported_period_start": "2026-04-02",
+      "imported_period_end": "2026-04-29",
+      "safe_error_message": null,
+      "unmapped_url_count": 0,
+      "rows_imported": 18420,
+      "notes": "События агрегированы без raw payload и form values."
+    },
+    {
+      "source_id": "yandex_metrica",
+      "display_name": "Яндекс Метрика",
+      "source_kind": "external_import",
+      "status": "ok",
+      "last_successful_at": "2026-04-30T07:40:00+03:00",
+      "last_attempted_at": "2026-04-30T07:40:00+03:00",
+      "imported_period_start": "2026-04-02",
+      "imported_period_end": "2026-04-29",
+      "safe_error_message": null,
+      "unmapped_url_count": 3,
+      "rows_imported": 982,
+      "notes": "Источник трафика и поведенческие агрегаты доступны."
+    },
+    {
+      "source_id": "yandex_webmaster",
+      "display_name": "Яндекс Вебмастер",
+      "source_kind": "external_import",
+      "status": "ok",
+      "last_successful_at": "2026-04-30T08:20:00+03:00",
+      "last_attempted_at": "2026-04-30T08:20:00+03:00",
+      "imported_period_start": "2026-04-02",
+      "imported_period_end": "2026-04-29",
+      "safe_error_message": null,
+      "unmapped_url_count": 1,
+      "rows_imported": 436,
+      "notes": "Yandex-first источник видимости и индексации."
+    },
+    {
+      "source_id": "google_search_console",
+      "display_name": "Google Search Console",
+      "source_kind": "external_import",
+      "status": "not_configured",
+      "last_successful_at": null,
+      "last_attempted_at": null,
+      "imported_period_start": null,
+      "imported_period_end": null,
+      "safe_error_message": "Google Search Console не подключён. Google visibility не участвует в выводах.",
+      "unmapped_url_count": 0,
+      "rows_imported": 0,
+      "notes": "Second contour; not MVP-first for РФ/Yandex-first strategy."
+    },
+    {
+      "source_id": "lead_domain",
+      "display_name": "Lead domain",
+      "source_kind": "domain",
+      "status": "not_applicable",
+      "domain_readiness": "not_ready",
+      "last_successful_at": null,
+      "last_attempted_at": null,
+      "imported_period_start": null,
+      "imported_period_end": null,
+      "safe_error_message": "Lead/intake domain пока не готов. Лиды отделены от contact actions.",
+      "unmapped_url_count": 0,
+      "rows_imported": 0,
+      "notes": "Конверсия считается по контактным действиям."
+    },
+    {
+      "source_id": "content_core",
+      "display_name": "Content Core",
+      "source_kind": "content",
+      "status": "ok",
+      "last_successful_at": "2026-04-30T09:20:00+03:00",
+      "last_attempted_at": "2026-04-30T09:20:00+03:00",
+      "imported_period_start": null,
+      "imported_period_end": null,
+      "safe_error_message": null,
+      "unmapped_url_count": 0,
+      "rows_imported": 38,
+      "notes": "Content Core остаётся source of truth для сущностей и published revisions."
+    }
+  ],
+  "warnings": [
+    {
+      "warning_id": "warn_gsc_not_configured",
+      "type": "source_not_configured",
+      "severity": "medium",
+      "message": "Google Search Console не подключён. Google visibility скрыт до настройки источника.",
+      "source_id": "google_search_console"
+    },
+    {
+      "warning_id": "warn_lead_domain_not_ready",
+      "type": "lead_domain_not_ready",
+      "severity": "medium",
+      "message": "Данные по лидам пока недоступны. Конверсия считается по контактным действиям.",
+      "source_id": "lead_domain"
+    },
+    {
+      "warning_id": "warn_unmapped_urls",
+      "type": "unmapped_url",
+      "severity": "high",
+      "message": "3 URL из Метрики не сопоставлены с сущностями сайта. Возможны старые адреса, query string или проблема canonical/redirect.",
+      "source_id": "yandex_metrica"
+    },
+    {
+      "warning_id": "warn_maps_directory_stale",
+      "type": "source_stale",
+      "severity": "low",
+      "message": "Источник maps_or_business_directory обновлялся 5 дней назад; выводы по нему ограничены.",
+      "source_id": "maps_or_business_directory"
+    }
+  ],
+  "limitations": [
+    "Search query data is aggregate signal only and cannot be linked to a specific user, session, contact action or lead.",
+    "Lead domain is not ready; lead metrics are unavailable, not zero.",
+    "This fixture contains mock data and is not production truth.",
+    "Before/after summaries are preliminary when after-period sample is small."
+  ],
+  "overview": {
+    "metrics": [
+      {
+        "metric_id": "visits",
+        "label": "Визиты",
+        "value": 5840,
+        "unit": "count",
+        "comparison_value": 5210,
+        "delta_vs_previous_period": {
+          "absolute": 630,
+          "relative": 0.1209,
+          "label": "+12%"
+        },
+        "signal": "traffic_growth",
+        "explanation": "Общий трафик вырос, но рост неравномерный по услугам.",
+        "next_action": "Проверить страницы с ростом визитов и низкими контактными действиями.",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_overview_visits"
+        ]
+      },
+      {
+        "metric_id": "organic_visits",
+        "label": "Органический трафик",
+        "value": 3210,
+        "unit": "count",
+        "comparison_value": 2840,
+        "delta_vs_previous_period": {
+          "absolute": 370,
+          "relative": 0.1303,
+          "label": "+13%"
+        },
+        "signal": "organic_growth",
+        "explanation": "Яндекс даёт основную долю органики.",
+        "next_action": "Смотреть Yandex-first страницы с низким CTR и высоким коммерческим приоритетом.",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_overview_organic"
+        ]
+      },
+      {
+        "metric_id": "yandex_impressions",
+        "label": "Показы в Яндексе",
+        "value": 18640,
+        "unit": "count",
+        "comparison_value": 17120,
+        "delta_vs_previous_period": {
+          "absolute": 1520,
+          "relative": 0.0888,
+          "label": "+9%"
+        },
+        "signal": "visibility_available",
+        "explanation": "Видимость в Яндексе достаточна для поиска CTR-возможностей.",
+        "next_action": "Разобрать страницы с высоким показом и низким CTR.",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_overview_yandex_visibility"
+        ]
+      },
+      {
+        "metric_id": "yandex_clicks",
+        "label": "Клики из поиска",
+        "value": 486,
+        "unit": "count",
+        "comparison_value": 444,
+        "delta_vs_previous_period": {
+          "absolute": 42,
+          "relative": 0.0946,
+          "label": "+9%"
+        },
+        "signal": "clicks_growth_below_impression_opportunity",
+        "explanation": "Клики растут, но есть страницы с CTR ниже 2%.",
+        "next_action": "Проверить сниппеты и интент запросов.",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_overview_yandex_clicks"
+        ]
+      },
+      {
+        "metric_id": "ctr",
+        "label": "CTR",
+        "value": 0.0261,
+        "unit": "percent",
+        "comparison_value": 0.0259,
+        "delta_vs_previous_period": {
+          "absolute": 0.0002,
+          "relative": 0.0077,
+          "label": "+0,02 п.п."
+        },
+        "signal": "stable_ctr_with_page_level_gaps",
+        "explanation": "Средний CTR стабилен; проблема видна на уровне отдельных услуг.",
+        "next_action": "Не оценивать CTR только по среднему, открыть page list.",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_overview_ctr"
+        ]
+      },
+      {
+        "metric_id": "contact_actions",
+        "label": "Контактные действия",
+        "value": 42,
+        "unit": "count",
+        "comparison_value": 39,
+        "delta_vs_previous_period": {
+          "absolute": 3,
+          "relative": 0.0769,
+          "label": "+8%"
+        },
+        "signal": "intent_low_relative_to_visits",
+        "explanation": "Рост контактов слабее, чем рост визитов.",
+        "next_action": "Искать страницы с трафиком и низким visit_to_intent.",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_overview_contact_actions"
+        ]
+      },
+      {
+        "metric_id": "leads",
+        "label": "Заявки / лиды",
+        "value": null,
+        "unit": "status",
+        "comparison_value": null,
+        "delta_vs_previous_period": null,
+        "signal": "lead_domain_missing",
+        "explanation": "Lead domain пока не готов; лиды недоступны.",
+        "next_action": "Не смешивать лиды с contact actions до готовности lead/intake domain.",
+        "confidence": "insufficient",
+        "evidence_item_ids": [
+          "ev_lead_domain_missing"
+        ]
+      },
+      {
+        "metric_id": "visit_to_intent_conversion",
+        "label": "Визит -> контактное действие",
+        "value": 0.0072,
+        "unit": "percent",
+        "comparison_value": 0.0075,
+        "delta_vs_previous_period": {
+          "absolute": -0.0003,
+          "relative": -0.04,
+          "label": "-0,03 п.п."
+        },
+        "signal": "conversion_watch",
+        "explanation": "Конверсия по контактным действиям не растёт вместе с трафиком.",
+        "next_action": "Проверить CTA, мобильные контакты и proof path на приоритетных страницах.",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_overview_visit_to_intent"
+        ]
+      }
+    ],
+    "top_opportunities": [
+      {
+        "opportunity_id": "opp_service_houses_traffic_no_intent",
+        "label": "Строительство домов под ключ получает трафик, но почти не даёт обращений",
+        "linked_page_path": "/services/stroitelstvo-domov-pod-klyuch",
+        "signal": "traffic_no_intent",
+        "explanation": "420 визитов за 28 дней и 2 контактных действия.",
+        "next_action": "Проверить CTA и доказательства на первом экране.",
+        "priority": "high",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_page_houses_visits",
+          "ev_page_houses_contact_actions",
+          "ev_page_houses_proof_gap"
+        ]
+      },
+      {
+        "opportunity_id": "opp_monolith_low_ctr",
+        "label": "Низкий CTR по странице Монолитные работы",
+        "linked_page_path": "/services/monolitnye-raboty",
+        "signal": "low_ctr",
+        "explanation": "1 240 показов и 18 кликов, CTR 1,45%.",
+        "next_action": "Проверить title, description, H1 и соответствие интенту запросов.",
+        "priority": "high",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_page_monolith_ctr"
+        ]
+      },
+      {
+        "opportunity_id": "opp_facade_proof_gap",
+        "label": "Фасадные работы без связанного кейса",
+        "linked_page_path": "/services/fasadnye-raboty",
+        "signal": "weak_proof_path",
+        "explanation": "Есть трафик и галерея, но нет кейса и отзывов.",
+        "next_action": "Запросить кейс/фото у владельца.",
+        "priority": "medium",
+        "confidence": "low",
+        "evidence_item_ids": [
+          "ev_page_facade_proof_gap"
+        ]
+      }
+    ],
+    "top_losses": [
+      {
+        "loss_id": "loss_contacts_transition_no_leads",
+        "label": "Много переходов в контакты, мало форм",
+        "linked_page_path": "/contacts",
+        "signal": "contacts_transition_no_leads",
+        "explanation": "Контактные действия есть, но lead domain не позволяет подтвердить заявки.",
+        "next_action": "Проверить контактный блок и отдельно спроектировать lead tracking.",
+        "priority": "medium",
+        "confidence": "low",
+        "evidence_item_ids": [
+          "ev_contacts_actions"
+        ]
+      }
+    ],
+    "top_recommendations": [
+      "rec_001",
+      "rec_002",
+      "rec_003"
+    ],
+    "data_warnings": [
+      "warn_gsc_not_configured",
+      "warn_lead_domain_not_ready",
+      "warn_unmapped_urls",
+      "warn_maps_directory_stale"
+    ]
+  },
+  "traffic_sources": [
+    {
+      "source": "organic_yandex",
+      "display_name": "Поиск Яндекса",
+      "sort_order": 1,
+      "visits": 2370,
+      "users": 1980,
+      "contact_actions": 24,
+      "leads": null,
+      "conversion_rate": 0.0101,
+      "lead_conversion_rate": null,
+      "delta_vs_previous_period": {
+        "visits_absolute": 328,
+        "visits_relative": 0.1606,
+        "label": "+16%"
+      },
+      "confidence": "medium",
+      "notes": "Yandex-first основной органический источник.",
+      "evidence_item_ids": [
+        "ev_source_yandex"
+      ]
+    },
+    {
+      "source": "direct",
+      "display_name": "Прямые заходы",
+      "sort_order": 2,
+      "visits": 1180,
+      "users": 1010,
+      "contact_actions": 7,
+      "leads": null,
+      "conversion_rate": 0.0059,
+      "lead_conversion_rate": null,
+      "delta_vs_previous_period": {
+        "visits_absolute": 45,
+        "visits_relative": 0.0396,
+        "label": "+4%"
+      },
+      "confidence": "medium",
+      "notes": "Атрибуция прямого трафика может смешивать возвращающихся пользователей.",
+      "evidence_item_ids": [
+        "ev_source_direct"
+      ]
+    },
+    {
+      "source": "referral",
+      "display_name": "Переходы с сайтов",
+      "sort_order": 3,
+      "visits": 620,
+      "users": 548,
+      "contact_actions": 3,
+      "leads": null,
+      "conversion_rate": 0.0048,
+      "lead_conversion_rate": null,
+      "delta_vs_previous_period": {
+        "visits_absolute": -54,
+        "visits_relative": -0.0801,
+        "label": "-8%"
+      },
+      "confidence": "medium",
+      "notes": "Нужен разбор доменов-источников вне этой фикстуры.",
+      "evidence_item_ids": [
+        "ev_source_referral"
+      ]
+    },
+    {
+      "source": "telegram",
+      "display_name": "Telegram",
+      "sort_order": 4,
+      "visits": 510,
+      "users": 430,
+      "contact_actions": 5,
+      "leads": null,
+      "conversion_rate": 0.0098,
+      "lead_conversion_rate": null,
+      "delta_vs_previous_period": {
+        "visits_absolute": 92,
+        "visits_relative": 0.2201,
+        "label": "+22%"
+      },
+      "confidence": "medium",
+      "notes": "UTM-разметка нужна для лучшего разделения каналов.",
+      "evidence_item_ids": [
+        "ev_source_telegram"
+      ]
+    },
+    {
+      "source": "whatsapp",
+      "display_name": "WhatsApp",
+      "sort_order": 5,
+      "visits": 240,
+      "users": 216,
+      "contact_actions": 2,
+      "leads": null,
+      "conversion_rate": 0.0083,
+      "lead_conversion_rate": null,
+      "delta_vs_previous_period": {
+        "visits_absolute": 14,
+        "visits_relative": 0.0619,
+        "label": "+6%"
+      },
+      "confidence": "low",
+      "notes": "Малый объём действий.",
+      "evidence_item_ids": [
+        "ev_source_whatsapp"
+      ]
+    },
+    {
+      "source": "maps_or_business_directory",
+      "display_name": "Карты и справочники",
+      "sort_order": 6,
+      "visits": 360,
+      "users": 330,
+      "contact_actions": 1,
+      "leads": null,
+      "conversion_rate": 0.0028,
+      "lead_conversion_rate": null,
+      "delta_vs_previous_period": {
+        "visits_absolute": null,
+        "visits_relative": null,
+        "label": "stale"
+      },
+      "confidence": "low",
+      "notes": "Источник stale: последняя успешная загрузка 5 дней назад.",
+      "evidence_item_ids": [
+        "ev_source_maps_stale"
+      ]
+    },
+    {
+      "source": "organic_google",
+      "display_name": "Поиск Google",
+      "sort_order": 7,
+      "visits": 410,
+      "users": 350,
+      "contact_actions": 0,
+      "leads": null,
+      "conversion_rate": 0,
+      "lead_conversion_rate": null,
+      "delta_vs_previous_period": {
+        "visits_absolute": null,
+        "visits_relative": null,
+        "label": "не полный контур"
+      },
+      "confidence": "low",
+      "notes": "Google Search Console не подключён; видимость Google не анализируется.",
+      "evidence_item_ids": [
+        "ev_gsc_not_configured"
+      ]
+    },
+    {
+      "source": "unknown",
+      "display_name": "Неизвестный источник",
+      "sort_order": 8,
+      "visits": 150,
+      "users": 138,
+      "contact_actions": 0,
+      "leads": null,
+      "conversion_rate": 0,
+      "lead_conversion_rate": null,
+      "delta_vs_previous_period": {
+        "visits_absolute": 12,
+        "visits_relative": 0.087,
+        "label": "+9%"
+      },
+      "confidence": "low",
+      "notes": "Не выводить источник из слабых признаков; нужна разметка.",
+      "evidence_item_ids": [
+        "ev_source_unknown"
+      ]
+    }
+  ],
+  "search_visibility": [
+    {
+      "source_system": "yandex_webmaster",
+      "search_engine": "yandex",
+      "query": null,
+      "page_path": "/services/stroitelstvo-domov-pod-klyuch",
+      "entity_type": "service",
+      "entity_id": "service_houses_turnkey",
+      "impressions": 2100,
+      "clicks": 64,
+      "ctr": 0.0305,
+      "position": 8.4,
+      "device": "all",
+      "country": "RU",
+      "region": "Краснодарский край",
+      "delta": {
+        "impressions_absolute": 260,
+        "clicks_absolute": 9,
+        "ctr_absolute": 0.0006
+      },
+      "opportunity_type": "traffic_no_intent",
+      "confidence": "medium",
+      "limitations": [
+        "Query data aggregate only; page-level signal."
+      ],
+      "evidence_item_ids": [
+        "ev_page_houses_yandex_visibility"
+      ]
+    },
+    {
+      "source_system": "yandex_webmaster",
+      "search_engine": "yandex",
+      "query": "монолитные работы сочи",
+      "page_path": "/services/monolitnye-raboty",
+      "entity_type": "service",
+      "entity_id": "service_monolith",
+      "impressions": 1240,
+      "clicks": 18,
+      "ctr": 0.0145,
+      "position": 9.7,
+      "device": "all",
+      "country": "RU",
+      "region": "Краснодарский край",
+      "delta": {
+        "impressions_absolute": 180,
+        "clicks_absolute": 1,
+        "ctr_absolute": -0.0015
+      },
+      "opportunity_type": "low_ctr",
+      "confidence": "medium",
+      "limitations": [
+        "Query data cannot be attributed to a specific session or lead."
+      ],
+      "evidence_item_ids": [
+        "ev_page_monolith_ctr"
+      ]
+    },
+    {
+      "source_system": "yandex_webmaster",
+      "search_engine": "yandex",
+      "query": null,
+      "page_path": "/cases/dom-v-sochi",
+      "entity_type": "case",
+      "entity_id": "case_house_sochi",
+      "impressions": 680,
+      "clicks": 31,
+      "ctr": 0.0456,
+      "position": 11.2,
+      "device": "all",
+      "country": "RU",
+      "region": "Сочи",
+      "delta": {
+        "impressions_absolute": 70,
+        "clicks_absolute": 4,
+        "ctr_absolute": 0.0013
+      },
+      "opportunity_type": "case_to_service_transfer",
+      "confidence": "low",
+      "limitations": [
+        "Case interest does not prove service intent."
+      ],
+      "evidence_item_ids": [
+        "ev_case_sochi_gallery"
+      ]
+    }
+  ],
+  "page_list": [
+    {
+      "page_path": "/services/stroitelstvo-domov-pod-klyuch",
+      "entity_type": "service",
+      "entity_id": "service_houses_turnkey",
+      "page_title": "Строительство домов под ключ",
+      "commercial_priority": "high",
+      "publish_status": "published",
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "impressions": 2100,
+      "clicks": 64,
+      "ctr": 0.0305,
+      "visits": 420,
+      "contact_actions": 2,
+      "leads": null,
+      "conversion_rate": 0.0048,
+      "lead_conversion_rate": null,
+      "mobile_share": 0.8,
+      "proof_path_summary": {
+        "has_case": false,
+        "has_gallery": true,
+        "has_faq": false,
+        "has_cta": true,
+        "has_reviews": false,
+        "label": "нет кейса / есть галерея / нет FAQ"
+      },
+      "seo_health": "watch",
+      "conversion_health": "issue",
+      "proof_health": "issue",
+      "primary_issue": {
+        "issue_type": "traffic_no_intent",
+        "label": "Трафик есть, обращений мало"
+      },
+      "recommended_next_action": "Усилить CTA и proof path",
+      "recommendation_status": "new",
+      "priority": "high",
+      "confidence": "medium",
+      "warnings": [
+        "lead_domain_missing"
+      ],
+      "evidence_item_ids": [
+        "ev_page_houses_visits",
+        "ev_page_houses_contact_actions",
+        "ev_page_houses_proof_gap"
+      ]
+    },
+    {
+      "page_path": "/services/monolitnye-raboty",
+      "entity_type": "service",
+      "entity_id": "service_monolith",
+      "page_title": "Монолитные работы",
+      "commercial_priority": "high",
+      "publish_status": "published",
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "impressions": 1240,
+      "clicks": 18,
+      "ctr": 0.0145,
+      "visits": 126,
+      "contact_actions": 1,
+      "leads": null,
+      "conversion_rate": 0.0079,
+      "lead_conversion_rate": null,
+      "mobile_share": 0.74,
+      "proof_path_summary": {
+        "has_case": true,
+        "has_gallery": true,
+        "has_faq": false,
+        "has_cta": true,
+        "has_reviews": false,
+        "label": "есть кейс / нет FAQ / CTA ниже первого экрана"
+      },
+      "seo_health": "issue",
+      "conversion_health": "watch",
+      "proof_health": "watch",
+      "primary_issue": {
+        "issue_type": "low_ctr",
+        "label": "Низкий CTR"
+      },
+      "recommended_next_action": "Проверить title/description/H1",
+      "recommendation_status": "accepted",
+      "priority": "high",
+      "confidence": "medium",
+      "warnings": [
+        "query_data_aggregate_only"
+      ],
+      "evidence_item_ids": [
+        "ev_page_monolith_ctr"
+      ]
+    },
+    {
+      "page_path": "/services/rekonstruktsiya-i-kapitalnyy-remont-zdaniy",
+      "entity_type": "service",
+      "entity_id": "service_reconstruction",
+      "page_title": "Реконструкция и капитальный ремонт зданий",
+      "commercial_priority": "high",
+      "publish_status": "published",
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "impressions": 980,
+      "clicks": 35,
+      "ctr": 0.0357,
+      "visits": 240,
+      "contact_actions": 3,
+      "leads": null,
+      "conversion_rate": 0.0125,
+      "lead_conversion_rate": null,
+      "mobile_share": 0.76,
+      "proof_path_summary": {
+        "has_case": true,
+        "has_gallery": true,
+        "has_faq": false,
+        "has_cta": true,
+        "has_reviews": false,
+        "label": "есть кейс / есть галерея / нет FAQ"
+      },
+      "seo_health": "ok",
+      "conversion_health": "watch",
+      "proof_health": "watch",
+      "primary_issue": {
+        "issue_type": "missing_faq",
+        "label": "Нет FAQ по срокам и этапам"
+      },
+      "recommended_next_action": "Добавить FAQ по срокам и этапам",
+      "recommendation_status": "done",
+      "priority": "medium",
+      "confidence": "low",
+      "warnings": [
+        "small_sample_for_before_after"
+      ],
+      "evidence_item_ids": [
+        "ev_reconstruction_faq"
+      ]
+    },
+    {
+      "page_path": "/services/fasadnye-raboty",
+      "entity_type": "service",
+      "entity_id": "service_facade",
+      "page_title": "Фасадные работы",
+      "commercial_priority": "medium",
+      "publish_status": "published",
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "impressions": 760,
+      "clicks": 24,
+      "ctr": 0.0316,
+      "visits": 188,
+      "contact_actions": 1,
+      "leads": null,
+      "conversion_rate": 0.0053,
+      "lead_conversion_rate": null,
+      "mobile_share": 0.69,
+      "proof_path_summary": {
+        "has_case": false,
+        "has_gallery": true,
+        "has_faq": false,
+        "has_cta": true,
+        "has_reviews": false,
+        "label": "нет кейса / есть галерея / нет FAQ"
+      },
+      "seo_health": "watch",
+      "conversion_health": "watch",
+      "proof_health": "issue",
+      "primary_issue": {
+        "issue_type": "weak_proof_path",
+        "label": "У страницы услуги нет связанного кейса"
+      },
+      "recommended_next_action": "Запросить кейс/фото у владельца",
+      "recommendation_status": "accepted",
+      "priority": "medium",
+      "confidence": "low",
+      "warnings": [
+        "owner_confirmation_required"
+      ],
+      "evidence_item_ids": [
+        "ev_page_facade_proof_gap"
+      ]
+    },
+    {
+      "page_path": "/services/stroitelstvo-gostevyh-domov",
+      "entity_type": "service",
+      "entity_id": "service_guest_houses",
+      "page_title": "Строительство гостевых домов",
+      "commercial_priority": "medium",
+      "publish_status": "published",
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "impressions": 540,
+      "clicks": 20,
+      "ctr": 0.037,
+      "visits": 132,
+      "contact_actions": 2,
+      "leads": null,
+      "conversion_rate": 0.0152,
+      "lead_conversion_rate": null,
+      "mobile_share": 0.71,
+      "proof_path_summary": {
+        "has_case": false,
+        "has_gallery": true,
+        "has_faq": true,
+        "has_cta": true,
+        "has_reviews": false,
+        "label": "нет кейса / есть галерея / есть FAQ"
+      },
+      "seo_health": "ok",
+      "conversion_health": "ok",
+      "proof_health": "watch",
+      "primary_issue": {
+        "issue_type": "published_service_no_case",
+        "label": "Нет кейса для услуги"
+      },
+      "recommended_next_action": "Добавить связанный кейс, когда появятся материалы",
+      "recommendation_status": "new",
+      "priority": "medium",
+      "confidence": "low",
+      "warnings": [
+        "owner_confirmation_required"
+      ],
+      "evidence_item_ids": [
+        "ev_guest_houses_case_gap"
+      ]
+    },
+    {
+      "page_path": "/cases/dom-v-sochi",
+      "entity_type": "case",
+      "entity_id": "case_house_sochi",
+      "page_title": "Дом в Сочи",
+      "commercial_priority": "medium",
+      "publish_status": "published",
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "impressions": 680,
+      "clicks": 31,
+      "ctr": 0.0456,
+      "visits": 210,
+      "contact_actions": 3,
+      "leads": null,
+      "conversion_rate": 0.0143,
+      "lead_conversion_rate": null,
+      "mobile_share": 0.66,
+      "proof_path_summary": {
+        "has_case": true,
+        "has_gallery": true,
+        "has_faq": false,
+        "has_cta": false,
+        "has_reviews": false,
+        "label": "галерея сильная / нет перехода к услуге"
+      },
+      "seo_health": "ok",
+      "conversion_health": "watch",
+      "proof_health": "ok",
+      "primary_issue": {
+        "issue_type": "case_to_service_transfer",
+        "label": "Интерес к галерее не ведёт к услуге"
+      },
+      "recommended_next_action": "Добавить связанный CTA",
+      "recommendation_status": "in_progress",
+      "priority": "medium",
+      "confidence": "low",
+      "warnings": [
+        "small_sample"
+      ],
+      "evidence_item_ids": [
+        "ev_case_sochi_gallery"
+      ]
+    },
+    {
+      "page_path": "/cases/rekonstruktsiya-zdaniya-v-adlere",
+      "entity_type": "case",
+      "entity_id": "case_reconstruction_adler",
+      "page_title": "Реконструкция здания в Адлере",
+      "commercial_priority": "low",
+      "publish_status": "published",
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "impressions": 280,
+      "clicks": 14,
+      "ctr": 0.05,
+      "visits": 94,
+      "contact_actions": 2,
+      "leads": null,
+      "conversion_rate": 0.0213,
+      "lead_conversion_rate": null,
+      "mobile_share": 0.62,
+      "proof_path_summary": {
+        "has_case": true,
+        "has_gallery": true,
+        "has_faq": false,
+        "has_cta": true,
+        "has_reviews": false,
+        "label": "есть галерея / есть услуга / нет FAQ"
+      },
+      "seo_health": "ok",
+      "conversion_health": "ok",
+      "proof_health": "watch",
+      "primary_issue": {
+        "issue_type": "small_sample",
+        "label": "Данных мало"
+      },
+      "recommended_next_action": "Наблюдать до следующей проверки",
+      "recommendation_status": "dismissed",
+      "priority": "low",
+      "confidence": "low",
+      "warnings": [
+        "small_sample"
+      ],
+      "evidence_item_ids": [
+        "ev_case_adler_small_sample"
+      ]
+    },
+    {
+      "page_path": "/contacts",
+      "entity_type": "page",
+      "entity_id": "page_contacts",
+      "page_title": "Контакты",
+      "commercial_priority": "medium",
+      "publish_status": "published",
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "impressions": 390,
+      "clicks": 22,
+      "ctr": 0.0564,
+      "visits": 520,
+      "contact_actions": 4,
+      "leads": null,
+      "conversion_rate": 0.0077,
+      "lead_conversion_rate": null,
+      "mobile_share": 0.78,
+      "proof_path_summary": {
+        "has_case": false,
+        "has_gallery": false,
+        "has_faq": false,
+        "has_cta": true,
+        "has_reviews": false,
+        "label": "нет формы / есть телефон / есть мессенджеры"
+      },
+      "seo_health": "ok",
+      "conversion_health": "watch",
+      "proof_health": "not_applicable",
+      "primary_issue": {
+        "issue_type": "contacts_transition_no_leads",
+        "label": "Много переходов в контакты, мало форм"
+      },
+      "recommended_next_action": "Проверить контактный блок",
+      "recommendation_status": "new",
+      "priority": "medium",
+      "confidence": "low",
+      "warnings": [
+        "lead_domain_missing"
+      ],
+      "evidence_item_ids": [
+        "ev_contacts_actions"
+      ]
+    }
+  ],
+  "selected_page_detail": {
+    "page_identity": {
+      "page_path": "/services/stroitelstvo-domov-pod-klyuch",
+      "entity_type": "service",
+      "entity_id": "service_houses_turnkey",
+      "page_kind": "service_detail",
+      "page_title": "Строительство домов под ключ"
+    },
+    "current_published_revision": {
+      "published_revision_id": "rev_service_0048",
+      "published_at": "2026-04-16T14:20:00+03:00",
+      "publish_status": "published"
+    },
+    "seo_fields_summary": {
+      "title": "Строительство домов под ключ в Сочи",
+      "description": "Проектирование и строительство частных домов в Большом Сочи.",
+      "h1": "Строительство домов под ключ",
+      "warnings": []
+    },
+    "indexation_summary": {
+      "indexation_state": "indexed",
+      "sitemap_state": "present",
+      "canonical_state": "ok",
+      "source_system": "yandex_webmaster",
+      "last_checked_at": "2026-04-30T08:20:00+03:00"
+    },
+    "visibility_summary": {
+      "source_system": "yandex_webmaster",
+      "impressions": 2100,
+      "clicks": 64,
+      "ctr": 0.0305,
+      "position": 8.4,
+      "confidence": "medium",
+      "evidence_item_ids": [
+        "ev_page_houses_yandex_visibility"
+      ]
+    },
+    "traffic_summary": {
+      "visits": 420,
+      "users": 360,
+      "organic_share": 0.74,
+      "mobile_share": 0.8,
+      "top_source": "organic_yandex",
+      "confidence": "medium",
+      "evidence_item_ids": [
+        "ev_page_houses_visits"
+      ]
+    },
+    "behavior_summary": {
+      "cta_views": 210,
+      "cta_clicks": 3,
+      "gallery_opens": 48,
+      "faq_expands": 0,
+      "scroll_depth_75": 0.26,
+      "interpretation": "Пользователи смотрят галерею, но редко переходят к обращению.",
+      "confidence": "medium",
+      "evidence_item_ids": [
+        "ev_page_houses_behavior"
+      ]
+    },
+    "intent_events_summary": {
+      "click_to_call": 0,
+      "click_to_telegram": 1,
+      "click_to_whatsapp": 1,
+      "form_start": 2,
+      "form_submit": 0,
+      "primary_contact_actions": 2,
+      "secondary_contact_actions": 3,
+      "confidence": "medium",
+      "evidence_item_ids": [
+        "ev_page_houses_contact_actions"
+      ]
+    },
+    "lead_summary": {
+      "status": "not_ready",
+      "leads": null,
+      "visit_to_lead_conversion": null,
+      "limitation": "Lead domain пока не готов; лиды не считаются."
+    },
+    "proof_path": {
+      "has_case": false,
+      "has_gallery": true,
+      "has_faq": false,
+      "has_cta": true,
+      "has_reviews": false,
+      "summary": "Есть галерея и CTA, но нет кейса, FAQ и отзывов.",
+      "evidence_item_ids": [
+        "ev_page_houses_proof_gap"
+      ]
+    },
+    "semantic_click_map": [
+      {
+        "element_id": "hero_primary_call",
+        "event_type": "click_to_call",
+        "section_id": "hero",
+        "label": "Телефон в первом экране",
+        "views": 210,
+        "clicks": 0,
+        "actions": 0,
+        "conversion_to_next_step": 0,
+        "drop_off_signal": "strong_drop_off",
+        "related_entity_type": "service",
+        "related_entity_id": "service_houses_turnkey",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_clickmap_call"
+        ]
+      },
+      {
+        "element_id": "hero_primary_telegram",
+        "event_type": "click_to_telegram",
+        "section_id": "hero",
+        "label": "Telegram в первом экране",
+        "views": 210,
+        "clicks": 1,
+        "actions": 1,
+        "conversion_to_next_step": 0.0048,
+        "drop_off_signal": "low_click_rate",
+        "related_entity_type": "service",
+        "related_entity_id": "service_houses_turnkey",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_clickmap_telegram"
+        ]
+      },
+      {
+        "element_id": "hero_primary_whatsapp",
+        "event_type": "click_to_whatsapp",
+        "section_id": "hero",
+        "label": "WhatsApp в первом экране",
+        "views": 210,
+        "clicks": 1,
+        "actions": 1,
+        "conversion_to_next_step": 0.0048,
+        "drop_off_signal": "low_click_rate",
+        "related_entity_type": "service",
+        "related_entity_id": "service_houses_turnkey",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_clickmap_whatsapp"
+        ]
+      },
+      {
+        "element_id": "proof_gallery_open",
+        "event_type": "gallery_open",
+        "section_id": "proof_gallery",
+        "label": "Открытие галереи",
+        "views": 210,
+        "clicks": 48,
+        "actions": 48,
+        "conversion_to_next_step": 0.2286,
+        "drop_off_signal": "proof_interest_without_contact",
+        "related_entity_type": "gallery",
+        "related_entity_id": "gallery_houses_turnkey",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_clickmap_gallery"
+        ]
+      },
+      {
+        "element_id": "faq_expand",
+        "event_type": "faq_expand",
+        "section_id": "faq",
+        "label": "Раскрытие FAQ",
+        "views": 0,
+        "clicks": 0,
+        "actions": 0,
+        "conversion_to_next_step": null,
+        "drop_off_signal": "element_missing",
+        "related_entity_type": "service",
+        "related_entity_id": "service_houses_turnkey",
+        "confidence": "high",
+        "evidence_item_ids": [
+          "ev_clickmap_faq_missing"
+        ]
+      },
+      {
+        "element_id": "related_case_click",
+        "event_type": "case_card_click",
+        "section_id": "related_cases",
+        "label": "Переход к связанному кейсу",
+        "views": 0,
+        "clicks": 0,
+        "actions": 0,
+        "conversion_to_next_step": null,
+        "drop_off_signal": "element_missing",
+        "related_entity_type": "case",
+        "related_entity_id": null,
+        "confidence": "high",
+        "evidence_item_ids": [
+          "ev_clickmap_related_case_missing"
+        ]
+      },
+      {
+        "element_id": "contact_form_start",
+        "event_type": "form_start",
+        "section_id": "contact_form",
+        "label": "Начало формы",
+        "views": 26,
+        "clicks": 2,
+        "actions": 2,
+        "conversion_to_next_step": 0.0769,
+        "drop_off_signal": "low_form_start",
+        "related_entity_type": "service",
+        "related_entity_id": "service_houses_turnkey",
+        "confidence": "low",
+        "evidence_item_ids": [
+          "ev_clickmap_form_start"
+        ]
+      },
+      {
+        "element_id": "contact_form_submit",
+        "event_type": "form_submit",
+        "section_id": "contact_form",
+        "label": "Отправка формы",
+        "views": 2,
+        "clicks": 0,
+        "actions": 0,
+        "conversion_to_next_step": 0,
+        "drop_off_signal": "form_submit_absent",
+        "related_entity_type": "service",
+        "related_entity_id": "service_houses_turnkey",
+        "confidence": "low",
+        "evidence_item_ids": [
+          "ev_clickmap_form_submit"
+        ]
+      },
+      {
+        "element_id": "contacts_link_click",
+        "event_type": "contact_link_click",
+        "section_id": "footer",
+        "label": "Переход в контакты",
+        "views": 420,
+        "clicks": 8,
+        "actions": 8,
+        "conversion_to_next_step": 0.019,
+        "drop_off_signal": "weak_secondary_intent",
+        "related_entity_type": "page",
+        "related_entity_id": "page_contacts",
+        "confidence": "medium",
+        "evidence_item_ids": [
+          "ev_clickmap_contacts_link"
+        ]
+      }
+    ],
+    "active_issues": [
+      {
+        "issue_type": "traffic_no_intent",
+        "priority": "high",
+        "severity": "high",
+        "label": "Есть трафик, но почти нет контактных действий",
+        "evidence_item_ids": [
+          "ev_page_houses_visits",
+          "ev_page_houses_contact_actions"
+        ]
+      },
+      {
+        "issue_type": "weak_proof_path",
+        "priority": "high",
+        "severity": "medium",
+        "label": "Proof path слабый",
+        "evidence_item_ids": [
+          "ev_page_houses_proof_gap"
+        ]
+      },
+      {
+        "issue_type": "mobile_low_conversion",
+        "priority": "medium",
+        "severity": "medium",
+        "label": "80% трафика с мобильных при низком контакте",
+        "evidence_item_ids": [
+          "ev_page_houses_mobile_share"
+        ]
+      }
+    ],
+    "recommendation_history": [
+      "rec_001",
+      "rec_004"
+    ],
+    "published_change_history": [
+      "chg_001"
+    ],
+    "before_after_summary": {
+      "status": "collecting",
+      "related_change_id": "chg_001",
+      "classified_change_id": "cchg_001",
+      "attribution_safety": "mixed_change",
+      "is_mixed_change": true,
+      "summary": "После набора изменений прошло мало времени; нельзя выделить влияние одного элемента.",
+      "data_sufficiency": "low",
+      "attribution_limitations": [
+        "mixed_change_warning",
+        "lead_domain_missing",
+        "no_single_cause_attribution"
+      ],
+      "evidence_item_ids": [
+        "ev_change_houses_after_low_sample"
+      ]
+    },
+    "source_freshness": {
+      "first_party_events": "ok",
+      "yandex_metrica": "ok",
+      "yandex_webmaster": "ok",
+      "lead_domain": "not_ready"
+    },
+    "uncertainty_flags": [
+      "lead_domain_missing",
+      "query_data_aggregate_only",
+      "no_before_after_baseline"
+    ],
+    "limitations": [
+      "Нельзя утверждать, что проблема именно в CTA; это гипотеза для проверки.",
+      "Лиды недоступны, поэтому оцениваются только contact actions.",
+      "Search query data is aggregate page-level signal only."
+    ],
+    "evidence_item_ids": [
+      "ev_page_houses_yandex_visibility",
+      "ev_page_houses_visits",
+      "ev_page_houses_contact_actions",
+      "ev_page_houses_proof_gap",
+      "ev_page_houses_behavior"
+    ]
+  },
+  "recommendations": [
+    {
+      "recommendation_id": "rec_001",
+      "issue_type": "traffic_no_intent",
+      "linked_page": {
+        "page_path": "/services/stroitelstvo-domov-pod-klyuch",
+        "page_title": "Строительство домов под ключ"
+      },
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "priority": "high",
+      "severity": "high",
+      "evidence_period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "evidence_items": [
+        "ev_page_houses_visits",
+        "ev_page_houses_contact_actions",
+        "ev_page_houses_proof_gap"
+      ],
+      "hypothesis": "Пользователь видит услугу и галерею, но не получает достаточно быстрого контакта и proof path на первом экране.",
+      "recommended_action": "Поднять CTA выше на странице услуги и добавить рядом доказательство: кейс, FAQ или подписи к галерее.",
+      "owner_role": "seo_manager",
+      "status": "new",
+      "next_check_date": "2026-05-14",
+      "implemented_at": null,
+      "published_at": null,
+      "monitoring_started_at": null,
+      "result_summary": null,
+      "confidence": "medium",
+      "limitations": [
+        "Не доказывает причинность; требует проверки после публикации."
+      ]
+    },
+    {
+      "recommendation_id": "rec_002",
+      "issue_type": "published_service_no_case",
+      "linked_page": {
+        "page_path": "/services/fasadnye-raboty",
+        "page_title": "Фасадные работы"
+      },
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_facade"
+      },
+      "priority": "high",
+      "severity": "medium",
+      "evidence_period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "evidence_items": [
+        "ev_page_facade_proof_gap"
+      ],
+      "hypothesis": "Странице услуги не хватает подтверждающего кейса для доверия.",
+      "recommended_action": "Запросить кейс/фото по фасадным работам у владельца.",
+      "owner_role": "business_owner",
+      "status": "accepted",
+      "next_check_date": "2026-05-12",
+      "implemented_at": null,
+      "published_at": null,
+      "monitoring_started_at": null,
+      "result_summary": null,
+      "confidence": "low",
+      "limitations": [
+        "Нельзя invent facts; нужны owner-approved materials."
+      ]
+    },
+    {
+      "recommendation_id": "rec_003",
+      "issue_type": "low_ctr",
+      "linked_page": {
+        "page_path": "/services/monolitnye-raboty",
+        "page_title": "Монолитные работы"
+      },
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_monolith"
+      },
+      "priority": "high",
+      "severity": "high",
+      "evidence_period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "evidence_items": [
+        "ev_page_monolith_ctr"
+      ],
+      "hypothesis": "Сниппет или H1 может не совпадать с интентом запросов.",
+      "recommended_action": "Проверить title/description/H1 и query-page match.",
+      "owner_role": "seo_manager",
+      "status": "in_progress",
+      "next_check_date": "2026-05-10",
+      "implemented_at": null,
+      "published_at": null,
+      "monitoring_started_at": null,
+      "result_summary": null,
+      "confidence": "medium",
+      "limitations": [
+        "Низкий CTR не доказывает, что причина именно в title."
+      ]
+    },
+    {
+      "recommendation_id": "rec_004",
+      "issue_type": "missing_faq",
+      "linked_page": {
+        "page_path": "/services/rekonstruktsiya-i-kapitalnyy-remont-zdaniy",
+        "page_title": "Реконструкция и капитальный ремонт зданий"
+      },
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_reconstruction"
+      },
+      "priority": "medium",
+      "severity": "medium",
+      "evidence_period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "evidence_items": [
+        "ev_reconstruction_faq"
+      ],
+      "hypothesis": "Пользователям не хватает быстрых ответов по срокам и этапам.",
+      "recommended_action": "Добавить FAQ по срокам, этапам и подготовке объекта.",
+      "owner_role": "editor",
+      "status": "done",
+      "next_check_date": "2026-05-20",
+      "implemented_at": "2026-04-28T15:00:00+03:00",
+      "published_at": "2026-04-29T11:40:00+03:00",
+      "monitoring_started_at": "2026-04-29T11:40:00+03:00",
+      "result_summary": "Monitoring started; after-period sample insufficient.",
+      "confidence": "low",
+      "limitations": [
+        "Published change is too recent for before/after conclusion."
+      ]
+    },
+    {
+      "recommendation_id": "rec_005",
+      "issue_type": "mobile_contact_button_check",
+      "linked_page": {
+        "page_path": "/contacts",
+        "page_title": "Контакты"
+      },
+      "linked_entity": {
+        "entity_type": "page",
+        "entity_id": "page_contacts"
+      },
+      "priority": "medium",
+      "severity": "medium",
+      "evidence_period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "evidence_items": [
+        "ev_contacts_actions"
+      ],
+      "hypothesis": "Мобильная кнопка звонка может быть недостаточно заметна.",
+      "recommended_action": "Проверить мобильную кнопку звонка и контактный блок.",
+      "owner_role": "admin",
+      "status": "dismissed",
+      "next_check_date": null,
+      "implemented_at": null,
+      "published_at": null,
+      "monitoring_started_at": null,
+      "result_summary": "Dismissed in mock: needs lead domain before stronger conclusion.",
+      "confidence": "low",
+      "limitations": [
+        "Lead domain missing."
+      ]
+    }
+  ],
+  "evidence_items": [
+    {
+      "evidence_id": "ev_overview_visits",
+      "source": "yandex_metrica",
+      "metric": "visits",
+      "value": 5840,
+      "comparison_value": 5210,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 5840,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "traffic_growth",
+      "linked_entity": null,
+      "notes": "Общий трафик вырос на 12%."
+    },
+    {
+      "evidence_id": "ev_overview_organic",
+      "source": "yandex_metrica",
+      "metric": "organic_visits",
+      "value": 3210,
+      "comparison_value": 2840,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 3210,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "organic_growth",
+      "linked_entity": null,
+      "notes": "Органический трафик вырос, основная доля из Яндекса."
+    },
+    {
+      "evidence_id": "ev_overview_yandex_visibility",
+      "source": "yandex_webmaster",
+      "metric": "impressions",
+      "value": 18640,
+      "comparison_value": 17120,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 18640,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "visibility_available",
+      "linked_entity": null,
+      "notes": "Yandex-first видимость доступна."
+    },
+    {
+      "evidence_id": "ev_overview_yandex_clicks",
+      "source": "yandex_webmaster",
+      "metric": "clicks",
+      "value": 486,
+      "comparison_value": 444,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 486,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "search_clicks_growth",
+      "linked_entity": null,
+      "notes": "Клики из Яндекса выросли, но page-level CTR неоднороден."
+    },
+    {
+      "evidence_id": "ev_overview_ctr",
+      "source": "yandex_webmaster",
+      "metric": "ctr",
+      "value": 0.0261,
+      "comparison_value": 0.0259,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 18640,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "stable_ctr_with_page_level_gaps",
+      "linked_entity": null,
+      "notes": "Средний CTR не заменяет page-level анализ."
+    },
+    {
+      "evidence_id": "ev_overview_contact_actions",
+      "source": "first_party_aggregate",
+      "metric": "contact_actions",
+      "value": 42,
+      "comparison_value": 39,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 5840,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "intent_low_relative_to_visits",
+      "linked_entity": null,
+      "notes": "Contact actions растут слабее визитов."
+    },
+    {
+      "evidence_id": "ev_overview_visit_to_intent",
+      "source": "first_party_aggregate",
+      "metric": "visit_to_intent_conversion",
+      "value": 0.0072,
+      "comparison_value": 0.0075,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 5840,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "conversion_watch",
+      "linked_entity": null,
+      "notes": "Visit -> contact action не растёт вместе с трафиком."
+    },
+    {
+      "evidence_id": "ev_lead_domain_missing",
+      "source": "lead_domain",
+      "metric": "leads",
+      "value": null,
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 0,
+      "freshness": "not_applicable",
+      "confidence": "insufficient",
+      "interpretation": "lead_domain_missing",
+      "linked_entity": null,
+      "notes": "Lead domain not ready; leads unavailable."
+    },
+    {
+      "evidence_id": "ev_page_houses_yandex_visibility",
+      "source": "yandex_webmaster",
+      "metric": "page_impressions_clicks_ctr",
+      "value": {
+        "impressions": 2100,
+        "clicks": 64,
+        "ctr": 0.0305
+      },
+      "comparison_value": {
+        "impressions": 1840,
+        "clicks": 55,
+        "ctr": 0.0299
+      },
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 2100,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "visibility_available",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "Страница видна в Яндексе и получает клики."
+    },
+    {
+      "evidence_id": "ev_page_houses_visits",
+      "source": "yandex_metrica",
+      "metric": "visits",
+      "value": 420,
+      "comparison_value": 360,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 420,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "traffic_available",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "Достаточно визитов для гипотезы о conversion/proof gap."
+    },
+    {
+      "evidence_id": "ev_page_houses_contact_actions",
+      "source": "first_party_aggregate",
+      "metric": "contact_actions",
+      "value": 2,
+      "comparison_value": 3,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 420,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "traffic_no_intent_signal",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "420 визитов и 2 контактных действия."
+    },
+    {
+      "evidence_id": "ev_page_houses_proof_gap",
+      "source": "content_core",
+      "metric": "proof_path",
+      "value": {
+        "has_case": false,
+        "has_gallery": true,
+        "has_faq": false,
+        "has_reviews": false
+      },
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-30",
+        "end": "2026-04-30"
+      },
+      "sample_size": 1,
+      "freshness": "ok",
+      "confidence": "high",
+      "interpretation": "weak_proof_path",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "Нет кейса, FAQ и отзывов."
+    },
+    {
+      "evidence_id": "ev_page_houses_behavior",
+      "source": "first_party_aggregate",
+      "metric": "semantic_behavior",
+      "value": {
+        "cta_views": 210,
+        "cta_clicks": 3,
+        "gallery_opens": 48,
+        "faq_expands": 0,
+        "scroll_depth_75": 0.26
+      },
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 420,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "proof_interest_without_contact",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "Люди смотрят галерею, но редко переходят к контакту."
+    },
+    {
+      "evidence_id": "ev_page_houses_mobile_share",
+      "source": "yandex_metrica",
+      "metric": "mobile_share",
+      "value": 0.8,
+      "comparison_value": 0.77,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 420,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "mobile_dominant",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "80% трафика с мобильных."
+    },
+    {
+      "evidence_id": "ev_page_monolith_ctr",
+      "source": "yandex_webmaster",
+      "metric": "ctr",
+      "value": 0.0145,
+      "comparison_value": 0.016,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 1240,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "low_ctr_signal",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_monolith"
+      },
+      "notes": "1 240 показов, 18 кликов, CTR 1,45%."
+    },
+    {
+      "evidence_id": "ev_page_facade_proof_gap",
+      "source": "content_core",
+      "metric": "proof_path",
+      "value": {
+        "has_case": false,
+        "has_gallery": true,
+        "has_faq": false,
+        "has_reviews": false
+      },
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-30",
+        "end": "2026-04-30"
+      },
+      "sample_size": 1,
+      "freshness": "ok",
+      "confidence": "high",
+      "interpretation": "weak_proof_path",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_facade"
+      },
+      "notes": "Нет связанного кейса для услуги."
+    },
+    {
+      "evidence_id": "ev_reconstruction_faq",
+      "source": "content_core",
+      "metric": "faq_presence",
+      "value": false,
+      "comparison_value": false,
+      "period": {
+        "start": "2026-04-30",
+        "end": "2026-04-30"
+      },
+      "sample_size": 1,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "missing_faq",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_reconstruction"
+      },
+      "notes": "FAQ отсутствовал до недавней рекомендации."
+    },
+    {
+      "evidence_id": "ev_guest_houses_case_gap",
+      "source": "content_core",
+      "metric": "related_case",
+      "value": false,
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-30",
+        "end": "2026-04-30"
+      },
+      "sample_size": 1,
+      "freshness": "ok",
+      "confidence": "high",
+      "interpretation": "published_service_no_case",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_guest_houses"
+      },
+      "notes": "Нет связанного кейса для строительства гостевых домов."
+    },
+    {
+      "evidence_id": "ev_case_sochi_gallery",
+      "source": "first_party_aggregate",
+      "metric": "gallery_open",
+      "value": 86,
+      "comparison_value": 72,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 210,
+      "freshness": "ok",
+      "confidence": "low",
+      "interpretation": "gallery_interest_no_service_transfer",
+      "linked_entity": {
+        "entity_type": "case",
+        "entity_id": "case_house_sochi"
+      },
+      "notes": "Хороший интерес к галерее, но нет явного перехода к услуге."
+    },
+    {
+      "evidence_id": "ev_case_adler_small_sample",
+      "source": "first_party_aggregate",
+      "metric": "visits",
+      "value": 94,
+      "comparison_value": 88,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 94,
+      "freshness": "ok",
+      "confidence": "low",
+      "interpretation": "small_sample",
+      "linked_entity": {
+        "entity_type": "case",
+        "entity_id": "case_reconstruction_adler"
+      },
+      "notes": "Данных мало для сильных выводов."
+    },
+    {
+      "evidence_id": "ev_contacts_actions",
+      "source": "first_party_aggregate",
+      "metric": "contact_actions",
+      "value": 4,
+      "comparison_value": 5,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 520,
+      "freshness": "ok",
+      "confidence": "low",
+      "interpretation": "contacts_transition_no_leads",
+      "linked_entity": {
+        "entity_type": "page",
+        "entity_id": "page_contacts"
+      },
+      "notes": "Много визитов на контакты, но lead domain отсутствует."
+    },
+    {
+      "evidence_id": "ev_gsc_not_configured",
+      "source": "google_search_console",
+      "metric": "source_status",
+      "value": "not_configured",
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 0,
+      "freshness": "not_configured",
+      "confidence": "insufficient",
+      "interpretation": "source_missing",
+      "linked_entity": null,
+      "notes": "Google visibility не анализируется."
+    },
+    {
+      "evidence_id": "ev_source_maps_stale",
+      "source": "yandex_metrica",
+      "metric": "source_sync_status",
+      "value": "stale",
+      "comparison_value": "ok",
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 360,
+      "freshness": "stale",
+      "confidence": "low",
+      "interpretation": "source_stale",
+      "linked_entity": null,
+      "notes": "maps_or_business_directory stale in mock source classification."
+    },
+    {
+      "evidence_id": "ev_change_houses_after_low_sample",
+      "source": "published_change_history",
+      "metric": "after_period_sample",
+      "value": 2,
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-16",
+        "end": "2026-04-29"
+      },
+      "sample_size": 2,
+      "freshness": "ok",
+      "confidence": "low",
+      "interpretation": "no_before_after_baseline",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "Недостаточно данных для вывода по after-period."
+    },
+    {
+      "evidence_id": "ev_clickmap_call",
+      "source": "first_party_aggregate",
+      "metric": "click_to_call",
+      "value": 0,
+      "comparison_value": 1,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 210,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "strong_drop_off",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "CTA seen 210 times, phone clicked 0 times."
+    },
+    {
+      "evidence_id": "ev_clickmap_telegram",
+      "source": "first_party_aggregate",
+      "metric": "click_to_telegram",
+      "value": 1,
+      "comparison_value": 1,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 210,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "low_click_rate",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "Telegram clicked once from hero."
+    },
+    {
+      "evidence_id": "ev_clickmap_whatsapp",
+      "source": "first_party_aggregate",
+      "metric": "click_to_whatsapp",
+      "value": 1,
+      "comparison_value": 1,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 210,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "low_click_rate",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "WhatsApp clicked once from hero."
+    },
+    {
+      "evidence_id": "ev_clickmap_gallery",
+      "source": "first_party_aggregate",
+      "metric": "gallery_open",
+      "value": 48,
+      "comparison_value": 39,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 210,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "proof_interest_without_contact",
+      "linked_entity": {
+        "entity_type": "gallery",
+        "entity_id": "gallery_houses_turnkey"
+      },
+      "notes": "Gallery interest exists."
+    },
+    {
+      "evidence_id": "ev_clickmap_faq_missing",
+      "source": "content_core",
+      "metric": "faq_presence",
+      "value": false,
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-30",
+        "end": "2026-04-30"
+      },
+      "sample_size": 1,
+      "freshness": "ok",
+      "confidence": "high",
+      "interpretation": "element_missing",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "FAQ element is absent."
+    },
+    {
+      "evidence_id": "ev_clickmap_related_case_missing",
+      "source": "content_core",
+      "metric": "related_case_presence",
+      "value": false,
+      "comparison_value": null,
+      "period": {
+        "start": "2026-04-30",
+        "end": "2026-04-30"
+      },
+      "sample_size": 1,
+      "freshness": "ok",
+      "confidence": "high",
+      "interpretation": "element_missing",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "No related case card exists."
+    },
+    {
+      "evidence_id": "ev_clickmap_form_start",
+      "source": "first_party_aggregate",
+      "metric": "form_start",
+      "value": 2,
+      "comparison_value": 2,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 26,
+      "freshness": "ok",
+      "confidence": "low",
+      "interpretation": "low_form_start",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "Only 2 form starts."
+    },
+    {
+      "evidence_id": "ev_clickmap_form_submit",
+      "source": "first_party_aggregate",
+      "metric": "form_submit",
+      "value": 0,
+      "comparison_value": 0,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 2,
+      "freshness": "ok",
+      "confidence": "low",
+      "interpretation": "form_submit_absent",
+      "linked_entity": {
+        "entity_type": "service",
+        "entity_id": "service_houses_turnkey"
+      },
+      "notes": "No form submit events."
+    },
+    {
+      "evidence_id": "ev_clickmap_contacts_link",
+      "source": "first_party_aggregate",
+      "metric": "contact_link_click",
+      "value": 8,
+      "comparison_value": 7,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 420,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "weak_secondary_intent",
+      "linked_entity": {
+        "entity_type": "page",
+        "entity_id": "page_contacts"
+      },
+      "notes": "Some users go to contacts instead of using page CTA."
+    },
+    {
+      "evidence_id": "ev_source_yandex",
+      "source": "yandex_metrica",
+      "metric": "source_visits",
+      "value": 2370,
+      "comparison_value": 2042,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 2370,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "primary_source",
+      "linked_entity": null,
+      "notes": "Yandex organic is first source."
+    },
+    {
+      "evidence_id": "ev_source_direct",
+      "source": "yandex_metrica",
+      "metric": "source_visits",
+      "value": 1180,
+      "comparison_value": 1135,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 1180,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "direct_source",
+      "linked_entity": null,
+      "notes": "Direct traffic stable."
+    },
+    {
+      "evidence_id": "ev_source_referral",
+      "source": "yandex_metrica",
+      "metric": "source_visits",
+      "value": 620,
+      "comparison_value": 674,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 620,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "source_decline",
+      "linked_entity": null,
+      "notes": "Referral declined."
+    },
+    {
+      "evidence_id": "ev_source_telegram",
+      "source": "yandex_metrica",
+      "metric": "source_visits",
+      "value": 510,
+      "comparison_value": 418,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 510,
+      "freshness": "ok",
+      "confidence": "medium",
+      "interpretation": "source_growth",
+      "linked_entity": null,
+      "notes": "Telegram grew."
+    },
+    {
+      "evidence_id": "ev_source_whatsapp",
+      "source": "yandex_metrica",
+      "metric": "source_visits",
+      "value": 240,
+      "comparison_value": 226,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 240,
+      "freshness": "ok",
+      "confidence": "low",
+      "interpretation": "small_channel",
+      "linked_entity": null,
+      "notes": "Small channel."
+    },
+    {
+      "evidence_id": "ev_source_unknown",
+      "source": "yandex_metrica",
+      "metric": "source_visits",
+      "value": 150,
+      "comparison_value": 138,
+      "period": {
+        "start": "2026-04-02",
+        "end": "2026-04-29"
+      },
+      "sample_size": 150,
+      "freshness": "ok",
+      "confidence": "low",
+      "interpretation": "unknown_source",
+      "linked_entity": null,
+      "notes": "Keep as unknown; do not infer."
+    }
+  ],
+  "analytics_history": {
+    "current_period": {
+      "start": "2026-04-02",
+      "end": "2026-04-29"
+    },
+    "previous_period": {
+      "start": "2026-03-05",
+      "end": "2026-04-01"
+    },
+    "baseline_period": {
+      "start": "2026-02-01",
+      "end": "2026-03-31",
+      "status": "partial",
+      "notes": "Baseline mock is partial because tracking changed in March."
+    },
+    "metric_trends": {
+      "visibility": {
+        "impressions": {
+          "current": 18640,
+          "previous": 17120,
+          "delta_absolute": 1520,
+          "delta_relative": 0.0888
+        },
+        "clicks": {
+          "current": 486,
+          "previous": 444,
+          "delta_absolute": 42,
+          "delta_relative": 0.0946
+        },
+        "ctr": {
+          "current": 0.0261,
+          "previous": 0.0259,
+          "delta_absolute": 0.0002,
+          "delta_relative": 0.0077
+        }
+      },
+      "traffic": {
+        "visits": {
+          "current": 5840,
+          "previous": 5210,
+          "delta_absolute": 630,
+          "delta_relative": 0.1209
+        },
+        "mobile_share": {
+          "current": 0.72,
+          "previous": 0.69,
+          "delta_absolute": 0.03,
+          "delta_relative": 0.0435
+        }
+      },
+      "conversion": {
+        "contact_actions": {
+          "current": 42,
+          "previous": 39,
+          "delta_absolute": 3,
+          "delta_relative": 0.0769
+        },
+        "visit_to_intent": {
+          "current": 0.0072,
+          "previous": 0.0075,
+          "delta_absolute": -0.0003,
+          "delta_relative": -0.04
+        }
+      },
+      "behavior": {
+        "cta_views": {
+          "current": 2680,
+          "previous": 2410,
+          "delta_absolute": 270,
+          "delta_relative": 0.112
+        },
+        "cta_clicks": {
+          "current": 38,
+          "previous": 34,
+          "delta_absolute": 4,
+          "delta_relative": 0.1176
+        },
+        "gallery_opens": {
+          "current": 640,
+          "previous": 590,
+          "delta_absolute": 50,
+          "delta_relative": 0.0847
+        },
+        "faq_expands": {
+          "current": 96,
+          "previous": 88,
+          "delta_absolute": 8,
+          "delta_relative": 0.0909
+        },
+        "scroll_depth_75": {
+          "current": 0.31,
+          "previous": 0.29,
+          "delta_absolute": 0.02,
+          "delta_relative": 0.069
+        }
+      }
+    },
+    "published_changes": [
+      "chg_001",
+      "chg_002",
+      "chg_003",
+      "chg_004"
+    ],
+    "recommendation_history": {
+      "new": 3,
+      "accepted": 2,
+      "in_progress": 1,
+      "done": 1,
+      "dismissed": 1
+    },
+    "tracking_changes": [
+      "trk_001",
+      "trk_002"
+    ],
+    "source_sync_history": [
+      {
+        "source_id": "yandex_metrica",
+        "last_7_days": [
+          {
+            "date": "2026-04-24",
+            "status": "ok",
+            "rows_imported": 120
+          },
+          {
+            "date": "2026-04-25",
+            "status": "ok",
+            "rows_imported": 118
+          },
+          {
+            "date": "2026-04-26",
+            "status": "ok",
+            "rows_imported": 121
+          },
+          {
+            "date": "2026-04-27",
+            "status": "ok",
+            "rows_imported": 130
+          },
+          {
+            "date": "2026-04-28",
+            "status": "ok",
+            "rows_imported": 126
+          },
+          {
+            "date": "2026-04-29",
+            "status": "ok",
+            "rows_imported": 124
+          },
+          {
+            "date": "2026-04-30",
+            "status": "ok",
+            "rows_imported": 122
+          }
+        ]
+      },
+      {
+        "source_id": "maps_or_business_directory",
+        "last_7_days": [
+          {
+            "date": "2026-04-24",
+            "status": "ok",
+            "rows_imported": 14
+          },
+          {
+            "date": "2026-04-25",
+            "status": "stale",
+            "rows_imported": 0
+          },
+          {
+            "date": "2026-04-26",
+            "status": "stale",
+            "rows_imported": 0
+          },
+          {
+            "date": "2026-04-27",
+            "status": "stale",
+            "rows_imported": 0
+          },
+          {
+            "date": "2026-04-28",
+            "status": "stale",
+            "rows_imported": 0
+          },
+          {
+            "date": "2026-04-29",
+            "status": "stale",
+            "rows_imported": 0
+          },
+          {
+            "date": "2026-04-30",
+            "status": "stale",
+            "rows_imported": 0
+          }
+        ]
+      }
+    ],
+    "known_limitations": [
+      "Baseline period is partial.",
+      "Lead domain missing.",
+      "Google Search Console not configured.",
+      "Tracking changes in March may affect longer trend interpretation."
+    ]
+  },
+  "classified_content_changes": [
+    {
+      "classified_change_id": "cchg_001",
+      "entity_type": "service",
+      "entity_id": "service_houses_turnkey",
+      "previous_revision_id": "rev_service_0044",
+      "new_revision_id": "rev_service_0048",
+      "published_at": "2026-04-16T14:20:00+03:00",
+      "changed_scopes": [
+        "cta",
+        "media_gallery",
+        "faq"
+      ],
+      "changed_fields": [
+        "hero.cta.primary.text",
+        "hero.cta.telegram",
+        "proof.gallery.items",
+        "faq.items"
+      ],
+      "change_types": [
+        "cta_text_changed",
+        "messenger_added",
+        "gallery_changed",
+        "faq_added"
+      ],
+      "change_summary": "Изменены CTA, мессенджер, галерея и FAQ на странице услуги.",
+      "related_recommendation_id": "rec_001",
+      "is_mixed_change": true,
+      "attribution_safety": "mixed_change",
+      "attribution_limitations": [
+        "mixed_change_warning",
+        "no_single_cause_attribution",
+        "lead_domain_missing"
+      ],
+      "monitoring_status": "collecting",
+      "before_period": {
+        "start": "2026-03-19",
+        "end": "2026-04-15",
+        "days": 28
+      },
+      "after_period": {
+        "start": "2026-04-16",
+        "end": "2026-04-29",
+        "days": 14
+      },
+      "data_sufficiency": "low",
+      "tracking_context": {
+        "tracking_changed_nearby": false,
+        "related_tracking_change_ids": []
+      },
+      "source_freshness_context": {
+        "first_party_events": "ok",
+        "yandex_metrica": "ok",
+        "yandex_webmaster": "ok",
+        "lead_domain": "not_ready"
+      },
+      "evidence_item_ids": [
+        "ev_change_houses_after_low_sample",
+        "ev_page_houses_contact_actions"
+      ]
+    },
+    {
+      "classified_change_id": "cchg_002",
+      "entity_type": "service",
+      "entity_id": "service_reconstruction",
+      "previous_revision_id": "rev_service_0059",
+      "new_revision_id": "rev_service_0061",
+      "published_at": "2026-04-29T11:40:00+03:00",
+      "changed_scopes": [
+        "faq"
+      ],
+      "changed_fields": [
+        "faq.items"
+      ],
+      "change_types": [
+        "faq_added"
+      ],
+      "change_summary": "Добавлен FAQ по срокам и этапам реконструкции.",
+      "related_recommendation_id": "rec_004",
+      "is_mixed_change": false,
+      "attribution_safety": "insufficient_after_period",
+      "attribution_limitations": [
+        "after_period_too_short",
+        "no_outcome_conclusion"
+      ],
+      "monitoring_status": "collecting",
+      "before_period": {
+        "start": "2026-04-01",
+        "end": "2026-04-28",
+        "days": 28
+      },
+      "after_period": {
+        "start": "2026-04-29",
+        "end": "2026-05-26",
+        "days": 28
+      },
+      "data_sufficiency": "insufficient",
+      "tracking_context": {
+        "tracking_changed_nearby": false,
+        "related_tracking_change_ids": []
+      },
+      "source_freshness_context": {
+        "first_party_events": "ok",
+        "yandex_metrica": "ok",
+        "yandex_webmaster": "ok",
+        "lead_domain": "not_ready"
+      },
+      "evidence_item_ids": [
+        "ev_reconstruction_faq"
+      ]
+    },
+    {
+      "classified_change_id": "cchg_003",
+      "entity_type": "service",
+      "entity_id": "service_monolith",
+      "previous_revision_id": "rev_service_0031",
+      "new_revision_id": "rev_service_0032",
+      "published_at": "2026-04-08T16:10:00+03:00",
+      "changed_scopes": [
+        "seo_metadata"
+      ],
+      "changed_fields": [
+        "seo.title"
+      ],
+      "change_types": [
+        "title_changed"
+      ],
+      "change_summary": "Изменён title страницы Монолитные работы.",
+      "related_recommendation_id": "rec_003",
+      "is_mixed_change": false,
+      "attribution_safety": "clean_single_change",
+      "attribution_limitations": [
+        "no_automatic_causality",
+        "query_data_aggregate_only"
+      ],
+      "monitoring_status": "ready",
+      "before_period": {
+        "start": "2026-03-11",
+        "end": "2026-04-07",
+        "days": 28
+      },
+      "after_period": {
+        "start": "2026-04-08",
+        "end": "2026-04-29",
+        "days": 22
+      },
+      "data_sufficiency": "medium",
+      "tracking_context": {
+        "tracking_changed_nearby": false,
+        "related_tracking_change_ids": []
+      },
+      "source_freshness_context": {
+        "yandex_webmaster": "ok",
+        "google_search_console": "not_configured"
+      },
+      "evidence_item_ids": [
+        "ev_page_monolith_ctr"
+      ]
+    },
+    {
+      "classified_change_id": "cchg_004",
+      "entity_type": "page",
+      "entity_id": "page_contacts",
+      "previous_revision_id": "rev_page_contacts_0010",
+      "new_revision_id": "rev_page_contacts_0011",
+      "published_at": "2026-04-06T12:15:00+03:00",
+      "changed_scopes": [
+        "contact_block"
+      ],
+      "changed_fields": [
+        "contacts.phone",
+        "contacts.telegram"
+      ],
+      "change_types": [
+        "phone_changed",
+        "contact_channel_changed"
+      ],
+      "change_summary": "Обновлён контактный блок и Telegram-ссылка.",
+      "related_recommendation_id": "rec_005",
+      "is_mixed_change": false,
+      "attribution_safety": "tracking_changed_nearby",
+      "attribution_limitations": [
+        "tracking_changed_nearby",
+        "contact_action_trend_limited"
+      ],
+      "monitoring_status": "collecting",
+      "before_period": {
+        "start": "2026-03-09",
+        "end": "2026-04-05",
+        "days": 28
+      },
+      "after_period": {
+        "start": "2026-04-06",
+        "end": "2026-04-29",
+        "days": 24
+      },
+      "data_sufficiency": "low",
+      "tracking_context": {
+        "tracking_changed_nearby": true,
+        "related_tracking_change_ids": [
+          "trk_002"
+        ]
+      },
+      "source_freshness_context": {
+        "first_party_events": "ok",
+        "yandex_metrica": "ok",
+        "lead_domain": "not_ready"
+      },
+      "evidence_item_ids": [
+        "ev_contacts_actions"
+      ]
+    }
+  ],
+  "published_change_history": [
+    {
+      "change_id": "chg_001",
+      "classified_change_id": "cchg_001",
+      "published_at": "2026-04-16T14:20:00+03:00",
+      "entity_type": "service",
+      "entity_id": "service_houses_turnkey",
+      "revision_id": "rev_service_0048",
+      "previous_revision_id": "rev_service_0044",
+      "new_revision_id": "rev_service_0048",
+      "change_type": "mixed_change",
+      "change_types": [
+        "cta_text_changed",
+        "messenger_added",
+        "gallery_changed",
+        "faq_added"
+      ],
+      "changed_scopes": [
+        "cta",
+        "media_gallery",
+        "faq"
+      ],
+      "changed_fields_summary": "Изменены CTA, мессенджер, галерея и FAQ.",
+      "related_recommendation_id": "rec_001",
+      "is_mixed_change": true,
+      "attribution_safety": "mixed_change",
+      "attribution_limitations": [
+        "mixed_change_warning",
+        "no_single_cause_attribution",
+        "lead_domain_missing"
+      ],
+      "before_period": {
+        "start": "2026-03-19",
+        "end": "2026-04-15",
+        "days": 28
+      },
+      "after_period": {
+        "start": "2026-04-16",
+        "end": "2026-04-29",
+        "days": 14
+      },
+      "monitoring_status": "collecting",
+      "data_sufficiency": "low",
+      "tracking_context": {
+        "tracking_changed_nearby": false,
+        "related_tracking_change_ids": []
+      },
+      "source_freshness_context": {
+        "first_party_events": "ok",
+        "yandex_metrica": "ok",
+        "yandex_webmaster": "ok",
+        "lead_domain": "not_ready"
+      },
+      "evidence_item_ids": [
+        "ev_change_houses_after_low_sample",
+        "ev_page_houses_contact_actions"
+      ],
+      "safe_interpretation": "После набора изменений можно наблюдать метрики, но нельзя выделить влияние CTA, галереи или FAQ отдельно."
+    },
+    {
+      "change_id": "chg_002",
+      "classified_change_id": "cchg_002",
+      "published_at": "2026-04-29T11:40:00+03:00",
+      "entity_type": "service",
+      "entity_id": "service_reconstruction",
+      "revision_id": "rev_service_0061",
+      "previous_revision_id": "rev_service_0059",
+      "new_revision_id": "rev_service_0061",
+      "change_type": "faq_added",
+      "change_types": [
+        "faq_added"
+      ],
+      "changed_scopes": [
+        "faq"
+      ],
+      "changed_fields_summary": "Добавлен FAQ по срокам и этапам реконструкции.",
+      "related_recommendation_id": "rec_004",
+      "is_mixed_change": false,
+      "attribution_safety": "insufficient_after_period",
+      "attribution_limitations": [
+        "after_period_too_short",
+        "no_outcome_conclusion"
+      ],
+      "before_period": {
+        "start": "2026-04-01",
+        "end": "2026-04-28",
+        "days": 28
+      },
+      "after_period": {
+        "start": "2026-04-29",
+        "end": "2026-05-26",
+        "days": 28
+      },
+      "monitoring_status": "collecting",
+      "data_sufficiency": "insufficient",
+      "tracking_context": {
+        "tracking_changed_nearby": false,
+        "related_tracking_change_ids": []
+      },
+      "source_freshness_context": {
+        "first_party_events": "ok",
+        "yandex_metrica": "ok",
+        "lead_domain": "not_ready"
+      },
+      "evidence_item_ids": [
+        "ev_reconstruction_faq"
+      ],
+      "safe_interpretation": "FAQ опубликован недавно; данных после публикации пока недостаточно."
+    },
+    {
+      "change_id": "chg_003",
+      "classified_change_id": "cchg_003",
+      "published_at": "2026-04-08T16:10:00+03:00",
+      "entity_type": "service",
+      "entity_id": "service_monolith",
+      "revision_id": "rev_service_0032",
+      "previous_revision_id": "rev_service_0031",
+      "new_revision_id": "rev_service_0032",
+      "change_type": "title_changed",
+      "change_types": [
+        "title_changed"
+      ],
+      "changed_scopes": [
+        "seo_metadata"
+      ],
+      "changed_fields_summary": "Изменён title страницы Монолитные работы.",
+      "related_recommendation_id": "rec_003",
+      "is_mixed_change": false,
+      "attribution_safety": "clean_single_change",
+      "attribution_limitations": [
+        "no_automatic_causality",
+        "query_data_aggregate_only"
+      ],
+      "before_period": {
+        "start": "2026-03-11",
+        "end": "2026-04-07",
+        "days": 28
+      },
+      "after_period": {
+        "start": "2026-04-08",
+        "end": "2026-04-29",
+        "days": 22
+      },
+      "monitoring_status": "ready",
+      "data_sufficiency": "medium",
+      "tracking_context": {
+        "tracking_changed_nearby": false,
+        "related_tracking_change_ids": []
+      },
+      "source_freshness_context": {
+        "yandex_webmaster": "ok",
+        "google_search_console": "not_configured"
+      },
+      "evidence_item_ids": [
+        "ev_page_monolith_ctr"
+      ],
+      "safe_interpretation": "После изменения title можно осторожно сравнить CTR, но это не доказывает причинность."
+    },
+    {
+      "change_id": "chg_004",
+      "classified_change_id": "cchg_004",
+      "published_at": "2026-04-06T12:15:00+03:00",
+      "entity_type": "page",
+      "entity_id": "page_contacts",
+      "revision_id": "rev_page_contacts_0011",
+      "previous_revision_id": "rev_page_contacts_0010",
+      "new_revision_id": "rev_page_contacts_0011",
+      "change_type": "contact_channel_changed",
+      "change_types": [
+        "phone_changed",
+        "contact_channel_changed"
+      ],
+      "changed_scopes": [
+        "contact_block"
+      ],
+      "changed_fields_summary": "Обновлён контактный блок и Telegram-ссылка.",
+      "related_recommendation_id": "rec_005",
+      "is_mixed_change": false,
+      "attribution_safety": "tracking_changed_nearby",
+      "attribution_limitations": [
+        "tracking_changed_nearby",
+        "contact_action_trend_limited"
+      ],
+      "before_period": {
+        "start": "2026-03-09",
+        "end": "2026-04-05",
+        "days": 28
+      },
+      "after_period": {
+        "start": "2026-04-06",
+        "end": "2026-04-29",
+        "days": 24
+      },
+      "monitoring_status": "collecting",
+      "data_sufficiency": "low",
+      "tracking_context": {
+        "tracking_changed_nearby": true,
+        "related_tracking_change_ids": [
+          "trk_002"
+        ]
+      },
+      "source_freshness_context": {
+        "first_party_events": "ok",
+        "yandex_metrica": "ok",
+        "lead_domain": "not_ready"
+      },
+      "evidence_item_ids": [
+        "ev_contacts_actions"
+      ],
+      "safe_interpretation": "В период рядом менялся трекинг, поэтому динамику contact actions нужно интерпретировать осторожно."
+    }
+  ],
+  "tracking_change_history": [
+    {
+      "tracking_change_id": "trk_001",
+      "changed_at": "2026-03-21T12:00:00+03:00",
+      "change_type": "data_analytics_id_changed",
+      "affected_events": [
+        "cta_click",
+        "click_to_telegram"
+      ],
+      "affected_pages": [
+        "/services/stroitelstvo-domov-pod-klyuch",
+        "/services/monolitnye-raboty"
+      ],
+      "description": "Обновлены stable analytics ids для hero CTA.",
+      "impact_on_metrics": "Длинные тренды по CTA до/после этой даты нужно интерпретировать осторожно.",
+      "tracking_recently_changed": true
+    },
+    {
+      "tracking_change_id": "trk_002",
+      "changed_at": "2026-04-05T10:30:00+03:00",
+      "change_type": "bot_exclusion_changed",
+      "affected_events": [
+        "page_view",
+        "scroll_depth"
+      ],
+      "affected_pages": [
+        "*"
+      ],
+      "description": "Уточнено исключение ботов и preview traffic.",
+      "impact_on_metrics": "Visits/page_view after 2026-04-05 may be cleaner than older baseline.",
+      "tracking_recently_changed": true
+    }
+  ],
+  "unmapped_url_diagnostics": [
+    {
+      "source_system": "yandex_metrica",
+      "external_url": "https://example.invalid/services/stroitelstvo-domov-pod-klyuch?utm_source=old",
+      "normalized_page_path": "/services/stroitelstvo-domov-pod-klyuch",
+      "first_seen_at": "2026-04-20T03:10:00+03:00",
+      "last_seen_at": "2026-04-29T03:10:00+03:00",
+      "metrics_snapshot": {
+        "visits": 18,
+        "contact_actions": 0
+      },
+      "probable_reason": "query_string_noise",
+      "resolution_status": "open"
+    },
+    {
+      "source_system": "yandex_metrica",
+      "external_url": "https://example.invalid/uslugi/monolit",
+      "normalized_page_path": "/uslugi/monolit",
+      "first_seen_at": "2026-04-18T03:10:00+03:00",
+      "last_seen_at": "2026-04-27T03:10:00+03:00",
+      "metrics_snapshot": {
+        "visits": 9,
+        "contact_actions": 0
+      },
+      "probable_reason": "old_url",
+      "resolution_status": "open"
+    },
+    {
+      "source_system": "yandex_metrica",
+      "external_url": "https://example.invalid/cases/dom-v-sochi/",
+      "normalized_page_path": "/cases/dom-v-sochi/",
+      "first_seen_at": "2026-04-10T03:10:00+03:00",
+      "last_seen_at": "2026-04-26T03:10:00+03:00",
+      "metrics_snapshot": {
+        "visits": 5,
+        "contact_actions": 0
+      },
+      "probable_reason": "canonical_mismatch",
+      "resolution_status": "open"
+    }
+  ],
+  "llm_derivation_notes": {
+    "allowed_read_model_inputs": [
+      "selected_page_detail",
+      "evidence_items",
+      "analytics_history.metric_trends",
+      "classified_content_changes",
+      "published_change_history",
+      "tracking_change_history",
+      "attribution_safety",
+      "source_health",
+      "warnings",
+      "limitations"
+    ],
+    "forbidden_llm_inputs": [
+      "raw_events",
+      "raw_sessions",
+      "form_values",
+      "ip",
+      "tokens",
+      "secrets",
+      "direct_sql",
+      "full_yandex_metrica_export",
+      "full_yandex_webmaster_export"
+    ],
+    "example_task_slice": {
+      "task": "explain_page",
+      "page_path": "/services/stroitelstvo-domov-pod-klyuch",
+      "include_evidence_item_ids": [
+        "ev_page_houses_yandex_visibility",
+        "ev_page_houses_visits",
+        "ev_page_houses_contact_actions",
+        "ev_page_houses_proof_gap",
+        "ev_page_houses_behavior"
+      ],
+      "include_history_ids": [
+        "cchg_001",
+        "chg_001",
+        "trk_001"
+      ],
+      "must_respect_attribution_safety": true,
+      "do_not_include_full_page_list": true
+    }
+  }
+}

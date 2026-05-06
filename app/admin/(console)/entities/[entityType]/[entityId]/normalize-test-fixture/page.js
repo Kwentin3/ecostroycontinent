@@ -15,14 +15,14 @@ import { ENTITY_TYPE_LABELS } from "../../../../../../../lib/content-core/conten
 
 function getCurrentStateLabel(root) {
   if (root?.published) {
-    return "Есть active published truth";
+    return "Есть активная опубликованная версия";
   }
 
   if (root?.hasReviewRevision) {
-    return "Есть review-state revision";
+    return "Есть ревизия на проверке";
   }
 
-  return "Live truth нет";
+  return "Активной опубликованной версии нет";
 }
 
 export default async function NormalizeLegacyTestFixturePage({ params, searchParams }) {
@@ -46,18 +46,15 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
 
   const sourceHref = `/admin/entities/${normalizedType}/${entityId}`;
   const failureRedirectTo = `/admin/entities/${normalizedType}/${entityId}/normalize-test-fixture`;
-  // This bridge is only for already-existing legacy fixtures that were created before
-  // the explicit `test__...` naming canon. New temporary entities must be test-marked
-  // at creation time instead of relying on post-hoc normalization.
 
   return (
     <AdminShell
       user={user}
-      title="Нормализовать как тестовый fixture"
+      title="Нормализовать как тестовый набор"
       breadcrumbs={[
         { label: "Админка", href: "/admin" },
         { label: ENTITY_TYPE_LABELS[normalizedType], href: `/admin/entities/${normalizedType}` },
-        { label: evaluation.root?.label || "Нормализация test fixture" }
+        { label: evaluation.root?.label || "Нормализация тестового набора" }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
       actions={<Link href={sourceHref} className={styles.secondaryButton}>Вернуться к объекту</Link>}
@@ -68,24 +65,24 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
 
         <section className={styles.panel}>
           <p className={styles.helpText}>
-            Это корректирующий bridge только для подтверждённых legacy test fixtures. Он меняет persisted marker на
-            <code> agent_test </code>, чтобы существующий teardown-путь мог честно рассматривать объект как тестовый.
-            Это не delete, не unpublish и не casual tag.
+            Это корректирующий экран только для подтвержденных устаревших тестовых наборов. Он меняет сохраненную метку происхождения на
+            <code> agent_test </code>,
+            чтобы существующий путь безопасного удаления мог честно считать объект тестовым. Это не удаление, не снятие с публикации и не обход дисциплины публикации.
           </p>
           <div className={styles.badgeRow}>
             <span className={`${styles.badge} ${evaluation.allowed ? styles.mediaBadgesuccess : styles.mediaBadgedanger}`}>
               {evaluation.allowed ? "Нормализация разрешена" : "Нормализация заблокирована"}
             </span>
-            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть published truth</span> : null}
-            {evaluation.root?.hasReviewRevision ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Есть review residue</span> : null}
+            {evaluation.root?.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Есть опубликованная версия</span> : null}
+            {evaluation.root?.hasReviewRevision ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Есть остаток проверки</span> : null}
             <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>
-              marker: {evaluation.root?.creationOrigin || "null"} → {evaluation.root?.resultingCreationOrigin || "agent_test"}
+              Метка: {evaluation.root?.creationOrigin || "null"} → {evaluation.root?.resultingCreationOrigin || "agent_test"}
             </span>
           </div>
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Dry-run</h3>
+          <h3>Предпросмотр операции</h3>
           <ul className={styles.stack}>
             <li className={styles.timelineItem}>
               <strong>Объект</strong>
@@ -97,11 +94,11 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
             </li>
             <li className={styles.timelineItem}>
               <strong>Что изменится</strong>
-              <p className={styles.mutedText}>После операции объект станет test-marked и в editor UI появится вход в `Удалить тестовый граф`, если остальные условия тоже соблюдены.</p>
+              <p className={styles.mutedText}>После операции объект станет помеченным как тестовый, и в операторском интерфейсе станет доступен путь удаления тестового графа, если остальные условия безопасности тоже выполнены.</p>
             </li>
             <li className={styles.timelineItem}>
               <strong>Что не изменится</strong>
-              <p className={styles.mutedText}>Нормализация сама по себе не удаляет объект, не снимает review residue и не обходит published/ref safety rules.</p>
+              <p className={styles.mutedText}>Нормализация сама по себе не удаляет объект, не снимает его с публикации, не закрывает остатки проверки и не убирает publish-обязательства.</p>
             </li>
           </ul>
         </section>
@@ -149,9 +146,9 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
         </section>
 
         <section className={`${styles.panel} ${styles.panelMuted}`}>
-          <h3>Связанные Page / Service / Case</h3>
+          <h3>Связанные сущности с собственным маршрутом</h3>
           {evaluation.relatedTargets.length === 0 ? (
-            <p className={styles.mutedText}>Связанных route-owning сущностей в этом срезе не найдено.</p>
+            <p className={styles.mutedText}>Связанных страниц, услуг и кейсов в этом срезе не найдено.</p>
           ) : (
             <ul className={styles.stack}>
               {evaluation.relatedTargets.map((target) => (
@@ -162,10 +159,10 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
                   </div>
                   <div className={styles.badgeRow}>
                     <span className={`${styles.badge} ${target.isTestData ? styles.mediaBadgewarning : styles.mediaBadgemuted}`}>
-                      {target.isTestData ? "Уже test-marked" : "Без test marker"}
+                      {target.isTestData ? "Уже помечен как тестовый" : "Без тестовой метки"}
                     </span>
-                    {target.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Published</span> : null}
-                    {target.hasReviewRevision ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Review residue</span> : null}
+                    {target.published ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Опубликовано</span> : null}
+                    {target.hasReviewRevision ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Остаток проверки</span> : null}
                   </div>
                   <div className={styles.inlineActions}>
                     <Link href={target.href} className={styles.secondaryButton}>Открыть</Link>
@@ -178,7 +175,7 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
 
         {evaluation.warnings.length > 0 ? (
           <section className={styles.statusPanelWarning}>
-            <strong>Что всё ещё может блокировать teardown</strong>
+            <strong>Что еще может заблокировать последующее удаление</strong>
             <ul className={styles.stack}>
               {evaluation.warnings.map((warning) => (
                 <li key={warning} className={styles.timelineItem}>{warning}</li>
@@ -202,16 +199,16 @@ export default async function NormalizeLegacyTestFixturePage({ params, searchPar
           <section className={styles.panel}>
             <h3>Подтверждение</h3>
             <p className={styles.helpText}>
-              Используйте это только для подтверждённых legacy test fixtures. После пометки объект войдёт в test-marked teardown path, но не будет удалён автоматически.
+              Используйте это только для подтвержденных устаревших тестовых наборов. После пометки объект войдет в тестовый контур удаления, но не будет удален автоматически.
             </p>
             <ConfirmActionForm
               action={`/api/admin/entities/${normalizedType}/${entityId}/normalize-test-fixture`}
-              confirmMessage="Пометить объект как legacy test fixture? Это изменит teardown eligibility и запишется в аудит."
+              confirmMessage="Пометить объект как устаревший тестовый набор? Это изменит путь безопасного удаления и запишется в форензик-журнал."
               className={styles.inlineActions}
             >
               <input type="hidden" name="redirectTo" value={sourceHref} />
               <input type="hidden" name="failureRedirectTo" value={failureRedirectTo} />
-              <button type="submit" className={styles.dangerButton}>Пометить как тестовые</button>
+              <button type="submit" className={styles.dangerButton}>Пометить как тестовый</button>
             </ConfirmActionForm>
           </section>
         ) : null}

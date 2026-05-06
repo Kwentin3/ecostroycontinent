@@ -41,7 +41,7 @@ export async function POST(request, { params }) {
   const action = getString(formData, "action") || "archive";
 
   if (!["archive", "restore"].includes(action)) {
-    return NextResponse.json({ ok: false, error: "Неизвестное lifecycle-действие." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Неизвестное действие жизненного цикла." }, { status: 400 });
   }
 
   if (action === "archive" && currentItem.archiveBlocked) {

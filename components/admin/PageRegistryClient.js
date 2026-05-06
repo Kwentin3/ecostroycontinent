@@ -89,7 +89,7 @@ function buildHiddenValue(pageType, createMode, formState) {
 function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
   const previewTitle = record.previewTitle || record.title;
   const previewIntro =
-    record.previewIntro || "Page preview keeps the first-screen composition intact instead of cropping to a media tile.";
+    record.previewIntro || "Предпросмотр страницы сохраняет композицию первого экрана и не обрезает её до медиа-тайла.";
   const canRenderPreview = Boolean(record.previewPageValue && globalSettings);
 
   return (
@@ -100,12 +100,12 @@ function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
       <div className={styles.pagePreviewViewport}>
         <div className={styles.pagePreviewSurface}>
           <div className={styles.pagePreviewFrame}>
-        <div className={styles.pagePreviewTop}>
+          <div className={styles.pagePreviewTop}>
           <span className={styles.pagePreviewEyebrow}>
             {PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
           </span>
           {record.lifecycle?.hasLivePublishedRevision ? (
-            <span className={styles.pagePreviewLive}>Live</span>
+            <span className={styles.pagePreviewLive}>Опубликовано</span>
           ) : null}
         </div>
         {canRenderPreview ? (
@@ -130,7 +130,7 @@ function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
         <div className={styles.pagePreviewBody}>
           <strong className={styles.pagePreviewTitle}>{previewTitle}</strong>
           <p className={styles.pagePreviewText}>
-            {record.previewIntro || "Карточка показывает собственный page preview, а не фотографию прикрепленного медиа."}
+            {record.previewIntro || "Карточка показывает собственный предпросмотр страницы, а не фотографию прикрепленного медиа."}
           </p>
         </div>
         <div className={styles.pagePreviewFooter}>
@@ -162,11 +162,58 @@ function renderCanonicalRegistryPageCardPreview(record, previewLookupRecords, gl
   );
 }
 
+function renderHomeLandingSurface(surface) {
+  if (!surface) {
+    return null;
+  }
+
+  const stats = [
+    surface.serviceCount > 0 ? `${surface.serviceCount} услуг` : "",
+    surface.equipmentCount > 0 ? `${surface.equipmentCount} единиц техники` : "",
+    surface.caseCount > 0 ? `${surface.caseCount} кейсов` : ""
+  ].filter(Boolean);
+
+  return (
+    <section className={styles.systemSurfaces} aria-labelledby="home-landing-surface-title">
+      <div className={styles.systemSurfaceIntro}>
+        <span className={styles.fieldLabel}>Системные витрины</span>
+        <h3 id="home-landing-surface-title" className={styles.title}>Главная страница</h3>
+        <p className={styles.meta}>
+          Главная не хранит копию текста в разделе страниц, а собирается из опубликованных услуг, техники и кейсов.
+        </p>
+      </div>
+      <article className={styles.systemCard}>
+        <div>
+          <span className={`${styles.badge} ${surface.ready ? styles.tonehealthy : styles.tonewarning}`}>
+            {surface.ready ? "Готова к показу" : "Нужна опубликованная услуга"}
+          </span>
+          <h4 className={styles.systemCardTitle}>{surface.title}</h4>
+          <p className={styles.meta}>{surface.description}</p>
+          {stats.length > 0 ? (
+            <div className={styles.systemStats} aria-label="Состав главной витрины">
+              {stats.map((item) => <span key={item}>{item}</span>)}
+            </div>
+          ) : null}
+        </div>
+        <div className={styles.systemActions}>
+          <Link href={surface.editHref} className={styles.primaryButton}>
+            {surface.editLabel}
+          </Link>
+          <Link href={surface.publicHref} className={styles.menuItem}>
+            Открыть /
+          </Link>
+        </div>
+      </article>
+    </section>
+  );
+}
+
 export function PageRegistryClient({
   initialRecords,
   summary = null,
   previewLookupRecords = null,
   globalSettings = null,
+  homeLandingSurface = null,
   metadataSaveBasePath = "/api/admin/entities/page",
   createFallbackHref = "/admin/entities/page/new",
   initialCreateOpen = false,
@@ -181,7 +228,7 @@ export function PageRegistryClient({
   equipmentOptions = []
 }) {
   const [records, setRecords] = useState(() => normalizePageRegistryRecords(initialRecords));
-  const [viewMode, setViewMode] = useState("cards");
+  const [viewMode, setViewMode] = useState("list");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -270,7 +317,7 @@ export function PageRegistryClient({
       { label: "Частично", value: stats.partial ?? 0 },
       { label: "Готово", value: stats.ready ?? 0 },
       { label: "Нет версии", value: stats.missing ?? 0 },
-      { label: "Вне live", value: stats.inactive ?? 0 }
+      { label: "Снято с публикации", value: stats.inactive ?? 0 }
     ];
   }, [records.length, summary]);
 
@@ -459,11 +506,11 @@ export function PageRegistryClient({
             Новая страница
           </button>
           <div className={styles.toggleRow}>
-            <button type="button" className={`${styles.toggle} ${viewMode === "cards" ? styles.toggleActive : ""}`} onClick={() => setViewMode("cards")}>
-              Карточки
-            </button>
             <button type="button" className={`${styles.toggle} ${viewMode === "list" ? styles.toggleActive : ""}`} onClick={() => setViewMode("list")}>
               Список
+            </button>
+            <button type="button" className={`${styles.toggle} ${viewMode === "cards" ? styles.toggleActive : ""}`} onClick={() => setViewMode("cards")}>
+              Превью
             </button>
           </div>
         </div>
@@ -471,6 +518,8 @@ export function PageRegistryClient({
 
       {actionMessage ? <div className={styles.feedbackInfo}>{actionMessage}</div> : null}
       {actionError ? <div className={styles.feedbackError}>{actionError}</div> : null}
+
+      {renderHomeLandingSurface(homeLandingSurface)}
 
       {filteredRecords.length === 0 ? (
         <div className={styles.empty}>Под эти фильтры страницы не найдены. Снимите фильтр или создайте новую страницу.</div>
@@ -583,7 +632,7 @@ export function PageRegistryClient({
               <div>
                 <p className={styles.fieldLabel}>Создание страницы</p>
                 <h2 id="page-create-title" className={styles.createTitle}>Новая страница</h2>
-                <p className={styles.createLegend}>Создание остается внутри единого редактора страниц. Режим старта задает только начальный контекст, а не отдельный экран.</p>
+                <p className={styles.createLegend}>После создания открывается тот же рабочий экран страницы. Режим старта задает только исходный контекст.</p>
               </div>
               <button type="button" className={styles.menuButton} onClick={() => setCreateOpen(false)}>
                 ×
@@ -708,9 +757,17 @@ export function PageRegistryClient({
               </p>
 
               <div className={styles.createActions}>
-                <Link href={createFallbackHref} className={styles.ghostLink}>
-                  Полный fallback-маршрут
-                </Link>
+                <details className={styles.createServiceDisclosure}>
+                  <summary className={styles.createServiceSummary}>Служебно</summary>
+                  <div className={styles.createServiceBody}>
+                    <p className={styles.createServiceNote}>
+                      Резервный маршрут нужен только как страховка. В обычной работе страница создается и сразу открывается в основном редакторе.
+                    </p>
+                    <Link href={createFallbackHref} className={styles.ghostLink}>
+                      Открыть резервный маршрут
+                    </Link>
+                  </div>
+                </details>
                 <div className={styles.createButtons}>
                   <button type="button" className={styles.toggle} onClick={() => setCreateOpen(false)}>
                     Отмена

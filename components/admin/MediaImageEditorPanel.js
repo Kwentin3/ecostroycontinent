@@ -48,7 +48,7 @@ async function applyCanvasTransform(sourceUrl, filename, mimeType, transform) {
   const context = canvas.getContext("2d");
 
   if (!context) {
-    throw new Error("Canvas-редактор недоступен в этом браузере.");
+    throw new Error("Редактор изображений недоступен в этом браузере.");
   }
 
   const { type } = transform;

@@ -61,11 +61,11 @@ test("projectServiceLandingSections keeps the service registry order and statuse
 
   assert.deepEqual(
     sections.map((section) => section.id),
-    ["service_hero", "primary_media", "service_scope", "related_cases", "gallery"]
+    ["service_hero", "primary_media", "service_scope", "related_equipment", "related_cases", "gallery"]
   );
   assert.deepEqual(
     sections.map((section) => section.status),
-    ["present", "present", "present", "present", "present"]
+    ["present", "present", "present", "absent", "present", "present"]
   );
 });
 
@@ -191,7 +191,7 @@ test("requestServiceLandingCandidate preserves the base revision through the str
   assert.equal(result.sourceContextSummary, sourceContextSummary);
   assert.equal(result.spec.baseRevisionId, "rev_1");
   assert.equal(result.spec.routeFamily, SERVICE_LANDING_ROUTE_FAMILY);
-  assert.equal(result.spec.sections.length, 5);
+  assert.equal(result.spec.sections.length, 6);
   assert.equal(result.spec.payload.slug, payload.slug);
   assert.match(result.promptPacket.prompt, /Action slice: service_landing_generation/);
   assert.match(requests[0].prompt, /Source service payload:/);
@@ -214,7 +214,7 @@ test("buildServiceLandingCandidateSpec wraps the normalized payload in the servi
   assert.equal(spec.specVersion, SERVICE_LANDING_SPEC_VERSION);
   assert.deepEqual(
     spec.sections.map((section) => section.id),
-    ["service_hero", "primary_media", "service_scope", "related_cases", "gallery"]
+    ["service_hero", "primary_media", "service_scope", "related_equipment", "related_cases", "gallery"]
   );
   assert.equal(spec.payload.slug, payload.slug);
 });

@@ -1,3 +1,5 @@
+import { lookupLatestRevisionId, parseRevisionIdFromEditorHtml } from "./lib/revision-id-parser.mjs";
+
 const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:3000";
 const seoUsername = process.env.SEED_SEO_USERNAME ?? "seo";
 const seoPassword = process.env.SEED_SEO_PASSWORD ?? "change-me-seo";
@@ -138,14 +140,7 @@ function extractFirstEntityIdFromList(html, entityType) {
 }
 
 function extractRevisionIdFromEditor(html) {
-  const submitMatch = html.match(/\/api\/admin\/revisions\/([^/]+)\/submit/);
-
-  if (submitMatch) {
-    return submitMatch[1];
-  }
-
-  const publishMatch = html.match(/\/admin\/revisions\/([^/]+)\/publish/);
-  return publishMatch ? publishMatch[1] : null;
+  return parseRevisionIdFromEditorHtml(html);
 }
 
 function createProofPngFile() {
@@ -194,8 +189,19 @@ async function createScratchServiceDraft(cookie, proofId) {
   ensure(entityIdMatch, "Could not extract scratch service entity id.");
 
   const entityId = entityIdMatch[1];
-  const editorHtml = await readHtml(`/admin/entities/service/${entityId}`, cookie);
-  const revisionId = extractRevisionIdFromEditor(editorHtml);
+  const lookupRevisionId = await lookupLatestRevisionId({
+    baseUrl,
+    cookie,
+    entityType: "service",
+    entityId
+  });
+  let revisionId = lookupRevisionId;
+
+  if (!revisionId) {
+    const editorHtml = await readHtml(`/admin/entities/service/${entityId}`, cookie);
+    revisionId = extractRevisionIdFromEditor(editorHtml);
+  }
+
   ensure(revisionId, "Could not extract scratch service revision id.");
 
   const submitResponse = await request(`/api/admin/revisions/${revisionId}/submit`, {

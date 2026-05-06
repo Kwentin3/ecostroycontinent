@@ -216,6 +216,38 @@ test("page workspace save_metadata keeps page composition intact and removes hid
   assert.equal(captured.saveDraftInput.payload.seo.indexationFlag, "noindex");
 });
 
+test("page workspace save_metadata blocks migration into legacy page types when ownership guard rejects it", async () => {
+  const response = await POST(
+    buildRequest({
+      action: "save_metadata",
+      metadata: {
+        slug: "foundation",
+        pageType: "service_landing",
+        pageThemeKey: "forest_contrast"
+      }
+    }),
+    { params: { pageId: "page_1" } },
+    {
+      ...buildRouteDeps(),
+      assertPageTypeAllowedForLaunchOwnership: ({ nextPageType }) => {
+        if (nextPageType === "service_landing") {
+          const error = new Error("Launch ownership guard blocks legacy pageType \"service_landing\".");
+          error.name = "LaunchOwnershipGuardError";
+          throw error;
+        }
+      },
+      saveDraft: async () => {
+        throw new Error("saveDraft should not be called when ownership guard blocks metadata mutation.");
+      }
+    }
+  );
+  const result = await response.json();
+
+  assert.equal(response.status, 400);
+  assert.equal(result.ok, false);
+  assert.equal(result.error, "Launch ownership guard blocks legacy pageType \"service_landing\".");
+});
+
 test("page workspace suggest_patch returns bounded AI patch without saving canonical truth", async () => {
   const captured = {};
   const response = await POST(

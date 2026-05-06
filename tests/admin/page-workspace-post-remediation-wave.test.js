@@ -14,8 +14,8 @@ test("preview viewport exposes tablet semantics as explicit operator affordance"
   assert.equal(tablet.value, "tablet");
   assert.equal(tablet.width, 834);
   assert.equal(tablet.deviceShellClassName, "previewViewportDeviceTablet");
-  assert.equal(formatPreviewViewportWidth(tablet.width), "834 px");
-  assert.match(tablet.hint, /РїРµСЂРµРЅРѕСЃ|CTA|СЃРµРєС†Рё/i);
+  assert.equal(formatPreviewViewportWidth(tablet.width), "834 пикс.");
+  assert.match(tablet.hint, /перенос|CTA|секц/i);
 });
 
 test("preview viewport falls back to desktop for unknown device", () => {
@@ -28,18 +28,23 @@ test("preview viewport falls back to desktop for unknown device", () => {
 test("standalone page keeps theme styling on the outer preview shell", () => {
   const source = readFileSync(new URL("../../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
-  assert.match(source, /<PublicPageShell globalSettings=\{globalSettings\} themeClassName=\{pageThemeClassName\}>/);
+  assert.match(source, /<PublicPageShell[\s\S]*globalSettings=\{globalSettings\}[\s\S]*themeClassName=\{pageThemeClassName\}[\s\S]*currentPath=\{currentPath\}/);
 });
 
 test("page workspace preview modal uses a single control center and renders viewport as a clean canvas", () => {
   const source = readFileSync(new URL("../../components/admin/PageWorkspaceScreen.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const previewViewportSource = readFileSync(new URL("../../components/admin/PreviewViewport.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const css = readFileSync(new URL("../../components/admin/admin-ui.module.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
   assert.match(source, /showToolbar=\{false\}/);
   assert.match(source, /showFrameTop=\{false\}/);
+  assert.match(source, /fullPage/);
   assert.match(source, /previewModalControlRow/);
   assert.match(source, /adminStyles\.previewViewportControls/);
+  assert.match(previewViewportSource, /fullPage = false/);
+  assert.match(previewViewportSource, /styles\.previewViewportFullPage/);
   assert.match(previewViewportSource, /data-preview-device=\{activeOption\.value\}/);
+  assert.match(css, /\.previewViewportFullPage \.previewViewportDeviceDesktop \.previewViewportDeviceViewport[\s\S]*aspect-ratio:\s*auto;/);
 });
 
 test("entity registry page keeps SurfacePacket imported for non-page entity lists", () => {
@@ -126,3 +131,4 @@ test("cleanup aggregate builder still orders existing revisions without duplicat
   assert.equal(aggregates[0].revisions[0].id, "rev_2");
   assert.equal(aggregates[0].revisions[1].id, "rev_1");
 });
+

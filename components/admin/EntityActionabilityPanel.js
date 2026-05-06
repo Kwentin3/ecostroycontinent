@@ -1,5 +1,5 @@
 import { buildEditorActionabilityModel } from "../../lib/admin/readiness-actionability.js";
-import { getRevisionStateLabel } from "../../lib/ui-copy.js";
+import { getLivePublicationStatusModel, getWorkingRevisionStatusModel } from "../../lib/admin/workflow-status.js";
 import styles from "./admin-ui.module.css";
 
 const TONE_CLASS_BY_STATE = {
@@ -38,8 +38,11 @@ export function EntityActionabilityPanel({
     currentRevision,
     activePublishedRevision
   });
-  const currentRevisionLabel = currentRevision ? getRevisionStateLabel(currentRevision.state) : "Новая карточка";
+  const workingStatus = getWorkingRevisionStatusModel({ currentRevision, activePublishedRevision });
+  const liveStatus = getLivePublicationStatusModel({ currentRevision, activePublishedRevision });
   const readinessToneClass = TONE_CLASS_BY_STATE[model.state.tone] || styles.cockpitToneUnknown;
+  const workingToneClass = TONE_CLASS_BY_STATE[workingStatus.tone] || styles.cockpitToneUnknown;
+  const liveToneClass = TONE_CLASS_BY_STATE[liveStatus.tone] || styles.cockpitToneUnknown;
 
   return (
     <section id={model.fallbackAnchorId} className={`${styles.panel} ${styles.editorActionabilityPanel}`}>
@@ -56,13 +59,14 @@ export function EntityActionabilityPanel({
 
       <div className={styles.cockpitStateGrid}>
         <article className={styles.cockpitStateCard}>
-          <span className={styles.cockpitStateLabel}>Состояние записи</span>
-          <span className={styles.cockpitStateValue}>{currentRevisionLabel}</span>
+          <span className={styles.cockpitStateLabel}>Рабочий статус</span>
+          <span className={styles.cockpitStateValue}>{workingStatus.label}</span>
           <p className={styles.cockpitStateCopy}>
-            {model.currentRevisionState === "draft" ? "Черновик ещё не прошёл проверку готовности." : model.state.note}
+            {workingStatus.description}
           </p>
           <div className={styles.badgeRow}>
-            <span className={`${styles.badge} ${readinessToneClass}`}>{model.state.label}</span>
+            <span className={`${styles.badge} ${workingToneClass}`}>{workingStatus.label}</span>
+            <span className={`${styles.badge} ${liveToneClass}`}>{liveStatus.label}</span>
             {activePublishedRevision ? <span className={styles.badge}>{model.activePublishedRevisionLabel}</span> : null}
           </div>
         </article>

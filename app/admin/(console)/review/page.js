@@ -6,9 +6,10 @@ import { PagePreview } from "../../../../components/admin/PagePreview";
 import { PagePreviewThumbnail } from "../../../../components/admin/PagePreviewThumbnail";
 import { PreviewViewport } from "../../../../components/admin/PreviewViewport";
 import styles from "../../../../components/admin/admin-ui.module.css";
+import { getEntityAdminHref } from "../../../../lib/admin/entity-links.js";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
 import { loadAdminPagePreviewPayload } from "../../../../lib/admin/page-preview-loader.js";
-import { userCanPublishRevision } from "../../../../lib/auth/session.js";
+import { appendAdminReturnTo } from "../../../../lib/admin/relation-navigation.js";
 import {
   buildOwnerReviewGalleryCards,
   buildOwnerReviewModalModel,
@@ -19,11 +20,13 @@ import { getReviewQueue } from "../../../../lib/content-ops/workflow";
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../../../lib/content-core/content-types.js";
 import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
 
+// The review screen is intentionally limited to unresolved review-lane work.
+// Once a revision is agreed or no owner decision is required, publishing moves
+// to the source entity screen and the card should leave this queue.
 const STATUS_OPTIONS = [
   { value: "all", label: "Все" },
   { value: "needs_owner", label: "Требуют решения" },
   { value: "returned", label: "Возвращены" },
-  { value: "approved", label: "Согласованы" },
   { value: "in_review", label: "На проверке" }
 ];
 
@@ -41,6 +44,14 @@ const MODAL_PAGE_PREVIEW_ZOOM = Object.freeze({
   tablet: 0.4,
   mobile: 0.58
 });
+
+function normalizeStatusFilter(value) {
+  if (value === "ready_to_publish" || value === "approved") {
+    return "all";
+  }
+
+  return value;
+}
 
 function buildReviewUrl({
   query = "",
@@ -91,10 +102,6 @@ function cardStatusClassName(card) {
 
   if (card.status.key === "returned") {
     return styles.reviewGalleryCardReturned;
-  }
-
-  if (card.status.key === "approved") {
-    return styles.reviewGalleryCardApproved;
   }
 
   return "";
@@ -192,7 +199,7 @@ function renderPageGalleryCardPreview(card, modalModel, previewPayload) {
 }
 
 function renderCanonicalPageGalleryCardPreview(card, modalModel, previewPayload) {
-  const previewIntro = card.previewIntro || "РљР°СЂС‚РѕС‡РєР° СЃС‚СЂР°РЅРёС†С‹ РїРѕРєР°Р·С‹РІР°РµС‚ РїРµСЂРІС‹Р№ СЌРєСЂР°РЅ С‚Р°Рє, РєР°Рє РµРіРѕ СѓРІРёРґРёС‚ РїРѕСЃРµС‚РёС‚РµР»СЊ.";
+  const previewIntro = card.previewIntro || "Карточка страницы показывает первый экран так, как его увидит посетитель.";
 
   return (
     <PagePreviewThumbnail
@@ -252,7 +259,7 @@ export default async function ReviewQueuePage({ searchParams }) {
   const queue = await getReviewQueue();
   const query = await searchParams;
   const search = typeof query?.q === "string" ? query.q : "";
-  const status = typeof query?.status === "string" ? query.status : "all";
+  const status = normalizeStatusFilter(typeof query?.status === "string" ? query.status : "all");
   const type = typeof query?.type === "string" ? query.type : "all";
   const selectedRevisionId = typeof query?.selected === "string" ? query.selected : "";
   const previewMode = typeof query?.preview === "string" ? query.preview : "desktop";
@@ -278,21 +285,20 @@ export default async function ReviewQueuePage({ searchParams }) {
       preview: previewMode
     })
     : closeHref;
+  const entityHref = selectedCard
+    ? appendAdminReturnTo(getEntityAdminHref(selectedCard.entityType, selectedCard.entityId), errorReturnTo)
+    : "";
   const pageModalModels = new Map(
     queue
       .filter((item) => item.entityType === ENTITY_TYPES.PAGE)
       .map((item) => [item.revision.id, buildOwnerReviewModalModel(item)])
   );
   let pagePreviewPayload = null;
-  const publishHref = selectedCard
-    && userCanPublishRevision(user, selectedCard.entityType, selectedCard.revision)
-    && (!selectedCard.revision.ownerReviewRequired || selectedCard.revision.ownerApprovalStatus === "approved")
-    ? `/admin/revisions/${selectedCard.id}/publish`
-    : "";
-  const publishWaitingForOwner = selectedCard
-    && userCanPublishRevision(user, selectedCard.entityType, selectedCard.revision)
-    && selectedCard.revision.ownerReviewRequired
-    && selectedCard.revision.ownerApprovalStatus !== "approved";
+  const canResolveOwnerReview = Boolean(
+    selectedCard
+    && (user.role === "business_owner" || user.role === "superadmin")
+    && selectedCard.status.key === "needs_owner"
+  );
 
   const shouldLoadPagePreviewContext = filteredCards.some((card) => card.entityType === ENTITY_TYPES.PAGE)
     || (selectedCard?.entityType === ENTITY_TYPES.PAGE && selectedModal?.pageValue);
@@ -311,6 +317,25 @@ export default async function ReviewQueuePage({ searchParams }) {
       <div className={styles.stack}>
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
+        <div className={styles.statusPanelInfo}>
+          В очереди остаются только материалы, по которым еще нужно решение или возврат.
+        </div>
+        <details className={styles.compactDisclosure}>
+          <summary className={styles.compactDisclosureSummary}>
+            <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+            <span className={styles.compactDisclosureSummaryMain}>
+              <strong>Как устроена очередь</strong>
+              <span className={styles.compactDisclosureSummaryMeta}>
+                После согласования карточка уходит из review-очереди, а публикация выполняется уже в карточке сущности.
+              </span>
+            </span>
+          </summary>
+          <div className={styles.compactDisclosureBody}>
+            <p className={styles.mutedText}>
+              Здесь остаются только незавершенные решения. Как только материал согласован или возвращен с замечанием, дальнейшая ежедневная работа снова идет из карточки сущности.
+            </p>
+          </div>
+        </details>
 
         <section className={styles.reviewGalleryControls}>
           <div className={styles.reviewScreenBar}>
@@ -318,7 +343,7 @@ export default async function ReviewQueuePage({ searchParams }) {
               <span className={styles.reviewGalleryCounter}>Всего: {summary.total}</span>
               <span className={styles.reviewGalleryCounter}>Требуют решения: {summary.byStatus.needs_owner || 0}</span>
               <span className={styles.reviewGalleryCounter}>Возвращены: {summary.byStatus.returned || 0}</span>
-              <span className={styles.reviewGalleryCounter}>Согласованы: {summary.byStatus.approved || 0}</span>
+              <span className={styles.reviewGalleryCounter}>На проверке: {summary.byStatus.in_review || 0}</span>
             </div>
           </div>
 
@@ -472,7 +497,7 @@ export default async function ReviewQueuePage({ searchParams }) {
                   ) : null}
                 </div>
 
-                {(user.role === "business_owner" || user.role === "superadmin") ? (
+                {canResolveOwnerReview ? (
                   <form action={`/api/admin/revisions/${selectedCard.id}/owner-action`} method="post" className={styles.formGrid}>
                     <input type="hidden" name="returnTo" value={closeHref} />
                     <input type="hidden" name="errorReturnTo" value={errorReturnTo} />
@@ -493,21 +518,24 @@ export default async function ReviewQueuePage({ searchParams }) {
                       Если нужно доработать материал, просто опишите, что исправить. После возврата он снова появится в галерее, когда SEO пришлет обновленную версию.
                     </p>
                   </form>
+                ) : (user.role === "business_owner" || user.role === "superadmin") ? (
+                  <p className={styles.reviewModalActionNote}>
+                    {selectedCard.status.key === "approved"
+                      ? "Согласование уже получено. Публикация и снятие с публикации выполняются в карточке сущности."
+                      : "Для этого материала отдельное согласование собственника не требуется."}
+                  </p>
                 ) : (
                   <p className={styles.reviewModalActionNote}>
-                    Решение собственника может оставить только собственник или супер-админ.
+                    {selectedCard.status.key === "needs_owner"
+                      ? "Решение собственника может оставить только собственник или супер-админ."
+                      : "Экран проверки нужен только для согласования и возврата материалов. Публикация и снятие с публикации выполняются в карточке сущности."}
                   </p>
                 )}
 
-                {publishHref ? (
+                {entityHref ? (
                   <div className={styles.inlineActions}>
-                    <Link href={publishHref} className={styles.secondaryButton}>Проверить перед публикацией</Link>
+                    <Link href={entityHref} className={styles.secondaryButton}>Открыть карточку</Link>
                   </div>
-                ) : null}
-                {publishWaitingForOwner ? (
-                  <p className={styles.reviewModalActionNote}>
-                    Путь к публикации откроется после согласования владельца.
-                  </p>
                 ) : null}
               </section>
             </div>

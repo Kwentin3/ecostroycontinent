@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
   }
 
   if (!userCanEditContent(user)) {
-    return new Response("Not found", { status: 404 });
+    return new Response("Не найдено", { status: 404 });
   }
 
   const { entityId } = await params;
@@ -20,7 +20,7 @@ export async function GET(request, { params }) {
   const storageKey = revision?.payload?.storageKey;
 
   if (!state.entity || state.entity.entityType !== "media_asset" || !storageKey) {
-    return new Response("Not found", { status: 404 });
+    return new Response("Не найдено", { status: 404 });
   }
 
   try {
@@ -33,6 +33,6 @@ export async function GET(request, { params }) {
       }
     });
   } catch {
-    return new Response("Not found", { status: 404 });
+    return new Response("Не найдено", { status: 404 });
   }
 }

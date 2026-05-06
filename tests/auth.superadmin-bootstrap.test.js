@@ -8,7 +8,7 @@ function makeConfig(overrides = {}) {
   return {
     bootstrapSuperadminConfigured: true,
     bootstrapSuperadminUsername: "superadmin",
-    bootstrapSuperadminDisplayName: "System Superadmin",
+    bootstrapSuperadminDisplayName: "Системный суперадмин",
     bootstrapSuperadminAccessToken: "bootstrap-token",
     ...overrides
   };

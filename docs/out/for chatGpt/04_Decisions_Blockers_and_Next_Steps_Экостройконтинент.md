@@ -1,93 +1,88 @@
-# Decisions, Blockers, and Next Steps
+﻿# Decisions, Blockers, and Next Steps
 
 ## Purpose
 
-Этот файл нужен, чтобы новый чат видел текущее реальное состояние проекта: что ещё не решено, что блокирует launch и куда полезно двигаться дальше.
+Этот документ показывает текущее фактическое состояние launch readiness и фиксирует рабочие решения/блокеры после аудита.
 
 ## Canonical truths
 
-- Главный текущий bottleneck: не стратегия и не новый PRD, а owner confirmations, evidence gaps, media gaps и production readiness.
-- Канон уже достаточно стабилен; сейчас важнее execution, чем новый documentation sweep.
-- Launch-core пока лучше обеспечен рамкой, чем реальной доказательной базой.
+- Главный bottleneck: execution readiness, а не стратегия и не новый PRD.
+- Канон достаточно собран; основной риск — drift в реализации и публикация слабых страниц.
+- Launch-core должен оставаться узким, proof-led и честным по contact/region/conversion truth.
 
 ## Open owner decisions
 
-- Подтвердить публичное имя бизнеса на сайте.
-- Подтвердить основной публичный телефон, мессенджеры и при необходимости email.
-- Подтвердить один primary launch region / service area.
-- Подтвердить финальный service core.
-- Подтвердить, остаётся ли `Строительство гостевых домов` в phase 1.
-- Подтвердить, какие кейсы становятся launch priority.
-- Утвердить boundaries по срокам, стоимости и гарантиям.
-- Подтвердить final owner review map.
+- Подтвердить финальный primary launch region / service area wording.
+- Подтвердить единый public contact set (phone/messenger/email).
+- Подтвердить финальный service launch list (surviving pages only).
+- Подтвердить claim boundaries по ценам/срокам/гарантиям.
+- Подтвердить flagship case shortlist для первой публикации.
 
-## Current blockers
+## Current blockers (from launch-readiness audit)
 
-- Нет подтверждённого публичного contact set.
-- Нет готовых case packs в доступном inventory.
-- Не виден usable media archive.
-- Нет publishable testimonials.
-- Для части service pages proof inventory слишком слабый.
-- Commercial page не проходит как честный phase-1 default.
+- Нет published service/case launch-core.
+- `/about` и `/contacts` не в published контуре.
+- `/blog` route и `Article` слой не готовы как рабочий supporting contour.
+- Contact truth не подтверждён до launch gate.
+- Недостаточен proof inventory (кейсы/медиа/фактура).
+- Technical SEO baseline неполный (`robots`, `sitemap`, canonical/meta/schema projection).
+- Навигация не закреплена как системная часть launch architecture.
+- Conversion path неполный на ключевых surface-ах.
 
 ## What is missing before launch
 
-- 1 confirmed launch region wording.
-- Public contact truth.
-- 2-3 real priority cases with evidence.
-- Minimum photo sets tied to services/cases.
-- Owner-approved claim boundaries.
-- Production queue for surviving launch pages.
+- минимум 2-3 publish-ready service pages с proof paths
+- минимум 2 publish-ready case pages с factual minimum
+- published `/about` и `/contacts`
+- подтверждённый contact/region truth
+- минимально рабочая global navigation system
+- базовый technical SEO delivery layer
+- production queue только из surviving pages
 
 ## Next practical steps
 
-1. Закрыть owner confirmations.
-2. Собрать minimum evidence packs по service/case candidates.
-3. Ужать launch-core до того, что реально проходит по фактуре.
-4. Перевести surviving pages в production queue.
-5. Реализовать first admin slice for content operations if it is not in place yet.
+1. Закрыть owner confirmations по region/contact/claim boundaries.
+2. Собрать и подтвердить proof packs для service/case candidates.
+3. Отфильтровать launch list до реально surviving pages.
+4. Довести до publish-ready home/services/cases/about/contacts core.
+5. Закрыть launch technical SEO baseline и связку publish->SEO delivery.
 
 ## Intentionally deferred topics
 
-- `public AI chat`
-- `calculator / estimate tool`
-- `SEO dashboard`
-- `advanced portfolio / filtering logic`
-- `CRM-lite beyond basic lead handling`
-- `EN` expansion
-- deep security / legal / analytics layers
+- broad blog expansion
+- public AI chat
+- calculator / estimate tool
+- advanced SEO dashboards
+- broad multi-region rollout
 
 ## What future chat should not spend time on right now
 
-- Переписывание PRD.
-- Новый большой architecture manifesto.
-- Broad content strategy before evidence collection.
-- Мульти-региональный launch.
-- Feature ideation beyond current phase-1 core.
+- переписывание PRD с нуля
+- broad ideation beyond phase 1
+- искусственное расширение launch list
+- попытка компенсировать отсутствие proof красивым copy
 
 ## Do not reopen by default
 
-- `Current priority = evidence and execution`
-- `Keep launch narrow`
-- `Do not expand scope to future surfaces`
-- `Do not treat weak pages as mandatory`
+- `Current priority = publishable proof-led core`
+- `No weak pages in launch set`
+- `No page-based ownership drift over Service/Case/Article`
+- `No bypass of explicit publish gates`
 
 ## What this file owns
 
-- Current unresolved decisions.
-- Real blockers.
-- Practical next-step framing for future chats.
+- current unresolved owner decisions
+- practical blocker map
+- immediate execution priorities
 
 ## What this file does not own
 
-- Canonical project truth.
-- Architecture boundaries.
-- Content model details.
-- Implementation plan in depth.
+- project-level canonical foundations
+- detailed architecture contracts
+- implementation-level task decomposition
 
 ## Source docs used
 
-- `docs/product-ux/Launch_SEO_Core_Экостройконтинент_v0.1.md`
-- `docs/product-ux/Content_Inventory_and_Evidence_Register_Экостройконтинент_v0.1.md`
-- `docs/product-ux/Owner_Confirmation_Pack_Экостройконтинент_v0.1.md`
-- `docs/reports/2026-03-23/DOCS.Bounded_Domain_Consistency_Sweep_Экостройконтинент_v0.1.report.md`
+- `docs/reports/2026-04-17/AUDIT.LAUNCH_READINESS_ANAMNESIS.ECOSTROYCONTINENT.V1.report.md`
+- `docs/product-ux/PRD_Экостройконтинент_v0.3.1.md`
+- `docs/product-ux/Public_Launch_Domain_Canon_Экостройконтинент_v0.1.md`

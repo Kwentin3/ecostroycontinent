@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
-import { assessEntityDelete, buildDeleteBatchSummary } from "../../lib/admin/entity-delete.js";
+import {
+  assessEntityDelete,
+  buildDeleteBatchSummary,
+  deleteEntityWithSafetyInDb
+} from "../../lib/admin/entity-delete.js";
 
 function makeAggregate(entityType, entityId, overrides = {}) {
   return {
@@ -140,6 +144,40 @@ test("safe delete refuses entity referenced by non-test draft", async () => {
   assert.equal(result.draftIncomingRefs[0].entityId, "service_1");
 });
 
+test("safe delete can ignore planned internal incoming refs for orchestrated teardown", async () => {
+  const result = await assessEntityDelete(
+    {
+      entityType: ENTITY_TYPES.MEDIA_ASSET,
+      entityId: "media_1",
+      ignoreIncomingEntityIds: ["case_1"]
+    },
+    buildDeps({
+      aggregate: makeAggregate(ENTITY_TYPES.MEDIA_ASSET, "media_1"),
+      latestCards: {
+        [ENTITY_TYPES.CASE]: [
+          {
+            entity: {
+              id: "case_1",
+              creationOrigin: null
+            },
+            latestRevision: {
+              state: "draft",
+              payload: {
+                title: "Case draft",
+                primaryMediaAssetId: "media_1"
+              }
+            }
+          }
+        ]
+      }
+    })
+  );
+
+  assert.equal(result.allowed, true);
+  assert.deepEqual(result.reasons, []);
+  assert.equal(result.draftIncomingRefs.length, 0);
+});
+
 test("safe delete exposes state blockers for review residue and open obligations", async () => {
   const result = await assessEntityDelete(
     {
@@ -184,4 +222,37 @@ test("delete batch summary keeps deleted and refused counts", () => {
   assert.equal(summary.deletedCount, 1);
   assert.equal(summary.refusedCount, 2);
   assert.equal(summary.reasons.length, 2);
+});
+
+test("direct safe delete DB helper preserves refusal reasons for orchestration callers", async () => {
+  const result = await deleteEntityWithSafetyInDb(
+    {
+      entityType: ENTITY_TYPES.SERVICE,
+      entityId: "service_1",
+      actorUserId: "user_1"
+    },
+    {
+      assessEntityDelete: async () => ({
+        allowed: false,
+        entityType: ENTITY_TYPES.SERVICE,
+        entityId: "service_1",
+        reasons: ["Объект используется в опубликованной странице."],
+        stateBlockers: [],
+        publishedIncomingRefs: [],
+        draftIncomingRefs: [],
+        root: {
+          entityId: "service_1",
+          entityType: ENTITY_TYPES.SERVICE,
+          label: "Service 1"
+        }
+      }),
+      recordDestructiveEvent: async () => {},
+      deleteEntityById: async () => {
+        throw new Error("should not execute");
+      }
+    }
+  );
+
+  assert.equal(result.deleted, false);
+  assert.deepEqual(result.reasons, ["Объект используется в опубликованной странице."]);
 });

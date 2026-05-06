@@ -113,3 +113,33 @@ test("delete route honors custom workspace redirect after successful media delet
   assert.equal(location.searchParams.get("filter"), "test-only");
   assert.equal(location.searchParams.get("message"), "Сущность удалена.");
 });
+
+test("delete route passes actor identity into the safe delete contour", async () => {
+  const seen = [];
+
+  const response = await POST(
+    buildRequest({
+      entityId: "case_1",
+      responseMode: "json"
+    }),
+    { params: { entityType: "case" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_actor_1" }, response: null }),
+      userCanEditContent: () => true,
+      deleteEntityWithSafety: async (input) => {
+        seen.push(input);
+        return {
+          deleted: true,
+          entityId: input.entityId,
+          decision: { entityId: input.entityId }
+        };
+      }
+    }
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(seen.length, 1);
+  assert.equal(seen[0].actorUserId, "user_actor_1");
+  assert.equal(seen[0].entityType, "case");
+  assert.equal(seen[0].entityId, "case_1");
+});

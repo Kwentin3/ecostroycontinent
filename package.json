@@ -12,12 +12,19 @@
     "db:cleanup:test-data": "node scripts/cleanup-test-data.mjs",
     "entity:ops": "node --env-file=.env scripts/entity-ops.mjs",
     "test": "node --experimental-specifier-resolution=node --test tests/**/*.test.js",
+    "smoke:public-admin": "node scripts/smoke-public-admin.mjs",
     "proof:admin:first-slice": "node scripts/proof-admin-first-slice.mjs",
-    "proof:seo:surface": "node scripts/proof-seo-surface.mjs"
+    "proof:seo:surface": "node scripts/proof-seo-surface.mjs",
+    "yandex:check-env": "node scripts/yandex/bootstrap.mjs check-env",
+    "yandex:oauth-url": "node scripts/yandex/bootstrap.mjs oauth-url",
+    "yandex:exchange-oauth-code": "node scripts/yandex/exchange-oauth-code.mjs",
+    "yandex:check-metrica": "node scripts/yandex/bootstrap.mjs check-metrica",
+    "yandex:bootstrap-metrica-goals": "node scripts/yandex/bootstrap.mjs bootstrap-goals",
+    "yandex:check-webmaster": "node scripts/yandex/bootstrap.mjs check-webmaster"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1018.0",
-    "next": "16.2.1",
+    "next": "16.2.4",
     "pg": "^8.16.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",

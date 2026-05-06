@@ -1,111 +1,113 @@
-# Domain and Architecture Boundaries
+﻿# Domain and Architecture Boundaries
 
 ## Purpose
 
-Этот файл даёт компактный архитектурный дистиллят: какие доменные границы уже зафиксированы и что новый чат не должен размывать.
+Этот документ фиксирует архитектурные границы, которые нельзя размывать в реализации public launch domain.
 
 ## Canonical truths
 
-- `Content Core` in SQL is the source of truth for content entities, relations, statuses and published revisions.
-- `Admin Console` is the write-side tool.
-- `Public Web` is a published read-side surface; it must not become owner of editorial truth.
-- `MediaAsset` is a first-class entity; `Gallery` is a lightweight ordered grouping concept.
-- Binaries live in `S3-compatible storage`; public delivery goes through `CDN`; raw public URLs are delivery outputs, not editorial truth.
-- Route ownership is explicit:
+- `Content Core` в SQL — source of truth для сущностей, связей, статусов и published revisions.
+- `Admin Console` — write-side only.
+- `Public Web` — published read-side only.
+- `MediaAsset` и `Gallery` — first-class supporting entities.
+- Route ownership явно закреплён:
   - `Service` owns `/services/[slug]`
   - `Case` owns `/cases/[slug]`
   - `Article` owns `/blog/[slug]`
   - `Page` owns standalone pages and page-level composition only
-- `Publish` is an explicit domain operation with validation, published revision semantics and operational side effects.
-- `Lead / intake domain` is adjacent to content domain, but separate from it.
-- `AI` is assistive only: not source of truth, not route owner, not autonomous publisher.
-- Acceptable posture: modular monolith is fine; contract-first boundaries are mandatory.
+- `Publish` — explicit domain operation with gates and side effects.
+- `AI` — assistive only: not source of truth, not route owner, not autonomous publisher.
+
+## Public launch route boundary (phase 1)
+
+Day-1 route core:
+
+- `/`
+- `/services`, `/services/[slug]`
+- `/cases`, `/cases/[slug]`
+- `/about`, `/contacts`
+
+`/blog` и `Article` — supporting layer phase 1, включается в live после готовности route/entity/publish contour.
+
+## Page ownership hard boundary
+
+- `Page` не владеет route truth для `/services/[slug]`, `/cases/[slug]`, `/blog/[slug]`.
+- `Page` не создаёт второй конкурирующий source-of-truth для service-like маршрутов.
+- Если route-owning сущность рендерится через page shell, shell является read-side projection/container, а не вторым редактором truth.
+- Запрещено одновременное сосуществование двух owner-моделей для одного коммерческого интента.
 
 ## Publish semantics
 
-- `Published` is not just a status label on a live page.
-- Publish promotes one validated revision to the active public revision.
-- Rollback returns to a previous published revision.
-- Changing `slug` on a published entity requires redirect / revalidation / sitemap follow-up.
+- `Published` — не label на live странице.
+- Publish активирует одну validated revision как публичную truth для сущности.
+- Rollback возвращает предыдущую published revision.
+- Изменение `slug` у опубликованной сущности требует redirect/revalidation/sitemap follow-up.
+
+## Navigation boundary
+
+Навигация входит в доменный контракт launch-readiness:
+
+- global header
+- active state
+- быстрый доступ к услугам
+- breadcrumbs
+- footer navigation
+- related/contextual links
+
+Отсутствие навигационной связки нарушает целостность read-side и conversion path.
 
 ## Media boundary
 
-- Metadata truth lives in SQL.
-- Binary truth lives in object storage.
-- Public serving lives behind CDN.
-- Content entities link media through IDs / refs, not through hardcoded URLs.
+- metadata truth живёт в SQL
+- binaries живут в object storage
+- public delivery идёт через CDN
+- контентные сущности ссылаются на media через refs/IDs, не через raw URL как truth
 
-## AI boundary
-
-- AI can draft, rewrite, summarize, propose SEO fields and suggest alt text.
-- AI cannot silently change canonical truth.
-- AI cannot publish.
-- AI should surface uncertainty instead of inventing commercial facts.
-
-## Anti-Drift Guardrails
+## Anti-drift guardrails
 
 ### Mandatory rules
 
 - `Admin Console` remains write-side only.
 - `Public Web` remains read-side only.
-- `Content Core` remains the source of truth for content entities, relations, statuses and published revisions.
-- `Publish` remains explicit domain operation, not save-time status mutation.
-- Published read-side consumes only validated published revisions.
-- `Service` and `Case` own route truth; `Page` does not duplicate or override it.
-- `MediaAsset` and `Gallery` remain first-class supporting entities.
-- `AI` remains assistive only: not source of truth and not autonomous publisher.
-- Contracts outrank backlog convenience, local shortcuts and ad hoc implementation pressure.
+- Route ownership и publish semantics не обходятся временными костылями.
+- `Service`/`Case`/`Article` остаются route owners.
+- `Page` не становится вторым route owner.
 
 ### Forbidden moves
 
-- hardcoded content, SEO, CTA or route truth in templates or UI components
-- public web owning publish truth
-- `Page` silently taking route ownership from `Service` or `Case`
-- raw media URLs as source of truth instead of `MediaAsset` / `Gallery`
-- implicit publish through save or edit
-- bypassing revision, review, approval or publish discipline "temporarily"
-- silent AI truth changes
-- second competing model for media, SEO, review or publish
-- mixing content contract with DB or ORM design
-- mixing operations contract with infra runbook or endpoint design
-- broadening first slice into page builder, enterprise DAM or broad CMS
-- ad hoc conflict resolution in code where canon already decides the issue
+- implicit publish через save/edit
+- page-based takeover коммерческих route-intents
+- параллельная truth-модель для SEO/route/publish
+- hardcoded public truth в шаблонах вместо structured entities
 
 ### Stop-and-escalate triggers
 
-- implementation requires violating route ownership
-- implementation requires bypassing explicit publish
-- truth must be stored outside `Content Core`
-- a second competing model appears for media, SEO, review or publish
-- infra limitation pushes implementation to break canon
-- PRD and contracts read differently
-- backlog task conflicts with contract or domain truth
+- нужно нарушить route ownership ради "быстрого launch"
+- появляется второй competing model для publish/SEO/route truth
+- реализация требует обхода publish gates
+- docs противоречат друг другу по owner boundaries
 
 ## Do not reopen by default
 
-- `Public Web` is read-side only.
-- `Admin Console` is write-side only.
-- `Media` is a separate first-class domain.
-- `Lead` is not part of the content entity model.
-- `Page` is not a second route owner for `Service`, `Case` or `Article`.
-- `Modular monolith acceptable; no premature microservice sprawl`.
+- `Public Web is read-side only`
+- `Admin Console is write-side only`
+- `Page is not a second route owner`
+- `Publish stays explicit`
 
 ## What this file owns
 
-- Cross-doc domain boundaries.
-- Architecture posture needed for future chats.
-- Contract meaning of publish, route ownership and media truth.
+- cross-doc boundaries
+- route ownership contract
+- publish and drift guardrails
 
 ## What this file does not own
 
-- DB schema.
-- API shape.
-- Infra provisioning.
-- UI behavior details.
+- DB schema details
+- endpoint contracts
+- UI pixel-level behavior
 
 ## Source docs used
 
 - `docs/product-ux/PRD_Экостройконтинент_v0.3.1.md`
-- `docs/product-ux/Content_Contract_Экостройконтинент_v0.2.md`
-- `docs/product-ux/Content_Operations_Admin_Console_MVP_Spec_Экостройконтинент_v0.1.md`
-- `docs/reports/2026-03-23/DOCS.Bounded_Domain_Consistency_Sweep_Экостройконтинент_v0.1.report.md`
+- `docs/product-ux/Public_Launch_Domain_Canon_Экостройконтинент_v0.1.md`
+- `docs/reports/2026-04-17/AUDIT.LAUNCH_READINESS_ANAMNESIS.ECOSTROYCONTINENT.V1.report.md`

@@ -3,13 +3,20 @@ import Link from "next/link";
 import { AdminShell } from "../../../components/admin/AdminShell";
 import { EvidenceRegisterPanel } from "../../../components/admin/EvidenceRegisterPanel";
 import { ContentOpsCockpitPanel } from "../../../components/admin/ContentOpsCockpitPanel";
+import { PublicDisplayModeControlPanel } from "../../../components/admin/PublicDisplayModeControlPanel";
 import styles from "../../../components/admin/admin-ui.module.css";
 import { requireAdminUser } from "../../../lib/admin/page-helpers";
 import { ENTITY_TYPES } from "../../../lib/content-core/content-types.js";
-import { findEntityByTypeSingleton, findRevisionById, listPublishObligations } from "../../../lib/content-core/repository.js";
+import {
+  findEntityByTypeSingleton,
+  findRevisionById,
+  listPublishObligations,
+  listUsers
+} from "../../../lib/content-core/repository.js";
 import { listEntityCards } from "../../../lib/content-core/service";
 import { evaluateReadiness } from "../../../lib/content-ops/readiness.js";
 import { buildContentOpsCockpitProjection } from "../../../lib/admin/content-ops-cockpit.js";
+import { getDisplayModeState, listDisplayModeAuditTrail } from "../../../lib/public-launch/display-mode-store.js";
 import {
   getEntityTypeLabel,
   getOwnerApprovalStatusLabel,
@@ -17,6 +24,7 @@ import {
   normalizeLegacyCopy
 } from "../../../lib/ui-copy.js";
 import { getReviewQueue } from "../../../lib/content-ops/workflow";
+import { userIsSuperadmin } from "../../../lib/auth/roles.js";
 
 function getCardLabel(card) {
   return (
@@ -70,6 +78,7 @@ async function buildCockpitSnapshot(card, globalSettingsRevision) {
 export default async function AdminDashboardPage({ searchParams }) {
   const user = await requireAdminUser();
   const query = await searchParams;
+  const superadmin = userIsSuperadmin(user);
 
   const [
     reviewQueue,
@@ -79,7 +88,10 @@ export default async function AdminDashboardPage({ searchParams }) {
     pageCards,
     mediaAssetCards,
     galleryCards,
-    globalSettingsEntity
+    globalSettingsEntity,
+    displayModeState,
+    displayModeAuditTrail,
+    users
   ] = await Promise.all([
     getReviewQueue(),
     listEntityCards(ENTITY_TYPES.GLOBAL_SETTINGS),
@@ -88,7 +100,10 @@ export default async function AdminDashboardPage({ searchParams }) {
     listEntityCards(ENTITY_TYPES.PAGE),
     listEntityCards(ENTITY_TYPES.MEDIA_ASSET),
     listEntityCards(ENTITY_TYPES.GALLERY),
-    findEntityByTypeSingleton(ENTITY_TYPES.GLOBAL_SETTINGS)
+    findEntityByTypeSingleton(ENTITY_TYPES.GLOBAL_SETTINGS),
+    superadmin ? getDisplayModeState() : Promise.resolve(null),
+    superadmin ? listDisplayModeAuditTrail({ limit: 12 }) : Promise.resolve([]),
+    superadmin ? listUsers() : Promise.resolve([])
   ]);
 
   const globalSettingsRevision = globalSettingsEntity?.activePublishedRevisionId
@@ -112,12 +127,30 @@ export default async function AdminDashboardPage({ searchParams }) {
   const requiresActionIds = new Set(requiresAction.map((item) => item.revision.id));
   const waitingOnOthers = reviewQueue.filter((item) => !requiresActionIds.has(item.revision.id));
   const readyNext = buildReadyNext([...serviceCards, ...caseCards]);
+  const actorMap = Object.fromEntries(
+    (users || []).map((item) => [
+      item.id,
+      {
+        username: item.username,
+        displayName: item.display_name,
+        role: item.role
+      }
+    ])
+  );
 
   return (
     <AdminShell user={user} title="Рабочая панель" breadcrumbs={[{ label: "Админка", href: "/admin" }]} activeHref="/admin">
       <div className={styles.stack}>
         {query?.error ? <div className={styles.statusPanelBlocking}>{normalizeLegacyCopy(query.error)}</div> : null}
         {query?.message ? <div className={styles.statusPanelInfo}>{normalizeLegacyCopy(query.message)}</div> : null}
+
+        {superadmin ? (
+          <PublicDisplayModeControlPanel
+            currentState={displayModeState}
+            history={displayModeAuditTrail}
+            actorMap={actorMap}
+          />
+        ) : null}
 
         <ContentOpsCockpitPanel cockpit={cockpit} />
 

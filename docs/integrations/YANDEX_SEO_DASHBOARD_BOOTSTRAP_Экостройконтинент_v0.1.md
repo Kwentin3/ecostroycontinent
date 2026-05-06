@@ -1,0 +1,215 @@
+# YANDEX_SEO_DASHBOARD_BOOTSTRAP_Экостройконтинент_v0.1
+
+Статус: tooling/bootstrap note  
+Дата: 2026-05-04  
+Область: будущая интеграция SEO Dashboard с Яндекс Метрикой и Яндекс Вебмастером
+
+## 1. Назначение
+
+Этот документ описывает безопасный bootstrap/check tooling для Яндекс Метрики и Яндекс Вебмастера.
+
+Tooling нужен только для подготовки интеграций:
+
+- проверить env;
+- получить ссылку авторизации OAuth;
+- проверить доступ к счетчику Метрики;
+- создать недостающие JavaScript-цели Метрики;
+- проверить доступ к Вебмастеру и найти `host_id`.
+
+Tooling не подключает реальные импорты в analytics read model, не меняет `/admin/visibility`, не добавляет OAuth callback route и не публикует счетчик Метрики на public site.
+
+## 2. Env contract
+
+Уже известное значение:
+
+```dotenv
+YANDEX_METRICA_COUNTER_ID=109037342
+NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID=109037342
+```
+
+Обязательные переменные для текущего bootstrap-этапа:
+
+```dotenv
+YANDEX_METRICA_COUNTER_ID=
+YANDEX_OAUTH_CLIENT_ID=
+YANDEX_OAUTH_CLIENT_SECRET=
+YANDEX_OAUTH_REDIRECT_URI=
+```
+
+Опциональные переменные:
+
+```dotenv
+PUBLIC_SITE_URL=
+YANDEX_OAUTH_REFRESH_TOKEN=
+YANDEX_METRICA_OAUTH_TOKEN=
+YANDEX_WEBMASTER_OAUTH_TOKEN=
+YANDEX_WEBMASTER_HOST_ID=
+```
+
+`NEXT_PUBLIC_*` значения могут попасть в браузер. Не помещайте туда secrets или OAuth tokens.
+
+Server-only secrets:
+
+- `YANDEX_OAUTH_CLIENT_SECRET`
+- `YANDEX_OAUTH_REFRESH_TOKEN`
+- `YANDEX_METRICA_OAUTH_TOKEN`
+- `YANDEX_WEBMASTER_OAUTH_TOKEN`
+
+Они не должны попадать в git diff, отчеты, логи, read model или UI.
+
+## 3. Команды
+
+Проверить env:
+
+```bash
+npm run yandex:check-env
+```
+
+Сгенерировать OAuth authorization URL:
+
+```bash
+npm run yandex:oauth-url
+```
+
+Обменять одноразовый authorization code на OAuth token:
+
+```bash
+# Рекомендуемый операторский путь: code передается через stdin,
+# а token пишется только в server env.
+printf '%s' "$YANDEX_OAUTH_AUTH_CODE" | npm run yandex:exchange-oauth-code -- \
+  --write-env-file=/opt/ecostroycontinent/runtime/.env \
+  --write-token-keys=YANDEX_METRICA_OAUTH_TOKEN,YANDEX_WEBMASTER_OAUTH_TOKEN \
+  --write-refresh-token
+```
+
+`--code=...` поддерживается только как аварийный режим и не рекомендуется, потому что shell history может сохранить одноразовый code.
+
+Проверить Метрику:
+
+```bash
+npm run yandex:check-metrica
+```
+
+Создать недостающие цели Метрики:
+
+```bash
+npm run yandex:bootstrap-metrica-goals
+```
+
+Проверить Вебмастер:
+
+```bash
+npm run yandex:check-webmaster
+```
+
+Скрипты автоматически читают локальный `.env`, если он есть, и не перезаписывают уже экспортированные переменные окружения.
+
+## 4. OAuth
+
+Tooling генерирует URL для authorization code flow:
+
+```text
+https://oauth.yandex.ru/authorize?response_type=code&client_id=...
+```
+
+Запрашиваемые scope:
+
+- `metrika:read`
+- `metrika:write`
+- `webmaster:hostinfo`
+- `webmaster:verify`
+
+После авторизации код нужно обменять на OAuth token через безопасный operator flow. Скрипты не печатают authorization code, access token или client secret.
+
+Для обмена используется `npm run yandex:exchange-oauth-code`. Скрипт читает code из `YANDEX_OAUTH_AUTH_CODE`, stdin или `--code=...`, но в stdout выводит только masked token. Если Яндекс вернул `refresh_token`, его можно сохранить только в server-only `YANDEX_OAUTH_REFRESH_TOKEN`; реальное значение нельзя коммитить и нельзя передавать в UI/read model.
+
+Если один OAuth token выдан с правами и Метрики, и Вебмастера, его можно положить в оба server-only env поля:
+
+```dotenv
+YANDEX_METRICA_OAUTH_TOKEN=
+YANDEX_WEBMASTER_OAUTH_TOKEN=
+```
+
+Реальные значения должны жить в local/server env или deployment secrets, а не в репозитории.
+
+## 5. Яндекс Метрика
+
+`check-metrica` делает следующее:
+
+- проверяет наличие `YANDEX_METRICA_COUNTER_ID`;
+- если `YANDEX_METRICA_OAUTH_TOKEN` отсутствует, возвращает `not_configured` и next action;
+- если token есть, вызывает Management API;
+- проверяет доступность счетчика;
+- получает список целей;
+- показывает количество целей, уже существующие цели из нужного набора и недостающие цели.
+
+`bootstrap-metrica-goals` создает только недостающие цели. Перед созданием он получает список существующих целей и не создает дубль, если:
+
+- уже есть цель с condition `type=action` и `url=<event_id>`;
+- или уже есть цель с таким же name, даже если condition требует ручной проверки.
+
+Нужные JavaScript goals:
+
+- `click_to_call`
+- `click_to_telegram`
+- `click_to_whatsapp`
+- `form_start`
+- `form_submit`
+- `cta_click`
+- `contact_link_click`
+- `gallery_open`
+- `faq_expand`
+- `case_card_click`
+- `service_link_click`
+
+Создаваемая форма цели:
+
+```json
+{
+  "goal": {
+    "name": "click_to_call",
+    "type": "action",
+    "conditions": [
+      {
+        "type": "exact",
+        "url": "click_to_call"
+      }
+    ]
+  }
+}
+```
+
+## 6. Яндекс Вебмастер
+
+`check-webmaster` делает следующее:
+
+- если `YANDEX_WEBMASTER_OAUTH_TOKEN` отсутствует, возвращает `not_configured`;
+- если token есть, получает `user_id`;
+- получает список hosts;
+- если задан `PUBLIC_SITE_URL`, ищет соответствующий host;
+- если задан `YANDEX_WEBMASTER_HOST_ID`, проверяет, есть ли такой host в списке;
+- если host найден, запрашивает verification summary;
+- если host найден по `PUBLIC_SITE_URL`, подсказывает safe значение для `YANDEX_WEBMASTER_HOST_ID`.
+
+Tooling не добавляет сайт в Вебмастер и не запускает verification flow. Если host не найден, нужно вручную добавить сайт в Яндекс Вебмастер, подтвердить права и повторить проверку.
+
+## 7. Статусы
+
+- `ok` — проверка прошла.
+- `not_configured` — не хватает OAuth token или host id; это не runtime failure.
+- `partial` — часть целей создана, часть не удалось создать.
+- `failed` — API отказал, сеть недоступна, token истек или нет прав.
+
+Для `401/403` tooling выводит safe error: token lacks required permissions or expired. Полный token, client secret и authorization code никогда не печатаются.
+
+## 8. Источники API
+
+Официальные документы:
+
+- Yandex Metrica authorization: https://yandex.ru/dev/metrika/en/intro/authorization
+- Yandex Metrica counter info: https://yandex.ru/dev/metrika/ru/management/openapi/counter/counter
+- Yandex Metrica goals list/create: https://yandex.com/dev/metrika/en/management/openapi/goal/goals
+- Yandex OAuth code URL: https://yandex.ru/dev/id/doc/en/codes/code-url
+- Yandex Webmaster authorization: https://yandex.ru/dev/webmaster/doc/ru/tasks/how-to-get-oauth
+- Yandex Webmaster user: https://yandex.ru/dev/webmaster/doc/en/reference/user
+- Yandex Webmaster hosts: https://yandex.ru/dev/webmaster/doc/en/reference/hosts

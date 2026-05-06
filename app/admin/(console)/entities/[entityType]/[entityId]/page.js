@@ -198,8 +198,10 @@ export default async function EntityEditorPage({ params, searchParams }) {
         auditItems={data.auditItems}
         obligations={data.obligations}
         relationOptions={data.relationOptions}
+        globalSettings={data.globalSettings}
         mediaOptions={data.mediaOptions}
         caseProjectTypeOptions={data.caseProjectTypeOptions}
+        markedForRemovalAt={data.state.entity.markedForRemovalAt ?? null}
         workspaceMemoryCard={data.workspaceMemoryCard}
         user={user}
         message={query?.message}

@@ -1,113 +1,124 @@
-# Content, SEO, and Admin Operational Truth
+﻿# Content, SEO, and Admin Operational Truth
 
 ## Purpose
 
-Этот файл объясняет, как проект practically живёт на уровне content, SEO, admin, media и publish без проваливания в low-level implementation.
+Этот файл фиксирует operational truth по content/SEO/admin для phase-1 launch без ухода в low-level implementation.
 
 ## Canonical truths
 
-- Core content entities:
-  - `Page`
-  - `Service`
-  - `Case / Project`
-  - `Article`
-  - `FAQ Item`
-  - `Review / Testimonial`
-  - `Global Settings`
-  - supporting entities: `MediaAsset`, `Gallery`
-- Страница не мешок текста: public pages собираются из структурированных сущностей и typed blocks.
-- `blocks[]` are typed and ordered; phase-1 types are limited and intentional.
-- `Gallery` stays lightweight; it is not a semi-DAM album subsystem.
-- `locale` stays in the model, but first-slice admin behavior is operationally `RU-only`.
+- Публичный сайт строится из структурированных сущностей, а не из хаотичного rich text.
+- `Service`, `Case`, `Article` — route-owning truth-слой для коммерческих/доказательных/knowledge маршрутов.
+- `Page` — слой standalone pages и композиции, но не владелец service/case/article route truth.
+- Launch-core intentionally narrow and proof-led.
+- `RU-only` operational behavior на launch.
 
-## Content and media relation posture
+## Public launch operating model
 
-- Relations are first-class and should use stable refs.
-- `Service`, `Case` and `Article` stay reusable route-owning entities.
-- `Page` composes and renders; it should not duplicate route truth.
-- Media should be reusable across entities without binary duplication.
-- Public-facing media should carry basic metadata such as `alt`, caption when needed, and ownership/source note.
+Launch строится на системе, а не на одном лендинге:
 
-## Launch-core operational posture
+- `Home` как hub
+- `Services index + detail` как money-page ядро
+- `Cases` как proof layer
+- `About/Contacts` как trust + conversion surfaces
+- `Blog/Article` как supporting layer (включается после готовности)
 
-- Launch-core is intentionally small and proof-led.
-- Better `5` strong service pages than `6-7` weak ones.
-- Better `2-3` real cases than a larger fake/empty case layer.
-- Supporting content should stay narrow: a few FAQs, a few trust pages, a few supporting topics.
-- `Contacts` is not honest to publish as a conversion page until public contact truth is confirmed.
+## Home operational role
 
-## Evidence minimum logic
+`Home` в launch-модели:
 
-- Service page should not go live as a thin promise page; it needs at least:
-  - real service scope
-  - CTA truth
-  - one proof path such as case, gallery/media, or FAQ-backed factual support
-- Case page should not go live without:
-  - `task`
-  - `work_scope`
-  - `result`
-  - location context
-  - minimum visual proof
-- Claims-heavy wording requires owner review.
+- показывает "кто мы / что делаем / где работаем"
+- маршрутизирует в key services
+- содержит proof/trust/CTA
+- не подменяет service detail страницы
 
-## Public SEO and read-side truths
+## Service and case operational rules
 
-- One service page = one main intent.
-- Money pages need unique `slug`, `H1` and SEO intent.
-- Filters are not indexable pages by default.
-- Local business signals must stay consistent across page copy, contacts, schema and global settings.
-- `sitemap.xml`, Search Console and basic conversion tracking are mandatory from launch.
+Service rules:
 
-## Admin MVP shape
+- one service page = one main intent
+- уникальные slug/H1/title
+- обязателен явный CTA
+- обязателен минимум один proof path
 
-- Admin exists to create, edit, normalize, link and publish structured content.
-- First implementation slice is narrow:
-  - `Global Settings`
-  - `MediaAsset`
-  - `Gallery`
-  - `Service`
-  - `Case`
-  - `Page`
-- Early-next slice: `FAQ`, `Review`, `Article`.
-- This is a content operations console, not a page-builder-first product.
+Case rules:
+
+- кейс не декоративный контент, а proof entity
+- minimum factual structure: `task`, `work_scope`, `result`, `location`, `visual proof`
+
+## Navigation operational contract
+
+Минимально обязательная система:
+
+- global header
+- active section state
+- быстрый доступ к услугам
+- breadcrumbs на внутренних страницах
+- footer navigation
+- related/contextual links между service/case/article surfaces
+
+Без этого навигация не поддерживает SEO-архитектуру и конверсионный путь.
+
+## Contact and region truth operational rules
+
+- Единый contact set хранится в `Global Settings` и подтверждается перед launch.
+- `contactTruthConfirmed=true` — launch gate для `Contacts` и conversion-critical surfaces.
+- Primary region/service area формулировка должна быть консистентной в home/services/contacts/schema/global settings.
+
+## Conversion mechanics baseline
+
+Обязательные conversion points:
+
+- CTA на home
+- CTA на service detail
+- рабочий path на contacts
+
+Минимум один рабочий канал обязателен на launch (`click-to-call`, `messenger` или lead form).
 
 ## Publish gates and side effects
 
-- Minimum publish gate checks required fields, valid refs, SEO basics, visible CTA where needed and minimum factual completeness.
-- Published read-side must consume validated published revisions only.
-- Slug change on a published entity is not a silent edit; it creates redirect / revalidation / sitemap obligations.
+- Publish — explicit operation (`Draft -> Review -> Published`).
+- Publish gate проверяет: required fields, valid refs, SEO basics, CTA visibility, factual minimum.
+- Slug change published сущности создаёт redirect/revalidation/sitemap obligations.
+- Published read-side потребляет только validated published revisions.
 
-## Small-team operating logic
+## SEO delivery baseline (operational)
 
-- Fast manual forms beat visual magic.
-- Human review remains central.
-- AI may help drafting, but public truth still depends on humans, evidence and explicit publish action.
+Launch-ready baseline:
+
+- `robots.txt`
+- `sitemap.xml`
+- canonical + metadata projection
+- indexation controls
+- schema markup where factual content exists
+- draft leakage prevention
+
+## Launch discipline
+
+- Лучше 5 сильных service pages, чем широкий слабый набор.
+- Лучше 2-3 реальных case pages, чем пустой proof contour.
+- Не публиковать weak/placeholder страницы "для объёма".
 
 ## Do not reopen by default
 
-- `Structured entities over freeform rich-text chaos`
-- `Typed blocks, not arbitrary custom blobs`
-- `Gallery is lightweight`
-- `RU-only admin behavior for first slice`
-- `Proof-led launch core`
+- `Proof-led narrow launch core`
+- `One service page = one main intent`
+- `Page does not replace route-owning entities`
 - `Publish gates stay real`
+- `AI assistive only`
 
 ## What this file owns
 
-- Practical content/SEO/admin truth.
-- Evidence minimum logic.
-- Launch-safe operational constraints for a small team.
+- practical content/SEO/admin operating truth
+- launch-safe constraints for public domain
 
 ## What this file does not own
 
-- Full CMS blueprint.
-- Detailed keyword research.
-- Full DAM policy.
-- CRM / analytics / future AI surfaces.
+- full CMS blueprint
+- implementation internals per module
+- long-term content expansion strategy
 
 ## Source docs used
 
-- `docs/product-ux/Content_Contract_Экостройконтинент_v0.2.md`
-- `docs/product-ux/Launch_SEO_Core_Экостройконтинент_v0.1.md`
-- `docs/product-ux/Content_Inventory_and_Evidence_Register_Экостройконтинент_v0.1.md`
-- `docs/product-ux/Content_Operations_Admin_Console_MVP_Spec_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_Экостройконтинент_v0.3.1.md`
+- `docs/product-ux/Public_Launch_Domain_Canon_Экостройконтинент_v0.1.md`
+- `docs/reports/2026-04-17/AUDIT.LAUNCH_READINESS_ANAMNESIS.ECOSTROYCONTINENT.V1.report.md`

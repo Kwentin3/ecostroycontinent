@@ -226,6 +226,37 @@ Forbidden:
 - Embedding live credentials in workflows, docs or compose examples used as canonical documentation.
 - Collapsing the future secrets contract into this deploy contract.
 
+### Yandex SEO Dashboard integration variables
+
+The SEO Dashboard Yandex env contract is declared in `.env.example` and passed to the `app` container by `compose.yaml`.
+
+Public/browser-safe variables:
+
+- `NEXT_PUBLIC_YANDEX_METRICA_ENABLED`
+- `NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID`
+
+Server/runtime variables:
+
+- `PUBLIC_SITE_URL`
+- `YANDEX_OAUTH_CLIENT_ID`
+- `YANDEX_OAUTH_CLIENT_SECRET`
+- `YANDEX_OAUTH_REDIRECT_URI`
+- `YANDEX_OAUTH_REFRESH_TOKEN`
+- `YANDEX_METRICA_COUNTER_ID`
+- `YANDEX_METRICA_OAUTH_TOKEN`
+- `YANDEX_WEBMASTER_OAUTH_TOKEN`
+- `YANDEX_WEBMASTER_HOST_ID`
+
+Required handling:
+
+- Real values must live in server env, Docker secrets or deployment secrets, not in repo files.
+- `.env.example` contains placeholders only.
+- OAuth client secrets and OAuth tokens must not be logged.
+- Analytics read models must never contain tokens or secrets.
+- Admin UI may show only connection status and masked identifiers, not secret values.
+- `NEXT_PUBLIC_*` values are client-exposed by design; do not place secrets in them.
+- If future client-side code reads `NEXT_PUBLIC_*` during the Next.js build, those public values must be supplied to the build environment as well; runtime compose passthrough alone must not be treated as enabling the public counter.
+
 ## 11. Logging / Traceability for Deploy
 
 Required:

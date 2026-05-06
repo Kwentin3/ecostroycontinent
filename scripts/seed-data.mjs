@@ -52,7 +52,7 @@ async function main() {
 
   const superadminId = await upsertUser({
     username: process.env.SEED_SUPERADMIN_USERNAME ?? "superadmin",
-    displayName: "System Superadmin",
+    displayName: "Системный суперадмин",
     role: "superadmin",
     password: process.env.SEED_SUPERADMIN_PASSWORD ?? "change-me-superadmin"
   });

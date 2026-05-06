@@ -1,4 +1,4 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 
 import { POST } from "../app/api/admin/workspace/landing/[pageId]/route.js";
@@ -37,8 +37,8 @@ test("legacy landing workspace route redirects callers into the Pages domain ins
   assert.equal(location.pathname, "/admin/entities/page/page_1");
   assert.equal(
     location.searchParams.get("error"),
-    "AI-верстка больше не поддерживает отдельный write-path. Откройте страницу в домене «Страницы» и продолжайте работу там."
+    "ИИ-верстка больше не поддерживает отдельный путь записи. Откройте страницу в домене «Страницы» и продолжайте работу там."
   );
   assert.equal(captured.path, "/admin/entities/page/page_1");
-  assert.match(captured.error, /не поддерживает отдельный write-path/i);
+  assert.match(captured.error, /не поддерживает отдельный путь записи/i);
 });

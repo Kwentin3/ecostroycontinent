@@ -1,0 +1,258 @@
+{
+  "checkedAt": "2026-04-25T14:38:45.248Z",
+  "commit": "b43041c01ef2fabc4057f7f63c25f8ff086f2191",
+  "imageRef": "ghcr.io/kwentin3/ecostroycontinent-app@sha256:a1d7e86967412b19a6005612f7f6de4025f2c18ce22f609b0a3296fe847abd0e",
+  "routes": [
+    {
+      "name": "services-index",
+      "url": "https://ecostroycontinent.ru/services",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "status": 200,
+      "expectedStatus": 200,
+      "title": "Услуги — в режиме подготовки",
+      "holdingVisible": true,
+      "serviceCardsVisible": false,
+      "screenshot": "services-index-desktop.png",
+      "consoleMessages": [],
+      "requestFailures": [
+        {
+          "url": "https://ecostroycontinent.ru/admin/login?_rsc=nmjo1",
+          "method": "GET",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://ecostroycontinent.ru/admin/login?_rsc=1b7g2",
+          "method": "GET",
+          "failure": "net::ERR_ABORTED"
+        }
+      ],
+      "serverErrors": []
+    },
+    {
+      "name": "service-arenda-tehniki",
+      "url": "https://ecostroycontinent.ru/services/arenda-tehniki",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "status": 200,
+      "expectedStatus": 200,
+      "title": "Услуга — в режиме подготовки",
+      "holdingVisible": true,
+      "serviceCardsVisible": false,
+      "screenshot": "service-arenda-tehniki-desktop.png",
+      "consoleMessages": [],
+      "requestFailures": [
+        {
+          "url": "https://ecostroycontinent.ru/admin/login?_rsc=1vjg4",
+          "method": "GET",
+          "failure": "net::ERR_ABORTED"
+        }
+      ],
+      "serverErrors": []
+    },
+    {
+      "name": "service-arenda-tehniki-display-override",
+      "url": "https://ecostroycontinent.ru/services/arenda-tehniki?__display_mode=published_only",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "status": 200,
+      "expectedStatus": 200,
+      "title": "Услуга — в режиме подготовки",
+      "holdingVisible": true,
+      "serviceCardsVisible": false,
+      "screenshot": "service-arenda-tehniki-display-override-desktop.png",
+      "consoleMessages": [],
+      "requestFailures": [
+        {
+          "url": "https://ecostroycontinent.ru/admin/login?_rsc=1vjg4",
+          "method": "GET",
+          "failure": "net::ERR_ABORTED"
+        }
+      ],
+      "serverErrors": []
+    },
+    {
+      "name": "cases",
+      "url": "https://ecostroycontinent.ru/cases",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "status": 200,
+      "expectedStatus": 200,
+      "title": "Кейсы — в режиме подготовки",
+      "holdingVisible": true,
+      "serviceCardsVisible": false,
+      "screenshot": "cases-desktop.png",
+      "consoleMessages": [],
+      "requestFailures": [],
+      "serverErrors": []
+    },
+    {
+      "name": "contacts",
+      "url": "https://ecostroycontinent.ru/contacts",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "status": 200,
+      "expectedStatus": 200,
+      "title": "Контакты — в режиме подготовки",
+      "holdingVisible": true,
+      "serviceCardsVisible": false,
+      "screenshot": "contacts-desktop.png",
+      "consoleMessages": [],
+      "requestFailures": [
+        {
+          "url": "https://ecostroycontinent.ru/admin/login?_rsc=123o5",
+          "method": "GET",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://ecostroycontinent.ru/admin/login?_rsc=1pokk",
+          "method": "GET",
+          "failure": "net::ERR_ABORTED"
+        }
+      ],
+      "serverErrors": []
+    },
+    {
+      "name": "equipment-404",
+      "url": "https://ecostroycontinent.ru/equipment",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "status": 404,
+      "expectedStatus": 404,
+      "title": "Экостройконтинент",
+      "holdingVisible": false,
+      "serviceCardsVisible": false,
+      "screenshot": "equipment-404-desktop.png",
+      "consoleMessages": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 404 ()",
+          "url": "https://ecostroycontinent.ru/equipment"
+        }
+      ],
+      "requestFailures": [],
+      "serverErrors": []
+    },
+    {
+      "name": "service-arenda-tehniki",
+      "url": "https://ecostroycontinent.ru/services/arenda-tehniki",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "expectedStatus": 200,
+      "title": "Услуга — в режиме подготовки",
+      "holdingVisible": true,
+      "serviceCardsVisible": false,
+      "screenshot": "service-arenda-tehniki-mobile.png",
+      "consoleMessages": [],
+      "requestFailures": [
+        {
+          "url": "https://ecostroycontinent.ru/admin/login?_rsc=1wz3f",
+          "method": "GET",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://ecostroycontinent.ru/admin/login?_rsc=1vjg4",
+          "method": "GET",
+          "failure": "net::ERR_ABORTED"
+        }
+      ],
+      "serverErrors": []
+    }
+  ],
+  "api": {
+    "health": {
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "service": "next-app",
+        "nodeEnv": "production",
+        "databaseConfigured": true
+      }
+    },
+    "displayMode": {
+      "status": 200,
+      "body": {
+        "mode": "under_construction",
+        "placeholderFallbackEnabled": false,
+        "underConstruction": true,
+        "indexingSuppressed": true
+      }
+    }
+  },
+  "diagnostics": {
+    "consoleMessageCount": 1,
+    "requestFailureCount": 8,
+    "serverErrorCount": 0,
+    "consoleMessages": [
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "url": "https://ecostroycontinent.ru/equipment"
+      }
+    ],
+    "requestFailures": [
+      {
+        "url": "https://ecostroycontinent.ru/admin/login?_rsc=nmjo1",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "url": "https://ecostroycontinent.ru/admin/login?_rsc=1b7g2",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "url": "https://ecostroycontinent.ru/admin/login?_rsc=1vjg4",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "url": "https://ecostroycontinent.ru/admin/login?_rsc=1vjg4",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "url": "https://ecostroycontinent.ru/admin/login?_rsc=123o5",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "url": "https://ecostroycontinent.ru/admin/login?_rsc=1pokk",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "url": "https://ecostroycontinent.ru/admin/login?_rsc=1wz3f",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "url": "https://ecostroycontinent.ru/admin/login?_rsc=1vjg4",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      }
+    ],
+    "serverErrors": []
+  },
+  "safety": {
+    "displayModeChanged": false,
+    "equipmentRouteCreated": false,
+    "directSqlWrites": false,
+    "directWriteApiCalls": false
+  }
+}

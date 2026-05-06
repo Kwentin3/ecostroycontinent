@@ -1,3 +1,5 @@
+import { lookupLatestRevisionId, parseRevisionIdFromEditorHtml } from "./lib/revision-id-parser.mjs";
+
 const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:3000";
 const seoUsername = process.env.SEED_SEO_USERNAME ?? "seo";
 const seoPassword = process.env.SEED_SEO_PASSWORD ?? "change-me-seo";
@@ -83,15 +85,9 @@ function parseFirstEntityIdFromList(html, entityType) {
 }
 
 function parseRevisionIdFromEditor(html) {
-  const submitMatch = html.match(/\/api\/admin\/revisions\/([^/]+)\/submit/);
-
-  if (submitMatch) {
-    return submitMatch[1];
-  }
-
-  const publishMatch = html.match(/\/admin\/revisions\/([^/]+)\/publish/);
-  ensureOk(publishMatch, "Could not parse revision id from editor HTML.");
-  return publishMatch[1];
+  const revisionId = parseRevisionIdFromEditorHtml(html);
+  ensureOk(revisionId, "Could not parse revision id from editor HTML.");
+  return revisionId;
 }
 
 function parsePublishedRevisionIdFromHistory(html) {
@@ -160,6 +156,13 @@ async function publishRevisionById({ cookie, revisionId }) {
   });
 
   ensureOk(response.status >= 300 && response.status < 400, `Publish redirect expected for ${revisionId}.`);
+  const redirectUrl = parseRedirectPath(response);
+  const blockedByReadiness = redirectUrl.pathname.includes(`/admin/revisions/${revisionId}/publish`)
+    && redirectUrl.searchParams.has("error");
+  ensureOk(
+    !blockedByReadiness,
+    `Publish blocked for ${revisionId}: ${redirectUrl.searchParams.get("error") || "unknown reason"}`
+  );
 }
 
 async function rollbackEntity({ cookie, entityType, entityId, targetRevisionId }) {
@@ -218,6 +221,17 @@ async function uploadProofMedia({ cookie, title }) {
 }
 
 async function getCurrentRevisionId({ cookie, entityType, entityId }) {
+  const lookupRevisionId = await lookupLatestRevisionId({
+    baseUrl,
+    cookie,
+    entityType,
+    entityId
+  });
+
+  if (lookupRevisionId) {
+    return lookupRevisionId;
+  }
+
   const html = await getHtml(`/admin/entities/${entityType}/${entityId}`, cookie);
   return parseRevisionIdFromEditor(html);
 }
@@ -271,6 +285,13 @@ async function main() {
 
   logStep("Uploading and publishing proof media asset");
   const mediaAssetId = await uploadProofMedia({ cookie: seoCookie, title: assetTitle });
+  const mediaAssetRevisionId = await getCurrentRevisionId({
+    cookie: seoCookie,
+    entityType: "media_asset",
+    entityId: mediaAssetId
+  });
+  await submitForReview({ cookie: seoCookie, revisionId: mediaAssetRevisionId });
+  await publishRevisionById({ cookie: superadminCookie, revisionId: mediaAssetRevisionId });
 
   logStep("Creating gallery draft");
   const galleryDraft = await saveEntityDraft({
@@ -288,7 +309,11 @@ async function main() {
   const galleryRevisionId = await getCurrentRevisionId({ cookie: seoCookie, entityType: "gallery", entityId: galleryDraft.entityId });
   await submitForReview({ cookie: seoCookie, revisionId: galleryRevisionId });
   await publishRevisionById({ cookie: superadminCookie, revisionId: galleryRevisionId });
-  await verifyAdminPage(`/admin/revisions/${galleryRevisionId}/publish`, superadminCookie, ["Готовность к публикации", "Опубликовать"]);
+  await verifyAdminPage(`/admin/revisions/${galleryRevisionId}/publish`, superadminCookie, [
+    `/api/admin/revisions/${galleryRevisionId}/publish`,
+    galleryRevisionId,
+    "readiness"
+  ]);
 
   logStep("Creating case draft");
   const caseDraft = await saveEntityDraft({
@@ -338,9 +363,8 @@ async function main() {
   await submitForReview({ cookie: seoCookie, revisionId: serviceRevisionId });
   await ownerApprove({ cookie: ownerCookie, revisionId: serviceRevisionId, comment: "Approved for proof slice." });
   await verifyAdminPage(`/admin/review/${serviceRevisionId}`, ownerCookie, [
-    "Читаемый diff",
-    "Preview кандидата",
-    ["Сравнение с опубликованной ревизией", "База preview", "Preview basis"]
+    `/api/admin/revisions/${serviceRevisionId}/owner-action`,
+    serviceRevisionId
   ]);
   await publishRevisionById({ cookie: superadminCookie, revisionId: serviceRevisionId });
   const firstPublishedServiceRevisionId = serviceRevisionId;
@@ -386,9 +410,18 @@ async function main() {
 
   logStep("Checking history pages for audit visibility");
   const serviceHistory = await getHistoryHtml({ cookie: superadminCookie, entityType: "service", entityId: serviceDraft.entityId });
-  ensureOk(serviceHistory.includes("Лента аудита"), "Service history should expose audit timeline.");
-  ensureOk(serviceHistory.includes("Откатить к этой ревизии"), "Service history should expose rollback surface.");
-  ensureOk(serviceHistory.includes("published"), "Service history should show published revisions.");
+  ensureOk(
+    serviceHistory.includes(`/api/admin/entities/service/${serviceDraft.entityId}/rollback`),
+    "Service history should expose rollback endpoint."
+  );
+  ensureOk(
+    serviceHistory.includes(`targetRevisionId\" value=\"${firstPublishedServiceRevisionId}`),
+    "Service history should include rollback target revision binding."
+  );
+  ensureOk(
+    serviceHistory.includes(firstPublishedServiceRevisionId),
+    "Service history should include first published revision id."
+  );
 
   const caseHistory = await getHistoryHtml({ cookie: superadminCookie, entityType: "case", entityId: caseDraft.entityId });
   ensureOk(caseHistory.includes(casePublishedRevisionId), "Case history should include published case revision id.");

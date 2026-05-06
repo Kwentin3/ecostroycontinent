@@ -5,12 +5,12 @@
 
 /* Guardrail: sources stay compact in the rail, while full selection moves into modal pickers. */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  align-items: start;
   gap: 16px;
-  padding: 18px 22px;
-  border-radius: 24px;
+  padding: 14px 18px;
+  border-radius: 20px;
   background: linear-gradient(140deg, #fffaf1 0%, #f3efe6 100%);
   border: 1px solid rgba(38, 76, 59, 0.12);
 }
@@ -87,11 +87,33 @@
 }
 
 .headerActions {
+  display: grid;
+  gap: 10px;
+  justify-items: stretch;
+  align-content: start;
+}
+
+.headerPrimaryActions,
+.headerServiceActions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  align-items: center;
   gap: 8px;
+}
+
+.headerServiceDisclosure {
+  width: 100%;
+}
+
+.headerServiceBody {
+  gap: 10px;
+}
+
+.headerServiceNote {
+  margin: 0;
+  color: #647165;
+  line-height: 1.45;
+  text-align: right;
 }
 
 .headerActions .supportCopy {
@@ -142,8 +164,8 @@
 
 .shell {
   display: grid;
-  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr) minmax(260px, 320px);
-  gap: 18px;
+  grid-template-columns: minmax(212px, 240px) minmax(0, 1fr) minmax(300px, 340px);
+  gap: 16px;
   align-items: start;
 }
 
@@ -164,9 +186,9 @@
 .rail {
   display: grid;
   gap: 14px;
-  padding: 16px;
+  padding: 14px;
   position: sticky;
-  top: 24px;
+  top: 18px;
   min-width: 0;
 }
 
@@ -227,7 +249,7 @@
 .canvasColumn {
   display: grid;
   gap: 16px;
-  padding: 18px;
+  padding: 16px;
 }
 
 .canvasTop {
@@ -267,9 +289,9 @@
 
 .sectionCard {
   display: grid;
-  gap: 14px;
-  padding: 18px;
-  border-radius: 20px;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
   border: 1px solid rgba(38, 76, 59, 0.1);
   background: #fffdf8;
 }
@@ -548,14 +570,75 @@
 .previewCard {
   display: grid;
   gap: 12px;
-  padding: 16px;
+  padding: 0;
+  align-content: start;
+}
+
+.previewPacket {
+  gap: 14px;
+}
+
+.previewPacketHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.previewPacketCopy {
+  display: grid;
+  gap: 6px;
+}
+
+.previewPacketPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.previewInlineEmpty {
+  padding: 14px;
+}
+
+.previewCompactList {
+  display: grid;
+  gap: 10px;
+}
+
+.previewCompactItem {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(38, 76, 59, 0.08);
+  background: #fff;
+}
+
+.previewCompactLabel {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #667267;
+}
+
+.supportGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.supportCardWide {
+  grid-column: 1 / -1;
 }
 
 .operatorCard {
   display: grid;
-  gap: 14px;
-  padding: 16px;
-  border-radius: 20px;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
   border: 1px solid rgba(38, 76, 59, 0.1);
   background: #fffdf8;
 }
@@ -703,44 +786,45 @@
 }
 
 .previewModalHeader {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
   align-items: flex-start;
-  gap: 16px;
-  padding: 18px 20px;
+  gap: 14px;
+  padding: 14px 18px;
   border-bottom: 1px solid rgba(38, 76, 59, 0.08);
   background: linear-gradient(140deg, #fffaf1 0%, #f6f1e7 100%);
 }
 
 .previewModalCopy {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
 .previewModalTitle {
   margin: 0;
   color: #21352a;
-  font-size: 1.3rem;
+  font-size: 1.16rem;
 }
 
 .previewModalMeta {
   margin: 0;
   color: #647165;
   line-height: 1.5;
+  font-size: 0.92rem;
 }
 
 .previewModalControls {
   display: grid;
-  gap: 12px;
-  min-width: min(100%, 620px);
+  gap: 10px;
+  min-width: min(100%, 520px);
 }
 
 .previewModalControlRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  gap: 10px;
+  align-items: start;
 }
 
 .previewModalZoom {
@@ -771,12 +855,12 @@
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .previewModalBody {
   overflow: auto;
-  padding: 18px 20px 20px;
+  padding: 12px 16px 16px;
   background: #f3efe6;
 }
 
@@ -899,19 +983,28 @@
   outline: none;
 }
 
-@media (max-width: 1480px) {
+@media (max-width: 1320px) {
   .shell {
-    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+    grid-template-columns: minmax(212px, 240px) minmax(0, 1fr);
   }
 
   .previewCard {
     grid-column: 1 / -1;
   }
+
+  .supportGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .supportCardWide {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 860px) {
   .header {
-    padding: 18px;
+    grid-template-columns: 1fr;
+    padding: 16px;
   }
 
   .shell {
@@ -939,6 +1032,15 @@
     justify-content: flex-start;
   }
 
+  .headerPrimaryActions,
+  .headerServiceActions {
+    justify-content: flex-start;
+  }
+
+  .headerServiceNote {
+    text-align: left;
+  }
+
   .previewLaunchGrid {
     grid-template-columns: 1fr;
   }
@@ -949,7 +1051,7 @@
 
   .previewModalHeader {
     padding: 16px;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .previewModalControlRow {

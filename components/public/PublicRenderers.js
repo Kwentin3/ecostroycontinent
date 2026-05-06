@@ -1,9 +1,26 @@
 import Link from "next/link";
 
 import { PAGE_SECTION_TYPES, PAGE_TYPES } from "../../lib/content-core/content-types.js";
+import { resolveEffectiveServiceArea } from "../../lib/content-core/geography.js";
 import { normalizePageMediaSettings } from "../../lib/content-core/page-media.js";
 import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { DEFAULT_LANDING_PAGE_THEME_KEY } from "../../lib/landing-composition/visual-semantics.js";
+import {
+  buildPublicBreadcrumbs,
+  buildServiceQuickLinks,
+  getPublicNavItems,
+  resolvePublicNavSection
+} from "../../lib/public-launch/navigation.js";
+import { buildPublicContactProjection } from "../../lib/public-launch/contact-projection.js";
+import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
+import { buildEquipmentCardsSectionModel } from "../../lib/public-launch/equipment-card-model.js";
+import {
+  buildBreadcrumbStructuredData,
+  buildLocalBusinessStructuredData,
+  buildServiceStructuredData,
+  serializeStructuredData
+} from "../../lib/public-launch/seo-structured-data.js";
+import { AnalyticsTracker } from "./AnalyticsTracker.js";
 import styles from "./public-ui.module.css";
 
 const THEME_CLASS_NAMES = Object.freeze({
@@ -14,6 +31,8 @@ const THEME_CLASS_NAMES = Object.freeze({
   night_signal: styles.themeNightSignal,
   concrete_blueprint: styles.themeConcreteBlueprint
 });
+
+const DEFAULT_PUBLIC_SITE_THEME_KEY = "graphite_industrial";
 
 const SURFACE_TONE_CLASS_NAMES = Object.freeze({
   plain: styles.sectionTonePlain,
@@ -45,9 +64,73 @@ const GALLERY_ASPECT_RATIO_CLASS_NAMES = Object.freeze({
   portrait: styles.galleryAspectPortrait
 });
 
+const UNDER_CONSTRUCTION_MOSAIC_TILES = Object.freeze([
+  {
+    key: "lead",
+    className: styles.mosaicLead,
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80"
+  },
+  {
+    key: "support-left",
+    className: styles.mosaicSupportLeft,
+    imageUrl: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=900&q=80"
+  },
+  {
+    key: "support-right",
+    className: styles.mosaicSupportRight,
+    imageUrl: "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=900&q=80"
+  }
+]);
+
+function getContactAnalyticsEvent(href = "") {
+  if (href.startsWith("tel:")) {
+    return "click_to_call";
+  }
+
+  if (/t\.me|telegram/i.test(href)) {
+    return "click_to_telegram";
+  }
+
+  if (/wa\.me|whatsapp/i.test(href)) {
+    return "click_to_whatsapp";
+  }
+
+  if (href === "/contacts" || href.startsWith("/contacts#")) {
+    return "contact_link_click";
+  }
+
+  return "cta_click";
+}
+
+function analyticsProps({
+  id,
+  event,
+  section,
+  entityType = "",
+  entityId = "",
+  targetType = "",
+  targetId = "",
+  navItem = "",
+  view = ""
+}) {
+  return {
+    "data-analytics-id": id,
+    "data-analytics-event": event,
+    "data-analytics-section": section,
+    "data-analytics-entity-type": entityType,
+    "data-analytics-entity-id": entityId,
+    "data-analytics-target-type": targetType,
+    "data-analytics-target-id": targetId,
+    "data-analytics-nav-item": navItem,
+    "data-analytics-view": view || undefined
+  };
+}
+
 function getThemeClassName(pageThemeKey) {
   return THEME_CLASS_NAMES[pageThemeKey || DEFAULT_LANDING_PAGE_THEME_KEY] ?? styles.themeEarthSand;
 }
+
+const DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME = getThemeClassName(DEFAULT_PUBLIC_SITE_THEME_KEY);
 
 function getSurfaceToneClassName(surfaceTone = "plain") {
   return SURFACE_TONE_CLASS_NAMES[surfaceTone] ?? SURFACE_TONE_CLASS_NAMES.plain;
@@ -147,6 +230,9 @@ function GallerySection({
     <section
       id={sectionId}
       data-preview-section={sectionName}
+      data-analytics-id={`${sectionId}-gallery`}
+      data-analytics-section={sectionName}
+      data-analytics-view="gallery_open"
       className={getSectionClassName([styles.gallerySection, styles.previewSection], sectionLike)}
     >
       {title ? <h3>{title}</h3> : null}
@@ -177,23 +263,410 @@ function GallerySection({
   );
 }
 
-function PublicPageShell({ globalSettings, themeClassName = "", children }) {
+function Breadcrumbs({ items }) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
   return (
-    <div className={`${styles.publicShell} ${themeClassName}`}>
+    <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
+      <ol>
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+
+          return (
+            <li key={item.key || `${item.label}-${index}`}>
+              {item.href && !isLast ? <Link href={item.href}>{item.label}</Link> : <span>{item.label}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+function ContactAction({
+  action,
+  className,
+  defaultLabel = "Открыть контакты"
+}) {
+  if (!action?.href) {
+    return null;
+  }
+
+  const label = action.label || defaultLabel;
+  const href = action.href;
+  const props = analyticsProps({
+    id: action.key ? `contact_${action.key}` : `contact_${getContactAnalyticsEvent(href)}`,
+    event: getContactAnalyticsEvent(href),
+    section: "contact-action",
+    targetType: href.startsWith("/") ? "page" : "contact_channel",
+    targetId: href.startsWith("/") ? href : getContactAnalyticsEvent(href),
+    view: "cta_view"
+  });
+
+  if (href.startsWith("/") || href.startsWith("#")) {
+    return <Link className={className} href={href} {...props}>{label}</Link>;
+  }
+
+  return <a className={className} href={href} {...props}>{label}</a>;
+}
+
+function PublicContactMeta({ contactProjection, includeRegion = true }) {
+  const contactItems = Array.isArray(contactProjection?.publicContactItems)
+    ? contactProjection.publicContactItems
+    : [];
+  const metaItems = [
+    ...contactItems,
+    includeRegion && contactProjection?.hasPublicRegion
+      ? {
+          key: "region",
+          label: contactProjection.publicRegion
+        }
+      : null
+  ].filter(Boolean);
+
+  if (metaItems.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={styles.publicShellMeta}>
+      {metaItems.map((item) => {
+        if (item.href) {
+          return (
+            <a
+              key={item.key}
+              href={item.href}
+              {...analyticsProps({
+                id: `header_contact_${item.key}`,
+                event: getContactAnalyticsEvent(item.href),
+                section: "public-shell-contact",
+                targetType: "contact_channel",
+                targetId: item.key
+              })}
+            >
+              {item.label}
+            </a>
+          );
+        }
+
+        return <span key={item.key}>{item.label}</span>;
+      })}
+    </div>
+  );
+}
+
+function ContactDetailsItems({ contactProjection }) {
+  const contactItems = Array.isArray(contactProjection?.publicContactItems)
+    ? contactProjection.publicContactItems
+    : [];
+
+  if (contactItems.length === 0) {
+    return <p>{contactProjection?.displayPhone || PUBLIC_COPY.contactInfoFallback}</p>;
+  }
+
+  return contactItems.map((item) => (
+    <p key={item.key}>
+      {item.href ? (
+        <a
+          href={item.href}
+          {...analyticsProps({
+            id: `contact_details_${item.key}`,
+            event: getContactAnalyticsEvent(item.href),
+            section: "contact-details",
+            targetType: "contact_channel",
+            targetId: item.key
+          })}
+        >
+          {item.label}
+        </a>
+      ) : item.label}
+    </p>
+  ));
+}
+
+function formatServiceAreaNote(region) {
+  const normalized = typeof region === "string" ? region.trim() : "";
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (/^работаем\b/i.test(normalized)) {
+    return /[.!?]$/.test(normalized) ? normalized : `${normalized}.`;
+  }
+
+  return `Зона оказания услуг: ${normalized}${/[.!?]$/.test(normalized) ? "" : "."}`;
+}
+
+function ServiceAreaNote({ serviceAreaModel, sectionId = "preview-service-area" }) {
+  const region = serviceAreaModel?.effectiveServiceArea;
+  const body = formatServiceAreaNote(region);
+  const note = normalizeLegacyCopy(serviceAreaModel?.serviceAreaNote || "");
+
+  if (!body) {
+    return null;
+  }
+
+  return (
+    <section
+      id={sectionId}
+      data-preview-section="service-area"
+      className={`${styles.card} ${styles.previewSection}`}
+    >
+      <p className={styles.eyebrow}>География работ</p>
+      <h2>Зона оказания услуг</h2>
+      <p className={styles.note}>{body}</p>
+      {note ? <p className={styles.note}>{note}</p> : null}
+    </section>
+  );
+}
+
+function CaseLocationLabel({ location }) {
+  const normalized = normalizeLegacyCopy(location || "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  return <p className={styles.note}>Локация: {normalized}</p>;
+}
+
+export function EquipmentCardsSection({ model, heading }) {
+  if (!model?.cards?.length) {
+    return null;
+  }
+
+  return (
+    <section
+      id="preview-service-related-equipment"
+      data-preview-section="related-equipment"
+      className={`${styles.equipmentSection} ${styles.previewSection}`}
+    >
+      {heading ? <h2>{heading}</h2> : null}
+      <div className={styles.equipmentGrid}>
+        {model.cards.map((card) => (
+          <article key={card.key} className={`${styles.card} ${styles.equipmentCard}`}>
+            {card.primaryMedia ? (
+              <figure className={styles.equipmentMedia}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={card.primaryMedia.previewUrl}
+                  alt={card.primaryMedia.alt || card.title || card.equipmentType || PUBLIC_COPY.imageFallback}
+                  loading="lazy"
+                  decoding="async"
+                />
+                {card.primaryMedia.caption ? (
+                  <figcaption className={styles.mediaCaption}>{card.primaryMedia.caption}</figcaption>
+                ) : null}
+              </figure>
+            ) : null}
+            <div className={styles.equipmentCardBody}>
+              <div className={styles.equipmentCardHeader}>
+                {card.equipmentType ? <span className={styles.equipmentType}>{card.equipmentType}</span> : null}
+                {card.title ? <h3>{card.title}</h3> : null}
+              </div>
+              {card.summary ? <p className={styles.equipmentSummary}>{card.summary}</p> : null}
+              {card.operatorMode ? (
+                <p className={styles.equipmentMode}>
+                  <span>Режим работы</span>
+                  <strong>{card.operatorMode}</strong>
+                </p>
+              ) : null}
+              {card.keySpecs.length > 0 ? (
+                <section className={styles.equipmentDetails} aria-labelledby={`${card.key}-specs`}>
+                  <h4 id={`${card.key}-specs`}>Характеристики</h4>
+                  <ul>
+                    {card.keySpecs.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}
+                  </ul>
+                </section>
+              ) : null}
+              {card.usageScenarios.length > 0 ? (
+                <section className={styles.equipmentDetails} aria-labelledby={`${card.key}-usage`}>
+                  <h4 id={`${card.key}-usage`}>Где применяется</h4>
+                  <ul>
+                    {card.usageScenarios.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}
+                  </ul>
+                </section>
+              ) : null}
+              {card.galleryAssets.length > 0 ? (
+                <section className={styles.equipmentDetails} aria-labelledby={`${card.key}-gallery`}>
+                  <h4 id={`${card.key}-gallery`}>Галерея</h4>
+                  <div className={styles.equipmentGallery}>
+                    {card.galleryAssets.map((asset) => (
+                      <figure key={asset.entityId || asset.previewUrl}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={asset.previewUrl}
+                          alt={asset.alt || card.title || card.equipmentType || PUBLIC_COPY.imageFallback}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </figure>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+              {card.action ? (
+                <ContactAction
+                  action={card.action}
+                  className={styles.actionLink}
+                  defaultLabel={PUBLIC_COPY.ctaFallback}
+                />
+              ) : null}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function StructuredDataScripts({ items }) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      {items.map((item, index) => (
+        <script
+          key={`${item.kind || "schema"}-${index}`}
+          type="application/ld+json"
+          data-schema-kind={item.kind || "schema"}
+          dangerouslySetInnerHTML={{ __html: serializeStructuredData(item.payload) }}
+        />
+      ))}
+    </>
+  );
+}
+
+export function PublicPageShell({
+  globalSettings,
+  themeClassName = DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME,
+  currentPath = "/",
+  breadcrumbs = [],
+  serviceLinks = [],
+  extraStructuredData = [],
+  allowStructuredData = true,
+  placeholderMarker = false,
+  showCasesNav = true,
+  children
+}) {
+  const resolvedThemeClassName = themeClassName || DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME;
+  const navItems = getPublicNavItems({ includeCases: showCasesNav });
+  const activeSection = resolvePublicNavSection(currentPath);
+  const quickServiceLinks = buildServiceQuickLinks(serviceLinks, { limit: 8 });
+  const resolvedBreadcrumbs = Array.isArray(breadcrumbs) ? breadcrumbs : [];
+  const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
+  const breadcrumbStructuredData = allowStructuredData
+    ? buildBreadcrumbStructuredData({
+      breadcrumbs: resolvedBreadcrumbs,
+      currentPath
+    })
+    : null;
+  const localBusinessStructuredData = allowStructuredData
+    ? buildLocalBusinessStructuredData({
+      globalSettings,
+      contactProjection
+    })
+    : null;
+  const structuredDataItems = allowStructuredData
+    ? [
+        breadcrumbStructuredData,
+        localBusinessStructuredData,
+        ...(Array.isArray(extraStructuredData) ? extraStructuredData : [])
+      ].filter(Boolean)
+    : [];
+
+  return (
+    <div
+      className={[styles.publicShell, resolvedThemeClassName].filter(Boolean).join(" ")}
+      data-contact-binding-mode={contactProjection.bindingMode}
+      data-contact-readiness={contactProjection.readiness.code}
+      data-contact-consistency-token={contactProjection.consistencyToken}
+    >
+      <StructuredDataScripts items={structuredDataItems} />
+      <AnalyticsTracker />
       <header className={styles.publicShellHeader}>
-        <div>
-          <p className={styles.publicShellEyebrow}>Публичная страница</p>
+        <div className={styles.publicShellBrand}>
           <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
         </div>
-        <div className={styles.publicShellMeta}>
-          <span>{globalSettings?.primaryPhone || "Телефон не указан"}</span>
-          <span>{globalSettings?.serviceArea || "География не указана"}</span>
-        </div>
+        <nav className={styles.publicShellNav} aria-label="Главная навигация">
+          {navItems.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`${styles.publicShellNavLink} ${activeSection === item.key ? styles.publicShellNavLinkActive : ""}`.trim()}
+              aria-current={activeSection === item.key ? "page" : undefined}
+              {...analyticsProps({
+                id: `nav_${item.key}`,
+                event: item.href === "/contacts" ? "contact_link_click" : "service_link_click",
+                section: "main-nav",
+                targetType: "page",
+                targetId: item.href,
+                navItem: item.key
+              })}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <PublicContactMeta contactProjection={contactProjection} />
       </header>
+      {quickServiceLinks.length > 0 ? (
+        <details className={styles.servicesQuickAccess}>
+          <summary>Быстрый доступ к услугам</summary>
+          <ul>
+            {quickServiceLinks.map((item) => (
+              <li key={item.key}>
+                <Link
+                  href={item.href}
+                  {...analyticsProps({
+                    id: `quick_service_${item.key}`,
+                    event: "service_link_click",
+                    section: "quick-services",
+                    targetType: "service",
+                    targetId: item.key
+                  })}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+      {placeholderMarker ? (
+        <div className={styles.placeholderMarker} role="note" aria-label="Техническая метка заглушки">
+          {PLACEHOLDER_MARKER_TEXT}
+        </div>
+      ) : null}
+      <Breadcrumbs items={resolvedBreadcrumbs} />
       {children}
       <footer className={styles.publicShellFooter}>
         <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
-        <span>{globalSettings?.publicEmail || "Почта не указана"}</span>
+        <nav className={styles.publicShellFooterNav} aria-label="Навигация в подвале">
+          {navItems.map((item) => (
+            <Link
+              key={`footer-${item.key}`}
+              href={item.href}
+              className={styles.publicShellFooterLink}
+              {...analyticsProps({
+                id: `footer_${item.key}`,
+                event: item.href === "/contacts" ? "contact_link_click" : "service_link_click",
+                section: "footer-nav",
+                targetType: "page",
+                targetId: item.href,
+                navItem: item.key
+              })}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <PublicContactMeta contactProjection={contactProjection} />
       </footer>
     </div>
   );
@@ -203,7 +676,7 @@ function getSection(page, type) {
   return (page.sections || []).find((section) => section.type === type) || null;
 }
 
-function renderPageSections({ page, globalSettings, services, equipment, cases, galleries }) {
+function renderPageSections({ page, globalSettings, services, equipment, cases, galleries, contactProjection }) {
   const sourceRefs = page.sourceRefs || {};
   const targeting = page.targeting || {};
   const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
@@ -238,8 +711,24 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
           >
             <h2>{section.title || "Контакты"}</h2>
             {section.body ? <p>{section.body}</p> : null}
-            <p>{globalSettings?.primaryPhone || PUBLIC_COPY.contactInfoFallback}</p>
-            <p>{globalSettings?.serviceArea || PUBLIC_COPY.serviceAreaFallback}</p>
+            <ContactDetailsItems contactProjection={contactProjection} />
+            {contactProjection?.hasPublicRegion ? <p>{contactProjection.publicRegion}</p> : null}
+            <p className={styles.note}>{contactProjection?.readiness?.message}</p>
+            <div className={styles.linkRow}>
+              <ContactAction
+                action={contactProjection?.primaryAction}
+                className={styles.actionLink}
+                defaultLabel={PUBLIC_COPY.ctaFallback}
+              />
+              {contactProjection?.secondaryActions?.map((action) => (
+                <ContactAction
+                  key={action.key || action.href}
+                  action={action}
+                  className={styles.actionLinkSecondary}
+                  defaultLabel={PUBLIC_COPY.ctaFallback}
+                />
+              ))}
+            </div>
           </section>
         );
       case PAGE_SECTION_TYPES.SERVICE_SCOPE:
@@ -332,7 +821,19 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
                   <article key={item.entityId} className={getSectionClassName(styles.card, section)}>
                     <h3>{item.title}</h3>
                     <p>{item.result}</p>
-                    <Link className={styles.actionLink} href={`/cases/${item.slug}`}>{PUBLIC_COPY.openCase}</Link>
+                    <Link
+                      className={styles.actionLink}
+                      href={`/cases/${item.slug}`}
+                      {...analyticsProps({
+                        id: `proof_case_${item.entityId || item.slug}`,
+                        event: "case_card_click",
+                        section: "proof-cases",
+                        targetType: "case",
+                        targetId: item.entityId || item.slug
+                      })}
+                    >
+                      {PUBLIC_COPY.openCase}
+                    </Link>
                   </article>
                 ))}
               </section>
@@ -371,9 +872,49 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
   });
 }
 
-export function PublicListPage({ eyebrow, title, intro, items, itemHrefPrefix }) {
+export function PublicListPage({
+  eyebrow,
+  title,
+  intro,
+  items,
+  itemHrefPrefix,
+  globalSettings = null,
+  currentPath = "/",
+  serviceLinks = [],
+  placeholderMarker = false,
+  breadcrumbs = null,
+  emptyTitle = "Пока нет опубликованных материалов",
+  emptyDescription = "Раздел не содержит опубликованных сущностей в текущем режиме.",
+  emptyActionHref = "",
+  emptyActionLabel = "",
+  nextStepTitle = "",
+  nextStepDescription = "",
+  nextStepPrimaryHref = "",
+  nextStepPrimaryLabel = "",
+  nextStepSecondaryHref = "",
+  nextStepSecondaryLabel = "",
+  nextStepTone = "plain",
+  allowStructuredData = true,
+  showCasesNav = true
+}) {
+  const trail = Array.isArray(breadcrumbs)
+    ? breadcrumbs
+    : buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: title });
+  const listItems = Array.isArray(items)
+    ? items.filter((item) => item?.slug && item?.title)
+    : [];
+  const hasNextStep = Boolean(nextStepTitle || nextStepDescription || nextStepPrimaryHref || nextStepSecondaryHref);
+
   return (
-    <div className={styles.publicShell}>
+    <PublicPageShell
+      globalSettings={globalSettings}
+      currentPath={currentPath}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+      allowStructuredData={allowStructuredData}
+      placeholderMarker={placeholderMarker}
+      showCasesNav={showCasesNav}
+    >
       <main className={styles.page}>
         <section
           id="preview-list-hero"
@@ -384,25 +925,142 @@ export function PublicListPage({ eyebrow, title, intro, items, itemHrefPrefix })
           <h1>{title}</h1>
           <p className={styles.note}>{intro}</p>
         </section>
-        <section className={styles.grid}>
-          {items.map((item) => (
-            <article key={item.entityId} className={styles.card}>
-              <h2>{item.title}</h2>
-              <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
-              <Link className={styles.actionLink} href={`${itemHrefPrefix}/${item.slug}`}>{PUBLIC_COPY.listOpen}</Link>
-            </article>
-          ))}
-        </section>
+        {listItems.length > 0 ? (
+          <section className={styles.grid}>
+            {listItems.map((item) => (
+              <article key={item.entityId || item.slug} className={styles.card}>
+                <h2>{item.title}</h2>
+                <CaseLocationLabel location={item.location} />
+                <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
+                <Link
+                  className={styles.actionLink}
+                  href={`${itemHrefPrefix}/${item.slug}`}
+                  {...analyticsProps({
+                    id: `list_${item.entityId || item.slug}`,
+                    event: itemHrefPrefix === "/cases" ? "case_card_click" : "service_link_click",
+                    section: "public-list",
+                    targetType: itemHrefPrefix === "/cases" ? "case" : "service",
+                    targetId: item.entityId || item.slug
+                  })}
+                >
+                  {PUBLIC_COPY.listOpen}
+                </Link>
+              </article>
+            ))}
+          </section>
+        ) : (
+          <section className={`${styles.card} ${styles.previewSection} ${styles.sectionTonePlain}`}>
+            <h2>{emptyTitle}</h2>
+            <p className={styles.note}>{emptyDescription}</p>
+            {emptyActionHref && emptyActionLabel ? (
+              <div className={styles.linkRow}>
+                <Link className={styles.actionLink} href={emptyActionHref}>{emptyActionLabel}</Link>
+              </div>
+            ) : null}
+          </section>
+        )}
+        {hasNextStep ? (
+          <section
+            id="preview-list-next-steps"
+            data-preview-section="next-steps"
+            className={getSectionClassName([styles.card, styles.previewSection], { surfaceTone: nextStepTone, textEmphasisPreset: "standard" })}
+          >
+            {nextStepTitle ? <h2>{nextStepTitle}</h2> : null}
+            {nextStepDescription ? <p className={styles.note}>{nextStepDescription}</p> : null}
+            {nextStepPrimaryHref || nextStepSecondaryHref ? (
+              <div className={styles.linkRow}>
+                {nextStepPrimaryHref && nextStepPrimaryLabel ? (
+                  <Link className={styles.actionLink} href={nextStepPrimaryHref}>{nextStepPrimaryLabel}</Link>
+                ) : null}
+                {nextStepSecondaryHref && nextStepSecondaryLabel ? (
+                  <Link className={styles.actionLinkSecondary} href={nextStepSecondaryHref}>{nextStepSecondaryLabel}</Link>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
       </main>
-    </div>
+    </PublicPageShell>
   );
 }
 
-export function ServicePage({ service, relatedCases, galleries, resolveMedia, globalSettings }) {
+export function PublicHoldingPage({
+  globalSettings = null,
+  currentPath = "/",
+  serviceLinks = []
+}) {
+  return (
+    <main className={styles.homeShell}>
+      <Link href="/admin/login" className={styles.loginIcon} aria-label="Войти в админку" title="Войти в админку">
+        ↗
+      </Link>
+
+      <section className={styles.homeCopy} id="preview-holding-hero" data-preview-section="holding-hero">
+        <p className={styles.eyebrow}>Экостройконтинент</p>
+        <h1 className={styles.homeTitle}>Экостройконтинент</h1>
+        <p className={styles.homeStatus}>В разработке</p>
+      </section>
+
+      <section
+        className={styles.homeMosaic}
+        id="preview-holding-status"
+        data-preview-section="holding-status"
+        aria-label="Подборка изображений для режима в разработке"
+      >
+        {UNDER_CONSTRUCTION_MOSAIC_TILES.map((tile) => (
+          <article
+            key={tile.key}
+            className={`${styles.mosaicCard} ${tile.className}`}
+            style={{ "--tile-image": `url("${tile.imageUrl}")` }}
+            aria-hidden="true"
+          />
+        ))}
+      </section>
+    </main>
+  );
+}
+
+export function ServicePage({
+  service,
+  relatedCases,
+  relatedEquipment = [],
+  galleries,
+  resolveMedia,
+  globalSettings,
+  serviceLinks = [],
+  allowStructuredData = true,
+  placeholderMarker = false,
+  showCasesNav = true
+}) {
   const primaryMedia = resolveMedia && service.primaryMediaAssetId ? resolveMedia(service.primaryMediaAssetId) : null;
+  const currentPath = `/services/${service.slug}`;
+  const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: service.h1 || service.title });
+  const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
+  const serviceAreaModel = resolveEffectiveServiceArea({ service, globalSettings });
+  const equipmentCardsModel = buildEquipmentCardsSectionModel({
+    equipmentRecords: relatedEquipment,
+    resolveMedia,
+    resolveGallery: galleries,
+    ctaAction: contactProjection.primaryAction,
+    ctaLabel: service.ctaVariant || contactProjection.defaultCtaLabel
+  });
+  const serviceStructuredData = buildServiceStructuredData({
+    service,
+    currentPath,
+    effectiveServiceArea: serviceAreaModel.effectiveServiceArea
+  });
 
   return (
-    <PublicPageShell globalSettings={globalSettings}>
+    <PublicPageShell
+      globalSettings={globalSettings}
+      currentPath={currentPath}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+      extraStructuredData={[serviceStructuredData]}
+      allowStructuredData={allowStructuredData}
+      placeholderMarker={placeholderMarker}
+      showCasesNav={showCasesNav}
+    >
       <main className={styles.page}>
         <section
           id="preview-service-hero"
@@ -425,17 +1083,37 @@ export function ServicePage({ service, relatedCases, galleries, resolveMedia, gl
           {service.problemsSolved ? <p>{service.problemsSolved}</p> : null}
           {service.methods ? <p>{service.methods}</p> : null}
         </section>
+        <ServiceAreaNote serviceAreaModel={serviceAreaModel} />
         {relatedCases.length > 0 ? (
           <section id="preview-service-related-cases" data-preview-section="related-cases" className={`${styles.grid} ${styles.previewSection}`}>
             {relatedCases.map((item) => (
               <article key={item.entityId} className={styles.card}>
                 <h3>{item.title}</h3>
+                <CaseLocationLabel location={item.location} />
                 <p>{item.result}</p>
-                <Link className={styles.actionLink} href={`/cases/${item.slug}`}>{PUBLIC_COPY.openCase}</Link>
+                <Link
+                  className={styles.actionLink}
+                  href={`/cases/${item.slug}`}
+                  {...analyticsProps({
+                    id: `service_related_case_${item.entityId || item.slug}`,
+                    event: "case_card_click",
+                    section: "related-cases",
+                    entityType: "service",
+                    entityId: service.entityId || "",
+                    targetType: "case",
+                    targetId: item.entityId || item.slug
+                  })}
+                >
+                  {PUBLIC_COPY.openCase}
+                </Link>
               </article>
             ))}
           </section>
         ) : null}
+        <EquipmentCardsSection
+          model={equipmentCardsModel}
+          heading="Техника для выполнения услуги"
+        />
         <GallerySection
           title={PUBLIC_COPY.galleryHeading}
           galleries={service.galleryIds || []}
@@ -443,16 +1121,83 @@ export function ServicePage({ service, relatedCases, galleries, resolveMedia, gl
           sectionId="preview-service-gallery"
           sectionName="gallery"
         />
+        <section id="preview-service-next-steps" data-preview-section="next-steps" className={`${styles.card} ${styles.previewSection}`}>
+          <h2>Следующий шаг</h2>
+          <p className={styles.note}>{contactProjection.defaultCtaDescription}</p>
+          <div className={styles.linkRow}>
+            <ContactAction action={contactProjection.primaryAction} className={styles.actionLink} defaultLabel={PUBLIC_COPY.ctaFallback} />
+            {contactProjection.secondaryActions.map((action) => (
+              <ContactAction
+                key={action.key || action.href}
+                action={action}
+                className={styles.actionLinkSecondary}
+                defaultLabel={PUBLIC_COPY.ctaFallback}
+              />
+            ))}
+            {relatedCases.length > 0 ? (
+              <Link
+                className={styles.actionLink}
+                href="/cases"
+                {...analyticsProps({
+                  id: "service_next_cases",
+                  event: "case_card_click",
+                  section: "next-steps",
+                  entityType: "service",
+                  entityId: service.entityId || "",
+                  targetType: "page",
+                  targetId: "/cases"
+                })}
+              >
+                Смотреть кейсы
+              </Link>
+            ) : null}
+            <Link
+              className={styles.actionLinkSecondary}
+              href="/contacts"
+              {...analyticsProps({
+                id: "service_next_contacts",
+                event: "contact_link_click",
+                section: "next-steps",
+                entityType: "service",
+                entityId: service.entityId || "",
+                targetType: "page",
+                targetId: "/contacts"
+              })}
+            >
+              Связаться
+            </Link>
+          </div>
+        </section>
       </main>
     </PublicPageShell>
   );
 }
 
-export function CasePage({ item, relatedServices, galleries, resolveMedia, globalSettings }) {
+export function CasePage({
+  item,
+  relatedServices,
+  relatedEquipment = [],
+  galleries,
+  resolveMedia,
+  globalSettings,
+  serviceLinks = [],
+  allowStructuredData = true,
+  placeholderMarker = false,
+  showCasesNav = true
+}) {
   const primaryMedia = resolveMedia && item.primaryMediaAssetId ? resolveMedia(item.primaryMediaAssetId) : null;
+  const trail = buildPublicBreadcrumbs({ pathname: `/cases/${item.slug}`, pageTitle: item.title });
 
   return (
-    <PublicPageShell globalSettings={globalSettings}>
+    <PublicPageShell
+      globalSettings={globalSettings}
+      currentPath={`/cases/${item.slug}`}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+      allowStructuredData={allowStructuredData}
+      placeholderMarker={placeholderMarker}
+      showCasesNav={showCasesNav}
+    >
       <main className={styles.page}>
         <section
           id="preview-case-hero"
@@ -461,7 +1206,7 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia, globa
         >
           <p className={styles.eyebrow}>{PUBLIC_COPY.caseEyebrow}</p>
           <h1>{item.title}</h1>
-          <p>{item.location}</p>
+          <CaseLocationLabel location={item.location} />
         </section>
         <MediaHero asset={primaryMedia} sectionId="preview-case-media" sectionName="media" />
         <section id="preview-case-core" data-preview-section="case-core" className={`${styles.grid} ${styles.previewSection}`}>
@@ -484,7 +1229,32 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia, globa
               <article key={service.entityId} className={styles.card}>
                 <h3>{service.title}</h3>
                 <p>{service.summary}</p>
-                <Link className={styles.actionLink} href={`/services/${service.slug}`}>{PUBLIC_COPY.openService}</Link>
+                <Link
+                  className={styles.actionLink}
+                  href={`/services/${service.slug}`}
+                  {...analyticsProps({
+                    id: `case_related_service_${service.entityId || service.slug}`,
+                    event: "service_link_click",
+                    section: "related-services",
+                    entityType: "case",
+                    entityId: item.entityId || "",
+                    targetType: "service",
+                    targetId: service.entityId || service.slug
+                  })}
+                >
+                  {PUBLIC_COPY.openService}
+                </Link>
+              </article>
+            ))}
+          </section>
+        ) : null}
+        {relatedEquipment.length > 0 ? (
+          <section id="preview-case-related-equipment" data-preview-section="related-equipment" className={`${styles.grid} ${styles.previewSection}`}>
+            <h2>Техника в кейсе</h2>
+            {relatedEquipment.map((equipmentItem) => (
+              <article key={equipmentItem.entityId} className={styles.card}>
+                <h3>{equipmentItem.title}</h3>
+                <p>{equipmentItem.capabilitySummary || equipmentItem.shortSummary || equipmentItem.equipmentType}</p>
               </article>
             ))}
           </section>
@@ -496,12 +1266,60 @@ export function CasePage({ item, relatedServices, galleries, resolveMedia, globa
           sectionId="preview-case-gallery"
           sectionName="gallery"
         />
+        <section id="preview-case-next-steps" data-preview-section="next-steps" className={`${styles.card} ${styles.previewSection}`}>
+          <h2>Следующий шаг</h2>
+          <p className={styles.note}>Выберите релевантную услугу или перейдите к контакту для запроса.</p>
+          <div className={styles.linkRow}>
+            <Link
+              className={styles.actionLink}
+              href="/services"
+              {...analyticsProps({
+                id: "case_next_services",
+                event: "service_link_click",
+                section: "next-steps",
+                entityType: "case",
+                entityId: item.entityId || "",
+                targetType: "page",
+                targetId: "/services"
+              })}
+            >
+              Перейти к услугам
+            </Link>
+            <Link
+              className={styles.actionLinkSecondary}
+              href="/contacts"
+              {...analyticsProps({
+                id: "case_next_contacts",
+                event: "contact_link_click",
+                section: "next-steps",
+                entityType: "case",
+                entityId: item.entityId || "",
+                targetType: "page",
+                targetId: "/contacts"
+              })}
+            >
+              Оставить заявку
+            </Link>
+          </div>
+        </section>
       </main>
     </PublicPageShell>
   );
 }
 
-export function StandalonePage({ page, globalSettings, services, equipment, cases, galleries, resolveMedia }) {
+export function StandalonePage({
+  page,
+  globalSettings,
+  services,
+  equipment,
+  cases,
+  galleries,
+  resolveMedia,
+  serviceLinks = [],
+  allowStructuredData = true,
+  placeholderMarker = false,
+  showCasesNav = true
+}) {
   const primaryMedia = resolveMedia && page.primaryMediaAssetId ? resolveMedia(page.primaryMediaAssetId) : null;
   const pageThemeClassName = getThemeClassName(page.pageThemeKey);
   const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
@@ -510,9 +1328,25 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
   const primaryService = sourceRefs.primaryServiceId ? services(sourceRefs.primaryServiceId) : null;
   const primaryEquipment = sourceRefs.primaryEquipmentId ? equipment?.(sourceRefs.primaryEquipmentId) : null;
   const showSplitHeroMedia = mediaSettings.heroLayout === "split" && primaryMedia;
+  const currentPath = page.pageType === PAGE_TYPES.CONTACTS
+    ? "/contacts"
+    : page.pageType === PAGE_TYPES.ABOUT
+      ? "/about"
+      : "/";
+  const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: page.h1 || page.title });
+  const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
 
   return (
-    <PublicPageShell globalSettings={globalSettings} themeClassName={pageThemeClassName}>
+    <PublicPageShell
+      globalSettings={globalSettings}
+      themeClassName={pageThemeClassName}
+      currentPath={currentPath}
+      breadcrumbs={trail}
+      serviceLinks={serviceLinks}
+      allowStructuredData={allowStructuredData}
+      placeholderMarker={placeholderMarker}
+      showCasesNav={showCasesNav}
+    >
       <main className={styles.page}>
         <section
           id="preview-page-hero"
@@ -558,10 +1392,48 @@ export function StandalonePage({ page, globalSettings, services, equipment, case
             services,
             equipment: equipment || (() => null),
             cases,
-            galleries
+            galleries,
+            contactProjection
           })}
         </section>
+        {page.pageType === PAGE_TYPES.CONTACTS ? (
+          <section id="contact-request" data-preview-section="contact-request" className={`${styles.card} ${styles.previewSection}`}>
+            <h2>Контактное действие</h2>
+            <p className={styles.note}>{contactProjection.readiness.message}</p>
+            {contactProjection.hasPublicRegion ? <p className={styles.note}>{contactProjection.publicRegion}</p> : null}
+            <div className={styles.linkRow}>
+              <ContactAction action={contactProjection.primaryAction} className={styles.actionLink} defaultLabel={PUBLIC_COPY.ctaFallback} />
+              {contactProjection.secondaryActions.map((action) => (
+                <ContactAction
+                  key={action.key || action.href}
+                  action={action}
+                  className={styles.actionLinkSecondary}
+                  defaultLabel={PUBLIC_COPY.ctaFallback}
+                />
+              ))}
+              <Link
+                className={styles.actionLinkSecondary}
+                href="/services"
+                {...analyticsProps({
+                  id: "contacts_open_services",
+                  event: "service_link_click",
+                  section: "contact-request",
+                  targetType: "page",
+                  targetId: "/services"
+                })}
+              >
+                Открыть услуги
+              </Link>
+            </div>
+            <p id="contact-messengers" className={styles.note}>
+              {contactProjection.messengers.length > 0
+                ? `Активные каналы: ${contactProjection.messengers.map((item) => item.label).join(", ")}`
+                : "Каналы в мессенджерах пока не настроены."}
+            </p>
+          </section>
+        ) : null}
       </main>
     </PublicPageShell>
   );
 }
+

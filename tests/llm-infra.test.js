@@ -308,8 +308,8 @@ test("diagnostic wrappers preserve kind and human-readable summary", async () =>
 
   assert.equal(llmResult.diagnosticKind, "llm_test");
   assert.equal(socksResult.diagnosticKind, "socks5_transport_test");
-  assert.equal(llmResult.summary, "LLM baseline is reachable and returned a validated structured artifact.");
-  assert.equal(socksResult.summary, "LLM baseline is reachable and returned a validated structured artifact.");
+  assert.equal(llmResult.summary, "LLM-базовый контур доступен и вернул проверенный структурированный артефакт.");
+  assert.equal(socksResult.summary, "LLM-базовый контур доступен и вернул проверенный структурированный артефакт.");
 });
 
 test("createGeminiProviderAdapter enables minimal thinking for gemini 3 preview models", async () => {

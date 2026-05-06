@@ -1,5 +1,3 @@
-import path from "node:path";
-
 import { NextResponse } from "next/server.js";
 
 import { normalizeEntityCreationOrigin } from "../../../../../../lib/admin/entity-origin.js";
@@ -8,7 +6,7 @@ import { getMediaLibraryCard } from "../../../../../../lib/admin/media-gallery.j
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
 import { userCanEditContent } from "../../../../../../lib/auth/session.js";
 import { saveDraft } from "../../../../../../lib/content-core/service.js";
-import { deleteMediaFile, storeMediaFile } from "../../../../../../lib/media/storage.js";
+import { createMediaStorageKey, deleteMediaFile, storeMediaFile } from "../../../../../../lib/media/storage.js";
 
 function buildTitleFromFilename(filename) {
   const base = (filename || "")
@@ -51,7 +49,7 @@ export async function POST(request, _context, deps = {}) {
     return NextResponse.json({ ok: false, error: "V1 принимает только изображения." }, { status: 400 });
   }
 
-  const storageKey = `${crypto.randomUUID()}${path.extname(file.name)}`;
+  const storageKey = createMediaStorageKey(file.name);
   const bytes = Buffer.from(await file.arrayBuffer());
   const title = getString(formData, "title") || buildTitleFromFilename(file.name);
   const creationOrigin = normalizeEntityCreationOrigin(getString(formData, "creationOrigin"));
