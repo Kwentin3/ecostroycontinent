@@ -107,6 +107,26 @@ $env:EXPECT_CONTACTS = 'known_missing'
 
 Use `EXPECT_ABOUT=published` and/or `EXPECT_CONTACTS=published` only after approved Content Core pages are published. Keep `EXPECT_RUNTIME_COMMIT=true` for post-deploy production acceptance so `/api/readiness` must expose a non-null deployed commit marker. The smoke script must stay read-only: it checks health, readiness, public launch routes, robots, sitemap honesty, admin protection, and optional `EXPECT_MEDIA_URL`; it must not create content, authenticate, publish, migrate, or mutate production data.
 
+Current media launch posture as of 2026-05-06:
+
+- Production media storage is S3-backed.
+- Production media delivery is accepted for launch through app proxy: `MEDIA_DELIVERY_MODE` is not injected and therefore defaults to `app_proxy`; `MEDIA_PUBLIC_BASE_URL` is empty.
+- Stable read-only media smoke URL:
+  - `https://ecostroycontinent.ru/api/media-public/entity_ae17b84b-9b6f-4c96-bae5-6af06a73851f`
+- Include media in launch smoke:
+
+```powershell
+$env:APP_BASE_URL = 'https://ecostroycontinent.ru'
+$env:EXPECT_RUNTIME_COMMIT = 'true'
+$env:EXPECT_MEDIA_URL = 'https://ecostroycontinent.ru/api/media-public/entity_ae17b84b-9b6f-4c96-bae5-6af06a73851f'
+npm run smoke:launch
+Remove-Item Env:APP_BASE_URL
+Remove-Item Env:EXPECT_RUNTIME_COMMIT
+Remove-Item Env:EXPECT_MEDIA_URL
+```
+
+This URL is an existing published `media_asset` served through the public app-proxy route. Do not store it as editorial truth in content entities, and refresh the runbook if the asset is intentionally unpublished or removed.
+
 Traefik dashboard raw data on VM:
 
 ```bash
