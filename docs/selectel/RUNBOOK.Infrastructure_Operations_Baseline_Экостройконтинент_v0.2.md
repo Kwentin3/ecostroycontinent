@@ -88,6 +88,23 @@ External health from operator machine:
 curl.exe -k https://178.72.179.66/api/health
 ```
 
+Read-only launch smoke from operator machine after PR/deploy:
+
+```powershell
+$env:APP_BASE_URL = 'https://ecostroycontinent.ru'
+npm run smoke:launch
+Remove-Item Env:APP_BASE_URL
+```
+
+Current expected content blockers:
+
+```powershell
+$env:EXPECT_ABOUT = 'known_missing'
+$env:EXPECT_CONTACTS = 'known_missing'
+```
+
+Use `EXPECT_ABOUT=published` and/or `EXPECT_CONTACTS=published` only after approved Content Core pages are published. The smoke script must stay read-only: it checks health, readiness, public launch routes, robots, sitemap honesty, admin protection, and optional `EXPECT_MEDIA_URL`; it must not create content, authenticate, publish, migrate, or mutate production data.
+
 Traefik dashboard raw data on VM:
 
 ```bash
@@ -241,11 +258,13 @@ Minimal operator check:
 2. Confirm runner service is `active`.
 3. Confirm `docker ps` shows `traefik`, `app`, `sql`.
 4. Confirm `curl -ksSf https://127.0.0.1/api/health` returns `status: ok`.
-5. Confirm disk still has headroom:
+5. Confirm `curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru"` returns `status: ready` and `database.status: ok`.
+6. Run `APP_BASE_URL=https://ecostroycontinent.ru npm run smoke:launch` from a clean repo checkout. `known_content_blocker` for `/about` and `/contacts` is acceptable only while owner content is missing; `failed` is not acceptable.
+7. Confirm disk still has headroom:
 
 ```bash
 df -h /
 ```
 
-6. Confirm latest backup file exists in `/opt/ecostroycontinent/backups/local`.
-7. Confirm `backup_s3_ok` appears in `/var/log/ecostroycontinent/backup.log`.
+8. Confirm latest backup file exists in `/opt/ecostroycontinent/backups/local`.
+9. Confirm `backup_s3_ok` appears in `/var/log/ecostroycontinent/backup.log`.
