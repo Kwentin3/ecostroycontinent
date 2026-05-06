@@ -92,8 +92,10 @@ Read-only launch smoke from operator machine after PR/deploy:
 
 ```powershell
 $env:APP_BASE_URL = 'https://ecostroycontinent.ru'
+$env:EXPECT_RUNTIME_COMMIT = 'true'
 npm run smoke:launch
 Remove-Item Env:APP_BASE_URL
+Remove-Item Env:EXPECT_RUNTIME_COMMIT
 ```
 
 Current expected content blockers:
@@ -103,7 +105,7 @@ $env:EXPECT_ABOUT = 'known_missing'
 $env:EXPECT_CONTACTS = 'known_missing'
 ```
 
-Use `EXPECT_ABOUT=published` and/or `EXPECT_CONTACTS=published` only after approved Content Core pages are published. The smoke script must stay read-only: it checks health, readiness, public launch routes, robots, sitemap honesty, admin protection, and optional `EXPECT_MEDIA_URL`; it must not create content, authenticate, publish, migrate, or mutate production data.
+Use `EXPECT_ABOUT=published` and/or `EXPECT_CONTACTS=published` only after approved Content Core pages are published. Keep `EXPECT_RUNTIME_COMMIT=true` for post-deploy production acceptance so `/api/readiness` must expose a non-null deployed commit marker. The smoke script must stay read-only: it checks health, readiness, public launch routes, robots, sitemap honesty, admin protection, and optional `EXPECT_MEDIA_URL`; it must not create content, authenticate, publish, migrate, or mutate production data.
 
 Traefik dashboard raw data on VM:
 
@@ -259,7 +261,7 @@ Minimal operator check:
 3. Confirm `docker ps` shows `traefik`, `app`, `sql`.
 4. Confirm `curl -ksSf https://127.0.0.1/api/health` returns `status: ok`.
 5. Confirm `curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru"` returns `status: ready` and `database.status: ok`.
-6. Run `APP_BASE_URL=https://ecostroycontinent.ru npm run smoke:launch` from a clean repo checkout. `known_content_blocker` for `/about` and `/contacts` is acceptable only while owner content is missing; `failed` is not acceptable.
+6. Run `APP_BASE_URL=https://ecostroycontinent.ru EXPECT_RUNTIME_COMMIT=true npm run smoke:launch` from a clean repo checkout. `known_content_blocker` for `/about` and `/contacts` is acceptable only while owner content is missing; `failed` is not acceptable.
 7. Confirm disk still has headroom:
 
 ```bash

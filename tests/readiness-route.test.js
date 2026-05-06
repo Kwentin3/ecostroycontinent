@@ -24,7 +24,8 @@ test("readiness snapshot returns ready only after the DB probe succeeds", async 
     now: () => new Date("2026-05-05T08:00:00.000Z"),
     env: {
       APP_VERSION: "0.1.0",
-      APP_COMMIT_SHA: "commit_readiness"
+      APP_COMMIT_SHA: "abc1234",
+      BUILD_TIME: "2026-05-05T07:59:00Z"
     }
   });
 
@@ -36,7 +37,26 @@ test("readiness snapshot returns ready only after the DB probe succeeds", async 
   assert.equal(snapshot.body.timestamp, "2026-05-05T08:00:00.000Z");
   assert.deepEqual(snapshot.body.database, { status: "ok" });
   assert.equal(snapshot.body.runtime.version, "0.1.0");
-  assert.equal(snapshot.body.runtime.commit, "commit_readiness");
+  assert.equal(snapshot.body.runtime.commit, "abc1234");
+  assert.equal(snapshot.body.runtime.buildTime, "2026-05-05T07:59:00Z");
+});
+
+test("readiness runtime marker ignores unsafe marker values", async () => {
+  const snapshot = await buildReadinessSnapshot({
+    config: makeConfig(),
+    queryFn: async () => ({ rows: [{ ok: 1 }] }),
+    now: () => new Date("2026-05-05T08:00:00.000Z"),
+    env: {
+      APP_VERSION: "postgres://user:secret@db/app",
+      APP_COMMIT_SHA: "not-a-sha-secret-token",
+      BUILD_TIME: "not-a-date"
+    }
+  });
+
+  assert.equal(snapshot.httpStatus, 200);
+  assert.equal(snapshot.body.runtime.version, null);
+  assert.equal(snapshot.body.runtime.commit, null);
+  assert.equal(snapshot.body.runtime.buildTime, null);
 });
 
 test("readiness snapshot fails closed and does not expose DB error details", async () => {
@@ -89,7 +109,7 @@ test("readiness route returns terminal status and no-store/noindex headers", asy
         nodeEnv: "test",
         timestamp: "2026-05-05T08:03:00.000Z",
         database: { status: "error" },
-        runtime: { node: "v22.0.0", version: null, commit: null }
+        runtime: { node: "v22.0.0", version: null, commit: null, buildTime: null }
       }
     })
   });

@@ -103,15 +103,22 @@ jobs:
       - name: Health and readiness probe through Traefik
         run: |
           for attempt in 1 2 3 4 5; do
-            if \
-              curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru" && \
-              curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru"; then
-              exit 0
+            if curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"; then
+              readiness="$(curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru")" || readiness=""
+              if \
+                printf '%s\n' "$readiness" | grep -q '"database":{"status":"ok"}' && \
+                printf '%s\n' "$readiness" | grep -Eq '"commit":"[0-9a-f]{7,40}"'; then
+                printf '%s\n' "$readiness"
+                exit 0
+              fi
             fi
             sleep 3
           done
           curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"
-          curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru"
+          readiness="$(curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru")"
+          printf '%s\n' "$readiness"
+          printf '%s\n' "$readiness" | grep -q '"database":{"status":"ok"}'
+          printf '%s\n' "$readiness" | grep -Eq '"commit":"[0-9a-f]{7,40}"'
 
       - name: Prepare temporary operator for live acceptance
         if: ${{ inputs.run_live_removal_acceptance }}

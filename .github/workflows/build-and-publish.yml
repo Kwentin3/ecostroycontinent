@@ -43,13 +43,27 @@ jobs:
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
 
+      - name: Derive runtime marker
+        id: runtime_marker
+        shell: bash
+        run: |
+          printf 'app_version=%s\n' "$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          printf 'build_time=%s\n' "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
       - name: Verify runtime image packages DB migrations
         run: |
-          docker build -t ecostroycontinent-runtime-check:${{ github.sha }} .
+          docker build \
+            --build-arg APP_COMMIT_SHA=${{ github.sha }} \
+            --build-arg APP_VERSION=${{ steps.runtime_marker.outputs.app_version }} \
+            --build-arg BUILD_TIME=${{ steps.runtime_marker.outputs.build_time }} \
+            -t ecostroycontinent-runtime-check:${{ github.sha }} .
           docker run --rm ecostroycontinent-runtime-check:${{ github.sha }} sh -lc '
             test -d /app/db/migrations &&
             test -f /app/db/migrations/001_admin_first_slice.sql &&
             test -f /app/db/migrations/006_removal_quarantine.sql &&
+            test "$APP_COMMIT_SHA" = "${{ github.sha }}" &&
+            test "$APP_VERSION" = "${{ steps.runtime_marker.outputs.app_version }}" &&
+            test -n "$BUILD_TIME" &&
             ls -1 /app/db/migrations
           '
 
@@ -61,3 +75,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_COMMIT_SHA=${{ github.sha }}
+            APP_VERSION=${{ steps.runtime_marker.outputs.app_version }}
+            BUILD_TIME=${{ steps.runtime_marker.outputs.build_time }}

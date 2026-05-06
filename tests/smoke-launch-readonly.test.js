@@ -66,7 +66,8 @@ function createLaunchRoutes({ sitemapXml }) {
       runtime: {
         node: "v22.22.2",
         version: "0.1.0",
-        commit: "abc1234"
+        commit: "abc1234",
+        buildTime: "2026-05-06T09:00:00Z"
       }
     }),
     "GET /": textResponse("<html>home</html>"),
@@ -122,7 +123,8 @@ test("runLaunchSmoke passes with known missing owner pages and protected admin",
     env: {
       APP_BASE_URL: "https://example.test",
       EXPECT_ABOUT: "known_missing",
-      EXPECT_CONTACTS: "known_missing"
+      EXPECT_CONTACTS: "known_missing",
+      EXPECT_RUNTIME_COMMIT: "true"
     },
     fetchImpl: createFetch(createLaunchRoutes({ sitemapXml }))
   });
@@ -130,6 +132,7 @@ test("runLaunchSmoke passes with known missing owner pages and protected admin",
   assert.equal(report.summary.failed, 0);
   assert.equal(report.summary.known_content_blocker, 2);
   assert.equal(report.runtimeMarker.commit, "abc1234");
+  assert.equal(report.runtimeMarker.buildTime, "2026-05-06T09:00:00Z");
   assert.equal(report.sitemap.urlCount, 3);
 });
 
@@ -156,4 +159,45 @@ test("runLaunchSmoke fails when sitemap lists a known missing owner route", asyn
     report.checks.some((check) => check.path === "/sitemap.xml#/about" && check.result === "failed"),
     true
   );
+});
+
+test("runLaunchSmoke fails strict runtime commit acceptance when commit marker is missing", async () => {
+  const sitemapXml = `
+    <urlset>
+      <url><loc>https://example.test/</loc></url>
+      <url><loc>https://example.test/services</loc></url>
+      <url><loc>https://example.test/cases</loc></url>
+    </urlset>
+  `;
+  const routes = createLaunchRoutes({ sitemapXml });
+  routes["GET /api/readiness"] = jsonResponse({
+    status: "ready",
+    service: "next-app",
+    nodeEnv: "production",
+    database: {
+      status: "ok"
+    },
+    runtime: {
+      node: "v22.22.2",
+      version: "0.1.0",
+      commit: null,
+      buildTime: null
+    }
+  });
+
+  const report = await runLaunchSmoke({
+    env: {
+      APP_BASE_URL: "https://example.test",
+      EXPECT_ABOUT: "known_missing",
+      EXPECT_CONTACTS: "known_missing",
+      EXPECT_RUNTIME_COMMIT: "true"
+    },
+    fetchImpl: createFetch(routes)
+  });
+
+  assert.equal(
+    report.checks.some((check) => check.path === "/api/readiness#runtime.commit" && check.result === "failed"),
+    true
+  );
+  assert.equal(report.summary.failed > 0, true);
 });

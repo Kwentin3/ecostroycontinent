@@ -73,6 +73,7 @@ function buildConfig(env = process.env) {
     hostHeader: String(env.SMOKE_HOST_HEADER || "").trim(),
     timeoutMs: parseTimeout(env.SMOKE_TIMEOUT_MS),
     expectReadiness: parseBoolean("EXPECT_READINESS", env.EXPECT_READINESS, true),
+    expectRuntimeCommit: parseBoolean("EXPECT_RUNTIME_COMMIT", env.EXPECT_RUNTIME_COMMIT, false),
     expectations: {
       about: parseContentExpectation("EXPECT_ABOUT", env.EXPECT_ABOUT),
       contacts: parseContentExpectation("EXPECT_CONTACTS", env.EXPECT_CONTACTS)
@@ -334,7 +335,8 @@ async function checkReadiness(context) {
     marker = {
       version: parsed.value?.runtime?.version ?? null,
       commit: parsed.value?.runtime?.commit ?? null,
-      node: parsed.value?.runtime?.node ?? null
+      node: parsed.value?.runtime?.node ?? null,
+      buildTime: parsed.value?.runtime?.buildTime ?? null
     };
   }
 
@@ -355,6 +357,18 @@ async function checkReadiness(context) {
     result: parsed.ok && !containsSensitiveValue(parsed.value) ? "passed" : "failed",
     reason: parsed.ok ? "secret scan complete" : "readiness JSON parse failed"
   }));
+
+  if (context.config.expectRuntimeCommit) {
+    const hasCommit = typeof marker?.commit === "string" && marker.commit.length > 0;
+    checks.push(makeCheck({
+      group: "runtime",
+      path: "/api/readiness#runtime.commit",
+      expected: "non-null runtime commit marker",
+      actualStatus: response.status,
+      result: hasCommit ? "passed" : "failed",
+      reason: hasCommit ? "runtime commit marker present" : "runtime commit marker missing"
+    }));
+  }
 
   return { checks, marker };
 }
@@ -618,6 +632,7 @@ export async function runLaunchSmoke(options = {}) {
       about: config.expectations.about,
       contacts: config.expectations.contacts,
       readiness: config.expectReadiness,
+      runtimeCommit: config.expectRuntimeCommit,
       media: config.mediaUrl ? "configured" : "not_configured"
     },
     runtimeMarker: readiness.marker,

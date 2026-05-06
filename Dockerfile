@@ -14,7 +14,13 @@ RUN npm run build
 FROM node:22-alpine AS runner
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
+ARG APP_COMMIT_SHA=""
+ARG APP_VERSION=""
+ARG BUILD_TIME=""
 ENV NODE_ENV=production
+ENV APP_COMMIT_SHA=$APP_COMMIT_SHA
+ENV APP_VERSION=$APP_VERSION
+ENV BUILD_TIME=$BUILD_TIME
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=deps /app/node_modules ./node_modules
