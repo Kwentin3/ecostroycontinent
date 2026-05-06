@@ -100,15 +100,18 @@ jobs:
           echo "Running app container image:"
           docker inspect repo-app-1 --format '{{.Image}}'
 
-      - name: Health probe through Traefik
+      - name: Health and readiness probe through Traefik
         run: |
           for attempt in 1 2 3 4 5; do
-            if curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"; then
+            if \
+              curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru" && \
+              curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru"; then
               exit 0
             fi
             sleep 3
           done
           curl -ksSf https://127.0.0.1/api/health -H "Host: ecostroycontinent.ru"
+          curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru"
 
       - name: Prepare temporary operator for live acceptance
         if: ${{ inputs.run_live_removal_acceptance }}
