@@ -110,22 +110,25 @@ Use `EXPECT_ABOUT=published` and/or `EXPECT_CONTACTS=published` only after appro
 Current media launch posture as of 2026-05-06:
 
 - Production media storage is S3-backed.
-- Production media delivery is accepted for launch through app proxy: `MEDIA_DELIVERY_MODE` is not injected and therefore defaults to `app_proxy`; `MEDIA_PUBLIC_BASE_URL` is empty.
-- Stable read-only media smoke URL:
-  - `https://ecostroycontinent.ru/api/media-public/entity_ae17b84b-9b6f-4c96-bae5-6af06a73851f`
+- Production media delivery is switched to CDN-first safe mode: `MEDIA_DELIVERY_MODE=auto`, `MEDIA_PUBLIC_BASE_URL=https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net`.
+- `auto` mode probes CDN with read-only `HEAD` and keeps app proxy as fallback if the CDN probe fails.
+- Stable read-only media smoke URL for `EXPECT_MEDIA_URL`:
+  - `https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/e3604676-6db4-4205-b9f8-96c0318bf4f7.jpg`
+- Public app route handoff can be checked separately:
+  - `https://ecostroycontinent.ru/api/media-public/entity_ae17b84b-9b6f-4c96-bae5-6af06a73851f` should return `302` to the CDN URL when CDN probing is healthy.
 - Include media in launch smoke:
 
 ```powershell
 $env:APP_BASE_URL = 'https://ecostroycontinent.ru'
 $env:EXPECT_RUNTIME_COMMIT = 'true'
-$env:EXPECT_MEDIA_URL = 'https://ecostroycontinent.ru/api/media-public/entity_ae17b84b-9b6f-4c96-bae5-6af06a73851f'
+$env:EXPECT_MEDIA_URL = 'https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/e3604676-6db4-4205-b9f8-96c0318bf4f7.jpg'
 npm run smoke:launch
 Remove-Item Env:APP_BASE_URL
 Remove-Item Env:EXPECT_RUNTIME_COMMIT
 Remove-Item Env:EXPECT_MEDIA_URL
 ```
 
-This URL is an existing published `media_asset` served through the public app-proxy route. Do not store it as editorial truth in content entities, and refresh the runbook if the asset is intentionally unpublished or removed.
+This URL maps to an existing published `media_asset` and is used only as operational smoke evidence. Do not store raw CDN URLs as editorial truth in content entities, and refresh the runbook if the asset is intentionally unpublished or removed.
 
 Traefik dashboard raw data on VM:
 
@@ -252,10 +255,10 @@ curl.exe -I https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/03daa1
 Expected current factual behavior:
 
 - bucket origin object returns `200 OK`
-- CDN object path may return `200 OK` from some edge nodes and cached `403` from others
+- CDN object path should return `200 OK` for the runbook smoke object and the legacy root-level canary
 - CDN root `/` may return `403`
 - bucket root `/` may return `404`
-- production app delivery must stay on `MEDIA_DELIVERY_MODE=app_proxy` until CDN edge sampling is clean
+- production app delivery is `MEDIA_DELIVERY_MODE=auto`; if CDN edge sampling regresses, rollback to `app_proxy` and clear `MEDIA_PUBLIC_BASE_URL`
 
 ## 12. Retention / Cleanup
 
