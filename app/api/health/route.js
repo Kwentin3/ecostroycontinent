@@ -1,6 +1,8 @@
 import { getRuntimeConfig } from "../../../lib/runtime-config";
 
 export async function GET() {
+  // Sticky canon: /api/health is lightweight liveness. Use /api/readiness
+  // for DB-backed production acceptance.
   const config = getRuntimeConfig();
 
   return Response.json({

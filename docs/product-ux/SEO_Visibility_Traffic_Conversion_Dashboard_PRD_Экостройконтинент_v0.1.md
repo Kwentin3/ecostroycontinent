@@ -7,6 +7,8 @@ Refine: 2026-04-30, operational growth loop, Yandex-first metrics layer, LLM con
 Дата: 2026-04-30
 Основание: PRD v0.3.1, Content Contract v0.2, Launch SEO Core v0.1, Public Launch Domain Canon v0.1, Content Operations Admin Console MVP Spec v0.1, Owner Confirmation Pack v0.1.
 
+Current-state note (2026-05-06): this PRD is a staged product spec, not the launch-hardening truth. For current readiness, smoke, runtime marker, media delivery and `/about`/`/contacts` blockers, read `docs/handbook/PROJECT_CURRENT_STATE_AGENT_HANDOFF_Экостройконтинент_v0.1.md`. Lead/intake remains a separate epic; intent events are not lead records.
+
 ## 1. Название фичи
 
 Рабочее название: **Дашборд видимости, трафика и конверсии**.

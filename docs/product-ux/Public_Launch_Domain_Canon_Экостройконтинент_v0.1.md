@@ -18,6 +18,8 @@
 
 Документ не вводит новые feature-domains и не заменяет PRD. Он уточняет и склеивает уже принятый канон в operationally usable модель.
 
+Current-state note (2026-05-06): `/about` and `/contacts` remain canonical route goals, but production keeps them 404 until owner-approved Content Core pages exist and are explicitly published. Do not satisfy this canon with hardcoded fallback content. See `docs/handbook/PROJECT_CURRENT_STATE_AGENT_HANDOFF_Экостройконтинент_v0.1.md`.
+
 ## 2. Canonical public launch model
 
 Каноническая модель phase-1 launch:

@@ -45,8 +45,8 @@ CDN surfaces:
 - Current public bucket origin: `https://media.ecostroycontinent.ru`
 - Current media bucket: `ecostroycontinent-media-ru3-20260428`
 - Origin Host header: `media.ecostroycontinent.ru`
-- Production delivery mode: `app_proxy` until all CDN edge probes are stable
-- Known CDN blocker as of 2026-04-28: some Selectel edge nodes return cached `403 HIT`
+- Production delivery mode: `MEDIA_DELIVERY_MODE=auto` with CDN as normal successful path
+- App proxy remains fallback if the CDN probe fails; the previous cached `403 HIT` blocker was not reproduced in the 2026-05-06 switch verification
 
 ## 3. Check Container State
 

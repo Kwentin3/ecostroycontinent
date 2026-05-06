@@ -79,8 +79,8 @@ export default async function AboutPage({ searchParams }) {
   const page = publishedPage || placeholderPage;
 
   if (!page) {
-    // Published-only 404 can be expected when no published Page(type=about)
-    // exists. Do not fake fallback content; see server acceptance report + handoff.
+    // Sticky canon: keep this 404 honest until owner-approved Page(type=about)
+    // exists and is explicitly published. Do not add hardcoded fallback content.
     notFound();
   }
 

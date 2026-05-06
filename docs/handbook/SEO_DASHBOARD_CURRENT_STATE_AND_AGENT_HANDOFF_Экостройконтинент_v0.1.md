@@ -4,6 +4,8 @@
 
 Этот документ - entry point для будущих агентов по текущему состоянию SEO Dashboard / Yandex analytics foundation. Он не заменяет PRD и контракты; он помогает быстро понять границы реализации без истории старых чатов.
 
+Launch-hardening current state now lives in `docs/handbook/PROJECT_CURRENT_STATE_AGENT_HANDOFF_Экостройконтинент_v0.1.md`. Read it first for readiness, smoke, media delivery and known owner/content blockers.
+
 ## 2. Executive current state
 
 - SEO Dashboard MVP backend/foundation реализован.
@@ -73,7 +75,7 @@ UI не должен собирать метрики напрямую из Ян�
 - Scheduled Yandex Metrica imports.
 - Scheduled Yandex Webmaster imports.
 - Real external aggregates in read model.
-- Lead/intake domain.
+- Lead/intake domain as a separate future epic; intent events are not lead records.
 - LLM provider integration.
 - LLM UI.
 - Visual pixel heatmap.
@@ -111,7 +113,7 @@ UI не должен собирать метрики напрямую из Ян�
 
 ## 10. Next recommended steps
 
-1. Publish Content Core pages for `/about` and `/contacts`.
+1. Publish owner-approved Content Core pages for `/about` and `/contacts`.
 2. Enable Yandex Metrica counter on public site via env flag after privacy/cookie decision.
 3. Add first-party event -> `ym` reachGoal bridge.
 4. Live smoke: first-party event + Metrica goal.

@@ -1,6 +1,8 @@
 import { pathToFileURL } from "node:url";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
+// Sticky canon: launch smoke must stay read-only. /about and /contacts may be
+// known_missing owner blockers; EXPECT_MEDIA_URL is operational evidence only.
 const DEFAULT_PUBLIC_ROUTES = ["/", "/services", "/cases"];
 const OWNER_CONTENT_ROUTES = [
   { path: "/about", envName: "EXPECT_ABOUT", label: "about" },

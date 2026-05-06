@@ -6,6 +6,8 @@ const HEADERS = {
 };
 
 export async function GET(_request, _context, deps = {}) {
+  // Sticky canon: this is strict production readiness. Keep checks safe,
+  // read-only and secret-free; no tenant/content reads or mutating probes.
   const snapshot = await (deps.buildReadinessSnapshot ?? buildReadinessSnapshot)();
 
   return Response.json(snapshot.body, {

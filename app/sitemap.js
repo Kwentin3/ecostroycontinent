@@ -29,8 +29,8 @@ export default async function sitemap() {
     getPublishedContactsPage()
   ]);
 
-  // Sitemap must not publish routes that resolve to 404 because published
-  // Content Core pages are missing. See SEO handoff and server acceptance report.
+  // Sticky canon: sitemap must stay honest. Do not list /about or /contacts
+  // until their published Content Core pages resolve to 200.
   return buildPublishedSitemapEntries({
     baseUrl: appBaseUrl,
     services,
