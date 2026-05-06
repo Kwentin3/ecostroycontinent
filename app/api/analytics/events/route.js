@@ -28,6 +28,8 @@ export async function POST(request, _context, deps = {}) {
     recordUnmappedUrlDiagnostic,
     ...deps
   };
+  // Public ingestion boundary: reject sensitive metadata and keep admin/bot/QA
+  // exclusion intact. Do not store form values. See SEO event taxonomy + handoff.
   const contentLength = Number(request.headers.get("content-length") || 0);
 
   if (contentLength > MAX_EVENT_BODY_BYTES) {

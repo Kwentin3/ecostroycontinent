@@ -20,6 +20,8 @@ export async function GET(request, _context, deps = {}) {
     buildSeoDashboardReadModel,
     ...deps
   };
+  // Admin boundary: return prepared read model only; never expose raw events,
+  // secrets/tokens/form values. RBAC is required. See the SEO handoff doc.
   const { response } = await routeDeps.requireRouteUser(request);
 
   if (response) {

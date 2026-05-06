@@ -56,6 +56,18 @@
 - Cases / portfolio доказывают выполненные работы.
 - Media визуально подтверждают услуги и кейсы через IDs/refs, а не через raw URL truth.
 
-## 5. Sticky Rule For Future Agents
+## 5. SEO Dashboard / Yandex Analytics Current State
+
+For SEO Dashboard, Yandex Metrica/Webmaster, first-party analytics,
+LLM context, `/about` / `/contacts` content-state, and read model
+boundaries, start with:
+
+- `docs/handbook/SEO_DASHBOARD_CURRENT_STATE_AND_AGENT_HANDOFF_Экостройконтинент_v0.1.md`
+
+Do not infer analytics state from old chat history. The read model is a
+consumer DTO boundary, not source of truth, and UI/LLM must not call
+Yandex/raw sources directly.
+
+## 6. Sticky Rule For Future Agents
 
 Local workspace may not have the runtime DB. Do not treat local Postgres `ECONNREFUSED` as proof of missing published content. Verify live published content through deployed runtime/server/admin/API according to this document and the Selectel runbook.

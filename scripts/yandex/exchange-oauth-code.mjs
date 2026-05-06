@@ -61,6 +61,8 @@ async function readStdinIfPiped(stdin = process.stdin) {
 }
 
 function printSafeJson(payload) {
+  // Token exchange output must stay redacted: no full OAuth token, refresh
+  // token, client secret or auth code in reports/git/logs. See SEO/Yandex handoff.
   console.log(JSON.stringify(redactSensitive(payload), null, 2));
 }
 

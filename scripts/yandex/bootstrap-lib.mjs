@@ -30,6 +30,8 @@ export const SECRET_ENV_KEYS = new Set([
   "YANDEX_OAUTH_REFRESH_TOKEN"
 ]);
 
+// Tooling must never print full tokens, client secret or auth code.
+// Keep secrets out of reports/git/logs; see the SEO/Yandex handoff doc.
 export const DISPLAY_VALUE_ENV_KEYS = new Set([
   "YANDEX_METRICA_COUNTER_ID",
   "NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID",

@@ -36,6 +36,8 @@ function printUsage() {
 }
 
 function printSafeJson(payload) {
+  // All CLI output must stay redacted: no full OAuth tokens, client secret or
+  // auth code in reports/git/logs. See SEO/Yandex handoff.
   console.log(JSON.stringify(redactSensitive(payload), null, 2));
 }
 
