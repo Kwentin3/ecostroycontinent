@@ -1,9 +1,9 @@
 # Contact Intent & Journey Telemetry Implementation Report - Экостройконтинент v0.1
 
-Date: 2026-05-07  
-Project: Экостройконтинент  
-Phase: pre-launch / launch-core  
-Branch: `main`  
+Date: 2026-05-07
+Project: Экостройконтинент
+Phase: pre-launch / launch-core
+Branch: `main`
 Implementation commit: `8508901e80bf8f312a451b87beb7642185f01e76`
 
 ## Executive Verdict
