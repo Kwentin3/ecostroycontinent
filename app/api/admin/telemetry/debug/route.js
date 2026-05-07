@@ -7,6 +7,7 @@ const JSON_HEADERS = {
   "X-Robots-Tag": "noindex, nofollow"
 };
 
+// Bounded admin read contract: default excludes internal/test and must not become a raw dump.
 function truthy(value) {
   return ["1", "true", "yes", "on"].includes(String(value || "").trim().toLowerCase());
 }

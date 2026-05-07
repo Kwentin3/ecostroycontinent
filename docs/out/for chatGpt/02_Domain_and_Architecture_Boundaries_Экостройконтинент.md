@@ -18,6 +18,15 @@
 - `Publish` — explicit domain operation with gates and side effects.
 - `AI` — assistive only: not source of truth, not route owner, not autonomous publisher.
 
+## Contact Intent & Journey Telemetry boundary
+
+- `Contact Intent & Journey Telemetry` — отдельный first-party telemetry domain для anonymous interest events, contact intent events и bounded contact journeys.
+- Домен не является `Content Core`, Lead domain, CRM-lite, SEO dashboard, BI dashboard, AI layer или external analytics source of truth.
+- Contact intent events (`phone_clicked`, `email_clicked`, `messenger_clicked`) не являются lead records и не запускают lead qualification.
+- `contact_journey_created` — system/domain-only event; Public UI не отправляет его напрямую.
+- Public UI сообщает события только в telemetry contract; Яндекс.Метрика, GA, PostHog, Plausible, Matomo и future consumers подключаются через adapters/read-contracts после validation.
+- Future admin/SEO/LLM consumers читают bounded aggregates/contact journeys, а не raw event dumps, PII, admin identity или unfiltered internal/test traffic.
+
 ## Public launch route boundary (phase 1)
 
 Day-1 route core:

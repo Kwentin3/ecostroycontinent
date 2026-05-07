@@ -18,6 +18,17 @@
 - Подтвердить claim boundaries по ценам/срокам/гарантиям.
 - Подтвердить flagship case shortlist для первой публикации.
 
+## Contact telemetry owner/legal backlog
+
+- `Contact Intent & Journey Telemetry` уже реализован и задеплоен; не открывать его заново как CRM, Lead Intake или dashboard-задачу.
+- Открыто: cookie/privacy notice для first-party telemetry.
+- Открыто: retention raw telemetry / contact journeys / aggregates.
+- Открыто: optional Yandex Metrica adapter и решение по GA / PostHog / Plausible / Matomo.
+- Открыто: persistent `anonymous_visitor_id` decision; default остается `session_id only`.
+- Открыто: internal marker reset UX и режим "посмотреть сайт как внешний пользователь".
+- Открыто: authenticated production admin debug-read smoke, когда будет безопасный admin test process.
+- Future: маленький admin read model после появления реального трафика, без raw event dump и без LLM/autonomous decisions.
+
 ## Current blockers (from launch-readiness audit)
 
 - Нет published service/case launch-core.
@@ -27,7 +38,7 @@
 - Недостаточен proof inventory (кейсы/медиа/фактура).
 - Technical SEO baseline неполный (`robots`, `sitemap`, canonical/meta/schema projection).
 - Навигация не закреплена как системная часть launch architecture.
-- Conversion path неполный на ключевых surface-ах.
+- Conversion path неполный на ключевых surface-ах; telemetry layer для измерения contact intent уже реализован отдельно.
 
 ## What is missing before launch
 

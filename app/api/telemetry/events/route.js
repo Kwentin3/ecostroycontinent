@@ -16,6 +16,7 @@ const JSON_HEADERS = {
 };
 const MAX_EVENT_BODY_BYTES = 16 * 1024;
 
+// Public boundary: validate and minimize before storage/adapters; never create leads here.
 function json(body, status) {
   return NextResponse.json(body, {
     status,

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 
 const ENDPOINT = "/api/telemetry/events";
 const EVENT_VERSION = "1.0";
+// UI emits only into the telemetry contract; external counters live behind adapters.
 const SUPPORTED_EVENTS = new Set([
   "page_viewed",
   "page_engagement_recorded",
@@ -69,6 +70,7 @@ function inferEventName(element) {
   const href = element.getAttribute("href") || "";
   const channel = inferContactChannel(href);
 
+  // Contact CTA single-counting: emit the final contact event, not cta_clicked plus contact.
   if (channel === "phone") {
     return "phone_clicked";
   }

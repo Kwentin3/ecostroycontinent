@@ -11,6 +11,13 @@
 - Reports помогают понять зафиксированные решения и текущие швы, но не заменяют канон.
 - Если pack конфликтует с каноническим документом, приоритет у канонического документа.
 
+## Implemented domain anchors
+
+- `Contact Intent & Journey Telemetry` реализован как отдельный first-party telemetry domain, а не как часть Content Core, Lead domain, CRM или external analytics.
+- Closure handoff: `docs/engineering/Contact_Intent_and_Journey_Telemetry_Closure_Handoff_Экостройконтинент_v0.1.md`.
+- Implementation report: `docs/reports/2026-05-07/CONTACT_INTENT_JOURNEY_TELEMETRY_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`.
+- Future admin/SEO/LLM consumers должны идти через telemetry contracts, bounded read-contracts, aggregates или adapters, а не через raw UI instrumentation.
+
 ## AI Discoverability Layer
 
 - AI discoverability — часть SEO-канона phase 1, а не отдельная фича.
