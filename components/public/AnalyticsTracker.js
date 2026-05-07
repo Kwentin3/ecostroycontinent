@@ -2,92 +2,19 @@
 
 import { useEffect, useRef } from "react";
 
-const ENDPOINT = "/api/analytics/events";
-const ANONYMOUS_KEY = "esc_analytics_anonymous_id";
-const SESSION_KEY = "esc_analytics_session_id";
-const SESSION_STARTED_KEY = "esc_analytics_session_started_at";
-const SESSION_TTL_MS = 30 * 60 * 1000;
-const SCROLL_MILESTONES = [25, 50, 75, 100];
-
-function createId(prefix) {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return `${prefix}_${crypto.randomUUID()}`;
-  }
-
-  return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-}
-
-function safeStorageGet(storage, key) {
-  try {
-    return storage.getItem(key);
-  } catch {
-    return "";
-  }
-}
-
-function safeStorageSet(storage, key, value) {
-  try {
-    storage.setItem(key, value);
-  } catch {
-    // Analytics must never break the public UI.
-  }
-}
-
-function getAnonymousId() {
-  const existing = safeStorageGet(window.localStorage, ANONYMOUS_KEY);
-
-  if (existing) {
-    return existing;
-  }
-
-  const next = createId("anon");
-  safeStorageSet(window.localStorage, ANONYMOUS_KEY, next);
-  return next;
-}
-
-function getSessionId() {
-  const now = Date.now();
-  const startedAt = Number(safeStorageGet(window.sessionStorage, SESSION_STARTED_KEY) || 0);
-  const existing = safeStorageGet(window.sessionStorage, SESSION_KEY);
-
-  if (existing && startedAt && now - startedAt < SESSION_TTL_MS) {
-    safeStorageSet(window.sessionStorage, SESSION_STARTED_KEY, String(now));
-    return existing;
-  }
-
-  const next = createId("session");
-  safeStorageSet(window.sessionStorage, SESSION_KEY, next);
-  safeStorageSet(window.sessionStorage, SESSION_STARTED_KEY, String(now));
-  return next;
-}
-
-function deviceType() {
-  const width = window.innerWidth || 0;
-
-  if (width < 640) {
-    return "mobile";
-  }
-
-  if (width < 1024) {
-    return "tablet";
-  }
-
-  return "desktop";
-}
-
-function viewportBucket() {
-  const width = window.innerWidth || 0;
-
-  if (width < 640) {
-    return "mobile";
-  }
-
-  if (width < 1024) {
-    return "tablet";
-  }
-
-  return "desktop";
-}
+const ENDPOINT = "/api/telemetry/events";
+const EVENT_VERSION = "1.0";
+const SUPPORTED_EVENTS = new Set([
+  "page_viewed",
+  "page_engagement_recorded",
+  "service_card_opened",
+  "case_card_opened",
+  "gallery_opened",
+  "cta_clicked",
+  "phone_clicked",
+  "email_clicked",
+  "messenger_clicked"
+]);
 
 function visibleText(element) {
   return (element.getAttribute("aria-label")
@@ -113,52 +40,103 @@ function targetPath(element) {
   }
 }
 
+function inferContactChannel(href = "") {
+  if (href.startsWith("tel:")) {
+    return "phone";
+  }
+
+  if (href.startsWith("mailto:")) {
+    return "email";
+  }
+
+  if (/t\.me|telegram/i.test(href)) {
+    return "telegram";
+  }
+
+  if (/wa\.me|whatsapp/i.test(href)) {
+    return "whatsapp";
+  }
+
+  if (/viber|vk\.com|max/i.test(href)) {
+    return "messenger";
+  }
+
+  return "";
+}
+
+function inferEventName(element) {
+  const explicitEvent = element.dataset.analyticsEvent || "";
+  const href = element.getAttribute("href") || "";
+  const channel = inferContactChannel(href);
+
+  if (channel === "phone") {
+    return "phone_clicked";
+  }
+
+  if (channel === "email") {
+    return "email_clicked";
+  }
+
+  if (channel) {
+    return "messenger_clicked";
+  }
+
+  return explicitEvent;
+}
+
 function metadataFor(element, extra = {}) {
-  return {
+  return trimMetadata({
     analytics_id: element.dataset.analyticsId || "",
     section_id: element.dataset.analyticsSection || "",
     target_type: element.dataset.analyticsTargetType || "",
     target_id: element.dataset.analyticsTargetId || "",
     target_path: targetPath(element),
     label: visibleText(element),
-    cta_variant: element.dataset.analyticsCtaVariant || "",
+    cta_kind: element.dataset.analyticsCtaKind || "",
+    destination_kind: element.dataset.analyticsDestinationKind || "",
     nav_item: element.dataset.analyticsNavItem || "",
     gallery_id: element.dataset.analyticsGalleryId || "",
-    case_id: element.dataset.analyticsTargetType === "case" ? element.dataset.analyticsTargetId || "" : "",
-    service_id: element.dataset.analyticsTargetType === "service" ? element.dataset.analyticsTargetId || "" : "",
-    form_id: element.dataset.analyticsFormId || "",
+    card_action: element.dataset.analyticsCardAction || "",
+    source_entity_type: element.dataset.analyticsEntityType || "",
+    source_entity_id: element.dataset.analyticsEntityId || "",
     ...extra
-  };
+  });
 }
 
 function trimMetadata(metadata) {
   return Object.fromEntries(
     Object.entries(metadata)
       .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== "")
-      .map(([key, value]) => [key, String(value)])
+      .map(([key, value]) => [key, String(value).slice(0, 180)])
   );
 }
 
-function send(payload) {
+function currentPath() {
+  return `${window.location.pathname}${window.location.search || ""}`;
+}
+
+function scrollDepth() {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+  const height = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+
+  return Math.min(100, Math.max(0, Math.round((scrollTop / height) * 100)));
+}
+
+function send(payload, { beacon = false } = {}) {
   if (window.location.pathname.startsWith("/admin")) {
     return;
   }
 
   const body = JSON.stringify({
-    timestamp: new Date().toISOString(),
-    anonymous_id: getAnonymousId(),
-    session_id: getSessionId(),
-    page_path: window.location.pathname,
+    event_version: EVENT_VERSION,
+    page_path: currentPath(),
+    page_title: document.title || "",
     referrer: document.referrer || "",
-    device_type: deviceType(),
-    viewport_width: window.innerWidth || 0,
-    viewport_height: window.innerHeight || 0,
-    viewport_bucket: viewportBucket(),
     ...payload,
     metadata: trimMetadata(payload.metadata || {})
   });
 
-  if (navigator.sendBeacon) {
+  if (beacon && navigator.sendBeacon) {
     const blob = new Blob([body], { type: "application/json" });
     navigator.sendBeacon(ENDPOINT, blob);
     return;
@@ -172,18 +150,70 @@ function send(payload) {
   }).catch(() => {});
 }
 
+function rootContextFor(element) {
+  const targetType = element.dataset.analyticsTargetType || "";
+  const targetId = element.dataset.analyticsTargetId || "";
+
+  return {
+    placement: element.dataset.analyticsSection || "",
+    entity_type: targetType || element.dataset.analyticsEntityType || undefined,
+    entity_id: targetId || element.dataset.analyticsEntityId || undefined,
+    contact_channel: element.dataset.analyticsContactChannel || inferContactChannel(element.getAttribute("href") || "") || undefined
+  };
+}
+
 export function AnalyticsTracker() {
   const viewedElementsRef = useRef(new Set());
-  const scrollMilestonesRef = useRef(new Set());
+  const engagementSentRef = useRef(false);
+  const activeStartedAtRef = useRef(0);
+  const activeTimeRef = useRef(0);
+  const maxScrollDepthRef = useRef(0);
 
   useEffect(() => {
     if (window.location.pathname.startsWith("/admin")) {
       return undefined;
     }
 
+    activeStartedAtRef.current = document.visibilityState === "hidden" ? 0 : Date.now();
+
+    const getActiveTime = () => {
+      if (activeStartedAtRef.current) {
+        return activeTimeRef.current + (Date.now() - activeStartedAtRef.current);
+      }
+
+      return activeTimeRef.current;
+    };
+
+    const updateScrollDepth = () => {
+      maxScrollDepthRef.current = Math.max(maxScrollDepthRef.current, scrollDepth());
+    };
+
+    const flushEngagement = (reason, { beacon = false } = {}) => {
+      updateScrollDepth();
+
+      const activeTimeMs = Math.min(30 * 60 * 1000, Math.round(getActiveTime()));
+
+      if (engagementSentRef.current || (activeTimeMs < 1000 && maxScrollDepthRef.current < 25)) {
+        return;
+      }
+
+      engagementSentRef.current = true;
+      send({
+        event_name: "page_engagement_recorded",
+        placement: "page",
+        active_time_ms: activeTimeMs,
+        max_scroll_depth: maxScrollDepthRef.current,
+        metadata: {
+          analytics_id: "page_engagement",
+          section_id: "page",
+          flush_reason: reason
+        }
+      }, { beacon });
+    };
+
     send({
-      event_type: "page_view",
-      element_id: "page",
+      event_name: "page_viewed",
+      placement: "page",
       metadata: {
         analytics_id: "page",
         section_id: "page"
@@ -197,19 +227,20 @@ export function AnalyticsTracker() {
         return;
       }
 
-      const eventType = element.dataset.analyticsEvent;
+      const eventName = inferEventName(element);
 
-      if (!eventType || eventType === "cta_view") {
+      if (!SUPPORTED_EVENTS.has(eventName) || eventName === "page_viewed") {
         return;
       }
 
+      updateScrollDepth();
       send({
-        event_type: eventType,
-        element_id: element.dataset.analyticsId || eventType,
-        entity_type: element.dataset.analyticsEntityType || undefined,
-        entity_id: element.dataset.analyticsEntityId || undefined,
+        event_name: eventName,
+        ...rootContextFor(element),
+        active_time_ms: Math.min(30 * 60 * 1000, Math.round(getActiveTime())),
+        max_scroll_depth: maxScrollDepthRef.current,
         metadata: metadataFor(element)
-      });
+      }, { beacon: eventName.endsWith("_clicked") });
     };
 
     document.addEventListener("click", handleClick, true);
@@ -222,20 +253,17 @@ export function AnalyticsTracker() {
             }
 
             const element = entry.target;
-            const id = element.dataset.analyticsId || element.id || "cta_view";
+            const eventName = element.dataset.analyticsView || "";
+            const id = element.dataset.analyticsId || element.id || eventName;
 
-            if (viewedElementsRef.current.has(id)) {
+            if (!SUPPORTED_EVENTS.has(eventName) || viewedElementsRef.current.has(id)) {
               continue;
             }
 
             viewedElementsRef.current.add(id);
-            const viewEventType = element.dataset.analyticsView || "cta_view";
-
             send({
-              event_type: viewEventType,
-              element_id: id,
-              entity_type: element.dataset.analyticsEntityType || undefined,
-              entity_id: element.dataset.analyticsEntityId || undefined,
+              event_name: eventName,
+              ...rootContextFor(element),
               metadata: metadataFor(element)
             });
           }
@@ -245,36 +273,45 @@ export function AnalyticsTracker() {
     document.querySelectorAll("[data-analytics-view]").forEach((element) => observer?.observe(element));
 
     const handleScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-      const height = Math.max(
-        document.documentElement.scrollHeight - window.innerHeight,
-        1
-      );
-      const depth = Math.min(100, Math.round((scrollTop / height) * 100));
+      updateScrollDepth();
+    };
 
-      for (const milestone of SCROLL_MILESTONES) {
-        if (depth >= milestone && !scrollMilestonesRef.current.has(milestone)) {
-          scrollMilestonesRef.current.add(milestone);
-          send({
-            event_type: "scroll_depth",
-            element_id: `scroll_${milestone}`,
-            metadata: {
-              analytics_id: `scroll_${milestone}`,
-              section_id: "page",
-              scroll_depth: String(milestone),
-              scroll_depth_bucket: `${milestone}`
-            }
-          });
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        if (activeStartedAtRef.current) {
+          activeTimeRef.current += Date.now() - activeStartedAtRef.current;
+          activeStartedAtRef.current = 0;
         }
+
+        flushEngagement("visibility_hidden", { beacon: true });
+        return;
+      }
+
+      if (!activeStartedAtRef.current) {
+        activeStartedAtRef.current = Date.now();
       }
     };
 
+    const handlePageHide = () => {
+      if (activeStartedAtRef.current) {
+        activeTimeRef.current += Date.now() - activeStartedAtRef.current;
+        activeStartedAtRef.current = 0;
+      }
+
+      flushEngagement("pagehide", { beacon: true });
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
 
     return () => {
       document.removeEventListener("click", handleClick, true);
       window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
       observer?.disconnect();
+      flushEngagement("unmount", { beacon: true });
     };
   }, []);
 

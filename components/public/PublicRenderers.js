@@ -84,22 +84,56 @@ const UNDER_CONSTRUCTION_MOSAIC_TILES = Object.freeze([
 
 function getContactAnalyticsEvent(href = "") {
   if (href.startsWith("tel:")) {
-    return "click_to_call";
+    return "phone_clicked";
+  }
+
+  if (href.startsWith("mailto:")) {
+    return "email_clicked";
   }
 
   if (/t\.me|telegram/i.test(href)) {
-    return "click_to_telegram";
+    return "messenger_clicked";
   }
 
   if (/wa\.me|whatsapp/i.test(href)) {
-    return "click_to_whatsapp";
+    return "messenger_clicked";
+  }
+
+  return "cta_clicked";
+}
+
+function getContactAnalyticsChannel(href = "") {
+  if (href.startsWith("tel:")) {
+    return "phone";
+  }
+
+  if (href.startsWith("mailto:")) {
+    return "email";
+  }
+
+  if (/t\.me|telegram/i.test(href)) {
+    return "telegram";
+  }
+
+  if (/wa\.me|whatsapp/i.test(href)) {
+    return "whatsapp";
+  }
+
+  return "";
+}
+
+function getDestinationKind(href = "", targetType = "") {
+  const channel = getContactAnalyticsChannel(href);
+
+  if (channel) {
+    return channel === "phone" || channel === "email" ? channel : "messenger";
   }
 
   if (href === "/contacts" || href.startsWith("/contacts#")) {
-    return "contact_link_click";
+    return "contact_page";
   }
 
-  return "cta_click";
+  return targetType || "page";
 }
 
 function analyticsProps({
@@ -111,7 +145,11 @@ function analyticsProps({
   targetType = "",
   targetId = "",
   navItem = "",
-  view = ""
+  view = "",
+  contactChannel = "",
+  ctaKind = "",
+  destinationKind = "",
+  cardAction = ""
 }) {
   return {
     "data-analytics-id": id,
@@ -122,7 +160,11 @@ function analyticsProps({
     "data-analytics-target-type": targetType,
     "data-analytics-target-id": targetId,
     "data-analytics-nav-item": navItem,
-    "data-analytics-view": view || undefined
+    "data-analytics-view": view || undefined,
+    "data-analytics-contact-channel": contactChannel || undefined,
+    "data-analytics-cta-kind": ctaKind || undefined,
+    "data-analytics-destination-kind": destinationKind || undefined,
+    "data-analytics-card-action": cardAction || undefined
   };
 }
 
@@ -232,7 +274,7 @@ function GallerySection({
       data-preview-section={sectionName}
       data-analytics-id={`${sectionId}-gallery`}
       data-analytics-section={sectionName}
-      data-analytics-view="gallery_open"
+      data-analytics-view="gallery_opened"
       className={getSectionClassName([styles.gallerySection, styles.previewSection], sectionLike)}
     >
       {title ? <h3>{title}</h3> : null}
@@ -302,7 +344,9 @@ function ContactAction({
     section: "contact-action",
     targetType: href.startsWith("/") ? "page" : "contact_channel",
     targetId: href.startsWith("/") ? href : getContactAnalyticsEvent(href),
-    view: "cta_view"
+    contactChannel: getContactAnalyticsChannel(href),
+    ctaKind: "contact",
+    destinationKind: getDestinationKind(href, href.startsWith("/") ? "page" : "contact_channel")
   });
 
   if (href.startsWith("/") || href.startsWith("#")) {
@@ -602,11 +646,13 @@ export function PublicPageShell({
               aria-current={activeSection === item.key ? "page" : undefined}
               {...analyticsProps({
                 id: `nav_${item.key}`,
-                event: item.href === "/contacts" ? "contact_link_click" : "service_link_click",
+                event: "cta_clicked",
                 section: "main-nav",
                 targetType: "page",
                 targetId: item.href,
-                navItem: item.key
+                navItem: item.key,
+                ctaKind: "navigation",
+                destinationKind: getDestinationKind(item.href, "page")
               })}
             >
               {item.label}
@@ -625,10 +671,11 @@ export function PublicPageShell({
                   href={item.href}
                   {...analyticsProps({
                     id: `quick_service_${item.key}`,
-                    event: "service_link_click",
+                    event: "service_card_opened",
                     section: "quick-services",
                     targetType: "service",
-                    targetId: item.key
+                    targetId: item.key,
+                    cardAction: "open"
                   })}
                 >
                   {item.label}
@@ -655,11 +702,13 @@ export function PublicPageShell({
               className={styles.publicShellFooterLink}
               {...analyticsProps({
                 id: `footer_${item.key}`,
-                event: item.href === "/contacts" ? "contact_link_click" : "service_link_click",
+                event: "cta_clicked",
                 section: "footer-nav",
                 targetType: "page",
                 targetId: item.href,
-                navItem: item.key
+                navItem: item.key,
+                ctaKind: "navigation",
+                destinationKind: getDestinationKind(item.href, "page")
               })}
             >
               {item.label}
@@ -826,10 +875,11 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
                       href={`/cases/${item.slug}`}
                       {...analyticsProps({
                         id: `proof_case_${item.entityId || item.slug}`,
-                        event: "case_card_click",
+                        event: "case_card_opened",
                         section: "proof-cases",
                         targetType: "case",
-                        targetId: item.entityId || item.slug
+                        targetId: item.entityId || item.slug,
+                        cardAction: "open"
                       })}
                     >
                       {PUBLIC_COPY.openCase}
@@ -937,10 +987,11 @@ export function PublicListPage({
                   href={`${itemHrefPrefix}/${item.slug}`}
                   {...analyticsProps({
                     id: `list_${item.entityId || item.slug}`,
-                    event: itemHrefPrefix === "/cases" ? "case_card_click" : "service_link_click",
+                    event: itemHrefPrefix === "/cases" ? "case_card_opened" : "service_card_opened",
                     section: "public-list",
                     targetType: itemHrefPrefix === "/cases" ? "case" : "service",
-                    targetId: item.entityId || item.slug
+                    targetId: item.entityId || item.slug,
+                    cardAction: "open"
                   })}
                 >
                   {PUBLIC_COPY.listOpen}
@@ -1096,12 +1147,13 @@ export function ServicePage({
                   href={`/cases/${item.slug}`}
                   {...analyticsProps({
                     id: `service_related_case_${item.entityId || item.slug}`,
-                    event: "case_card_click",
+                    event: "case_card_opened",
                     section: "related-cases",
                     entityType: "service",
                     entityId: service.entityId || "",
                     targetType: "case",
-                    targetId: item.entityId || item.slug
+                    targetId: item.entityId || item.slug,
+                    cardAction: "open"
                   })}
                 >
                   {PUBLIC_COPY.openCase}
@@ -1140,12 +1192,14 @@ export function ServicePage({
                 href="/cases"
                 {...analyticsProps({
                   id: "service_next_cases",
-                  event: "case_card_click",
+                  event: "cta_clicked",
                   section: "next-steps",
                   entityType: "service",
                   entityId: service.entityId || "",
                   targetType: "page",
-                  targetId: "/cases"
+                  targetId: "/cases",
+                  ctaKind: "section_navigation",
+                  destinationKind: "page"
                 })}
               >
                 Смотреть кейсы
@@ -1156,12 +1210,14 @@ export function ServicePage({
               href="/contacts"
               {...analyticsProps({
                 id: "service_next_contacts",
-                event: "contact_link_click",
+                event: "cta_clicked",
                 section: "next-steps",
                 entityType: "service",
                 entityId: service.entityId || "",
                 targetType: "page",
-                targetId: "/contacts"
+                targetId: "/contacts",
+                ctaKind: "contact_page",
+                destinationKind: "contact_page"
               })}
             >
               Связаться
@@ -1234,12 +1290,13 @@ export function CasePage({
                   href={`/services/${service.slug}`}
                   {...analyticsProps({
                     id: `case_related_service_${service.entityId || service.slug}`,
-                    event: "service_link_click",
+                    event: "service_card_opened",
                     section: "related-services",
                     entityType: "case",
                     entityId: item.entityId || "",
                     targetType: "service",
-                    targetId: service.entityId || service.slug
+                    targetId: service.entityId || service.slug,
+                    cardAction: "open"
                   })}
                 >
                   {PUBLIC_COPY.openService}
@@ -1275,12 +1332,14 @@ export function CasePage({
               href="/services"
               {...analyticsProps({
                 id: "case_next_services",
-                event: "service_link_click",
+                event: "cta_clicked",
                 section: "next-steps",
                 entityType: "case",
                 entityId: item.entityId || "",
                 targetType: "page",
-                targetId: "/services"
+                targetId: "/services",
+                ctaKind: "section_navigation",
+                destinationKind: "page"
               })}
             >
               Перейти к услугам
@@ -1290,12 +1349,14 @@ export function CasePage({
               href="/contacts"
               {...analyticsProps({
                 id: "case_next_contacts",
-                event: "contact_link_click",
+                event: "cta_clicked",
                 section: "next-steps",
                 entityType: "case",
                 entityId: item.entityId || "",
                 targetType: "page",
-                targetId: "/contacts"
+                targetId: "/contacts",
+                ctaKind: "contact_page",
+                destinationKind: "contact_page"
               })}
             >
               Оставить заявку
@@ -1416,10 +1477,12 @@ export function StandalonePage({
                 href="/services"
                 {...analyticsProps({
                   id: "contacts_open_services",
-                  event: "service_link_click",
+                  event: "cta_clicked",
                   section: "contact-request",
                   targetType: "page",
-                  targetId: "/services"
+                  targetId: "/services",
+                  ctaKind: "section_navigation",
+                  destinationKind: "page"
                 })}
               >
                 Открыть услуги

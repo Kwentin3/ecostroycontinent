@@ -28,18 +28,89 @@ function isInternalHref(href) {
   return typeof href === "string" && (href.startsWith("/") || href.startsWith("#"));
 }
 
+function contactTelemetryEvent(href = "") {
+  if (href.startsWith("tel:")) {
+    return "phone_clicked";
+  }
+
+  if (href.startsWith("mailto:")) {
+    return "email_clicked";
+  }
+
+  if (/t\.me|telegram|wa\.me|whatsapp/i.test(href)) {
+    return "messenger_clicked";
+  }
+
+  return "cta_clicked";
+}
+
+function contactTelemetryChannel(href = "") {
+  if (href.startsWith("tel:")) {
+    return "phone";
+  }
+
+  if (href.startsWith("mailto:")) {
+    return "email";
+  }
+
+  if (/t\.me|telegram/i.test(href)) {
+    return "telegram";
+  }
+
+  if (/wa\.me|whatsapp/i.test(href)) {
+    return "whatsapp";
+  }
+
+  return "";
+}
+
+function telemetryProps({
+  id,
+  event,
+  section,
+  targetType = "",
+  targetId = "",
+  ctaKind = "",
+  destinationKind = "",
+  contactChannel = "",
+  cardAction = ""
+}) {
+  return {
+    "data-analytics-id": id,
+    "data-analytics-event": event,
+    "data-analytics-section": section,
+    "data-analytics-target-type": targetType,
+    "data-analytics-target-id": targetId,
+    "data-analytics-cta-kind": ctaKind || undefined,
+    "data-analytics-destination-kind": destinationKind || undefined,
+    "data-analytics-contact-channel": contactChannel || undefined,
+    "data-analytics-card-action": cardAction || undefined
+  };
+}
+
 function ActionLink({ action, className, fallbackLabel }) {
   if (!action?.href) {
     return null;
   }
 
   const label = action.label || fallbackLabel;
+  const channel = contactTelemetryChannel(action.href);
+  const props = telemetryProps({
+    id: action.key ? `home_contact_${action.key}` : "home_contact_action",
+    event: contactTelemetryEvent(action.href),
+    section: "home-contact-action",
+    targetType: isInternalHref(action.href) ? "page" : "contact_channel",
+    targetId: isInternalHref(action.href) ? action.href : contactTelemetryEvent(action.href),
+    ctaKind: "contact",
+    destinationKind: channel || (isInternalHref(action.href) ? "page" : "messenger"),
+    contactChannel: channel
+  });
 
   if (isInternalHref(action.href)) {
-    return <Link className={className} href={action.href}>{label}</Link>;
+    return <Link className={className} href={action.href} {...props}>{label}</Link>;
   }
 
-  return <a className={className} href={action.href}>{label}</a>;
+  return <a className={className} href={action.href} {...props}>{label}</a>;
 }
 
 function pickPrimaryService({ publishedRentalService, services, placeholderMode }) {
@@ -193,7 +264,21 @@ export default async function HomePage({ searchParams }) {
             <h1>Услуги готовятся к публикации</h1>
             <p>Главная витрина появится после публикации первой услуги и связанных материалов.</p>
             <div className={styles.linkRow}>
-              <Link className={styles.actionLink} href="/contacts">Открыть контакты</Link>
+              <Link
+                className={styles.actionLink}
+                href="/contacts"
+                {...telemetryProps({
+                  id: "home_empty_contacts",
+                  event: "cta_clicked",
+                  section: "home-empty",
+                  targetType: "page",
+                  targetId: "/contacts",
+                  ctaKind: "contact_page",
+                  destinationKind: "contact_page"
+                })}
+              >
+                Открыть контакты
+              </Link>
             </div>
           </section>
         </main>
@@ -240,7 +325,21 @@ export default async function HomePage({ searchParams }) {
               className={styles.actionLink}
               fallbackLabel="Оставить заявку"
             />
-            <Link className={styles.actionLinkSecondary} href="#preview-home-equipment">Выбрать технику</Link>
+            <Link
+              className={styles.actionLinkSecondary}
+              href="#preview-home-equipment"
+              {...telemetryProps({
+                id: "home_choose_equipment",
+                event: "cta_clicked",
+                section: "hero",
+                targetType: "page",
+                targetId: "#preview-home-equipment",
+                ctaKind: "section_navigation",
+                destinationKind: "page"
+              })}
+            >
+              Выбрать технику
+            </Link>
           </div>
         </section>
 
@@ -295,7 +394,18 @@ export default async function HomePage({ searchParams }) {
                 <article key={item.entityId || item.slug} className={styles.card}>
                   <h3>{item.title}</h3>
                   <p>{item.summary || item.serviceScope || item.problemsSolved}</p>
-                  <Link className={styles.actionLink} href={`/services/${item.slug}`}>
+                  <Link
+                    className={styles.actionLink}
+                    href={`/services/${item.slug}`}
+                    {...telemetryProps({
+                      id: `home_service_${item.entityId || item.slug}`,
+                      event: "service_card_opened",
+                      section: "home-services",
+                      targetType: "service",
+                      targetId: item.entityId || item.slug,
+                      cardAction: "open"
+                    })}
+                  >
                     Открыть услугу
                   </Link>
                 </article>
@@ -318,7 +428,18 @@ export default async function HomePage({ searchParams }) {
                   <h3>{item.title}</h3>
                   {item.location ? <p className={styles.note}>{item.location}</p> : null}
                   <p>{item.summary || item.result || item.task}</p>
-                  <Link className={styles.actionLink} href={`/cases/${item.slug}`}>
+                  <Link
+                    className={styles.actionLink}
+                    href={`/cases/${item.slug}`}
+                    {...telemetryProps({
+                      id: `home_case_${item.entityId || item.slug}`,
+                      event: "case_card_opened",
+                      section: "home-cases",
+                      targetType: "case",
+                      targetId: item.entityId || item.slug,
+                      cardAction: "open"
+                    })}
+                  >
                     Смотреть кейс
                   </Link>
                 </article>
@@ -351,7 +472,18 @@ export default async function HomePage({ searchParams }) {
               className={styles.actionLink}
               fallbackLabel="Уточнить стоимость"
             />
-            <Link className={styles.actionLinkSecondary} href={`/services/${primaryService?.slug || PRIMARY_SERVICE_SLUG}`}>
+            <Link
+              className={styles.actionLinkSecondary}
+              href={`/services/${primaryService?.slug || PRIMARY_SERVICE_SLUG}`}
+              {...telemetryProps({
+                id: `home_bottom_service_${primaryService?.entityId || primaryService?.slug || PRIMARY_SERVICE_SLUG}`,
+                event: "service_card_opened",
+                section: "home-next-step",
+                targetType: "service",
+                targetId: primaryService?.entityId || primaryService?.slug || PRIMARY_SERVICE_SLUG,
+                cardAction: "open"
+              })}
+            >
               Открыть услугу
             </Link>
           </div>
