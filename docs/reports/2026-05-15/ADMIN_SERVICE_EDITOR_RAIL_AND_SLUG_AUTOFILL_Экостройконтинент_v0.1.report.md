@@ -163,3 +163,13 @@ Admin route smoke under SEO manager:
 - verified actions/readiness/history/service-actions are visible;
 - verified slug help text is present;
 - verified existing slug value remains `arenda-tehniki`.
+
+Browser-level smoke:
+
+- launched temporary headless Chrome through CDP without repo changes;
+- reused SEO-manager session cookie from domain login;
+- opened the deployed service editor on `https://ecostroycontinent.ru`;
+- verified visible editor state: service title, right rail status, save action, preserved slug;
+- opened new service draft route without submit;
+- typed `Строительство домов под ключ` into title;
+- verified client autofill produced `stroitelstvo-domov-pod-klyuch`.
