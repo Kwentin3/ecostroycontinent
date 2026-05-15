@@ -49,6 +49,8 @@ test("entity editor keeps right rail status and actions compact", () => {
   assert.match(source, /role="toolbar" aria-label="Действия карточки"/);
   assert.match(source, /aria-label=\{ADMIN_COPY\.saveDraft\}/);
   assert.match(source, /title=\{ADMIN_COPY\.saveDraft\}/);
+  assert.match(source, /formAction=\{`\/api\/admin\/entities\/\$\{entityType\}\/save`\}/);
+  assert.match(source, /formMethod="post"/);
   assert.match(source, /RailActionIcon icon="↺"/);
   assert.match(source, /RailActionIcon icon="↩"/);
   assert.match(source, /showMaintenanceTools/);

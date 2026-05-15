@@ -598,6 +598,8 @@ export function EntityEditorForm({
             <button
               form={editorFormId}
               type="submit"
+              formAction={`/api/admin/entities/${entityType}/save`}
+              formMethod="post"
               className={`${styles.editorRailIconAction} ${styles.editorRailIconActionPrimary}`}
               aria-label={ADMIN_COPY.saveDraft}
               title={ADMIN_COPY.saveDraft}
@@ -609,6 +611,7 @@ export function EntityEditorForm({
                 form={editorFormId}
                 type="submit"
                 formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
+                formMethod="post"
                 className={styles.editorRailIconAction}
                 aria-label={ADMIN_COPY.sendForReview}
                 title={ADMIN_COPY.sendForReview}
