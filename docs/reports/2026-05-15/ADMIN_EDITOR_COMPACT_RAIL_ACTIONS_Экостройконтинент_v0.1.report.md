@@ -62,6 +62,34 @@ Closed-world evidence:
 - `package.json` and `package-lock.json` have no diff.
 - `rg "editorRailIconActions|editorStatusPills|Действия карточки|готово · Б0 · П0" .next/standalone/.next/server -g "*.js"` finds the compact rail in the build artifact.
 
+## Delivery
+
+- Code commit: `314927a56f1cd7e9e2008a8cfe90180724e3cd6e`.
+- GitHub Actions build: `build-and-publish` run `25931274738`, success.
+- Published image: `ghcr.io/kwentin3/ecostroycontinent-app@sha256:8be8f8321efc9821cbd1197a32ffa2152d5e0579e9db2f85dc1c86c4168e23a8`.
+- Production deploy: `deploy-phase1` run `25931366347`, success.
+- Readiness after deploy: `https://ecostroycontinent.ru/api/readiness` returned `status=ready`, `database.status=ok`, runtime commit `314927a56f1cd7e9e2008a8cfe90180724e3cd6e`.
+
+Launch smoke on the domain:
+
+```powershell
+$env:APP_BASE_URL='https://ecostroycontinent.ru'
+$env:EXPECT_RUNTIME_COMMIT='true'
+$env:EXPECT_MEDIA_URL='https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/e3604676-6db4-4205-b9f8-96c0318bf4f7.jpg'
+npm run smoke:launch
+```
+
+Result: passed, 23/23 checks; 2 known content blockers remain for `/about` and `/contacts`.
+
+Browser smoke on the domain:
+
+- logged in through `/api/admin/login` as SEO manager;
+- looked up service by slug `arenda-tehniki`;
+- opened `/admin/entities/service/entity_a380afe4-354f-40f4-a386-b13fee79b954?returnTo=%2Fadmin%2Fentities%2Fservice`;
+- verified `Аренда спецтехники` page content, compact status header, `v3`, `Изменений нет`, `Опубликовано`, `готово · Б0 · П0`;
+- verified right status card no longer repeats `Аренда спецтехники`;
+- verified icon actions `Сохранить черновик`, `История`, `Вернуться к источнику` render as 38x38 controls with `aria-label` and `title`.
+
 ## Notes
 
 No code comments were added. The compact rail helpers are small and self-explanatory; extra comments would be noisier than the code.
