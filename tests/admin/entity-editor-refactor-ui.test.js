@@ -51,10 +51,28 @@ test("entity editor keeps right rail status and actions compact", () => {
   assert.match(source, /title=\{ADMIN_COPY\.saveDraft\}/);
   assert.match(source, /formAction=\{`\/api\/admin\/entities\/\$\{entityType\}\/save`\}/);
   assert.match(source, /formMethod="post"/);
+  assert.match(source, /EntityEditorValidationNotice formId=\{editorFormId\}/);
   assert.match(source, /RailActionIcon icon="↺"/);
   assert.match(source, /RailActionIcon icon="↩"/);
   assert.match(source, /showMaintenanceTools/);
   assert.match(source, /compactDisclosureSummaryMeta/);
+});
+
+test("entity editor reports required fields hidden inside collapsed sections", () => {
+  const source = readUtf8("components/admin/EntityEditorValidationNotice.js");
+  const css = readUtf8("components/admin/admin-ui.module.css");
+
+  assert.match(source, /"use client"/);
+  assert.match(source, /addEventListener\("invalid", handleInvalid, true\)/);
+  assert.match(source, /getInvalidControls\(form\)/);
+  assert.match(source, /closest\("details"\)\?\.setAttribute\("open", ""\)/);
+  assert.match(source, /setAttribute\("aria-invalid", "true"\)/);
+  assert.match(source, /setAttribute\("aria-describedby", describedById\)/);
+  assert.match(source, /role="alert" aria-live="assertive"/);
+  assert.match(source, /focus\(\{ preventScroll: true \}\)/);
+  assert.match(source, /Перейти к полю/);
+  assert.match(css, /\.editorValidationNotice\s*\{/);
+  assert.match(css, /\.inlineTextButton:focus-visible\s*\{/);
 });
 
 test("editor rail presents related-data diagnostics as a secondary disclosure", () => {

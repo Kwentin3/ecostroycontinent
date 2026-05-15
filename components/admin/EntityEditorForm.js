@@ -4,6 +4,7 @@ import { ConfirmActionForm } from "./ConfirmActionForm";
 import { EntityTruthSections } from "./EntityTruthSections";
 import { FilterableChecklist } from "./FilterableChecklist";
 import { EvidenceRegisterPanel } from "./EvidenceRegisterPanel";
+import { EntityEditorValidationNotice } from "./EntityEditorValidationNotice";
 import { MediaPicker } from "./MediaPicker";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
@@ -232,6 +233,7 @@ export function EntityEditorForm({
             <input type="hidden" name="entityId" value={entityId || ""} />
             <input type="hidden" name="returnTo" value={redirectTo} />
             {!entityId && entityCreationOrigin ? <input type="hidden" name="creationOrigin" value={entityCreationOrigin} /> : null}
+            <EntityEditorValidationNotice formId={editorFormId} />
             <label className={styles.label}>
               <span>{CHANGE_INTENT_LABEL}</span>
               <input name="changeIntent" defaultValue={normalizeLegacyCopy(currentRevision?.changeIntent) || "Черновик сохранён из редактора."} />
