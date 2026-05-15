@@ -129,7 +129,8 @@ export function EntityEditorForm({
   markedForRemovalAt = null,
   user,
   message,
-  error
+  error,
+  returnTo = ""
 }) {
   const redirectTo = entityId ? `/admin/entities/${entityType}/${entityId}` : `/admin/entities/${entityType}`;
   const historyHref = entityId ? `/admin/entities/${entityType}/${entityId}/history` : "";
@@ -196,130 +197,10 @@ export function EntityEditorForm({
       <div className={styles.stack}>
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
-        <section className={`${styles.panel} ${styles.editorHero}`}>
-          <div className={styles.editorHeroHeader}>
-            <div className={styles.editorHeroCopy}>
-              <p className={styles.eyebrow}>Редактирование</p>
-              <h2 className={styles.sectionTitle}>{surfaceTitle}</h2>
-              <p className={styles.editorHeroSummary}>{surfaceSummary}</p>
-            </div>
-            <div className={styles.editorHeroMeta}>
-              <span className={styles.badge}>{currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"}</span>
-              <span className={styles.badge}>Статус: {workflowStatus.label}</span>
-              <span className={styles.badge}>Публикация: {liveStatus.label}</span>
-              <span className={styles.badge}>
-                {readiness ? `Блокеров ${readinessBlocking}, предупреждений ${readinessWarnings}` : "Готовность появится после сохранения"}
-              </span>
-              {isAgentTestCreationOrigin(entityCreationOrigin) ? (
-                <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
-              ) : null}
-              {!activePublishedRevision && currentRevision?.state === "published" ? (
-                <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Вне live</span>
-              ) : null}
-            </div>
-          </div>
-        </section>
-        <section className={`${styles.panel} ${styles.editorToolbar}`}>
-          <button form={editorFormId} type="submit" className={styles.primaryButton}>{ADMIN_COPY.saveDraft}</button>
-          {canSubmit && currentRevision?.state === "draft" ? (
-            <button
-              form={editorFormId}
-              type="submit"
-              formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
-              className={styles.secondaryButton}
-            >
-              {ADMIN_COPY.sendForReview}
-            </button>
-          ) : null}
-          {canOpenReview ? (
-            <Link href={reviewHref} className={styles.secondaryButton}>
-              Открыть проверку
-            </Link>
-          ) : null}
-          {canOpenPublishReadiness ? (
-            <Link href={publishHref} className={styles.secondaryButton}>
-              {publishAction.label}
-            </Link>
-          ) : null}
-          {entityId ? <Link href={historyHref} className={styles.secondaryButton}>{ADMIN_COPY.openHistory}</Link> : null}
-        </section>
         {isMarkedForRemoval ? (
           <section className={styles.statusPanelInfo}>
             Объект помечен на удаление. Новые ссылки на него блокируются, а финальная очистка запускается из центра очистки.
           </section>
-        ) : null}
-        {showMaintenanceTools ? (
-          <details className={styles.compactDisclosure}>
-            <summary className={styles.compactDisclosureSummary}>
-              <span className={styles.compactDisclosureMarker} aria-hidden="true" />
-              <span className={styles.compactDisclosureSummaryMain}>
-                <strong>Служебные действия</strong>
-                <span className={styles.compactDisclosureSummaryMeta}>
-                  Редкие и обслуживающие действия убраны из основного рабочего потока.
-                </span>
-              </span>
-            </summary>
-            <div className={styles.compactDisclosureBody}>
-              <div className={styles.inlineActions}>
-                {canUseRemovalQuarantine && !isMarkedForRemoval ? (
-                  <ConfirmActionForm
-                    action={getRemovalMarkHref(entityType, entityId)}
-                    confirmMessage="Пометить объект на удаление? Новые ссылки на него будут заблокированы."
-                  >
-                    <input type="hidden" name="redirectTo" value={redirectTo} />
-                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
-                    <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
-                  </ConfirmActionForm>
-                ) : null}
-                {canUseRemovalQuarantine && isMarkedForRemoval ? (
-                  <ConfirmActionForm
-                    action={getRemovalUnmarkHref(entityType, entityId)}
-                    confirmMessage="Снять пометку удаления?"
-                  >
-                    <input type="hidden" name="redirectTo" value={redirectTo} />
-                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
-                    <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
-                  </ConfirmActionForm>
-                ) : null}
-                {canUseRemovalQuarantine ? (
-                  <Link href={getRemovalSweepHref()} className={styles.secondaryButton}>
-                    Центр очистки
-                  </Link>
-                ) : null}
-                {canTeardownTestGraph ? (
-                  <Link href={getTestGraphTeardownHref(entityType, entityId)} className={styles.secondaryButton}>
-                    Удалить тестовый граф
-                  </Link>
-                ) : null}
-                {canNormalizeLegacyTestFixture ? (
-                  <Link href={getLegacyTestFixtureNormalizationHref(entityType, entityId)} className={styles.secondaryButton}>
-                    Пометить как тестовые
-                  </Link>
-                ) : null}
-                {canLiveDeactivate ? (
-                  <Link href={getLiveDeactivationHref(entityType, entityId)} className={styles.secondaryButton}>
-                    Снять с публикации
-                  </Link>
-                ) : null}
-                {canDeletePreview ? (
-                  <Link href={getEntityDeletePreviewHref(entityType, entityId)} className={styles.secondaryButton}>
-                    Безопасно убрать (legacy)
-                  </Link>
-                ) : null}
-                {canDeleteEntity ? (
-                  <ConfirmActionForm
-                    action={`/api/admin/entities/${entityType}/delete`}
-                    confirmMessage="Удалить эту сущность? Действие необратимо."
-                  >
-                    <input type="hidden" name="entityId" value={entityId} />
-                    <input type="hidden" name="redirectTo" value={`/admin/entities/${entityType}`} />
-                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
-                    <button type="submit" className={styles.dangerButton}>Удалить</button>
-                  </ConfirmActionForm>
-                ) : null}
-              </div>
-            </div>
-          </details>
         ) : null}
         {entityType === "media_asset" ? renderMediaUpload(redirectTo) : null}
         <section className={styles.panel}>
@@ -659,6 +540,64 @@ export function EntityEditorForm({
         ) : null}
       </div>
       <div className={`${styles.stack} ${styles.editorRail}`}>
+        <section className={`${styles.panel} ${styles.editorStatusPanel}`}>
+          <div className={styles.editorRailInfo}>
+            <p className={styles.eyebrow}>Состояние карточки</p>
+            <h2 className={styles.sectionTitle}>{surfaceTitle}</h2>
+            <p className={styles.editorStatusSummary}>{surfaceSummary}</p>
+          </div>
+          <dl className={styles.editorStatusList}>
+            <div>
+              <dt>Версия</dt>
+              <dd>{currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"}</dd>
+            </div>
+            <div>
+              <dt>Рабочий статус</dt>
+              <dd>{workflowStatus.label}</dd>
+            </div>
+            <div>
+              <dt>Публикация</dt>
+              <dd>{liveStatus.label}</dd>
+            </div>
+            <div>
+              <dt>Готовность</dt>
+              <dd>{readiness ? `Блокеров ${readinessBlocking}, предупреждений ${readinessWarnings}` : "После сохранения"}</dd>
+            </div>
+          </dl>
+          <div className={styles.badgeRow}>
+            {isAgentTestCreationOrigin(entityCreationOrigin) ? (
+              <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
+            ) : null}
+            {!activePublishedRevision && currentRevision?.state === "published" ? (
+              <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Вне live</span>
+            ) : null}
+          </div>
+          <div className={styles.editorRailActions}>
+            <button form={editorFormId} type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`}>{ADMIN_COPY.saveDraft}</button>
+            {canSubmit && currentRevision?.state === "draft" ? (
+              <button
+                form={editorFormId}
+                type="submit"
+                formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
+                className={`${styles.secondaryButton} ${styles.stretchButton}`}
+              >
+                {ADMIN_COPY.sendForReview}
+              </button>
+            ) : null}
+            {canOpenReview ? (
+              <Link href={reviewHref} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                Открыть проверку
+              </Link>
+            ) : null}
+            {canOpenPublishReadiness ? (
+              <Link href={publishHref} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                {publishAction.label}
+              </Link>
+            ) : null}
+            {entityId ? <Link href={historyHref} className={`${styles.secondaryButton} ${styles.stretchButton}`}>{ADMIN_COPY.openHistory}</Link> : null}
+            {returnTo ? <Link href={returnTo} className={`${styles.secondaryButton} ${styles.stretchButton}`}>Вернуться к источнику</Link> : null}
+          </div>
+        </section>
         <ReadinessPanel
           readiness={readiness}
           entityType={entityType}
@@ -700,6 +639,79 @@ export function EntityEditorForm({
             <TimelineList items={auditItems} />
           </div>
         </details>
+        {showMaintenanceTools ? (
+          <details className={styles.compactDisclosure}>
+            <summary className={styles.compactDisclosureSummary}>
+              <span className={styles.compactDisclosureMarker} aria-hidden="true" />
+              <span className={styles.compactDisclosureSummaryMain}>
+                <strong>Служебные действия</strong>
+                <span className={styles.compactDisclosureSummaryMeta}>
+                  Редкие и обслуживающие действия не мешают основному редактированию.
+                </span>
+              </span>
+            </summary>
+            <div className={styles.compactDisclosureBody}>
+              <div className={styles.editorRailActions}>
+                {canUseRemovalQuarantine && !isMarkedForRemoval ? (
+                  <ConfirmActionForm
+                    action={getRemovalMarkHref(entityType, entityId)}
+                    confirmMessage="Пометить объект на удаление? Новые ссылки на него будут заблокированы."
+                  >
+                    <input type="hidden" name="redirectTo" value={redirectTo} />
+                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                    <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>Пометить на удаление</button>
+                  </ConfirmActionForm>
+                ) : null}
+                {canUseRemovalQuarantine && isMarkedForRemoval ? (
+                  <ConfirmActionForm
+                    action={getRemovalUnmarkHref(entityType, entityId)}
+                    confirmMessage="Снять пометку удаления?"
+                  >
+                    <input type="hidden" name="redirectTo" value={redirectTo} />
+                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                    <button type="submit" className={`${styles.secondaryButton} ${styles.stretchButton}`}>Снять пометку удаления</button>
+                  </ConfirmActionForm>
+                ) : null}
+                {canUseRemovalQuarantine ? (
+                  <Link href={getRemovalSweepHref()} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                    Центр очистки
+                  </Link>
+                ) : null}
+                {canTeardownTestGraph ? (
+                  <Link href={getTestGraphTeardownHref(entityType, entityId)} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                    Удалить тестовый граф
+                  </Link>
+                ) : null}
+                {canNormalizeLegacyTestFixture ? (
+                  <Link href={getLegacyTestFixtureNormalizationHref(entityType, entityId)} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                    Пометить как тестовые
+                  </Link>
+                ) : null}
+                {canLiveDeactivate ? (
+                  <Link href={getLiveDeactivationHref(entityType, entityId)} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                    Снять с публикации
+                  </Link>
+                ) : null}
+                {canDeletePreview ? (
+                  <Link href={getEntityDeletePreviewHref(entityType, entityId)} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                    Безопасно убрать (legacy)
+                  </Link>
+                ) : null}
+                {canDeleteEntity ? (
+                  <ConfirmActionForm
+                    action={`/api/admin/entities/${entityType}/delete`}
+                    confirmMessage="Удалить эту сущность? Действие необратимо."
+                  >
+                    <input type="hidden" name="entityId" value={entityId} />
+                    <input type="hidden" name="redirectTo" value={`/admin/entities/${entityType}`} />
+                    <input type="hidden" name="failureRedirectTo" value={redirectTo} />
+                    <button type="submit" className={`${styles.dangerButton} ${styles.stretchButton}`}>Удалить</button>
+                  </ConfirmActionForm>
+                ) : null}
+              </div>
+            </div>
+          </details>
+        ) : null}
       </div>
     </div>
   );

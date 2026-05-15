@@ -185,7 +185,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
         { label: surfaceLabel }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
-      actions={returnTo ? <Link href={returnTo} className={styles.secondaryButton}>Вернуться к источнику</Link> : null}
+      actions={null}
     >
       <EntityEditorForm
         entityType={normalizedType}
@@ -206,6 +206,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
         user={user}
         message={query?.message}
         error={query?.error}
+        returnTo={returnTo}
       />
     </AdminShell>
   );

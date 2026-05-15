@@ -253,6 +253,77 @@ test("change classification and owner review rules follow first-slice canon", ()
   );
 });
 
+test("normalizeEntityInput derives latin slugs from titles when route fields are empty", () => {
+  const service = normalizeEntityInput(ENTITY_TYPES.SERVICE, {
+    slug: "",
+    title: "Аренда спецтехники",
+    h1: "Аренда спецтехники",
+    summary: "Summary",
+    serviceScope: "Scope",
+    problemsSolved: "",
+    methods: "",
+    ctaVariant: "Request quote",
+    equipmentIds: [],
+    relatedCaseIds: [],
+    galleryIds: [],
+    primaryMediaAssetId: "",
+    seo: {}
+  });
+  const equipment = normalizeEntityInput(ENTITY_TYPES.EQUIPMENT, {
+    slug: "",
+    title: "Гусеничный экскаватор",
+    equipmentType: "Экскаватор",
+    shortSummary: "Summary",
+    capabilitySummary: "Capability",
+    keySpecs: [],
+    usageScenarios: [],
+    operatorMode: "",
+    primaryMediaAssetId: "",
+    galleryIds: [],
+    relatedCaseIds: [],
+    serviceIds: [],
+    seo: {}
+  });
+  const item = normalizeEntityInput(ENTITY_TYPES.CASE, {
+    slug: "",
+    title: "Работы в Сочи",
+    location: "Сочи",
+    projectType: "",
+    task: "Task",
+    workScope: "Scope",
+    result: "Result",
+    serviceIds: [],
+    equipmentIds: [],
+    galleryIds: [],
+    primaryMediaAssetId: "",
+    seo: {}
+  });
+
+  assert.equal(service.slug, "arenda-spetstekhniki");
+  assert.equal(equipment.slug, "gusenichnyy-ekskavator");
+  assert.equal(item.slug, "raboty-v-sochi");
+});
+
+test("normalizeEntityInput preserves a manual latin slug over title-derived fallback", () => {
+  const service = normalizeEntityInput(ENTITY_TYPES.SERVICE, {
+    slug: "custom-rental-url",
+    title: "Аренда спецтехники",
+    h1: "Аренда спецтехники",
+    summary: "Summary",
+    serviceScope: "Scope",
+    problemsSolved: "",
+    methods: "",
+    ctaVariant: "Request quote",
+    equipmentIds: [],
+    relatedCaseIds: [],
+    galleryIds: [],
+    primaryMediaAssetId: "",
+    seo: {}
+  });
+
+  assert.equal(service.slug, "custom-rental-url");
+});
+
 test("buildChangeSummary reports top-level field deltas only for the target entity type", () => {
   const changedFields = buildChangeSummary(
     ENTITY_TYPES.SERVICE,

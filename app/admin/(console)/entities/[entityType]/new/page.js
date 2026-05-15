@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AdminShell } from "../../../../../../components/admin/AdminShell";
@@ -9,7 +8,6 @@ import { normalizeAdminReturnTo } from "../../../../../../lib/admin/relation-nav
 import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
-import styles from "../../../../../../components/admin/admin-ui.module.css";
 
 export default async function NewEntityPage({ params, searchParams }) {
   const { entityType } = await params;
@@ -79,7 +77,7 @@ export default async function NewEntityPage({ params, searchParams }) {
         { label: "Новый черновик" }
       ]}
       activeHref={`/admin/entities/${normalizedType}`}
-      actions={returnTo ? <Link href={returnTo} className={styles.secondaryButton}>Вернуться к источнику</Link> : null}
+      actions={null}
     >
       <EntityEditorForm
         entityType={normalizedType}
@@ -99,6 +97,7 @@ export default async function NewEntityPage({ params, searchParams }) {
         user={user}
         message={query?.message}
         error={query?.error}
+        returnTo={returnTo}
       />
     </AdminShell>
   );

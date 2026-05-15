@@ -2,6 +2,7 @@ import { buildRelationSelectionModel } from "../../lib/admin/relation-navigation
 import { FilterableChecklist } from "./FilterableChecklist";
 import { MediaPicker } from "./MediaPicker";
 import { RelationChipRow } from "./RelationChipRow";
+import { SlugTitleFields } from "./SlugTitleFields";
 import { FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { resolveGlobalDefaultServiceArea } from "../../lib/content-core/geography.js";
 import { FIELD_LABELS } from "../../lib/ui-copy.js";
@@ -212,14 +213,7 @@ export function EntityTruthSections({
       <>
         <TruthGroup id="service-seo-truth" title="Данные услуги" note="Это базовые данные услуги и её видимый заголовок." defaultOpen>
           <div className={styles.gridTwo}>
-            <label className={styles.label}>
-              <span>{FIELD_LABELS.slug}</span>
-              <input name="slug" defaultValue={value.slug || ""} required />
-            </label>
-            <label className={styles.label}>
-              <span>Название</span>
-              <input name="title" defaultValue={value.title || ""} required />
-            </label>
+            <SlugTitleFields slugDefault={value.slug || ""} titleDefault={value.title || ""} slugLabel={FIELD_LABELS.slug} />
             <label className={styles.label}>
               <span>{FIELD_LABELS.h1}</span>
               <input name="h1" defaultValue={value.h1 || ""} required />
@@ -320,17 +314,10 @@ export function EntityTruthSections({
       <>
         <TruthGroup id="equipment-seo-truth" title="Данные техники" note="Это базовая карточка техники, которая потом может стать источником для страницы." defaultOpen>
           <div className={styles.gridTwo}>
-            <label className={styles.label}>
-              <span>Короткий адрес</span>
-              <input name="slug" defaultValue={value.slug || ""} required />
-            </label>
+            <SlugTitleFields slugDefault={value.slug || ""} titleDefault={value.title || ""} />
             <label className={styles.label}>
               <span>Локаль</span>
               <input name="locale" defaultValue={value.locale || "ru-RU"} required />
-            </label>
-            <label className={styles.label}>
-              <span>Название</span>
-              <input name="title" defaultValue={value.title || ""} required />
             </label>
             <label className={styles.label}>
               <span>Тип техники</span>
@@ -417,14 +404,7 @@ export function EntityTruthSections({
       <>
         <TruthGroup id="case-seo-truth" title="Данные кейса" note="Это базовые данные кейса и его видимый заголовок." defaultOpen>
           <div className={styles.gridTwo}>
-            <label className={styles.label}>
-              <span>{FIELD_LABELS.slug}</span>
-              <input name="slug" defaultValue={value.slug || ""} required />
-            </label>
-            <label className={styles.label}>
-              <span>Название</span>
-              <input name="title" defaultValue={value.title || ""} required />
-            </label>
+            <SlugTitleFields slugDefault={value.slug || ""} titleDefault={value.title || ""} slugLabel={FIELD_LABELS.slug} />
             <label className={styles.label}>
               <span>{FIELD_LABELS.location}</span>
               <input name="location" defaultValue={value.location || ""} required />

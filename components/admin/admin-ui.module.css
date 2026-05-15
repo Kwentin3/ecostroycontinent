@@ -477,53 +477,49 @@
   gap: var(--space-3);
 }
 
-.editorHero {
+.editorStatusPanel {
   display: grid;
-  gap: 10px;
-  padding: 12px 14px;
-}
-
-.editorHeroHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
   gap: var(--space-3);
-  flex-wrap: wrap;
 }
 
-.editorHeroCopy {
-  min-width: min(100%, 460px);
-  display: grid;
-  gap: 4px;
-}
-
-.editorHeroSummary {
+.editorStatusSummary {
   margin: 0;
   color: var(--subtle);
-  line-height: 1.4;
-  max-width: 64ch;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
-.editorHeroMeta {
-  display: flex;
-  gap: var(--space-1);
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-content: flex-start;
+.editorStatusList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
 }
 
-.editorToolbar {
-  position: sticky;
-  top: var(--space-4);
-  z-index: 5;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(10px);
+.editorStatusList div {
+  display: grid;
+  gap: 2px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.editorStatusList dt {
+  color: var(--subtle);
+  font-size: 0.78rem;
+}
+
+.editorStatusList dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.editorRailActions {
+  display: grid;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.editorRailActions form {
+  display: grid;
 }
 
 .stack {
@@ -2692,6 +2688,13 @@
   max-width: 100%;
 }
 
+.editorRail .editorRailActions .secondaryButton,
+.editorRail .editorRailActions .primaryButton,
+.editorRail .editorRailActions .dangerButton {
+  width: 100%;
+  justify-content: center;
+}
+
 .editorRail .table {
   display: block;
   overflow-x: auto;
@@ -3191,15 +3194,10 @@
     justify-items: stretch;
   }
 
-  .editorToolbar {
+  .editorRail {
+    order: -1;
     position: static;
-  }
-
-  .editorHeroHeader {
-    flex-direction: column;
-  }
-
-  .editorHeroMeta {
-    justify-content: flex-start;
+    max-height: none;
+    overflow: visible;
   }
 }

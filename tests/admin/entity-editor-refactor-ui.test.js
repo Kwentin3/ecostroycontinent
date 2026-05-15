@@ -14,6 +14,16 @@ test("entity truth sections keep SEO grouped in a dedicated metadata section", (
   assert.match(source, /SeoMetaFields/);
 });
 
+test("entity truth sections use the shared slug-title control for routed entities", () => {
+  const source = readUtf8("components/admin/EntityTruthSections.js");
+  const control = readUtf8("components/admin/SlugTitleFields.js");
+
+  assert.match(source, /SlugTitleFields/);
+  assert.match(control, /normalizeSlug/);
+  assert.match(control, /slugManuallyEdited/);
+  assert.match(control, /onBlur=\{handleSlugBlur\}/);
+});
+
 test("entity truth sections use compact disclosures so secondary groups do not overload the first screen", () => {
   const source = readUtf8("components/admin/EntityTruthSections.js");
   const css = readUtf8("components/admin/admin-ui.module.css");
@@ -26,10 +36,14 @@ test("entity truth sections use compact disclosures so secondary groups do not o
   assert.match(css, /\.editorSectionDisclosureBody \.label textarea\s*\{/);
 });
 
-test("entity editor keeps one primary toolbar and demotes maintenance actions into disclosure", () => {
+test("entity editor moves primary actions and status into the right rail", () => {
   const source = readUtf8("components/admin/EntityEditorForm.js");
 
-  assert.match(source, /editorToolbar/);
+  assert.doesNotMatch(source, /editorHero/);
+  assert.doesNotMatch(source, /editorToolbar/);
+  assert.match(source, /editorStatusPanel/);
+  assert.match(source, /editorStatusList/);
+  assert.match(source, /editorRailActions/);
   assert.match(source, /showMaintenanceTools/);
   assert.match(source, /compactDisclosureSummaryMeta/);
   assert.equal((source.match(/ADMIN_COPY\.openHistory/g) || []).length, 1);
@@ -46,11 +60,14 @@ test("editor rail presents related-data diagnostics as a secondary disclosure", 
   assert.match(evidenceSource, /<details id=\{panelId\} className=\{styles\.compactDisclosure\}>/);
 });
 
-test("shared admin ui exposes compact editor hero toolbar and rail patterns", () => {
+test("shared admin ui exposes compact editor status rail patterns", () => {
   const css = readUtf8("components/admin/admin-ui.module.css");
 
-  assert.match(css, /\.editorHero\s*\{/);
-  assert.match(css, /\.editorToolbar\s*\{/);
+  assert.doesNotMatch(css, /\.editorHero\s*\{/);
+  assert.doesNotMatch(css, /\.editorToolbar\s*\{/);
+  assert.match(css, /\.editorStatusPanel\s*\{/);
+  assert.match(css, /\.editorRailActions\s*\{/);
   assert.match(css, /grid-template-columns: minmax\(0, 1fr\) minmax\(240px, 280px\);/);
   assert.match(css, /\.editorRail\s*\{[\s\S]*position:\s*sticky;/);
+  assert.match(css, /\.editorRail\s*\{[\s\S]*order:\s*-1;/);
 });
