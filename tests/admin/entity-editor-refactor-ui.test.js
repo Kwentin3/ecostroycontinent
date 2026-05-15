@@ -65,6 +65,8 @@ test("entity editor reports required fields hidden inside collapsed sections", (
   assert.match(source, /"use client"/);
   assert.match(source, /addEventListener\("invalid", handleInvalid, true\)/);
   assert.match(source, /getInvalidControls\(form\)/);
+  assert.match(source, /!element\.validity\.valid/);
+  assert.doesNotMatch(source, /checkValidity/);
   assert.match(source, /closest\("details"\)\?\.setAttribute\("open", ""\)/);
   assert.match(source, /setAttribute\("aria-invalid", "true"\)/);
   assert.match(source, /setAttribute\("aria-describedby", describedById\)/);

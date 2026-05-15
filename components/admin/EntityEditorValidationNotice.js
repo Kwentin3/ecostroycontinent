@@ -9,12 +9,16 @@ function normalizeText(value) {
 }
 
 function getInvalidControls(form) {
+  if (!form) {
+    return [];
+  }
+
   return Array.from(form.elements).filter((element) => (
     element
     && "willValidate" in element
     && element.willValidate
-    && typeof element.checkValidity === "function"
-    && !element.checkValidity()
+    && element.validity
+    && !element.validity.valid
   ));
 }
 
@@ -70,7 +74,7 @@ export function EntityEditorValidationNotice({ formId }) {
         control.removeAttribute("aria-describedby");
       }
 
-      if (control?.checkValidity?.()) {
+      if (control?.validity?.valid) {
         control.removeAttribute("aria-invalid");
       }
     }
@@ -131,7 +135,9 @@ export function EntityEditorValidationNotice({ formId }) {
     const control = issue?.fieldName
       ? form?.elements.namedItem(issue.fieldName)
       : getInvalidControls(form)[0];
-    const target = Array.isArray(control) ? control[0] : control;
+    const target = control && "length" in control && !("focus" in control)
+      ? control[0]
+      : control;
 
     if (target) {
       revealControl(target, noticeId);
