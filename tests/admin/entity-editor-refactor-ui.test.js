@@ -36,17 +36,23 @@ test("entity truth sections use compact disclosures so secondary groups do not o
   assert.match(css, /\.editorSectionDisclosureBody \.label textarea\s*\{/);
 });
 
-test("entity editor moves primary actions and status into the right rail", () => {
+test("entity editor keeps right rail status and actions compact", () => {
   const source = readUtf8("components/admin/EntityEditorForm.js");
 
   assert.doesNotMatch(source, /editorHero/);
   assert.doesNotMatch(source, /editorToolbar/);
+  assert.doesNotMatch(source, /editorStatusList/);
+  assert.doesNotMatch(source, /editorStatusSummary/);
   assert.match(source, /editorStatusPanel/);
-  assert.match(source, /editorStatusList/);
-  assert.match(source, /editorRailActions/);
+  assert.match(source, /editorStatusPills/);
+  assert.match(source, /editorRailIconActions/);
+  assert.match(source, /role="toolbar" aria-label="Действия карточки"/);
+  assert.match(source, /aria-label=\{ADMIN_COPY\.saveDraft\}/);
+  assert.match(source, /title=\{ADMIN_COPY\.saveDraft\}/);
+  assert.match(source, /RailActionIcon icon="↺"/);
+  assert.match(source, /RailActionIcon icon="↩"/);
   assert.match(source, /showMaintenanceTools/);
   assert.match(source, /compactDisclosureSummaryMeta/);
-  assert.equal((source.match(/ADMIN_COPY\.openHistory/g) || []).length, 1);
 });
 
 test("editor rail presents related-data diagnostics as a secondary disclosure", () => {
@@ -65,8 +71,13 @@ test("shared admin ui exposes compact editor status rail patterns", () => {
 
   assert.doesNotMatch(css, /\.editorHero\s*\{/);
   assert.doesNotMatch(css, /\.editorToolbar\s*\{/);
+  assert.doesNotMatch(css, /\.editorStatusList\s*\{/);
   assert.match(css, /\.editorStatusPanel\s*\{/);
-  assert.match(css, /\.editorRailActions\s*\{/);
+  assert.match(css, /\.editorStatusPills\s*\{/);
+  assert.match(css, /\.editorRailIconActions\s*\{/);
+  assert.match(css, /\.editorRailIconAction\s*\{/);
+  assert.match(css, /width:\s*38px;/);
+  assert.match(css, /\.editorRailIconAction:focus-visible\s*\{/);
   assert.match(css, /grid-template-columns: minmax\(0, 1fr\) minmax\(240px, 280px\);/);
   assert.match(css, /\.editorRail\s*\{[\s\S]*position:\s*sticky;/);
   assert.match(css, /\.editorRail\s*\{[\s\S]*order:\s*-1;/);

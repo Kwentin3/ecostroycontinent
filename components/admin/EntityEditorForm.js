@@ -112,6 +112,35 @@ function renderMediaUpload(redirectTo) {
   );
 }
 
+function getRevisionCompactLabel(currentRevision) {
+  return currentRevision ? `v${currentRevision.revisionNumber}` : "новая";
+}
+
+function getReadinessCompactLabel(readiness, blockingCount, warningCount) {
+  if (!readiness) {
+    return "после сохранения";
+  }
+
+  if (blockingCount > 0) {
+    return `блокеры ${blockingCount} · П${warningCount}`;
+  }
+
+  if (warningCount > 0) {
+    return `предупр. ${warningCount}`;
+  }
+
+  return "готово · Б0 · П0";
+}
+
+function RailActionIcon({ icon, label }) {
+  return (
+    <>
+      <span aria-hidden="true" className={styles.editorRailActionGlyph}>{icon}</span>
+      <span className={styles.visuallyHidden}>{label}</span>
+    </>
+  );
+}
+
 export function EntityEditorForm({
   entityType,
   entityId,
@@ -173,6 +202,7 @@ export function EntityEditorForm({
   const surfaceTitle = entityType === "global_settings" ? "Глобальные настройки" : getPayloadLabel(value);
   const readinessBlocking = readiness ? readiness.results.filter((result) => result.severity === "blocking").length : 0;
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
+  const readinessCompactLabel = getReadinessCompactLabel(readiness, readinessBlocking, readinessWarnings);
   const workflowStatus = getWorkingRevisionStatusModel({ currentRevision, activePublishedRevision });
   const liveStatus = getLivePublicationStatusModel({ currentRevision, activePublishedRevision });
   const publishAction = getPublishActionCopy({ activePublishedRevision });
@@ -186,12 +216,6 @@ export function EntityEditorForm({
     || canDeletePreview
     || canDeleteEntity
   );
-  const surfaceSummary = entityType === "media_asset"
-    ? "Загрузите файл и заполните карточку без лишних служебных действий на первом экране."
-    : entityType === "gallery"
-      ? "Соберите подборку из уже загруженных медиа и выберите главный кадр."
-      : "Основные поля и связи редактируются здесь, а проверка и служебные детали остаются вторичным слоем.";
-
   return (
     <div className={styles.split}>
       <div className={styles.stack}>
@@ -541,61 +565,77 @@ export function EntityEditorForm({
       </div>
       <div className={`${styles.stack} ${styles.editorRail}`}>
         <section className={`${styles.panel} ${styles.editorStatusPanel}`}>
-          <div className={styles.editorRailInfo}>
+          <div className={styles.editorStatusHeader}>
             <p className={styles.eyebrow}>Состояние карточки</p>
-            <h2 className={styles.sectionTitle}>{surfaceTitle}</h2>
-            <p className={styles.editorStatusSummary}>{surfaceSummary}</p>
+            <div className={styles.badgeRow}>
+              {isAgentTestCreationOrigin(entityCreationOrigin) ? (
+                <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
+              ) : null}
+              {!activePublishedRevision && currentRevision?.state === "published" ? (
+                <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Вне live</span>
+              ) : null}
+            </div>
           </div>
-          <dl className={styles.editorStatusList}>
-            <div>
-              <dt>Версия</dt>
-              <dd>{currentRevision ? `Версия №${currentRevision.revisionNumber}` : "Новая запись"}</dd>
-            </div>
-            <div>
-              <dt>Рабочий статус</dt>
-              <dd>{workflowStatus.label}</dd>
-            </div>
-            <div>
-              <dt>Публикация</dt>
-              <dd>{liveStatus.label}</dd>
-            </div>
-            <div>
-              <dt>Готовность</dt>
-              <dd>{readiness ? `Блокеров ${readinessBlocking}, предупреждений ${readinessWarnings}` : "После сохранения"}</dd>
-            </div>
-          </dl>
-          <div className={styles.badgeRow}>
-            {isAgentTestCreationOrigin(entityCreationOrigin) ? (
-              <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span>
-            ) : null}
-            {!activePublishedRevision && currentRevision?.state === "published" ? (
-              <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Вне live</span>
-            ) : null}
-          </div>
-          <div className={styles.editorRailActions}>
-            <button form={editorFormId} type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`}>{ADMIN_COPY.saveDraft}</button>
+          <ul className={styles.editorStatusPills} aria-label="Сводка состояния карточки">
+            <li title="Версия">
+              <span className={styles.visuallyHidden}>Версия: </span>
+              {getRevisionCompactLabel(currentRevision)}
+            </li>
+            <li title="Рабочий статус">
+              <span className={styles.visuallyHidden}>Рабочий статус: </span>
+              {workflowStatus.label}
+            </li>
+            <li title="Публикация">
+              <span className={styles.visuallyHidden}>Публикация: </span>
+              {liveStatus.label}
+            </li>
+            <li title="Готовность">
+              <span className={styles.visuallyHidden}>Готовность: </span>
+              {readinessCompactLabel}
+            </li>
+          </ul>
+          <div className={styles.editorRailIconActions} role="toolbar" aria-label="Действия карточки">
+            <button
+              form={editorFormId}
+              type="submit"
+              className={`${styles.editorRailIconAction} ${styles.editorRailIconActionPrimary}`}
+              aria-label={ADMIN_COPY.saveDraft}
+              title={ADMIN_COPY.saveDraft}
+            >
+              <RailActionIcon icon="✓" label={ADMIN_COPY.saveDraft} />
+            </button>
             {canSubmit && currentRevision?.state === "draft" ? (
               <button
                 form={editorFormId}
                 type="submit"
                 formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
-                className={`${styles.secondaryButton} ${styles.stretchButton}`}
+                className={styles.editorRailIconAction}
+                aria-label={ADMIN_COPY.sendForReview}
+                title={ADMIN_COPY.sendForReview}
               >
-                {ADMIN_COPY.sendForReview}
+                <RailActionIcon icon="→" label={ADMIN_COPY.sendForReview} />
               </button>
             ) : null}
             {canOpenReview ? (
-              <Link href={reviewHref} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
-                Открыть проверку
+              <Link href={reviewHref} className={styles.editorRailIconAction} aria-label="Открыть проверку" title="Открыть проверку">
+                <RailActionIcon icon="?" label="Открыть проверку" />
               </Link>
             ) : null}
             {canOpenPublishReadiness ? (
-              <Link href={publishHref} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
-                {publishAction.label}
+              <Link href={publishHref} className={styles.editorRailIconAction} aria-label={publishAction.label} title={publishAction.label}>
+                <RailActionIcon icon="↑" label={publishAction.label} />
               </Link>
             ) : null}
-            {entityId ? <Link href={historyHref} className={`${styles.secondaryButton} ${styles.stretchButton}`}>{ADMIN_COPY.openHistory}</Link> : null}
-            {returnTo ? <Link href={returnTo} className={`${styles.secondaryButton} ${styles.stretchButton}`}>Вернуться к источнику</Link> : null}
+            {entityId ? (
+              <Link href={historyHref} className={styles.editorRailIconAction} aria-label={ADMIN_COPY.openHistory} title={ADMIN_COPY.openHistory}>
+                <RailActionIcon icon="↺" label={ADMIN_COPY.openHistory} />
+              </Link>
+            ) : null}
+            {returnTo ? (
+              <Link href={returnTo} className={styles.editorRailIconAction} aria-label="Вернуться к источнику" title="Вернуться к источнику">
+                <RailActionIcon icon="↩" label="Вернуться к источнику" />
+              </Link>
+            ) : null}
           </div>
         </section>
         <ReadinessPanel
