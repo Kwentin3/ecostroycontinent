@@ -2,7 +2,7 @@
 
 Дата: 2026-05-15
 Branch: `ui/service-editor-rail-slug-refactor`
-Commit: см. `git log -1 --oneline` после доставки
+Runtime/code commit: `c3459bc0bbfdab0bcad629d608203e52c74e58c2`
 
 ## Executive Verdict
 
@@ -139,10 +139,27 @@ Failure attribution during verification:
 
 Нет новых зависимостей, migrations, env variables или runtime services.
 
-После merge/deploy требуется smoke check production admin route:
+GitHub delivery:
 
-- доменный `/admin`;
-- карточка услуги `Аренда спецтехники`;
-- right rail содержит `Состояние карточки`;
-- старые `editorHero/editorToolbar` не должны быть в markup;
-- slug autofill проверяется на новой service/equipment/case карточке или через тестовый draft без публикации.
+- `main` fast-forwarded to `c3459bc0bbfdab0bcad629d608203e52c74e58c2`;
+- `build-and-publish` run: `25929725279`, success;
+- published image: `ghcr.io/kwentin3/ecostroycontinent-app@sha256:2bd6b03521697ad27590c6861dc98ed65303456f6f32ac14630e020d5f8d1667`;
+- `deploy-phase1` run: `25929843185`, success;
+- live `/api/readiness` reports runtime commit `c3459bc0bbfdab0bcad629d608203e52c74e58c2`.
+
+Post-deploy smoke:
+
+- `npm run smoke:launch` against `https://ecostroycontinent.ru`: passed `23`, failed `0`, known content blockers `2`;
+- runtime marker: version `0.1.0`, commit `c3459bc0bbfdab0bcad629d608203e52c74e58c2`, build time `2026-05-15T16:43:04Z`;
+- admin protection: `/admin`, `/admin/review`, `/admin/entities/service` redirect to auth and are not public.
+
+Admin route smoke under SEO manager:
+
+- logged in through `/api/admin/login` using local operator env credentials;
+- looked up service by slug `arenda-tehniki`;
+- opened `/admin/entities/service/entity_a380afe4-354f-40f4-a386-b13fee79b954` on the domain;
+- verified title `Аренда спецтехники`;
+- verified right rail text `Состояние карточки`;
+- verified actions/readiness/history/service-actions are visible;
+- verified slug help text is present;
+- verified existing slug value remains `arenda-tehniki`.
