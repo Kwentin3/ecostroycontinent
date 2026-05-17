@@ -99,6 +99,7 @@ test("stage4a wiring keeps contact projection inside shared public renderers", (
   assert.match(rendererSource, /const ctaAction = contactProjection\?\.primaryAction/);
   assert.match(rendererSource, /<ContactAction\s+action=\{ctaAction\}/);
   assert.doesNotMatch(rendererSource, /<p className=\{styles\.ctaChip\}/);
+  assert.match(publicUiSource, /\.ctaChip\s*\{[\s\S]*color:\s*var\(--cta-ink\)\s*!important;/);
   assert.match(publicUiSource, /\.ctaChip:focus-visible/);
   assert.match(rendererSource, /contact-request/);
   assert.match(rendererSource, /data-contact-binding-mode/);

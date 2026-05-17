@@ -1352,7 +1352,7 @@
   padding: 11px 18px;
   border-radius: 999px;
   background: var(--cta-bg);
-  color: var(--cta-ink);
+  color: var(--cta-ink) !important;
   text-decoration: none;
   border: 1px solid var(--cta-border);
   box-shadow: var(--cta-shadow);
