@@ -981,13 +981,18 @@
 .listCardMediaFrame {
   position: relative;
   z-index: 2;
-  width: min(100%, 100%);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   pointer-events: none;
 }
 
 .listCardMediaStrip {
   display: flex;
   gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
