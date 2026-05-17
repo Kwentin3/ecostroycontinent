@@ -64,6 +64,8 @@
   font-family: var(--display-font);
   letter-spacing: var(--display-letter-spacing);
   text-wrap: balance;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .page h1 {

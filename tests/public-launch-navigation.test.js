@@ -107,6 +107,7 @@ test("public renderers include global nav shell and contextual quick-access serv
   assert.match(css, /\.publicShellBrand\s*\{/);
   assert.match(css, /\.publicShellBrand strong\s*\{/);
   assert.match(css, /\.publicShellBrand:focus-visible/);
+  assert.match(css, /\.page :where\(h1, h2, h3\) \{[\s\S]*overflow-wrap: anywhere;/);
   assert.match(css, /grid-template-columns: minmax\(180px, 230px\) minmax\(380px, 1fr\) minmax\(250px, 340px\)/);
   assert.match(css, /\.publicShellMeta a\s*\{/);
   assert.match(css, /\.publicShellMeta a:focus-visible/);
