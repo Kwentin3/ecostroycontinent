@@ -51,11 +51,11 @@ test("normalizeEntityInput keeps Home as a page-owned root hub", () => {
   assert.deepEqual(page.sourceRefs.serviceIds, ["service-1"]);
   assert.deepEqual(
     page.sections.map((section) => section.type),
-    ["hero_offer", "rich_text", "service_list", "proof_cases", "cta"]
+    ["hero_offer", "service_list", "proof_cases", "cta"]
   );
   assert.deepEqual(
     page.blocks.map((block) => block.type),
-    ["hero", "rich_text", "service_list", "case_list", "gallery", "cta"]
+    ["hero", "service_list", "case_list", "gallery", "cta"]
   );
   assert.equal("serviceIds" in page, false);
 });
