@@ -34,6 +34,7 @@ test("services index stays a neutral system collection and cases keeps next-step
   assert.match(servicesIndex, /resolveMedia=/);
   assert.match(servicesIndex, /resolveGallery=/);
   assert.match(servicesIndex, /resolveEquipment=/);
+  assert.match(servicesIndex, /resolveCase=/);
   assert.doesNotMatch(servicesIndex, /nextStepTitle=/);
   assert.doesNotMatch(servicesIndex, /nextStepPrimaryHref=/);
   assert.doesNotMatch(servicesIndex, /emptyActionHref=/);
@@ -53,7 +54,8 @@ test("public list renderer supports empty-state and next-step sections", () => {
   assert.match(rendererSource, /showIntroHero \? \(/);
   assert.match(rendererSource, /className=\{styles\.visuallyHidden\}/);
   assert.match(rendererSource, /buildListCardMediaAssets/);
-  assert.match(rendererSource, /listCardMediaStrip/);
+  assert.match(rendererSource, /ListCardMediaStrip/);
+  assert.match(rendererSource, /listCardPrimaryLink/);
   assert.match(rendererSource, /preview-list-next-steps/);
   assert.match(rendererSource, /nextStepPrimaryHref/);
   assert.match(rendererSource, /nextStepSecondaryHref/);

@@ -91,6 +91,55 @@ test("list card media can use published linked equipment primary images as compa
   );
 });
 
+test("list card media collects service, equipment and case gallery media without a default cap", () => {
+  const assets = buildListCardMediaAssets({
+    item: {
+      title: "Service title",
+      primaryMediaAssetId: "service_primary",
+      galleryIds: ["service_gallery"],
+      equipmentIds: ["equipment_1"],
+      relatedCaseIds: ["case_1"]
+    },
+    resolveMedia: (id) => ({
+      entityId: id,
+      previewUrl: `/api/media-public/${id}`,
+      title: id
+    }),
+    resolveGallery: (id) => ({
+      entityId: id,
+      assets: [
+        { entityId: `${id}_asset_1`, previewUrl: `/api/media-public/${id}_asset_1` },
+        { entityId: `${id}_asset_2`, previewUrl: `/api/media-public/${id}_asset_2` }
+      ]
+    }),
+    resolveEquipment: () => ({
+      title: "Equipment title",
+      primaryMediaAssetId: "equipment_primary",
+      galleryIds: ["equipment_gallery"]
+    }),
+    resolveCase: () => ({
+      title: "Case title",
+      primaryMediaAssetId: "case_primary",
+      galleryIds: ["case_gallery"]
+    })
+  });
+
+  assert.deepEqual(
+    assets.map((asset) => asset.entityId),
+    [
+      "service_primary",
+      "service_gallery_asset_1",
+      "service_gallery_asset_2",
+      "equipment_primary",
+      "equipment_gallery_asset_1",
+      "equipment_gallery_asset_2",
+      "case_primary",
+      "case_gallery_asset_1",
+      "case_gallery_asset_2"
+    ]
+  );
+});
+
 test("list card media respects the compact card limit", () => {
   const assets = buildListCardMediaAssets({
     item: {

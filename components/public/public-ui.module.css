@@ -942,20 +942,72 @@
   gap: 12px;
 }
 
+.listCard {
+  isolation: isolate;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.listCard:hover {
+  transform: translateY(-1px);
+  border-color: var(--section-tinted-border);
+}
+
+.listCardPrimaryLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.listCardPrimaryLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.listCardPrimaryLink:focus-visible {
+  outline: none;
+}
+
+.listCard:has(.listCardPrimaryLink:focus-visible) {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.listCard .actionLink {
+  width: fit-content;
+  pointer-events: none;
+}
+
+.listCardMediaFrame {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 100%);
+  pointer-events: none;
+}
+
 .listCardMediaStrip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(72px, 96px));
+  display: flex;
   gap: 8px;
-  align-items: center;
-  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding: 0 2px 2px;
+}
+
+.listCardMediaStrip::-webkit-scrollbar {
+  display: none;
 }
 
 .listCardMediaStrip figure {
+  flex: 0 0 clamp(72px, 9vw, 96px);
   margin: 0;
   overflow: hidden;
   border-radius: calc(var(--section-radius) - 12px);
   border: 1px solid var(--media-frame-border);
   background: var(--media-frame-bg);
+  scroll-snap-align: start;
 }
 
 .listCardMediaStrip img {
@@ -964,6 +1016,47 @@
   max-width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+}
+
+.listCardMediaArrow {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  pointer-events: auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--shell-panel-border);
+  border-radius: 999px;
+  background: var(--section-emphasis-bg);
+  color: var(--section-emphasis-ink);
+  box-shadow: var(--shell-shadow);
+  transform: translateY(-50%);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font: 700 1.35rem/1 var(--body-font);
+}
+
+.listCardMediaArrow:hover {
+  filter: brightness(1.03);
+}
+
+.listCardMediaArrow:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.listCardMediaArrow:disabled {
+  opacity: 0.36;
+  cursor: default;
+}
+
+.listCardMediaArrowBack {
+  left: -10px;
+}
+
+.listCardMediaArrowForward {
+  right: -10px;
 }
 
 .gallerySection {

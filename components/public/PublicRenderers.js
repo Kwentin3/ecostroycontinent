@@ -23,6 +23,7 @@ import {
   serializeStructuredData
 } from "../../lib/public-launch/seo-structured-data.js";
 import { AnalyticsTracker } from "./AnalyticsTracker.js";
+import { ListCardMediaStrip } from "./ListCardMediaStrip.js";
 import styles from "./public-ui.module.css";
 
 const THEME_CLASS_NAMES = Object.freeze({
@@ -983,7 +984,8 @@ export function PublicListPage({
   resolveMedia = null,
   resolveGallery = null,
   resolveEquipment = null,
-  listCardMediaLimit = 3,
+  resolveCase = null,
+  listCardMediaLimit = null,
   allowStructuredData = true,
   showCasesNav = true
 }) {
@@ -1027,37 +1029,34 @@ export function PublicListPage({
                 resolveMedia,
                 resolveGallery,
                 resolveEquipment,
+                resolveCase,
                 limit: listCardMediaLimit
               });
+              const itemHref = `${itemHrefPrefix}/${item.slug}`;
 
               return (
-                <article key={item.entityId || item.slug} className={styles.card}>
-                  <h2>{item.title}</h2>
+                <article key={item.entityId || item.slug} className={`${styles.card} ${styles.listCard}`}>
+                  <h2>
+                    <Link
+                      className={styles.listCardPrimaryLink}
+                      href={itemHref}
+                      aria-label={`Открыть: ${item.title}`}
+                      {...analyticsProps({
+                        id: `list_${item.entityId || item.slug}`,
+                        event: itemHrefPrefix === "/cases" ? "case_card_opened" : "service_card_opened",
+                        section: "public-list",
+                        targetType: itemHrefPrefix === "/cases" ? "case" : "service",
+                        targetId: item.entityId || item.slug,
+                        cardAction: "open"
+                      })}
+                    >
+                      {item.title}
+                    </Link>
+                  </h2>
                   <CaseLocationLabel location={item.location} />
                   <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
-                  {mediaAssets.length > 0 ? (
-                    <div className={styles.listCardMediaStrip} aria-label="Изображения услуги">
-                      {mediaAssets.map((asset) => (
-                        <figure key={asset.entityId || asset.previewUrl}>
-                          <img src={asset.previewUrl} alt={asset.alt || item.title || PUBLIC_COPY.imageFallback} />
-                        </figure>
-                      ))}
-                    </div>
-                  ) : null}
-                  <Link
-                    className={styles.actionLink}
-                    href={`${itemHrefPrefix}/${item.slug}`}
-                    {...analyticsProps({
-                      id: `list_${item.entityId || item.slug}`,
-                      event: itemHrefPrefix === "/cases" ? "case_card_opened" : "service_card_opened",
-                      section: "public-list",
-                      targetType: itemHrefPrefix === "/cases" ? "case" : "service",
-                      targetId: item.entityId || item.slug,
-                      cardAction: "open"
-                    })}
-                  >
-                    {PUBLIC_COPY.listOpen}
-                  </Link>
+                  <ListCardMediaStrip assets={mediaAssets} />
+                  <span className={styles.actionLink} aria-hidden="true">{PUBLIC_COPY.listOpen}</span>
                 </article>
               );
             })}

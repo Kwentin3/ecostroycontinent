@@ -77,6 +77,7 @@ export default async function ServicesPage({ searchParams }) {
       resolveMedia={(id) => lookups.mediaMap.get(id) || null}
       resolveGallery={(id) => lookups.galleryMap.get(id) || null}
       resolveEquipment={(id) => lookups.equipmentMap.get(id) || null}
+      resolveCase={(id) => lookups.caseMap.get(id) || null}
       emptyTitle="Каталог услуг пока пуст"
       emptyDescription="Опубликованные страницы услуг ещё не готовы для этого режима."
     />
