@@ -64,9 +64,7 @@ export default async function ServicesPage({ searchParams }) {
 
   return (
       <PublicListPage
-        eyebrow="Каталог услуг"
         title="Услуги"
-      intro="Раздел ведёт к отдельным страницам услуг с объёмом работ, подтверждением и следующим шагом."
         items={resolvedServices}
       itemHrefPrefix="/services"
       globalSettings={resolvedGlobalSettings}
@@ -75,17 +73,9 @@ export default async function ServicesPage({ searchParams }) {
       allowStructuredData={!placeholderMode}
       placeholderMarker={usingPlaceholder}
       showCasesNav={hasPublishedCases}
+      showIntroHero={false}
       emptyTitle="Каталог услуг пока пуст"
       emptyDescription="Опубликованные страницы услуг ещё не готовы для этого режима."
-      emptyActionHref={hasPublishedCases ? "/cases" : "/contacts"}
-      emptyActionLabel={hasPublishedCases ? "Перейти в раздел кейсов" : "Связаться"}
-      nextStepTitle="Следующий шаг"
-      nextStepDescription="Выберите услугу для перехода к деталям или сразу откройте контактный маршрут."
-      nextStepPrimaryHref="/contacts"
-      nextStepPrimaryLabel="Связаться"
-      nextStepSecondaryHref={hasPublishedCases ? "/cases" : ""}
-      nextStepSecondaryLabel={hasPublishedCases ? "Смотреть кейсы" : ""}
-      nextStepTone="tinted"
     />
   );
 }

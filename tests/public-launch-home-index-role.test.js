@@ -23,16 +23,18 @@ test("home route is the canonical content-managed Home page", () => {
   assert.equal(homeSource.includes("/admin/login"), false);
 });
 
-test("services and cases indexes declare detail-entry and next-step contracts", () => {
+test("services index stays a neutral system collection and cases keeps next-step contract", () => {
   const servicesIndex = readSource("../app/services/page.js");
   const casesIndex = readSource("../app/cases/page.js");
 
   assert.match(servicesIndex, /itemHrefPrefix="\/services"/);
   assert.match(servicesIndex, /getPublishedCases/);
   assert.match(servicesIndex, /showCasesNav=\{hasPublishedCases\}/);
-  assert.match(servicesIndex, /nextStepTitle=/);
-  assert.match(servicesIndex, /nextStepPrimaryHref="\/contacts"/);
-  assert.match(servicesIndex, /nextStepSecondaryHref=\{hasPublishedCases \? "\/cases" : ""\}/);
+  assert.match(servicesIndex, /showIntroHero=\{false\}/);
+  assert.doesNotMatch(servicesIndex, /nextStepTitle=/);
+  assert.doesNotMatch(servicesIndex, /nextStepPrimaryHref=/);
+  assert.doesNotMatch(servicesIndex, /emptyActionHref=/);
+  assert.doesNotMatch(servicesIndex, /emptyActionLabel=/);
 
   assert.match(casesIndex, /itemHrefPrefix="\/cases"/);
   assert.match(casesIndex, /showCasesNav/);
@@ -44,6 +46,9 @@ test("public list renderer supports empty-state and next-step sections", () => {
   const rendererSource = readSource("../components/public/PublicRenderers.js");
 
   assert.match(rendererSource, /emptyTitle/);
+  assert.match(rendererSource, /showIntroHero = true/);
+  assert.match(rendererSource, /showIntroHero \? \(/);
+  assert.match(rendererSource, /className=\{styles\.visuallyHidden\}/);
   assert.match(rendererSource, /preview-list-next-steps/);
   assert.match(rendererSource, /nextStepPrimaryHref/);
   assert.match(rendererSource, /nextStepSecondaryHref/);

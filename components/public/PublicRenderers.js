@@ -978,6 +978,7 @@ export function PublicListPage({
   nextStepSecondaryHref = "",
   nextStepSecondaryLabel = "",
   nextStepTone = "plain",
+  showIntroHero = true,
   allowStructuredData = true,
   showCasesNav = true
 }) {
@@ -1000,15 +1001,19 @@ export function PublicListPage({
       showCasesNav={showCasesNav}
     >
       <main className={styles.page}>
-        <section
-          id="preview-list-hero"
-          data-preview-section="hero"
-          className={getSectionClassName([styles.hero, styles.previewSection], { surfaceTone: "tinted", textEmphasisPreset: "strong" })}
-        >
-          <p className={styles.eyebrow}>{eyebrow}</p>
-          <h1>{title}</h1>
-          <p className={styles.note}>{intro}</p>
-        </section>
+        {showIntroHero ? (
+          <section
+            id="preview-list-hero"
+            data-preview-section="hero"
+            className={getSectionClassName([styles.hero, styles.previewSection], { surfaceTone: "tinted", textEmphasisPreset: "strong" })}
+          >
+            <p className={styles.eyebrow}>{eyebrow}</p>
+            <h1>{title}</h1>
+            <p className={styles.note}>{intro}</p>
+          </section>
+        ) : (
+          <h1 className={styles.visuallyHidden}>{title}</h1>
+        )}
         {listItems.length > 0 ? (
           <section className={styles.grid}>
             {listItems.map((item) => (
