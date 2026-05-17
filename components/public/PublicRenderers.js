@@ -1202,6 +1202,12 @@ export function ServicePage({
   const currentPath = `/services/${service.slug}`;
   const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: service.h1 || service.title });
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
+  const serviceHeroAction = contactProjection.primaryAction
+    ? {
+        ...contactProjection.primaryAction,
+        label: service.ctaVariant || contactProjection.primaryAction.label
+      }
+    : null;
   const serviceAreaModel = resolveEffectiveServiceArea({ service, globalSettings });
   const equipmentCardsModel = buildEquipmentCardsSectionModel({
     equipmentRecords: relatedEquipment,
@@ -1236,7 +1242,13 @@ export function ServicePage({
           <p className={styles.eyebrow}>{PUBLIC_COPY.serviceEyebrow}</p>
           <h1>{service.h1}</h1>
           <p>{service.summary}</p>
-          <p className={styles.note}>{PUBLIC_COPY.ctaPrefix}: {service.ctaVariant || globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}</p>
+          <div className={styles.linkRow}>
+            <ContactAction
+              action={serviceHeroAction}
+              className={styles.actionLink}
+              defaultLabel={globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}
+            />
+          </div>
         </section>
         <MediaHero asset={primaryMedia} sectionId="preview-service-media" sectionName="media" />
         <section

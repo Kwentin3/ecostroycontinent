@@ -93,6 +93,9 @@ test("stage4a wiring keeps contact projection inside shared public renderers", (
   assert.match(rendererSource, /publicContactItems/);
   assert.match(rendererSource, /ServiceAreaNote/);
   assert.match(rendererSource, /contactProjection\.hasPublicRegion/);
+  assert.match(rendererSource, /const serviceHeroAction = contactProjection\.primaryAction/);
+  assert.match(rendererSource, /<ContactAction\s+action=\{serviceHeroAction\}/);
+  assert.doesNotMatch(rendererSource, /PUBLIC_COPY\.ctaPrefix/);
   assert.match(rendererSource, /const ctaAction = contactProjection\?\.primaryAction/);
   assert.match(rendererSource, /<ContactAction\s+action=\{ctaAction\}/);
   assert.doesNotMatch(rendererSource, /<p className=\{styles\.ctaChip\}/);
