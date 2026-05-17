@@ -636,9 +636,22 @@ export function PublicPageShell({
       <StructuredDataScripts items={structuredDataItems} />
       <AnalyticsTracker />
       <header className={styles.publicShellHeader}>
-        <div className={styles.publicShellBrand}>
+        <Link
+          className={styles.publicShellBrand}
+          href="/"
+          {...analyticsProps({
+            id: "nav_brand",
+            event: "cta_clicked",
+            section: "main-nav",
+            targetType: "page",
+            targetId: "/",
+            navItem: "brand",
+            ctaKind: "navigation",
+            destinationKind: "page"
+          })}
+        >
           <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
-        </div>
+        </Link>
         <nav className={styles.publicShellNav} aria-label="Главная навигация">
           {navItems.map((item) => (
             <Link

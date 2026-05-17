@@ -88,6 +88,8 @@ test("public renderers include global nav shell, breadcrumbs and quick-access se
   assert.match(source, /aria-label="Главная навигация"/);
   assert.match(source, /aria-label="Хлебные крошки"/);
   assert.match(source, /servicesQuickAccess/);
+  assert.match(source, /className=\{styles\.publicShellBrand\}/);
+  assert.match(source, /id: "nav_brand"/);
   assert.match(source, /shouldRenderServiceQuickAccess/);
   assert.match(source, /styles\.servicesQuickAccessLabel/);
   assert.doesNotMatch(source, /<details className=\{styles\.servicesQuickAccess\}/);
@@ -99,6 +101,8 @@ test("public renderers include global nav shell, breadcrumbs and quick-access se
   assert.match(css, /\.publicShellNavLinkActive\s*\{/);
   assert.match(css, /\.publicShellBrand\s*\{/);
   assert.match(css, /\.publicShellBrand strong\s*\{/);
+  assert.match(css, /\.publicShellBrand:focus-visible/);
+  assert.match(css, /grid-template-columns: minmax\(180px, 230px\) minmax\(380px, 1fr\) minmax\(250px, 340px\)/);
   assert.match(css, /\.publicShellMeta a\s*\{/);
   assert.match(css, /\.publicShellMeta a:focus-visible/);
   assert.match(css, /\.servicesQuickAccess\s*\{/);
