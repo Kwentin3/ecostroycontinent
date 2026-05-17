@@ -15,6 +15,7 @@ import {
 import { buildPublicContactProjection } from "../../lib/public-launch/contact-projection.js";
 import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
 import { buildEquipmentCardsSectionModel } from "../../lib/public-launch/equipment-card-model.js";
+import { buildListCardMediaAssets } from "../../lib/public-launch/list-card-media.js";
 import {
   buildBreadcrumbStructuredData,
   buildLocalBusinessStructuredData,
@@ -979,6 +980,10 @@ export function PublicListPage({
   nextStepSecondaryLabel = "",
   nextStepTone = "plain",
   showIntroHero = true,
+  resolveMedia = null,
+  resolveGallery = null,
+  resolveEquipment = null,
+  listCardMediaLimit = 3,
   allowStructuredData = true,
   showCasesNav = true
 }) {
@@ -1016,27 +1021,46 @@ export function PublicListPage({
         )}
         {listItems.length > 0 ? (
           <section className={styles.grid}>
-            {listItems.map((item) => (
-              <article key={item.entityId || item.slug} className={styles.card}>
-                <h2>{item.title}</h2>
-                <CaseLocationLabel location={item.location} />
-                <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
-                <Link
-                  className={styles.actionLink}
-                  href={`${itemHrefPrefix}/${item.slug}`}
-                  {...analyticsProps({
-                    id: `list_${item.entityId || item.slug}`,
-                    event: itemHrefPrefix === "/cases" ? "case_card_opened" : "service_card_opened",
-                    section: "public-list",
-                    targetType: itemHrefPrefix === "/cases" ? "case" : "service",
-                    targetId: item.entityId || item.slug,
-                    cardAction: "open"
-                  })}
-                >
-                  {PUBLIC_COPY.listOpen}
-                </Link>
-              </article>
-            ))}
+            {listItems.map((item) => {
+              const mediaAssets = buildListCardMediaAssets({
+                item,
+                resolveMedia,
+                resolveGallery,
+                resolveEquipment,
+                limit: listCardMediaLimit
+              });
+
+              return (
+                <article key={item.entityId || item.slug} className={styles.card}>
+                  <h2>{item.title}</h2>
+                  <CaseLocationLabel location={item.location} />
+                  <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
+                  {mediaAssets.length > 0 ? (
+                    <div className={styles.listCardMediaStrip} aria-label="Изображения услуги">
+                      {mediaAssets.map((asset) => (
+                        <figure key={asset.entityId || asset.previewUrl}>
+                          <img src={asset.previewUrl} alt={asset.alt || item.title || PUBLIC_COPY.imageFallback} />
+                        </figure>
+                      ))}
+                    </div>
+                  ) : null}
+                  <Link
+                    className={styles.actionLink}
+                    href={`${itemHrefPrefix}/${item.slug}`}
+                    {...analyticsProps({
+                      id: `list_${item.entityId || item.slug}`,
+                      event: itemHrefPrefix === "/cases" ? "case_card_opened" : "service_card_opened",
+                      section: "public-list",
+                      targetType: itemHrefPrefix === "/cases" ? "case" : "service",
+                      targetId: item.entityId || item.slug,
+                      cardAction: "open"
+                    })}
+                  >
+                    {PUBLIC_COPY.listOpen}
+                  </Link>
+                </article>
+              );
+            })}
           </section>
         ) : (
           <section className={`${styles.card} ${styles.previewSection} ${styles.sectionTonePlain}`}>

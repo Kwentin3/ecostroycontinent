@@ -942,6 +942,30 @@
   gap: 12px;
 }
 
+.listCardMediaStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 96px));
+  gap: 8px;
+  align-items: center;
+  max-width: 100%;
+}
+
+.listCardMediaStrip figure {
+  margin: 0;
+  overflow: hidden;
+  border-radius: calc(var(--section-radius) - 12px);
+  border: 1px solid var(--media-frame-border);
+  background: var(--media-frame-bg);
+}
+
+.listCardMediaStrip img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
 .gallerySection {
   display: grid;
   gap: 16px;

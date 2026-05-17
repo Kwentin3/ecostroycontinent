@@ -1,6 +1,6 @@
 ﻿import { PublicHoldingPage, PublicListPage } from "../../components/public/PublicRenderers";
 import {
-  getPublishedCases,
+  buildPublishedLookups,
   getPublishedGlobalSettings,
   getPublishedServices
 } from "../../lib/read-side/public-content";
@@ -51,21 +51,21 @@ export default async function ServicesPage({ searchParams }) {
     );
   }
 
-  const [services, cases, globalSettings] = await Promise.all([
-    getPublishedServices(),
-    getPublishedCases(),
+  const [lookups, globalSettings] = await Promise.all([
+    buildPublishedLookups(),
     getPublishedGlobalSettings()
   ]);
 
+  const services = lookups.services;
   const usingPlaceholder = placeholderMode && services.length === 0;
   const resolvedServices = usingPlaceholder ? getPlaceholderServices() : services;
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
-  const hasPublishedCases = cases.some((item) => item?.slug && item?.title);
+  const hasPublishedCases = lookups.cases.some((item) => item?.slug && item?.title);
 
   return (
-      <PublicListPage
-        title="Услуги"
-        items={resolvedServices}
+    <PublicListPage
+      title="Услуги"
+      items={resolvedServices}
       itemHrefPrefix="/services"
       globalSettings={resolvedGlobalSettings}
       currentPath="/services"
@@ -74,6 +74,9 @@ export default async function ServicesPage({ searchParams }) {
       placeholderMarker={usingPlaceholder}
       showCasesNav={hasPublishedCases}
       showIntroHero={false}
+      resolveMedia={(id) => lookups.mediaMap.get(id) || null}
+      resolveGallery={(id) => lookups.galleryMap.get(id) || null}
+      resolveEquipment={(id) => lookups.equipmentMap.get(id) || null}
       emptyTitle="Каталог услуг пока пуст"
       emptyDescription="Опубликованные страницы услуг ещё не готовы для этого режима."
     />
