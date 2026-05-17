@@ -31,6 +31,35 @@ test("normalizeEntityInput keeps fixed page route truth for contacts pages", () 
   assert.equal(page.blocks.some((block) => block.type === "cta"), false);
 });
 
+test("normalizeEntityInput keeps Home as a page-owned root hub", () => {
+  const page = normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    pageType: PAGE_TYPES.HOME,
+    slug: "wrong-route",
+    title: "Главная",
+    h1: "Экостройконтинент",
+    intro: "Инженерные работы и аренда спецтехники.",
+    body: "Работаем с объектами, техникой и доказательной базой.",
+    serviceIds: ["service-1"],
+    caseIds: ["case-1"],
+    galleryIds: ["gallery-1"],
+    primaryMediaAssetId: "media-1",
+    defaultBlockCtaLabel: "Связаться"
+  });
+
+  assert.equal(page.slug, "home");
+  assert.equal(page.pageType, PAGE_TYPES.HOME);
+  assert.deepEqual(page.sourceRefs.serviceIds, ["service-1"]);
+  assert.deepEqual(
+    page.sections.map((section) => section.type),
+    ["hero_offer", "rich_text", "service_list", "proof_cases", "cta"]
+  );
+  assert.deepEqual(
+    page.blocks.map((block) => block.type),
+    ["hero", "rich_text", "service_list", "case_list", "gallery", "cta"]
+  );
+  assert.equal("serviceIds" in page, false);
+});
+
 test("normalizeEntityInput applies product media defaults for page type when editor left media presentation untouched", () => {
   const servicePage = normalizeEntityInput(ENTITY_TYPES.PAGE, {
     pageType: PAGE_TYPES.SERVICE_LANDING,
@@ -63,6 +92,19 @@ test("normalizeEntityInput applies product media defaults for page type when edi
     sections: [],
     seo: {}
   });
+  const homePage = normalizeEntityInput(ENTITY_TYPES.PAGE, {
+    pageType: PAGE_TYPES.HOME,
+    title: "Home",
+    h1: "Home",
+    intro: "Intro",
+    sourceRefs: {
+      serviceIds: [],
+      caseIds: [],
+      galleryIds: []
+    },
+    sections: [],
+    seo: {}
+  });
 
   assert.deepEqual(servicePage.mediaSettings, {
     heroLayout: "split",
@@ -77,6 +119,13 @@ test("normalizeEntityInput applies product media defaults for page type when edi
     galleryAspectRatio: "landscape",
     galleryGrouping: "flat",
     showGalleryCaptions: false
+  });
+  assert.deepEqual(homePage.mediaSettings, {
+    heroLayout: "split",
+    galleryLayout: "grid",
+    galleryAspectRatio: "landscape",
+    galleryGrouping: "by_collection",
+    showGalleryCaptions: true
   });
 });
 
@@ -514,6 +563,10 @@ test("entity type parsing and owner-review rules stay narrow and contract-safe",
   );
   assert.equal(
     requiresOwnerReview(ENTITY_TYPES.PAGE, { pageType: PAGE_TYPES.ABOUT, slug: "about" }, { pageType: PAGE_TYPES.ABOUT, slug: "about" }),
+    true
+  );
+  assert.equal(
+    requiresOwnerReview(ENTITY_TYPES.PAGE, { pageType: PAGE_TYPES.HOME, slug: "home" }, { pageType: PAGE_TYPES.HOME, slug: "home" }),
     true
   );
   assert.equal(

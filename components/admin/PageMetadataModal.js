@@ -252,6 +252,7 @@ export function PageMetadataModal({
                   value={draft.pageType}
                   onChange={(event) => setDraft((current) => ({ ...current, pageType: event.target.value }))}
                 >
+                  <option value="home">Главная</option>
                   <option value="about">О нас</option>
                   <option value="contacts">Контакты</option>
                   <option value="service_landing">Страница услуги</option>

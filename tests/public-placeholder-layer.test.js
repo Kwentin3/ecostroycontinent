@@ -15,6 +15,7 @@ import {
   getPlaceholderCases,
   getPlaceholderContactsPage,
   getPlaceholderGlobalSettings,
+  getPlaceholderHomePage,
   getPlaceholderServiceBySlug,
   getPlaceholderServices
 } from "../lib/public-launch/placeholder-fixtures.js";
@@ -56,11 +57,13 @@ test("placeholder robots metadata is noindex and nofollow", () => {
 test("placeholder fixtures expose route stubs for services, cases and standalone pages", () => {
   const services = getPlaceholderServices();
   const cases = getPlaceholderCases();
+  const home = getPlaceholderHomePage();
   const about = getPlaceholderAboutPage();
   const contacts = getPlaceholderContactsPage();
 
   assert.ok(services.length >= 3);
   assert.ok(cases.length >= 2);
+  assert.equal(home.pageType, "home");
   assert.equal(about.pageType, "about");
   assert.equal(contacts.pageType, "contacts");
   assert.ok(getPlaceholderServiceBySlug(services[0].slug));
@@ -78,12 +81,15 @@ test("placeholder local signals stay aligned with the Sochi launch cluster", () 
 
 test("public placeholder layer wiring is present in routes and proxy", () => {
   const servicesIndex = readFileSync(new URL("../app/services/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const homePage = readFileSync(new URL("../app/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const serviceDetail = readFileSync(new URL("../app/services/[slug]/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const contactsPage = readFileSync(new URL("../app/contacts/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const runtimeDisplayModeSource = readFileSync(new URL("../lib/public-launch/runtime-display-mode.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const proxySource = readFileSync(new URL("../proxy.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const rendererSource = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
+  assert.match(homePage, /getPlaceholderHomePage/);
+  assert.match(homePage, /placeholderMarker=\{usingPlaceholder\}/);
   assert.match(servicesIndex, /resolvePublicRuntimeDisplayMode/);
   assert.match(servicesIndex, /placeholderFallbackEnabled/);
   assert.match(servicesIndex, /buildPublicRouteMetadata|buildPlaceholderRobotsMetadata/);

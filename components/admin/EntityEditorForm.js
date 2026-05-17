@@ -496,6 +496,7 @@ export function EntityEditorForm({
                   <label className={styles.label}>
                     <span>Тип страницы</span>
                     <select name="pageType" defaultValue={value.pageType || "about"}>
+                      <option value="home">Главная</option>
                       <option value="about">О нас</option>
                       <option value="contacts">Контакты</option>
                     </select>

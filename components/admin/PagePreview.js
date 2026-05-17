@@ -24,6 +24,7 @@ export function PagePreview({
       cases={previewContext.lookupResolvers.cases}
       galleries={previewContext.lookupResolvers.galleries}
       resolveMedia={previewContext.lookupResolvers.media}
+      serviceLinks={previewContext.previewLookupRecords.services}
     />
   );
 }

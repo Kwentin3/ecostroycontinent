@@ -174,6 +174,10 @@ function moveSection(sections = [], type, direction) {
 }
 
 function getMediaRecommendationSummary(pageType) {
+  if (pageType === PAGE_TYPES.HOME) {
+    return "Главная использует управляемый первый экран и общий список опубликованных услуг; медиа задает атмосферу хаба.";
+  }
+
   if (pageType === PAGE_TYPES.SERVICE_LANDING) {
     return "Раздельная обложка, ровная доказательная галерея и группировка по коллекциям.";
   }
@@ -602,6 +606,7 @@ export function PageWorkspaceScreen({
   const mediaRecommendationSummary = useMemo(() => getMediaRecommendationSummary(metadata.pageType), [metadata.pageType]);
   const primaryService = serviceItems.find((item) => item.id === composition.sourceRefs.primaryServiceId) || null;
   const primaryEquipment = equipmentItems.find((item) => item.id === composition.sourceRefs.primaryEquipmentId) || null;
+  const selectedServiceItems = serviceItems.filter((item) => (composition.sourceRefs.serviceIds || []).includes(item.id));
   const selectedCaseItems = caseItems.filter((item) => (composition.sourceRefs.caseIds || []).includes(item.id));
   const selectedGalleryItems = galleryItems.filter((item) => (composition.sourceRefs.galleryIds || []).includes(item.id));
   const pageStatusItems = useMemo(() => ([
@@ -746,6 +751,15 @@ export function PageWorkspaceScreen({
       });
     }
 
+    if (metadata.pageType === PAGE_TYPES.HOME) {
+      items.push({
+        key: "services",
+        icon: "У",
+        label: "Услуги",
+        meta: selectedServiceItems.length > 0 ? `Подключено: ${selectedServiceItems.length}` : "Автоматически: все опубликованные"
+      });
+    }
+
     if (metadata.pageType === PAGE_TYPES.EQUIPMENT_LANDING) {
       items.push({
         key: "equipment",
@@ -775,9 +789,31 @@ export function PageWorkspaceScreen({
     });
 
     return items;
-  }, [equipmentItems.length, heroMedia, mediaOptions.length, metadata.pageType, primaryEquipment, primaryService, selectedCaseItems.length, selectedGalleryItems.length, serviceItems.length]);
+  }, [equipmentItems.length, heroMedia, mediaOptions.length, metadata.pageType, primaryEquipment, primaryService, selectedCaseItems.length, selectedGalleryItems.length, selectedServiceItems.length, serviceItems.length]);
   const pickerModel = useMemo(() => {
     switch (activePicker) {
+      case "services":
+        return {
+          title: "Услуги на главной",
+          legend: "Выберите услуги для хаба. Если список пуст, публичная главная покажет все опубликованные услуги в порядке read-side.",
+          items: serviceItems.map((item) => ({ ...item, marker: "У" })),
+          selectedIds: composition.sourceRefs.serviceIds || [],
+          selectionMode: "multiple",
+          emptyState: serviceEmptyState,
+          onToggle: (id) => toggleRelation("serviceIds", id),
+          onClear: () => {
+            setComposition((current) => ({
+              ...current,
+              sourceRefs: {
+                ...current.sourceRefs,
+                serviceIds: []
+              },
+              sections: updateSectionList(current.sections, PAGE_SECTION_TYPES.SERVICE_LIST, {
+                serviceIds: []
+              })
+            }));
+          }
+        };
       case "service":
         return {
           title: "Основная услуга",
@@ -876,7 +912,29 @@ export function PageWorkspaceScreen({
       default:
         return null;
     }
-  }, [activePicker, caseEmptyState, caseItems, composition.primaryMediaAssetId, composition.sourceRefs.caseIds, composition.sourceRefs.galleryIds, composition.sourceRefs.primaryEquipmentId, composition.sourceRefs.primaryServiceId, equipmentEmptyState, equipmentItems, galleryEmptyState, galleryItems, mediaEmptyState, mediaOptions, serviceEmptyState, serviceItems]);
+  }, [activePicker, caseEmptyState, caseItems, composition.primaryMediaAssetId, composition.sourceRefs.caseIds, composition.sourceRefs.galleryIds, composition.sourceRefs.primaryEquipmentId, composition.sourceRefs.primaryServiceId, composition.sourceRefs.serviceIds, equipmentEmptyState, equipmentItems, galleryEmptyState, galleryItems, mediaEmptyState, mediaOptions, serviceEmptyState, serviceItems]);
+
+  function toggleRelation(field, id) {
+    const sectionType = field === "serviceIds" ? PAGE_SECTION_TYPES.SERVICE_LIST : PAGE_SECTION_TYPES.PROOF_CASES;
+
+    setComposition((current) => {
+      const currentIds = current.sourceRefs[field] || [];
+      const nextIds = currentIds.includes(id)
+        ? currentIds.filter((item) => item !== id)
+        : [...currentIds, id];
+
+      return {
+        ...current,
+        sourceRefs: {
+          ...current.sourceRefs,
+          [field]: nextIds
+        },
+        sections: updateSectionList(current.sections, sectionType, {
+          [field]: nextIds
+        })
+      };
+    });
+  }
 
   const handleJsonAction = async (payload) => {
     const response = await fetch(saveUrl, {
@@ -1096,23 +1154,6 @@ export function PageWorkspaceScreen({
     }
   };
 
-  const toggleRelation = (field, id) => {
-    setComposition((current) => ({
-      ...current,
-      sourceRefs: {
-        ...current.sourceRefs,
-        [field]: current.sourceRefs[field].includes(id)
-          ? current.sourceRefs[field].filter((item) => item !== id)
-          : [...current.sourceRefs[field], id]
-      },
-      sections: updateSectionList(current.sections, PAGE_SECTION_TYPES.PROOF_CASES, {
-        [field]: current.sourceRefs[field].includes(id)
-          ? current.sourceRefs[field].filter((item) => item !== id)
-          : [...current.sourceRefs[field], id]
-      })
-    }));
-  };
-
   return (
     <div className={styles.workspace}>
       <section className={styles.header}>
@@ -1235,6 +1276,15 @@ export function PageWorkspaceScreen({
                 </div>
               </div>
             ) : null}
+            {selectedServiceItems.length > 0 ? (
+              <div className={styles.selectedItem}>
+                <div className={styles.selectedFallback}>У</div>
+                <div className={styles.selectedMain}>
+                  <strong>Услуги: {selectedServiceItems.length}</strong>
+                  <p className={styles.selectedMeta}>{selectedServiceItems.slice(0, 2).map((item) => item.label).join(" · ")}</p>
+                </div>
+              </div>
+            ) : null}
             {heroMedia ? (
               <div className={styles.selectedItem}>
                 {heroMedia.previewUrl ? <img src={heroMedia.previewUrl} alt={heroMedia.title} className={styles.selectedThumb} /> : <div className={styles.selectedFallback}>М</div>}
@@ -1262,7 +1312,7 @@ export function PageWorkspaceScreen({
                 </div>
               </div>
             ) : null}
-            {!primaryService && !primaryEquipment && !heroMedia && selectedCaseItems.length === 0 && selectedGalleryItems.length === 0 ? (
+            {!primaryService && !primaryEquipment && !heroMedia && selectedServiceItems.length === 0 && selectedCaseItems.length === 0 && selectedGalleryItems.length === 0 ? (
               <div className={styles.pickerEmpty}>
                 <p className={styles.pickerLegend}>Слева остаются только источники и быстрый контекст. Полный выбор открывается в крупных модалках.</p>
               </div>

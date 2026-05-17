@@ -86,6 +86,14 @@ function buildHiddenValue(pageType, createMode, formState) {
   return pageType;
 }
 
+function getRecordPublicPath(record = {}) {
+  if (record?.metadata?.pageType === "home") {
+    return "/";
+  }
+
+  return record?.slug ? `/${record.slug}` : "/";
+}
+
 function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
   const previewTitle = record.previewTitle || record.title;
   const previewIntro =
@@ -137,7 +145,7 @@ function renderPageCardPreview(record, previewLookupRecords, globalSettings) {
           <span className={styles.pagePreviewMetaLine}>
             {PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType}
           </span>
-          <span className={styles.pagePreviewMetaLine}>/{record.slug}</span>
+          <span className={styles.pagePreviewMetaLine}>{getRecordPublicPath(record)}</span>
         </div>
           </div>
         </div>
@@ -162,58 +170,11 @@ function renderCanonicalRegistryPageCardPreview(record, previewLookupRecords, gl
   );
 }
 
-function renderHomeLandingSurface(surface) {
-  if (!surface) {
-    return null;
-  }
-
-  const stats = [
-    surface.serviceCount > 0 ? `${surface.serviceCount} услуг` : "",
-    surface.equipmentCount > 0 ? `${surface.equipmentCount} единиц техники` : "",
-    surface.caseCount > 0 ? `${surface.caseCount} кейсов` : ""
-  ].filter(Boolean);
-
-  return (
-    <section className={styles.systemSurfaces} aria-labelledby="home-landing-surface-title">
-      <div className={styles.systemSurfaceIntro}>
-        <span className={styles.fieldLabel}>Системные витрины</span>
-        <h3 id="home-landing-surface-title" className={styles.title}>Главная страница</h3>
-        <p className={styles.meta}>
-          Главная не хранит копию текста в разделе страниц, а собирается из опубликованных услуг, техники и кейсов.
-        </p>
-      </div>
-      <article className={styles.systemCard}>
-        <div>
-          <span className={`${styles.badge} ${surface.ready ? styles.tonehealthy : styles.tonewarning}`}>
-            {surface.ready ? "Готова к показу" : "Нужна опубликованная услуга"}
-          </span>
-          <h4 className={styles.systemCardTitle}>{surface.title}</h4>
-          <p className={styles.meta}>{surface.description}</p>
-          {stats.length > 0 ? (
-            <div className={styles.systemStats} aria-label="Состав главной витрины">
-              {stats.map((item) => <span key={item}>{item}</span>)}
-            </div>
-          ) : null}
-        </div>
-        <div className={styles.systemActions}>
-          <Link href={surface.editHref} className={styles.primaryButton}>
-            {surface.editLabel}
-          </Link>
-          <Link href={surface.publicHref} className={styles.menuItem}>
-            Открыть /
-          </Link>
-        </div>
-      </article>
-    </section>
-  );
-}
-
 export function PageRegistryClient({
   initialRecords,
   summary = null,
   previewLookupRecords = null,
   globalSettings = null,
-  homeLandingSurface = null,
   metadataSaveBasePath = "/api/admin/entities/page",
   createFallbackHref = "/admin/entities/page/new",
   initialCreateOpen = false,
@@ -255,7 +216,7 @@ export function PageRegistryClient({
       id: record.id,
       label: record.title,
       pageType: record.metadata.pageType,
-      meta: `/${record.slug}`
+      meta: getRecordPublicPath(record)
     })),
     [records]
   );
@@ -519,8 +480,6 @@ export function PageRegistryClient({
       {actionMessage ? <div className={styles.feedbackInfo}>{actionMessage}</div> : null}
       {actionError ? <div className={styles.feedbackError}>{actionError}</div> : null}
 
-      {renderHomeLandingSurface(homeLandingSurface)}
-
       {filteredRecords.length === 0 ? (
         <div className={styles.empty}>Под эти фильтры страницы не найдены. Снимите фильтр или создайте новую страницу.</div>
       ) : null}
@@ -534,7 +493,7 @@ export function PageRegistryClient({
               <div className={styles.cardHead}>
                 <div>
                   <h3 className={styles.title}>{record.title}</h3>
-                  <p className={styles.meta}>{PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType} · /{record.slug}</p>
+                  <p className={styles.meta}>{PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType} · {getRecordPublicPath(record)}</p>
                   {record.updatedAtLabel ? <p className={styles.metaMinor}>Обновлено {record.updatedAtLabel}</p> : null}
                   {record.lifecycle?.hasLivePublishedRevision ? <p className={styles.metaMinor}>Сейчас в публикации</p> : null}
                 </div>
@@ -578,7 +537,7 @@ export function PageRegistryClient({
                 <div className={styles.listHead}>
                   <div>
                     <h3 className={styles.title}>{record.title}</h3>
-                    <p className={styles.meta}>{PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType} · /{record.slug}</p>
+                    <p className={styles.meta}>{PAGE_TYPE_LABELS[record.metadata.pageType] || record.metadata.pageType} · {getRecordPublicPath(record)}</p>
                     {record.updatedAtLabel ? <p className={styles.metaMinor}>Обновлено {record.updatedAtLabel}</p> : null}
                   </div>
                   <span className={`${styles.badge} ${toneClassName(record.signalTone)}`}>{record.signalLabel}</span>
@@ -667,6 +626,7 @@ export function PageRegistryClient({
                     setCreateType(event.target.value);
                     setCreateError("");
                   }}>
+                    <option value="home">Главная</option>
                     <option value="about">О нас</option>
                     <option value="contacts">Контакты</option>
                   </select>

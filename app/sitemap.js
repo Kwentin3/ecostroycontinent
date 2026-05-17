@@ -6,6 +6,7 @@ import {
   getPublishedAboutPage,
   getPublishedCases,
   getPublishedContactsPage,
+  getPublishedHomePage,
   getPublishedServices
 } from "../lib/read-side/public-content.js";
 
@@ -22,19 +23,21 @@ export default async function sitemap() {
     return [];
   }
 
-  const [services, cases, aboutPage, contactsPage] = await Promise.all([
+  const [services, cases, homePage, aboutPage, contactsPage] = await Promise.all([
     getPublishedServices(),
     getPublishedCases(),
+    getPublishedHomePage(),
     getPublishedAboutPage(),
     getPublishedContactsPage()
   ]);
 
-  // Sticky canon: sitemap must stay honest. Do not list /about or /contacts
+  // Sticky canon: sitemap must stay honest. Do not list Page-owned routes
   // until their published Content Core pages resolve to 200.
   return buildPublishedSitemapEntries({
     baseUrl: appBaseUrl,
     services,
     cases,
+    homePage,
     aboutPage,
     contactsPage
   });

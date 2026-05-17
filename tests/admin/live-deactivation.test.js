@@ -99,6 +99,43 @@ test("evaluateLiveDeactivation allows an ordinary published page with no incomin
   assert.ok(result.routeEffects.routeOutcome.includes("404"));
 });
 
+test("evaluateLiveDeactivation supports the published Home page route", async () => {
+  const aggregate = makeAggregate(ENTITY_TYPES.PAGE, "page_home_1", {
+    activePublishedRevisionId: "rev_page_home_1",
+    latestPayload: {
+      pageType: PAGE_TYPES.HOME,
+      title: "Home",
+      h1: "Home"
+    }
+  });
+
+  const result = await evaluateLiveDeactivation(
+    {
+      entityType: ENTITY_TYPES.PAGE,
+      entityId: "page_home_1"
+    },
+    buildDeps({
+      aggregate,
+      latestCards: {
+        [ENTITY_TYPES.PAGE]: [makeLatestCard(aggregate)],
+        [ENTITY_TYPES.SERVICE]: [],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      },
+      publishedCards: {
+        [ENTITY_TYPES.PAGE]: [makePublishedCard(aggregate)],
+        [ENTITY_TYPES.SERVICE]: [],
+        [ENTITY_TYPES.CASE]: [],
+        [ENTITY_TYPES.GALLERY]: []
+      }
+    })
+  );
+
+  assert.equal(result.allowed, true);
+  assert.equal(result.routeEffects.routePath, "/");
+  assert.deepEqual(result.routeEffects.revalidationPaths, ["/"]);
+});
+
 test("evaluateLiveDeactivation allows an ordinary published media asset with no incoming refs", async () => {
   const aggregate = makeAggregate(ENTITY_TYPES.MEDIA_ASSET, "media_live_1", {
     activePublishedRevisionId: "rev_media_live_1",

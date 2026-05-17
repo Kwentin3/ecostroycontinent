@@ -41,6 +41,7 @@ test("sitemap entries include launch-core routes and published detail routes onl
       { entityId: "case-1", slug: "slope-fix" },
       { entityId: "case-2", slug: null }
     ],
+    homePage: { entityId: "page-home" },
     aboutPage: { entityId: "page-about" },
     contactsPage: null
   });
@@ -56,6 +57,19 @@ test("sitemap entries include launch-core routes and published detail routes onl
   assert.equal(urls.includes("https://ecostroycontinent.ru/cases/slope-fix"), true);
 });
 
+test("sitemap keeps root honest until a published Home page exists", () => {
+  const entries = buildPublishedSitemapEntries({
+    baseUrl: "https://ecostroycontinent.ru",
+    services: [],
+    cases: [],
+    homePage: null,
+    aboutPage: null,
+    contactsPage: null
+  });
+
+  assert.equal(entries.map((entry) => entry.url).includes("https://ecostroycontinent.ru/"), false);
+});
+
 test("seo routes wire to published truth sources and avoid placeholder fixtures", () => {
   const robotsSource = readFileSync(new URL("../app/robots.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const sitemapSource = readFileSync(new URL("../app/sitemap.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
@@ -64,6 +78,7 @@ test("seo routes wire to published truth sources and avoid placeholder fixtures"
   assert.match(sitemapSource, /buildPublishedSitemapEntries/);
   assert.match(sitemapSource, /getPublishedServices/);
   assert.match(sitemapSource, /getPublishedCases/);
+  assert.match(sitemapSource, /getPublishedHomePage/);
   assert.match(sitemapSource, /getPublishedAboutPage/);
   assert.match(sitemapSource, /getPublishedContactsPage/);
   assert.doesNotMatch(sitemapSource, /getPlaceholder/);

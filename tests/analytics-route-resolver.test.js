@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 
 import { resolveRouteEntity } from "../lib/analytics/route-resolver.js";
 
-test("route resolver maps service, case, about and contacts routes", async () => {
+test("route resolver maps home, service, case, about and contacts routes", async () => {
   const deps = {
+    getPublishedHomePage: async () => ({ entityId: "page_home", revisionId: "revision_home" }),
     getPublishedServiceBySlug: async (slug) => slug === "monolitnye-raboty"
       ? { entityId: "service_1", revisionId: "revision_service_1" }
       : null,
@@ -15,6 +16,14 @@ test("route resolver maps service, case, about and contacts routes", async () =>
     getPublishedContactsPage: async () => ({ entityId: "page_contacts", revisionId: "revision_contacts" })
   };
 
+  assert.deepEqual(await resolveRouteEntity("/", deps), {
+    page_path: "/",
+    entity_type: "page",
+    entity_id: "page_home",
+    page_kind: "home",
+    published_revision_id: "revision_home",
+    resolution_status: "resolved"
+  });
   assert.deepEqual(await resolveRouteEntity("/services/monolitnye-raboty?utm_source=yandex", deps), {
     page_path: "/services/monolitnye-raboty",
     entity_type: "service",
@@ -32,6 +41,7 @@ test("route resolver returns unmapped safely instead of dropping unknown URLs", 
   const result = await resolveRouteEntity("/old-service?foo=bar", {
     getPublishedServiceBySlug: async () => null,
     getPublishedCaseBySlug: async () => null,
+    getPublishedHomePage: async () => null,
     getPublishedAboutPage: async () => null,
     getPublishedContactsPage: async () => null
   });

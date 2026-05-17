@@ -6,22 +6,20 @@ function readSource(relativePath) {
   return readFileSync(new URL(relativePath, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 }
 
-test("home route behaves as service rental landing and is not admin-centric", () => {
+test("home route is the canonical content-managed Home page", () => {
   const homeSource = readSource("../app/page.js");
 
-  assert.match(homeSource, /PRIMARY_SERVICE_SLUG = "arenda-tehniki"/);
-  assert.match(homeSource, /getPublishedServiceBySlug/);
-  assert.match(homeSource, /buildEquipmentCardsSectionModel/);
-  assert.match(homeSource, /EquipmentCardsSection/);
-  assert.match(homeSource, /rotateItemsByDay/);
-  assert.match(homeSource, /hasMoreServices/);
-  assert.match(homeSource, /preview-home-services/);
+  assert.match(homeSource, /getPublishedHomePage/);
+  assert.match(homeSource, /getPlaceholderHomePage/);
+  assert.match(homeSource, /StandalonePage/);
+  assert.match(homeSource, /notFound\(\);/);
   assert.match(homeSource, /hasPublishedCases/);
   assert.match(homeSource, /showCasesNav=\{hasPublishedCases\}/);
-  assert.match(homeSource, /preview-home-cases/);
-  assert.match(homeSource, /preview-home-empty/);
-  assert.match(homeSource, /href=\{`\/services\/\$\{/);
-  assert.match(homeSource, /href="#preview-home-equipment"/);
+  assert.doesNotMatch(homeSource, /PRIMARY_SERVICE_SLUG/);
+  assert.doesNotMatch(homeSource, /getPublishedServiceBySlug/);
+  assert.doesNotMatch(homeSource, /buildEquipmentCardsSectionModel/);
+  assert.doesNotMatch(homeSource, /EquipmentCardsSection/);
+  assert.doesNotMatch(homeSource, /themeGraphiteIndustrial/);
   assert.equal(homeSource.includes("/admin/login"), false);
 });
 

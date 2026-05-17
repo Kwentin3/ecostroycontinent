@@ -80,12 +80,12 @@ test("contact projection supports confirmed email-only public contacts", () => {
   ]);
 });
 
-test("stage4a wiring uses shared contact projection helper on home and public renderer", () => {
+test("stage4a wiring keeps contact projection inside shared public renderers", () => {
   const homeSource = readFileSync(new URL("../app/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const rendererSource = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
-  assert.match(homeSource, /buildPublicContactProjection/);
-  assert.match(homeSource, /contactProjection\.primaryAction/);
+  assert.match(homeSource, /StandalonePage/);
+  assert.doesNotMatch(homeSource, /contactProjection\.primaryAction/);
   assert.match(rendererSource, /buildPublicContactProjection/);
   assert.match(rendererSource, /ContactAction/);
   assert.match(rendererSource, /PublicContactMeta/);

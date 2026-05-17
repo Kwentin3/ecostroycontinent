@@ -725,7 +725,7 @@ function getSection(page, type) {
   return (page.sections || []).find((section) => section.type === type) || null;
 }
 
-function renderPageSections({ page, globalSettings, services, equipment, cases, galleries, contactProjection }) {
+function renderPageSections({ page, globalSettings, services, serviceList = [], equipment, cases, galleries, contactProjection }) {
   const sourceRefs = page.sourceRefs || {};
   const targeting = page.targeting || {};
   const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
@@ -780,6 +780,53 @@ function renderPageSections({ page, globalSettings, services, equipment, cases, 
             </div>
           </section>
         );
+      case PAGE_SECTION_TYPES.SERVICE_LIST: {
+        const selectedServiceIds = section.serviceIds?.length
+          ? section.serviceIds
+          : (sourceRefs.serviceIds || []);
+        const serviceItems = selectedServiceIds.length > 0
+          ? selectedServiceIds.map((id) => services(id)).filter(Boolean)
+          : (Array.isArray(serviceList) ? serviceList : []);
+        const renderableServices = serviceItems.filter((item) => item?.slug && item?.title);
+
+        if (renderableServices.length === 0) {
+          return null;
+        }
+
+        return (
+          <section
+            key={`${section.type}-${section.order}`}
+            id={`preview-page-${section.type}-${section.order}`}
+            data-preview-section={section.type}
+            className={getSectionClassName([styles.stack, styles.previewSection], section)}
+          >
+            {section.title ? <h2>{section.title}</h2> : null}
+            {section.body ? <p className={styles.note}>{section.body}</p> : null}
+            <div className={styles.grid}>
+              {renderableServices.map((item) => (
+                <article key={item.entityId || item.slug} className={getSectionClassName(styles.card, section)}>
+                  <h3>{item.title}</h3>
+                  <p>{normalizeLegacyCopy(item.summary || item.serviceScope || item.problemsSolved || PUBLIC_COPY.publishedEntityFallback)}</p>
+                  <Link
+                    className={styles.actionLink}
+                    href={`/services/${item.slug}`}
+                    {...analyticsProps({
+                      id: `page_service_${item.entityId || item.slug}`,
+                      event: "service_card_opened",
+                      section: "page-services",
+                      targetType: "service",
+                      targetId: item.entityId || item.slug,
+                      cardAction: "open"
+                    })}
+                  >
+                    {PUBLIC_COPY.openService}
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </section>
+        );
+      }
       case PAGE_SECTION_TYPES.SERVICE_SCOPE:
         return (
           <section
@@ -1393,7 +1440,9 @@ export function StandalonePage({
     ? "/contacts"
     : page.pageType === PAGE_TYPES.ABOUT
       ? "/about"
-      : "/";
+      : page.pageType === PAGE_TYPES.HOME
+        ? "/"
+        : "/";
   const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: page.h1 || page.title });
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
 
@@ -1418,7 +1467,9 @@ export function StandalonePage({
           )}
         >
           <p className={styles.eyebrow}>
-            {page.pageType === PAGE_TYPES.SERVICE_LANDING
+            {page.pageType === PAGE_TYPES.HOME
+              ? globalSettings?.publicBrandName || PUBLIC_COPY.pageEyebrow
+              : page.pageType === PAGE_TYPES.SERVICE_LANDING
               ? "Страница услуги"
               : page.pageType === PAGE_TYPES.EQUIPMENT_LANDING
                 ? "Страница техники"
@@ -1451,6 +1502,7 @@ export function StandalonePage({
             page,
             globalSettings,
             services,
+            serviceList: serviceLinks,
             equipment: equipment || (() => null),
             cases,
             galleries,

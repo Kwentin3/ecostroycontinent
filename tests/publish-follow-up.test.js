@@ -37,6 +37,10 @@ test("case publish follow-up includes case paths and sitemap", () => {
 });
 
 test("page publish follow-up is scoped to canonical standalone routes", () => {
+  const homePaths = buildPublishRevalidationPaths({
+    entityType: ENTITY_TYPES.PAGE,
+    nextPayload: { pageType: PAGE_TYPES.HOME }
+  });
   const aboutPaths = buildPublishRevalidationPaths({
     entityType: ENTITY_TYPES.PAGE,
     nextPayload: { pageType: PAGE_TYPES.ABOUT }
@@ -46,8 +50,10 @@ test("page publish follow-up is scoped to canonical standalone routes", () => {
     nextPayload: { pageType: PAGE_TYPES.CONTACTS }
   });
 
+  assert.equal(homePaths.includes("/"), true);
   assert.equal(aboutPaths.includes("/about"), true);
   assert.equal(contactsPaths.includes("/contacts"), true);
+  assert.equal(homePaths.includes("/sitemap.xml"), true);
   assert.equal(aboutPaths.includes("/sitemap.xml"), true);
   assert.equal(contactsPaths.includes("/sitemap.xml"), true);
 });

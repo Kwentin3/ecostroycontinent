@@ -56,6 +56,24 @@ test("launch ownership guard blocks new legacy page types in strict mode", () =>
   );
 });
 
+test("launch ownership guard allows canonical standalone page types in strict mode", () => {
+  assert.doesNotThrow(() => assertPageTypeAllowedForLaunchOwnership({
+    strictMode: true,
+    nextPageType: PAGE_TYPES.HOME,
+    previousPageType: ""
+  }));
+  assert.doesNotThrow(() => assertPageTypeAllowedForLaunchOwnership({
+    strictMode: true,
+    nextPageType: PAGE_TYPES.ABOUT,
+    previousPageType: ""
+  }));
+  assert.doesNotThrow(() => assertPageTypeAllowedForLaunchOwnership({
+    strictMode: true,
+    nextPageType: PAGE_TYPES.CONTACTS,
+    previousPageType: ""
+  }));
+});
+
 test("launch ownership guard allows updates when legacy page type stays unchanged", () => {
   assert.doesNotThrow(() => assertPageTypeAllowedForLaunchOwnership({
     strictMode: true,

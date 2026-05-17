@@ -16,7 +16,6 @@ test("page registry keeps compact stats and page-owned preview scaffolding", () 
   assert.match(source, /summary = null/);
   assert.match(source, /useState\("list"\)/);
   assert.match(source, />\s*Превью\s*</);
-  assert.match(source, /homeLandingSurface = null/);
   assert.match(source, /registryStats = useMemo/);
   assert.match(source, /styles\.statsRow/);
   assert.match(source, /renderPageCardPreview/);
@@ -36,21 +35,23 @@ test("page registry keeps compact stats and page-owned preview scaffolding", () 
   assert.match(css, /\.previewLayoutSplit\s+\.pagePreviewFrame\s*\{/);
 });
 
-test("page registry exposes home landing as a system surface instead of a duplicate page", () => {
+test("page registry treats home as a normal page-owned record", () => {
   const source = readUtf8(componentPath);
   const css = readUtf8(cssPath);
   const routeSource = readUtf8(new URL("../../app/admin/(console)/entities/[entityType]/page.js", import.meta.url));
 
-  assert.match(source, /renderHomeLandingSurface/);
-  assert.match(source, /Системные витрины/);
-  assert.match(source, /Главная не хранит копию текста/);
-  assert.match(source, /homeLandingSurface/);
-  assert.match(routeSource, /buildHomeLandingSurface/);
-  assert.match(routeSource, /homeLandingSurface=\{homeLandingSurface\}/);
-  assert.match(routeSource, /listEntityCards\(ENTITY_TYPES\.CASE\)/);
-  assert.match(css, /\.systemSurfaces\s*\{/);
-  assert.match(css, /\.systemCard\s*\{/);
-  assert.match(css, /\.systemActions\s*\{/);
+  assert.match(source, /getRecordPublicPath/);
+  assert.match(source, /record\?\.metadata\?\.pageType === "home"/);
+  assert.match(source, /<option value="home">Главная<\/option>/);
+  assert.doesNotMatch(source, /renderHomeLandingSurface/);
+  assert.doesNotMatch(source, /Системные витрины/);
+  assert.doesNotMatch(source, /homeLandingSurface/);
+  assert.doesNotMatch(routeSource, /buildHomeLandingSurface/);
+  assert.doesNotMatch(routeSource, /homeLandingSurface=\{homeLandingSurface\}/);
+  assert.doesNotMatch(routeSource, /listEntityCards\(ENTITY_TYPES\.CASE\)/);
+  assert.doesNotMatch(css, /\.systemSurfaces\s*\{/);
+  assert.doesNotMatch(css, /\.systemCard\s*\{/);
+  assert.doesNotMatch(css, /\.systemActions\s*\{/);
 });
 
 test("page registry preview fits real hero media into a mini-page viewport instead of cropping it", () => {
