@@ -306,28 +306,6 @@ function GallerySection({
   );
 }
 
-function Breadcrumbs({ items }) {
-  if (!Array.isArray(items) || items.length === 0) {
-    return null;
-  }
-
-  return (
-    <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
-      <ol>
-        {items.map((item, index) => {
-          const isLast = index === items.length - 1;
-
-          return (
-            <li key={item.key || `${item.label}-${index}`}>
-              {item.href && !isLast ? <Link href={item.href}>{item.label}</Link> : <span>{item.label}</span>}
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-}
-
 function ContactAction({
   action,
   className,
@@ -705,7 +683,6 @@ export function PublicPageShell({
           {PLACEHOLDER_MARKER_TEXT}
         </div>
       ) : null}
-      <Breadcrumbs items={resolvedBreadcrumbs} />
       {children}
       <footer className={styles.publicShellFooter}>
         <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>

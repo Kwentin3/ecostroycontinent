@@ -33,16 +33,20 @@ test("public navigation provides bounded unique quick links for services dropdow
   assert.deepEqual(links.map((item) => item.href), ["/services/drainage", "/services/demolition"]);
 });
 
-test("service quick access stays out of canonical hub routes", () => {
+test("service quick access renders only in service and case detail context", () => {
   const quickLinks = [
-    { key: "service_1", href: "/services/drainage", label: "Дренаж" }
+    { key: "service_1", href: "/services/drainage", label: "Дренаж" },
+    { key: "service_2", href: "/services/demolition", label: "Демонтаж" }
   ];
 
   assert.equal(shouldRenderServiceQuickAccess("/", quickLinks), false);
   assert.equal(shouldRenderServiceQuickAccess("/services", quickLinks), false);
-  assert.equal(shouldRenderServiceQuickAccess("/about", quickLinks), true);
-  assert.equal(shouldRenderServiceQuickAccess("/contacts?utm=1", quickLinks), true);
-  assert.equal(shouldRenderServiceQuickAccess("/about", []), false);
+  assert.equal(shouldRenderServiceQuickAccess("/cases", quickLinks), false);
+  assert.equal(shouldRenderServiceQuickAccess("/about", quickLinks), false);
+  assert.equal(shouldRenderServiceQuickAccess("/contacts?utm=1", quickLinks), false);
+  assert.equal(shouldRenderServiceQuickAccess("/services/drainage", quickLinks), true);
+  assert.equal(shouldRenderServiceQuickAccess("/cases/project-x", quickLinks), true);
+  assert.equal(shouldRenderServiceQuickAccess("/services/drainage", []), false);
 });
 
 test("public breadcrumbs reflect index and detail route ownership", () => {
@@ -81,12 +85,13 @@ test("public nav model keeps launch-core menu entries stable", () => {
   );
 });
 
-test("public renderers include global nav shell, breadcrumbs and quick-access services surface", () => {
+test("public renderers include global nav shell and contextual quick-access services surface", () => {
   const source = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const css = readFileSync(new URL("../components/public/public-ui.module.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
   assert.match(source, /aria-label="Главная навигация"/);
-  assert.match(source, /aria-label="Хлебные крошки"/);
+  assert.doesNotMatch(source, /styles\.breadcrumbs/);
+  assert.doesNotMatch(source, /function Breadcrumbs/);
   assert.match(source, /servicesQuickAccess/);
   assert.match(source, /className=\{styles\.publicShellBrand\}/);
   assert.match(source, /id: "nav_brand"/);
@@ -108,6 +113,6 @@ test("public renderers include global nav shell, breadcrumbs and quick-access se
   assert.match(css, /\.servicesQuickAccess\s*\{/);
   assert.match(css, /\.servicesQuickAccessLabel\s*\{/);
   assert.match(css, /\.servicesQuickAccess a:focus-visible/);
-  assert.match(css, /\.breadcrumbs\s*\{/);
+  assert.doesNotMatch(css, /\.breadcrumbs\s*\{/);
   assert.match(css, /\.publicShellFooterNav\s*\{/);
 });
