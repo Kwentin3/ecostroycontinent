@@ -727,6 +727,22 @@ function getSection(page, type) {
   return (page.sections || []).find((section) => section.type === type) || null;
 }
 
+function getStandalonePageHeroEyebrow(page, heroSection = null) {
+  if (page.pageType === PAGE_TYPES.HOME) {
+    return heroSection?.title || "";
+  }
+
+  if (page.pageType === PAGE_TYPES.SERVICE_LANDING) {
+    return "Страница услуги";
+  }
+
+  if (page.pageType === PAGE_TYPES.EQUIPMENT_LANDING) {
+    return "Страница техники";
+  }
+
+  return PUBLIC_COPY.pageEyebrow;
+}
+
 function renderPageSections({ page, globalSettings, services, serviceList = [], equipment, cases, galleries, contactProjection }) {
   const sourceRefs = page.sourceRefs || {};
   const targeting = page.targeting || {};
@@ -1447,6 +1463,7 @@ export function StandalonePage({
         : "/";
   const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: page.h1 || page.title });
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
+  const heroEyebrow = getStandalonePageHeroEyebrow(page, heroSection);
 
   return (
     <PublicPageShell
@@ -1468,15 +1485,7 @@ export function StandalonePage({
             heroSection || { surfaceTone: "tinted", textEmphasisPreset: "strong" }
           )}
         >
-          <p className={styles.eyebrow}>
-            {page.pageType === PAGE_TYPES.HOME
-              ? globalSettings?.publicBrandName || PUBLIC_COPY.pageEyebrow
-              : page.pageType === PAGE_TYPES.SERVICE_LANDING
-              ? "Страница услуги"
-              : page.pageType === PAGE_TYPES.EQUIPMENT_LANDING
-                ? "Страница техники"
-                : PUBLIC_COPY.pageEyebrow}
-          </p>
+          {heroEyebrow ? <p className={styles.eyebrow}>{heroEyebrow}</p> : null}
           <h1>{page.h1}</h1>
           <p>{heroSection?.body || page.intro}</p>
           {heroSection?.trustText ? <p className={styles.note}>{heroSection.trustText}</p> : null}

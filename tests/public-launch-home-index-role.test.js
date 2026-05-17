@@ -57,3 +57,13 @@ test("public route shells keep the launch theme when a route has no pageThemeKey
   assert.match(rendererSource, /resolvedThemeClassName = themeClassName \|\| DEFAULT_PUBLIC_SITE_THEME_CLASS_NAME/);
   assert.match(rendererSource, /className=\{\[styles\.publicShell, resolvedThemeClassName\]\.filter\(Boolean\)\.join\(" "\)\}/);
 });
+
+test("home hero does not auto-duplicate the brand eyebrow", () => {
+  const rendererSource = readSource("../components/public/PublicRenderers.js");
+
+  assert.match(rendererSource, /getStandalonePageHeroEyebrow/);
+  assert.match(rendererSource, /page\.pageType === PAGE_TYPES\.HOME/);
+  assert.match(rendererSource, /return heroSection\?\.title \|\| ""/);
+  assert.match(rendererSource, /heroEyebrow \? <p className=\{styles\.eyebrow\}>\{heroEyebrow\}<\/p> : null/);
+  assert.doesNotMatch(rendererSource, /PAGE_TYPES\.HOME[\s\S]{0,120}globalSettings\?\.publicBrandName/);
+});
