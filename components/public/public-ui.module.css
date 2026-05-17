@@ -167,7 +167,6 @@
 .publicShellMeta a:focus-visible,
 .publicShellBrand:focus-visible,
 .publicShellNavLink:focus-visible,
-.publicShellFooterLink:focus-visible,
 .servicesQuickAccess a:focus-visible {
   outline: none;
   box-shadow: 0 0 0 4px var(--focus-ring);
@@ -203,8 +202,7 @@
   min-width: 0;
 }
 
-.publicShellNavLink,
-.publicShellFooterLink {
+.publicShellNavLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -220,8 +218,7 @@
     transform 140ms ease;
 }
 
-.publicShellNavLink:hover,
-.publicShellFooterLink:hover {
+.publicShellNavLink:hover {
   transform: translateY(-1px);
   border-color: rgba(134, 110, 75, 0.2);
   background: rgba(255, 255, 255, 0.55);
@@ -232,14 +229,6 @@
   color: var(--cta-ink);
   border-color: var(--cta-border);
   box-shadow: var(--cta-shadow);
-}
-
-.publicShellFooterNav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
 }
 
 .servicesQuickAccess {
@@ -1092,8 +1081,7 @@
   font-size: 1.12rem;
 }
 
-:global([data-preview-device="mobile"]) .publicShellNav,
-:global([data-preview-device="mobile"]) .publicShellFooterNav {
+:global([data-preview-device="mobile"]) .publicShellNav {
   flex-wrap: wrap;
   justify-content: flex-start;
 }
@@ -1383,8 +1371,7 @@
     font-size: 1.12rem;
   }
 
-  .publicShellNav,
-  .publicShellFooterNav {
+  .publicShellNav {
     flex-wrap: wrap;
     justify-content: flex-start;
   }

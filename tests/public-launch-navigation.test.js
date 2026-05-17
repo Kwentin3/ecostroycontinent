@@ -98,7 +98,9 @@ test("public renderers include global nav shell and contextual quick-access serv
   assert.match(source, /shouldRenderServiceQuickAccess/);
   assert.match(source, /styles\.servicesQuickAccessLabel/);
   assert.doesNotMatch(source, /<details className=\{styles\.servicesQuickAccess\}/);
-  assert.match(source, /publicShellFooterNav/);
+  assert.match(source, /<footer className=\{styles\.publicShellFooter\}>/);
+  assert.doesNotMatch(source, /publicShellFooterNav/);
+  assert.doesNotMatch(source, /footer-nav/);
   assert.match(source, /buildPublicBreadcrumbs/);
   assert.equal(source.includes("Публичный сайт"), false);
 
@@ -115,5 +117,6 @@ test("public renderers include global nav shell and contextual quick-access serv
   assert.match(css, /\.servicesQuickAccessLabel\s*\{/);
   assert.match(css, /\.servicesQuickAccess a:focus-visible/);
   assert.doesNotMatch(css, /\.breadcrumbs\s*\{/);
-  assert.match(css, /\.publicShellFooterNav\s*\{/);
+  assert.doesNotMatch(css, /\.publicShellFooterNav\s*\{/);
+  assert.doesNotMatch(css, /\.publicShellFooterLink\s*\{/);
 });

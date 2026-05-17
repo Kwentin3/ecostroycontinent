@@ -686,27 +686,6 @@ export function PublicPageShell({
       {children}
       <footer className={styles.publicShellFooter}>
         <strong>{globalSettings?.publicBrandName || "Экостройконтинент"}</strong>
-        <nav className={styles.publicShellFooterNav} aria-label="Навигация в подвале">
-          {navItems.map((item) => (
-            <Link
-              key={`footer-${item.key}`}
-              href={item.href}
-              className={styles.publicShellFooterLink}
-              {...analyticsProps({
-                id: `footer_${item.key}`,
-                event: "cta_clicked",
-                section: "footer-nav",
-                targetType: "page",
-                targetId: item.href,
-                navItem: item.key,
-                ctaKind: "navigation",
-                destinationKind: getDestinationKind(item.href, "page")
-              })}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
         <PublicContactMeta contactProjection={contactProjection} />
       </footer>
     </div>
