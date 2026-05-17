@@ -9,7 +9,8 @@ import {
   buildPublicBreadcrumbs,
   buildServiceQuickLinks,
   getPublicNavItems,
-  resolvePublicNavSection
+  resolvePublicNavSection,
+  shouldRenderServiceQuickAccess
 } from "../../lib/public-launch/navigation.js";
 import { buildPublicContactProjection } from "../../lib/public-launch/contact-projection.js";
 import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
@@ -602,6 +603,7 @@ export function PublicPageShell({
   const navItems = getPublicNavItems({ includeCases: showCasesNav });
   const activeSection = resolvePublicNavSection(currentPath);
   const quickServiceLinks = buildServiceQuickLinks(serviceLinks, { limit: 8 });
+  const showServiceQuickAccess = shouldRenderServiceQuickAccess(currentPath, quickServiceLinks);
   const resolvedBreadcrumbs = Array.isArray(breadcrumbs) ? breadcrumbs : [];
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
   const breadcrumbStructuredData = allowStructuredData
@@ -661,9 +663,9 @@ export function PublicPageShell({
         </nav>
         <PublicContactMeta contactProjection={contactProjection} />
       </header>
-      {quickServiceLinks.length > 0 ? (
-        <details className={styles.servicesQuickAccess}>
-          <summary>Быстрый доступ к услугам</summary>
+      {showServiceQuickAccess ? (
+        <nav className={styles.servicesQuickAccess} aria-label="Быстрый доступ к услугам">
+          <span className={styles.servicesQuickAccessLabel}>Услуги</span>
           <ul>
             {quickServiceLinks.map((item) => (
               <li key={item.key}>
@@ -683,7 +685,7 @@ export function PublicPageShell({
               </li>
             ))}
           </ul>
-        </details>
+        </nav>
       ) : null}
       {placeholderMarker ? (
         <div className={styles.placeholderMarker} role="note" aria-label="Техническая метка заглушки">

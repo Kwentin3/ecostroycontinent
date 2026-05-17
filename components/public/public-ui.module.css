@@ -148,7 +148,8 @@
 
 .publicShellMeta a:focus-visible,
 .publicShellNavLink:focus-visible,
-.publicShellFooterLink:focus-visible {
+.publicShellFooterLink:focus-visible,
+.servicesQuickAccess a:focus-visible {
   outline: none;
   box-shadow: 0 0 0 4px var(--focus-ring);
 }
@@ -228,28 +229,54 @@
   max-width: 1080px;
   width: calc(100% - 48px);
   margin: -10px auto 0;
-  border-radius: 16px;
-  border: 1px dashed var(--surface-border);
-  background: rgba(255, 255, 255, 0.84);
+  border-radius: 999px;
+  border: 1px solid var(--section-plain-border);
+  background: var(--section-plain-bg);
   color: var(--page-ink);
-  padding: 10px 14px;
+  padding: 8px 10px 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--surface-shadow);
 }
 
-.servicesQuickAccess summary {
-  cursor: pointer;
+.servicesQuickAccessLabel {
+  flex: 0 0 auto;
   font-weight: 600;
   color: var(--page-heading-ink);
+  line-height: 1.4;
 }
 
 .servicesQuickAccess ul {
-  margin: 10px 0 0;
-  padding-left: 18px;
-  display: grid;
-  gap: 6px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
 }
 
 .servicesQuickAccess a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
   color: var(--page-link);
+  text-decoration: none;
+  background: var(--card-bg);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.servicesQuickAccess a:hover {
+  transform: translateY(-1px);
+  color: var(--page-link-hover);
+  border-color: var(--page-link);
 }
 
 .placeholderMarker {
@@ -1087,6 +1114,12 @@
   width: calc(100% - 32px);
 }
 
+:global([data-preview-device="mobile"]) .servicesQuickAccess {
+  border-radius: 18px;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
 :global([data-preview-device="mobile"]) .hero,
 :global([data-preview-device="mobile"]) .mediaHero,
 :global([data-preview-device="mobile"]) .card,
@@ -1348,6 +1381,12 @@
   .breadcrumbs,
   .placeholderMarker {
     width: calc(100% - 32px);
+  }
+
+  .servicesQuickAccess {
+    border-radius: 18px;
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .hero,

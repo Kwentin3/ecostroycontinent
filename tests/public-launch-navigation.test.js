@@ -6,7 +6,8 @@ import {
   buildPublicBreadcrumbs,
   buildServiceQuickLinks,
   getPublicNavItems,
-  resolvePublicNavSection
+  resolvePublicNavSection,
+  shouldRenderServiceQuickAccess
 } from "../lib/public-launch/navigation.js";
 
 test("public navigation resolves active section for canonical launch routes", () => {
@@ -30,6 +31,18 @@ test("public navigation provides bounded unique quick links for services dropdow
 
   assert.equal(links.length, 2);
   assert.deepEqual(links.map((item) => item.href), ["/services/drainage", "/services/demolition"]);
+});
+
+test("service quick access stays out of canonical hub routes", () => {
+  const quickLinks = [
+    { key: "service_1", href: "/services/drainage", label: "Дренаж" }
+  ];
+
+  assert.equal(shouldRenderServiceQuickAccess("/", quickLinks), false);
+  assert.equal(shouldRenderServiceQuickAccess("/services", quickLinks), false);
+  assert.equal(shouldRenderServiceQuickAccess("/about", quickLinks), true);
+  assert.equal(shouldRenderServiceQuickAccess("/contacts?utm=1", quickLinks), true);
+  assert.equal(shouldRenderServiceQuickAccess("/about", []), false);
 });
 
 test("public breadcrumbs reflect index and detail route ownership", () => {
@@ -75,6 +88,9 @@ test("public renderers include global nav shell, breadcrumbs and quick-access se
   assert.match(source, /aria-label="Главная навигация"/);
   assert.match(source, /aria-label="Хлебные крошки"/);
   assert.match(source, /servicesQuickAccess/);
+  assert.match(source, /shouldRenderServiceQuickAccess/);
+  assert.match(source, /styles\.servicesQuickAccessLabel/);
+  assert.doesNotMatch(source, /<details className=\{styles\.servicesQuickAccess\}/);
   assert.match(source, /publicShellFooterNav/);
   assert.match(source, /buildPublicBreadcrumbs/);
   assert.equal(source.includes("Публичный сайт"), false);
@@ -86,6 +102,8 @@ test("public renderers include global nav shell, breadcrumbs and quick-access se
   assert.match(css, /\.publicShellMeta a\s*\{/);
   assert.match(css, /\.publicShellMeta a:focus-visible/);
   assert.match(css, /\.servicesQuickAccess\s*\{/);
+  assert.match(css, /\.servicesQuickAccessLabel\s*\{/);
+  assert.match(css, /\.servicesQuickAccess a:focus-visible/);
   assert.match(css, /\.breadcrumbs\s*\{/);
   assert.match(css, /\.publicShellFooterNav\s*\{/);
 });
