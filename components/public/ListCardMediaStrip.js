@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PUBLIC_COPY } from "../../lib/ui-copy.js";
 import styles from "./public-ui.module.css";
 
+const SCROLL_EDGE_TOLERANCE = 4;
+
 export function ListCardMediaStrip({ assets = [], label = "Изображения услуги" }) {
   const stripRef = useRef(null);
   const [scrollState, setScrollState] = useState({
@@ -24,9 +26,9 @@ export function ListCardMediaStrip({ assets = [], label = "Изображени�
     const scrollLeft = Math.max(0, strip.scrollLeft);
 
     setScrollState({
-      canScroll: maxScrollLeft > 1,
-      canScrollBack: scrollLeft > 1,
-      canScrollForward: scrollLeft < maxScrollLeft - 1
+      canScroll: maxScrollLeft > SCROLL_EDGE_TOLERANCE,
+      canScrollBack: scrollLeft > SCROLL_EDGE_TOLERANCE,
+      canScrollForward: scrollLeft < maxScrollLeft - SCROLL_EDGE_TOLERANCE
     });
   }, []);
 
