@@ -83,6 +83,7 @@ test("contact projection supports confirmed email-only public contacts", () => {
 test("stage4a wiring keeps contact projection inside shared public renderers", () => {
   const homeSource = readFileSync(new URL("../app/page.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const rendererSource = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const publicUiSource = readFileSync(new URL("../components/public/public-ui.module.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
   assert.match(homeSource, /StandalonePage/);
   assert.doesNotMatch(homeSource, /contactProjection\.primaryAction/);
@@ -92,6 +93,10 @@ test("stage4a wiring keeps contact projection inside shared public renderers", (
   assert.match(rendererSource, /publicContactItems/);
   assert.match(rendererSource, /ServiceAreaNote/);
   assert.match(rendererSource, /contactProjection\.hasPublicRegion/);
+  assert.match(rendererSource, /const ctaAction = contactProjection\?\.primaryAction/);
+  assert.match(rendererSource, /<ContactAction\s+action=\{ctaAction\}/);
+  assert.doesNotMatch(rendererSource, /<p className=\{styles\.ctaChip\}/);
+  assert.match(publicUiSource, /\.ctaChip:focus-visible/);
   assert.match(rendererSource, /contact-request/);
   assert.match(rendererSource, /data-contact-binding-mode/);
   assert.match(rendererSource, /data-contact-consistency-token/);

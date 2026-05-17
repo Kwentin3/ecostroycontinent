@@ -989,7 +989,14 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
           </section>
         );
       }
-      case PAGE_SECTION_TYPES.CTA:
+      case PAGE_SECTION_TYPES.CTA: {
+        const ctaAction = contactProjection?.primaryAction
+          ? {
+              ...contactProjection.primaryAction,
+              label: section.ctaLabel || contactProjection.primaryAction.label
+            }
+          : null;
+
         return (
           <section
             key={`${section.type}-${section.order}`}
@@ -1000,10 +1007,15 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
             <h2>{section.title || "Оставьте заявку"}</h2>
             <div className={styles.ctaRow}>
               <p className={styles.ctaCopy}>{section.body || globalSettings?.defaultCtaDescription || ""}</p>
-              <p className={styles.ctaChip}>{section.ctaLabel || globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}</p>
+              <ContactAction
+                action={ctaAction}
+                className={styles.ctaChip}
+                defaultLabel={globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}
+              />
             </div>
           </section>
         );
+      }
       default:
         return null;
     }

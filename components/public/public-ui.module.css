@@ -1345,13 +1345,34 @@
 
 .ctaChip {
   margin: 0;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 11px 18px;
   border-radius: 999px;
   background: var(--cta-bg);
   color: var(--cta-ink);
+  text-decoration: none;
   border: 1px solid var(--cta-border);
   box-shadow: var(--cta-shadow);
   font-weight: 600;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.ctaChip:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.ctaChip:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px var(--focus-ring),
+    var(--cta-shadow);
 }
 
 .sectionTonePlain {
