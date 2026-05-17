@@ -72,6 +72,7 @@ Purpose:
 Must include:
 
 - service hub блок с переходами на service detail;
+- service hub использует тот же компактный service-card контракт, что и `/services`: заголовок, короткое описание, опубликованная медиалента в одну строку со скроллом при overflow, переход в detail по карточке;
 - proof-led блоки (кейсы/фактура/FAQ/trust);
 - явный CTA к контакту.
 
@@ -90,12 +91,15 @@ Must include:
 
 - список publish-ready service cards;
 - быстрые переходы к detail;
+- service cards в том же визуальном и интерактивном контракте, что на Home service hub;
+- компактная медиалента карточки собирается только из опубликованных связанных media/gallery/equipment/case материалов;
 - вторичный CTA к контакту.
 
 Must not:
 
 - быть тупиком без перехода в detail;
 - содержать дублирующий full-detail контент каждой услуги.
+- иметь отдельный hardcoded card renderer, расходящийся с Home service hub.
 
 ### 4.3 Service detail (`/services/[slug]`)
 

@@ -714,7 +714,53 @@ function getStandalonePageHeroEyebrow(page, heroSection = null) {
   return PUBLIC_COPY.pageEyebrow;
 }
 
-function renderPageSections({ page, globalSettings, services, serviceList = [], equipment, cases, galleries, contactProjection }) {
+// Shared public card contract for Home service hubs and system list pages.
+function PublicEntityListCard({
+  item,
+  href,
+  headingLevel = 2,
+  description,
+  mediaAssets = [],
+  analyticsId,
+  analyticsEvent = "service_card_opened",
+  analyticsSection = "public-list",
+  targetType = "service",
+  targetId = "",
+  sectionLike = null
+}) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
+  const articleClassName = sectionLike
+    ? getSectionClassName([styles.card, styles.listCard], sectionLike)
+    : `${styles.card} ${styles.listCard}`;
+
+  return (
+    <article className={articleClassName}>
+      <Heading>
+        <Link
+          className={styles.listCardPrimaryLink}
+          href={href}
+          aria-label={`Открыть: ${item.title}`}
+          {...analyticsProps({
+            id: analyticsId,
+            event: analyticsEvent,
+            section: analyticsSection,
+            targetType,
+            targetId: targetId || item.entityId || item.slug,
+            cardAction: "open"
+          })}
+        >
+          {item.title}
+        </Link>
+      </Heading>
+      <CaseLocationLabel location={item.location} />
+      <p>{description}</p>
+      <ListCardMediaStrip assets={mediaAssets} />
+      <span className={styles.actionLink} aria-hidden="true">{PUBLIC_COPY.listOpen}</span>
+    </article>
+  );
+}
+
+function renderPageSections({ page, globalSettings, services, serviceList = [], equipment, cases, galleries, resolveMedia, contactProjection }) {
   const sourceRefs = page.sourceRefs || {};
   const targeting = page.targeting || {};
   const mediaSettings = normalizePageMediaSettings(page.mediaSettings, page.pageType);
@@ -792,26 +838,32 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
             {section.title ? <h2>{section.title}</h2> : null}
             {section.body ? <p className={styles.note}>{section.body}</p> : null}
             <div className={styles.grid}>
-              {renderableServices.map((item) => (
-                <article key={item.entityId || item.slug} className={getSectionClassName(styles.card, section)}>
-                  <h3>{item.title}</h3>
-                  <p>{normalizeLegacyCopy(item.summary || item.serviceScope || item.problemsSolved || PUBLIC_COPY.publishedEntityFallback)}</p>
-                  <Link
-                    className={styles.actionLink}
+              {renderableServices.map((item) => {
+                const mediaAssets = buildListCardMediaAssets({
+                  item,
+                  resolveMedia,
+                  resolveGallery: galleries,
+                  resolveEquipment: equipment,
+                  resolveCase: cases
+                });
+
+                return (
+                  <PublicEntityListCard
+                    key={item.entityId || item.slug}
+                    item={item}
                     href={`/services/${item.slug}`}
-                    {...analyticsProps({
-                      id: `page_service_${item.entityId || item.slug}`,
-                      event: "service_card_opened",
-                      section: "page-services",
-                      targetType: "service",
-                      targetId: item.entityId || item.slug,
-                      cardAction: "open"
-                    })}
-                  >
-                    {PUBLIC_COPY.openService}
-                  </Link>
-                </article>
-              ))}
+                    headingLevel={3}
+                    description={normalizeLegacyCopy(item.summary || item.serviceScope || item.problemsSolved || PUBLIC_COPY.publishedEntityFallback)}
+                    mediaAssets={mediaAssets}
+                    sectionLike={section}
+                    analyticsId={`page_service_${item.entityId || item.slug}`}
+                    analyticsEvent="service_card_opened"
+                    analyticsSection="page-services"
+                    targetType="service"
+                    targetId={item.entityId || item.slug}
+                  />
+                );
+              })}
             </div>
           </section>
         );
@@ -1035,29 +1087,18 @@ export function PublicListPage({
               const itemHref = `${itemHrefPrefix}/${item.slug}`;
 
               return (
-                <article key={item.entityId || item.slug} className={`${styles.card} ${styles.listCard}`}>
-                  <h2>
-                    <Link
-                      className={styles.listCardPrimaryLink}
-                      href={itemHref}
-                      aria-label={`Открыть: ${item.title}`}
-                      {...analyticsProps({
-                        id: `list_${item.entityId || item.slug}`,
-                        event: itemHrefPrefix === "/cases" ? "case_card_opened" : "service_card_opened",
-                        section: "public-list",
-                        targetType: itemHrefPrefix === "/cases" ? "case" : "service",
-                        targetId: item.entityId || item.slug,
-                        cardAction: "open"
-                      })}
-                    >
-                      {item.title}
-                    </Link>
-                  </h2>
-                  <CaseLocationLabel location={item.location} />
-                  <p>{normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}</p>
-                  <ListCardMediaStrip assets={mediaAssets} />
-                  <span className={styles.actionLink} aria-hidden="true">{PUBLIC_COPY.listOpen}</span>
-                </article>
+                <PublicEntityListCard
+                  key={item.entityId || item.slug}
+                  item={item}
+                  href={itemHref}
+                  description={normalizeLegacyCopy(item.summary || item.result || item.location || item.intro || PUBLIC_COPY.publishedEntityFallback)}
+                  mediaAssets={mediaAssets}
+                  analyticsId={`list_${item.entityId || item.slug}`}
+                  analyticsEvent={itemHrefPrefix === "/cases" ? "case_card_opened" : "service_card_opened"}
+                  analyticsSection="public-list"
+                  targetType={itemHrefPrefix === "/cases" ? "case" : "service"}
+                  targetId={item.entityId || item.slug}
+                />
               );
             })}
           </section>
@@ -1514,6 +1555,7 @@ export function StandalonePage({
             equipment: equipment || (() => null),
             cases,
             galleries,
+            resolveMedia,
             contactProjection
           })}
         </section>

@@ -15,6 +15,8 @@ test("home route is the canonical content-managed Home page", () => {
   assert.match(homeSource, /notFound\(\);/);
   assert.match(homeSource, /hasPublishedCases/);
   assert.match(homeSource, /showCasesNav=\{hasPublishedCases\}/);
+  assert.match(homeSource, /resolveMedia=/);
+  assert.match(homeSource, /galleries=/);
   assert.doesNotMatch(homeSource, /PRIMARY_SERVICE_SLUG/);
   assert.doesNotMatch(homeSource, /getPublishedServiceBySlug/);
   assert.doesNotMatch(homeSource, /buildEquipmentCardsSectionModel/);
@@ -55,7 +57,13 @@ test("public list renderer supports empty-state and next-step sections", () => {
   assert.match(rendererSource, /className=\{styles\.visuallyHidden\}/);
   assert.match(rendererSource, /buildListCardMediaAssets/);
   assert.match(rendererSource, /ListCardMediaStrip/);
+  assert.match(rendererSource, /PublicEntityListCard/);
   assert.match(rendererSource, /listCardPrimaryLink/);
+  assert.match(rendererSource, /analyticsSection="page-services"/);
+  assert.match(rendererSource, /headingLevel=\{3\}/);
+  assert.match(rendererSource, /resolveGallery: galleries/);
+  assert.match(rendererSource, /resolveEquipment: equipment/);
+  assert.match(rendererSource, /resolveCase: cases/);
   assert.match(rendererSource, /preview-list-next-steps/);
   assert.match(rendererSource, /nextStepPrimaryHref/);
   assert.match(rendererSource, /nextStepSecondaryHref/);
