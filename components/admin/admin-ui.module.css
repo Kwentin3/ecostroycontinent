@@ -561,6 +561,16 @@
   color: #fff;
 }
 
+.editorRailPrimaryFlow {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.editorRailPrimaryFlow .primaryButton {
+  width: 100%;
+  justify-content: center;
+}
+
 .editorRailActionGlyph {
   font-size: 1.05rem;
   line-height: 1;

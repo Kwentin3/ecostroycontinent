@@ -197,7 +197,7 @@ export function EntityEditorForm({
     currentRevision
     && currentRevision.state === "review"
     && userCanPublishRevision(user, entityType, currentRevision)
-    && (!currentRevision.ownerReviewRequired || currentRevision.ownerApprovalStatus === "approved")
+    && currentRevision.ownerApprovalStatus === "approved"
   );
   const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
   const surfaceTitle = entityType === "global_settings" ? "Глобальные настройки" : getPayloadLabel(value);
@@ -643,6 +643,14 @@ export function EntityEditorForm({
               </Link>
             ) : null}
           </div>
+          {canSubmit && currentRevision?.state === "draft" ? (
+            <form action={`/api/admin/revisions/${currentRevision.id}/submit`} method="post" className={styles.editorRailPrimaryFlow}>
+              <input type="hidden" name="returnTo" value={redirectTo} />
+              <button type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`}>
+                {ADMIN_COPY.sendForReview}
+              </button>
+            </form>
+          ) : null}
         </section>
         <ReadinessPanel
           readiness={readiness}

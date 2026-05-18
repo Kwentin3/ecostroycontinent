@@ -395,7 +395,6 @@ function isWaitingForOwnerApproval(item) {
   return Boolean(
     item?.currentRevisionId
     && item?.statusKey === "review"
-    && item?.ownerReviewRequired
     && item?.ownerApprovalStatus !== "approved"
   );
 }
@@ -405,7 +404,7 @@ function canOpenMediaPublishReadiness(item, currentUserRole) {
     item?.currentRevisionId
     && item?.statusKey === "review"
     && currentUserRole === "superadmin"
-    && (!item?.ownerReviewRequired || item?.ownerApprovalStatus === "approved")
+    && item?.ownerApprovalStatus === "approved"
   );
 }
 

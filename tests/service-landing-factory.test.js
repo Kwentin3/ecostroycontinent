@@ -274,7 +274,7 @@ test("buildServiceLandingVerificationReport distinguishes pass, warning, and blo
   assert.equal(warningReport.hasBlocking, false);
   assert.equal(warningReport.hasWarnings, true);
   assert.equal(warningReport.approvalEligible, true);
-  assert.equal(warningReport.publishReady, true);
+  assert.equal(warningReport.publishReady, false);
 
   const blockedSpec = {
     ...spec,

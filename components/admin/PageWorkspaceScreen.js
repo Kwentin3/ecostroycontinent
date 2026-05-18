@@ -579,15 +579,15 @@ export function PageWorkspaceScreen({
   const revisionStateLabel = revision ? getRevisionStateLabel(revision.state) : "Черновика пока нет";
   const ownerApprovalTone = revision?.ownerApprovalStatus === "approved"
     ? "healthy"
-    : revision?.ownerApprovalStatus === "pending"
+    : revision?.ownerApprovalStatus === "pending" || revision?.ownerApprovalStatus === "not_required"
       ? "warning"
       : revision?.ownerApprovalStatus === "rejected"
         ? "danger"
         : "unknown";
-  const ownerApprovalLabel = revision?.ownerReviewRequired
+  const ownerApprovalLabel = revision
     ? getOwnerApprovalStatusLabel(revision.ownerApprovalStatus)
     : "Согласование не требуется";
-  const ownerApprovalPending = Boolean(revision?.ownerReviewRequired && revision.ownerApprovalStatus === "pending");
+  const ownerApprovalPending = Boolean(revision && revision.ownerApprovalStatus !== "approved");
   const canOpenPublishReadiness = Boolean(publishHref && revision?.state === "review");
   const activePublishedRevision = lifecycleState?.hasLivePublishedRevision
     ? {
@@ -627,7 +627,7 @@ export function PageWorkspaceScreen({
     },
     {
       label: "Согласование",
-      tone: revision?.ownerReviewRequired ? ownerApprovalTone : "unknown",
+      tone: revision ? ownerApprovalTone : "unknown",
       detail: ownerApprovalLabel
     },
     {
@@ -1168,7 +1168,7 @@ export function PageWorkspaceScreen({
             <span className={`${styles.badge} ${toneClassName(liveStatus.tone)}`}>{liveStatus.label}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{revision ? `Версия №${revision.revisionNumber} · ${revisionStateLabel}` : "Черновика пока нет"}</span>
             <span className={`${styles.badge} ${styles.toneunknown}`}>{PAGE_TYPE_LABELS[metadata.pageType] || metadata.pageType}</span>
-            {revision?.ownerReviewRequired ? (
+            {revision ? (
               <span className={`${styles.badge} ${toneClassName(ownerApprovalTone)}`}>{ownerApprovalLabel}</span>
             ) : null}
             {compositionDirty ? <span className={`${styles.badge} ${styles.tonewarning}`}>Есть несохраненные изменения</span> : null}

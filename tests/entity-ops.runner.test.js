@@ -382,7 +382,7 @@ test("entity ops runner publishes review revision through workflow route", async
           id: "rev_equipment_1",
           state: "review",
           ownerReviewRequired: false,
-          ownerApprovalStatus: "not_required",
+          ownerApprovalStatus: "approved",
           payload: {
             slug: "shantui-se420lcw"
           }

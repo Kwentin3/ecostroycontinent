@@ -52,14 +52,9 @@ export async function POST(request, { params }, deps = defaultDeps) {
       canRenderPreview: true
     });
 
-    const needsOwnerDecision = Boolean(result?.revision?.ownerReviewRequired);
-    // Review submission and review-screen routing are intentionally separate:
-    // if owner action is not needed, the editor should continue from the source card
-    // and immediately see that the revision is ready for publish.
-    const successPath = !needsOwnerDecision && returnTo ? returnTo : `/admin/review/${revisionId}`;
-    const message = needsOwnerDecision ? feedbackCopy.reviewSubmitted : feedbackCopy.readyToPublish;
-
-    return redirectWithQueryImpl(request, successPath, { message });
+    return redirectWithQueryImpl(request, `/admin/review/${result.revision.id || revisionId}`, {
+      message: feedbackCopy.reviewSubmitted
+    });
   } catch (error) {
     return redirectWithErrorImpl(request, returnTo || `/admin/review/${revisionId}`, error);
   }

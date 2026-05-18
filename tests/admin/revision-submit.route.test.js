@@ -62,7 +62,7 @@ function buildDeps({ ownerReviewRequired = false, submitError = null } = {}) {
   };
 }
 
-test("submit route returns the operator to the source screen when owner action is not required", async () => {
+test("submit route opens review even when the saved draft did not require owner review yet", async () => {
   const response = await POST(
     buildRequest("/admin/entities/media_asset?asset=media_1"),
     { params: { revisionId: "rev_1" } },
@@ -71,9 +71,8 @@ test("submit route returns the operator to the source screen when owner action i
   const location = new URL(response.headers.get("location"), "http://localhost");
 
   assert.equal(response.status, 303);
-  assert.equal(location.pathname, "/admin/entities/media_asset");
-  assert.equal(location.searchParams.get("asset"), "media_1");
-  assert.equal(location.searchParams.get("message"), FEEDBACK_COPY.readyToPublish);
+  assert.equal(location.pathname, "/admin/review/rev_1");
+  assert.equal(location.searchParams.get("message"), FEEDBACK_COPY.reviewSubmitted);
 });
 
 test("submit route still opens review when owner action is required", async () => {

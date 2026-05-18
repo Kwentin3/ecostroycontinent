@@ -15,7 +15,7 @@ function buildQueueItem(id, ownerApprovalStatus) {
   };
 }
 
-test("review queue keeps only revisions that still need review-lane attention", () => {
+test("review queue keeps submitted revisions visible until explicit approval", () => {
   const queue = [
     buildQueueItem("pending", "pending"),
     buildQueueItem("returned", "rejected"),
@@ -28,6 +28,6 @@ test("review queue keeps only revisions that still need review-lane attention", 
 
   assert.deepEqual(
     filtered.map((item) => item.revision.id),
-    ["rev_pending", "rev_returned", "rev_legacy"]
+    ["rev_pending", "rev_returned", "rev_not_required", "rev_legacy"]
   );
 });

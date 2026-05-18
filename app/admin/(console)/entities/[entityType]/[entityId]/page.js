@@ -108,7 +108,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
     const reviewHref = data.currentRevision ? `/admin/review/${data.currentRevision.id}` : "";
     const publishHref = data.currentRevision
       && userCanPublishRevision(user, data.state.entity, data.currentRevision)
-      && (!data.currentRevision.ownerReviewRequired || data.currentRevision.ownerApprovalStatus === "approved")
+      && data.currentRevision.ownerApprovalStatus === "approved"
       ? `/admin/revisions/${data.currentRevision.id}/publish`
       : "";
     const signal = row || {

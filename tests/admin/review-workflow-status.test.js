@@ -14,7 +14,7 @@ test("review workflow status surfaces owner-approved items as agreed even withou
   assert.equal(status.tone, "success");
 });
 
-test("review workflow status treats non-owner review items as agreed once they are submitted", () => {
+test("review workflow status keeps non-owner review items pending until explicit approval", () => {
   const status = getReviewWorkflowStatusModel({
     ownerReviewRequired: false,
     ownerApprovalStatus: "not_required"
@@ -24,9 +24,9 @@ test("review workflow status treats non-owner review items as agreed once they a
     ownerApprovalStatus: "approved"
   });
 
-  assert.equal(status.key, "approved");
-  assert.equal(status.label, approvedStatus.label);
-  assert.equal(status.tone, "success");
+  assert.equal(status.key, "needs_owner");
+  assert.notEqual(status.label, approvedStatus.label);
+  assert.equal(status.tone, "warning");
 });
 
 test("review workflow status keeps unresolved owner approval items in the decision bucket", () => {
