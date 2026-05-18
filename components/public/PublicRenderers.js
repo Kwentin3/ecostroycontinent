@@ -15,6 +15,7 @@ import {
 import { buildPublicContactProjection } from "../../lib/public-launch/contact-projection.js";
 import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
 import { buildEquipmentCardsSectionModel } from "../../lib/public-launch/equipment-card-model.js";
+import { buildFormattedPlainTextBlocks } from "../../lib/public-launch/formatted-plain-text.js";
 import { buildListCardMediaAssets } from "../../lib/public-launch/list-card-media.js";
 import {
   buildBreadcrumbStructuredData,
@@ -171,6 +172,38 @@ function analyticsProps({
   };
 }
 
+function FormattedPlainText({
+  text,
+  fallback = "",
+  className = ""
+}) {
+  const normalizedText = normalizeLegacyCopy(text || fallback || "");
+  const blocks = buildFormattedPlainTextBlocks(normalizedText);
+  const rootClassName = [styles.formattedText, className].filter(Boolean).join(" ");
+
+  if (blocks.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={rootClassName}>
+      {blocks.map((block, blockIndex) => {
+        if (block.type === "orderedList") {
+          return (
+            <ol key={`list-${blockIndex}`} className={styles.formattedList}>
+              {block.items.map((item, itemIndex) => (
+                <li key={`${item.number}-${itemIndex}`} value={item.number}>{item.text}</li>
+              ))}
+            </ol>
+          );
+        }
+
+        return <p key={`paragraph-${blockIndex}`}>{block.text}</p>;
+      })}
+    </div>
+  );
+}
+
 function getThemeClassName(pageThemeKey) {
   return THEME_CLASS_NAMES[pageThemeKey || DEFAULT_LANDING_PAGE_THEME_KEY] ?? styles.themeEarthSand;
 }
@@ -228,7 +261,7 @@ function MediaHero({
       <p className={styles.eyebrow}>{label}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
-      <p className={styles.mediaCaption}>{asset.caption || asset.title || asset.originalFilename || PUBLIC_COPY.mediaFallback}</p>
+      <FormattedPlainText text={asset.caption || asset.title || asset.originalFilename || PUBLIC_COPY.mediaFallback} className={styles.mediaCaption} />
     </section>
   );
 }
@@ -287,7 +320,7 @@ function GallerySection({
             {hasGroupedCollections ? (
               <div className={styles.galleryGroupHead}>
                 <h4>{group.title}</h4>
-                {group.caption ? <p className={styles.note}>{group.caption}</p> : null}
+                <FormattedPlainText text={group.caption} className={styles.note} />
               </div>
             ) : null}
             <div className={`${styles.gallery} ${getGalleryLayoutClassName(normalizedMediaSettings.galleryLayout)} ${getGalleryAspectRatioClassName(normalizedMediaSettings.galleryAspectRatio)}`}>
@@ -449,8 +482,8 @@ function ServiceAreaNote({ serviceAreaModel, sectionId = "preview-service-area" 
     >
       <p className={styles.eyebrow}>География работ</p>
       <h2>Зона оказания услуг</h2>
-      <p className={styles.note}>{body}</p>
-      {note ? <p className={styles.note}>{note}</p> : null}
+      <FormattedPlainText text={body} className={styles.note} />
+      <FormattedPlainText text={note} className={styles.note} />
     </section>
   );
 }
@@ -499,7 +532,7 @@ export function EquipmentCardsSection({ model, heading }) {
                 {card.equipmentType ? <span className={styles.equipmentType}>{card.equipmentType}</span> : null}
                 {card.title ? <h3>{card.title}</h3> : null}
               </div>
-              {card.summary ? <p className={styles.equipmentSummary}>{card.summary}</p> : null}
+              <FormattedPlainText text={card.summary} className={styles.equipmentSummary} />
               {card.operatorMode ? (
                 <p className={styles.equipmentMode}>
                   <span>Режим работы</span>
@@ -765,7 +798,7 @@ function PublicEntityListCard({
         </Link>
       </Heading>
       <CaseLocationLabel location={item.location} />
-      <p>{description}</p>
+      <FormattedPlainText text={description} />
       <ListCardMediaStrip assets={mediaAssets} />
       <span className={styles.actionLink} aria-hidden="true">{PUBLIC_COPY.listOpen}</span>
     </article>
@@ -794,7 +827,7 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
             {section.title ? <h2>{section.title}</h2> : null}
-            <p>{section.body}</p>
+            <FormattedPlainText text={section.body} />
           </section>
         );
       case PAGE_SECTION_TYPES.CONTACT_DETAILS:
@@ -806,7 +839,7 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
             <h2>{section.title || "Контакты"}</h2>
-            {section.body ? <p>{section.body}</p> : null}
+            <FormattedPlainText text={section.body} />
             <ContactDetailsItems contactProjection={contactProjection} />
             {contactProjection?.hasPublicRegion ? <p>{contactProjection.publicRegion}</p> : null}
             <p className={styles.note}>{contactProjection?.readiness?.message}</p>
@@ -848,7 +881,7 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
             className={getSectionClassName([styles.stack, styles.previewSection], section)}
           >
             {section.title ? <h2>{section.title}</h2> : null}
-            {section.body ? <p className={styles.note}>{section.body}</p> : null}
+            <FormattedPlainText text={section.body} className={styles.note} />
             <div className={styles.grid}>
               {renderableServices.map((item) => {
                 const mediaAssets = buildListCardMediaAssets({
@@ -889,8 +922,8 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
             <h2>{section.title || "Что входит в услугу"}</h2>
-            <p>{section.body || primaryService?.serviceScope || primaryService?.summary || "Описание пока не заполнено."}</p>
-            {primaryService?.problemsSolved ? <p>{primaryService.problemsSolved}</p> : null}
+            <FormattedPlainText text={section.body || primaryService?.serviceScope || primaryService?.summary || "Описание пока не заполнено."} />
+            <FormattedPlainText text={primaryService?.problemsSolved} />
           </section>
         );
       case PAGE_SECTION_TYPES.EQUIPMENT_SUMMARY:
@@ -902,7 +935,7 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
             <h2>{section.title || "О технике"}</h2>
-            <p>{section.body || primaryEquipment?.capabilitySummary || primaryEquipment?.shortSummary || "Описание техники пока не заполнено."}</p>
+            <FormattedPlainText text={section.body || primaryEquipment?.capabilitySummary || primaryEquipment?.shortSummary || "Описание техники пока не заполнено."} />
           </section>
         );
       case PAGE_SECTION_TYPES.EQUIPMENT_SPECS: {
@@ -944,7 +977,7 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
             className={getSectionClassName([styles.card, styles.previewSection], section)}
           >
             <h2>{section.title || "Где работаем"}</h2>
-            <p>{geoBits.join(" · ") || "География пока не заполнена."}</p>
+            <FormattedPlainText text={geoBits.join(" · ") || "География пока не заполнена."} />
           </section>
         );
       }
@@ -969,7 +1002,7 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
                 {caseItems.map((item) => (
                   <article key={item.entityId} className={getSectionClassName(styles.card, section)}>
                     <h3>{item.title}</h3>
-                    <p>{item.result}</p>
+                    <FormattedPlainText text={item.result} />
                     <Link
                       className={styles.actionLink}
                       href={`/cases/${item.slug}`}
@@ -1018,7 +1051,7 @@ function renderPageSections({ page, globalSettings, services, serviceList = [], 
           >
             <h2>{section.title || "Оставьте заявку"}</h2>
             <div className={styles.ctaRow}>
-              <p className={styles.ctaCopy}>{section.body || globalSettings?.defaultCtaDescription || ""}</p>
+              <FormattedPlainText text={section.body || globalSettings?.defaultCtaDescription || ""} className={styles.ctaCopy} />
               <ContactAction
                 action={ctaAction}
                 className={styles.ctaChip}
@@ -1092,7 +1125,7 @@ export function PublicListPage({
           >
             <p className={styles.eyebrow}>{eyebrow}</p>
             <h1>{title}</h1>
-            <p className={styles.note}>{intro}</p>
+            <FormattedPlainText text={intro} className={styles.note} />
           </section>
         ) : (
           <h1 className={styles.visuallyHidden}>{title}</h1>
@@ -1129,7 +1162,7 @@ export function PublicListPage({
         ) : (
           <section className={`${styles.card} ${styles.previewSection} ${styles.sectionTonePlain}`}>
             <h2>{emptyTitle}</h2>
-            <p className={styles.note}>{emptyDescription}</p>
+            <FormattedPlainText text={emptyDescription} className={styles.note} />
             {emptyActionHref && emptyActionLabel ? (
               <div className={styles.linkRow}>
                 <Link className={styles.actionLink} href={emptyActionHref}>{emptyActionLabel}</Link>
@@ -1144,7 +1177,7 @@ export function PublicListPage({
             className={getSectionClassName([styles.card, styles.previewSection], { surfaceTone: nextStepTone, textEmphasisPreset: "standard" })}
           >
             {nextStepTitle ? <h2>{nextStepTitle}</h2> : null}
-            {nextStepDescription ? <p className={styles.note}>{nextStepDescription}</p> : null}
+            <FormattedPlainText text={nextStepDescription} className={styles.note} />
             {nextStepPrimaryHref || nextStepSecondaryHref ? (
               <div className={styles.linkRow}>
                 {nextStepPrimaryHref && nextStepPrimaryLabel ? (
@@ -1247,7 +1280,7 @@ export function ServicePage({
         >
           <p className={styles.eyebrow}>{PUBLIC_COPY.serviceEyebrow}</p>
           <h1>{service.h1}</h1>
-          <p>{service.summary}</p>
+          <FormattedPlainText text={service.summary} />
           <div className={styles.linkRow}>
             {serviceContactActions.map((action, index) => (
               <ContactAction
@@ -1266,10 +1299,19 @@ export function ServicePage({
           className={getSectionClassName([styles.card, styles.previewSection], { surfaceTone: "plain", textEmphasisPreset: "standard" })}
         >
           <h2>{PUBLIC_COPY.serviceScopeHeading}</h2>
-          <p>{service.serviceScope}</p>
-          {service.problemsSolved ? <p>{service.problemsSolved}</p> : null}
-          {service.methods ? <p>{service.methods}</p> : null}
+          <FormattedPlainText text={service.serviceScope} />
+          <FormattedPlainText text={service.problemsSolved} />
         </section>
+        {service.methods ? (
+          <section
+            id="preview-service-methods"
+            data-preview-section="service-methods"
+            className={getSectionClassName([styles.card, styles.previewSection], { surfaceTone: "plain", textEmphasisPreset: "standard" })}
+          >
+            <h2>Как работаем</h2>
+            <FormattedPlainText text={service.methods} />
+          </section>
+        ) : null}
         <ServiceAreaNote serviceAreaModel={serviceAreaModel} />
         {relatedCases.length > 0 ? (
           <section id="preview-service-related-cases" data-preview-section="related-cases" className={`${styles.grid} ${styles.previewSection}`}>
@@ -1285,7 +1327,7 @@ export function ServicePage({
                 <article key={item.entityId} className={styles.card}>
                   <h3>{item.title}</h3>
                   <CaseLocationLabel location={item.location} />
-                  <p>{item.result}</p>
+                  <FormattedPlainText text={item.result} />
                   <ListCardMediaStrip assets={proofMediaAssets} label={`Фотоподтверждения кейса: ${item.title}`} />
                   <Link
                     className={styles.actionLink}
@@ -1321,7 +1363,7 @@ export function ServicePage({
         />
         <section id="preview-service-next-steps" data-preview-section="next-steps" className={`${styles.card} ${styles.previewSection}`}>
           <h2>Следующий шаг</h2>
-          <p className={styles.note}>{contactProjection.defaultCtaDescription}</p>
+          <FormattedPlainText text={contactProjection.defaultCtaDescription} className={styles.note} />
           <div className={styles.linkRow}>
             {serviceContactActions.map((action, index) => (
               <ContactAction
@@ -1398,15 +1440,15 @@ export function CasePage({
         <section id="preview-case-core" data-preview-section="case-core" className={`${styles.grid} ${styles.previewSection}`}>
           <article className={styles.card}>
             <h3>{PUBLIC_COPY.taskHeading}</h3>
-            <p>{item.task}</p>
+            <FormattedPlainText text={item.task} />
           </article>
           <article className={styles.card}>
             <h3>{PUBLIC_COPY.workScopeHeading}</h3>
-            <p>{item.workScope}</p>
+            <FormattedPlainText text={item.workScope} />
           </article>
           <article className={styles.card}>
             <h3>{PUBLIC_COPY.resultHeading}</h3>
-            <p>{item.result}</p>
+            <FormattedPlainText text={item.result} />
           </article>
         </section>
         {relatedServices.length > 0 ? (
@@ -1414,7 +1456,7 @@ export function CasePage({
             {relatedServices.map((service) => (
               <article key={service.entityId} className={styles.card}>
                 <h3>{service.title}</h3>
-                <p>{service.summary}</p>
+                <FormattedPlainText text={service.summary} />
                 <Link
                   className={styles.actionLink}
                   href={`/services/${service.slug}`}
@@ -1441,7 +1483,7 @@ export function CasePage({
             {relatedEquipment.map((equipmentItem) => (
               <article key={equipmentItem.entityId} className={styles.card}>
                 <h3>{equipmentItem.title}</h3>
-                <p>{equipmentItem.capabilitySummary || equipmentItem.shortSummary || equipmentItem.equipmentType}</p>
+                <FormattedPlainText text={equipmentItem.capabilitySummary || equipmentItem.shortSummary || equipmentItem.equipmentType} />
               </article>
             ))}
           </section>
@@ -1543,15 +1585,15 @@ export function StandalonePage({
         >
           {heroEyebrow ? <p className={styles.eyebrow}>{heroEyebrow}</p> : null}
           <h1>{page.h1}</h1>
-          <p>{heroSection?.body || page.intro}</p>
-          {heroSection?.trustText ? <p className={styles.note}>{heroSection.trustText}</p> : null}
-          {page.pageType === PAGE_TYPES.SERVICE_LANDING && primaryService?.summary ? <p className={styles.note}>{primaryService.summary}</p> : null}
-          {page.pageType === PAGE_TYPES.EQUIPMENT_LANDING && primaryEquipment?.shortSummary ? <p className={styles.note}>{primaryEquipment.shortSummary}</p> : null}
+          <FormattedPlainText text={heroSection?.body || page.intro} />
+          <FormattedPlainText text={heroSection?.trustText} className={styles.note} />
+          {page.pageType === PAGE_TYPES.SERVICE_LANDING ? <FormattedPlainText text={primaryService?.summary} className={styles.note} /> : null}
+          {page.pageType === PAGE_TYPES.EQUIPMENT_LANDING ? <FormattedPlainText text={primaryEquipment?.shortSummary} className={styles.note} /> : null}
           {showSplitHeroMedia ? (
             <div className={styles.heroSplitMedia}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={primaryMedia.previewUrl} alt={primaryMedia.alt || primaryMedia.title || PUBLIC_COPY.imageFallback} />
-              <p className={styles.mediaCaption}>{primaryMedia.caption || primaryMedia.title || primaryMedia.originalFilename || PUBLIC_COPY.mediaFallback}</p>
+              <FormattedPlainText text={primaryMedia.caption || primaryMedia.title || primaryMedia.originalFilename || PUBLIC_COPY.mediaFallback} className={styles.mediaCaption} />
             </div>
           ) : null}
         </section>

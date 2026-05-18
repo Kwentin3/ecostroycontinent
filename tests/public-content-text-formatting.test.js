@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { buildEntityPayload } from "../lib/admin/entity-form-data.js";
 import { ENTITY_TYPES, PAGE_SECTION_TYPES, PAGE_TYPES } from "../lib/content-core/content-types.js";
 import { normalizeEntityInput } from "../lib/content-core/pure.js";
+import { buildFormattedPlainTextBlocks } from "../lib/public-launch/formatted-plain-text.js";
 
 const FORMATTED_TEXT = "Первая строка\r\n\r\nВторая строка";
 
@@ -66,8 +67,58 @@ test("page sections keep internal blank lines through public payload normalizati
 });
 
 test("public text rendering keeps textarea line breaks visible", () => {
+  const rendererSource = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8")
+    .replace(/\r\n/g, "\n");
   const css = readFileSync(new URL("../components/public/public-ui.module.css", import.meta.url), "utf8")
     .replace(/\r\n/g, "\n");
 
+  assert.match(rendererSource, /function FormattedPlainText/);
+  assert.match(rendererSource, /buildFormattedPlainTextBlocks/);
+  assert.match(rendererSource, /id="preview-service-methods"/);
+  assert.match(rendererSource, /<FormattedPlainText text=\{service\.serviceScope\}/);
+  assert.match(rendererSource, /<FormattedPlainText text=\{service\.methods\}/);
   assert.match(css, /\.page :where\(p, figcaption\)\s*\{[\s\S]*white-space:\s*pre-line;/);
+  assert.match(css, /\.formattedText\s*\{/);
+  assert.match(css, /\.formattedList\s*\{/);
+});
+
+test("formatted plain text parser turns blank-line paragraphs and numbered lines into semantic blocks", () => {
+  const blocks = buildFormattedPlainTextBlocks([
+    "Первый абзац",
+    "",
+    "Второй абзац",
+    "",
+    "1. Первый шаг",
+    "2. Второй шаг",
+    "продолжение второго шага",
+    "3) Третий шаг"
+  ].join("\r\n"));
+
+  assert.deepEqual(blocks, [
+    {
+      type: "paragraph",
+      text: "Первый абзац"
+    },
+    {
+      type: "paragraph",
+      text: "Второй абзац"
+    },
+    {
+      type: "orderedList",
+      items: [
+        {
+          number: 1,
+          text: "Первый шаг"
+        },
+        {
+          number: 2,
+          text: "Второй шаг\nпродолжение второго шага"
+        },
+        {
+          number: 3,
+          text: "Третий шаг"
+        }
+      ]
+    }
+  ]);
 });

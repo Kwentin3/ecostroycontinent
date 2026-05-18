@@ -91,6 +91,29 @@
   white-space: pre-line;
 }
 
+.formattedText {
+  display: grid;
+  gap: 10px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.formattedText p,
+.formattedList {
+  margin: 0;
+}
+
+.formattedList {
+  display: grid;
+  gap: 8px;
+  padding-left: 1.35rem;
+}
+
+.formattedList li {
+  padding-left: 2px;
+  overflow-wrap: anywhere;
+}
+
 .page a {
   color: var(--page-link);
 }
