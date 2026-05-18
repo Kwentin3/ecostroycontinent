@@ -98,6 +98,19 @@
   min-width: 0;
 }
 
+.formattedTextColumns {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  align-items: start;
+  gap: 14px 24px;
+}
+
+.formattedTextColumns p {
+  text-align: justify;
+  text-align-last: left;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
 .formattedText p,
 .formattedList {
   margin: 0;
@@ -1212,6 +1225,19 @@
   max-width: 100%;
 }
 
+:global([data-preview-device="tablet"]) .formattedTextColumns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:global([data-preview-device="mobile"]) .formattedTextColumns {
+  grid-template-columns: 1fr;
+}
+
+:global([data-preview-device="mobile"]) .formattedTextColumns p {
+  text-align: left;
+  hyphens: manual;
+}
+
 :global([data-preview-device="mobile"]) .page {
   padding: 28px 16px 48px;
 }
@@ -1507,6 +1533,10 @@
   .galleryLayoutStrip {
     grid-auto-columns: minmax(240px, 78vw);
   }
+
+  .formattedTextColumns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 980px) {
@@ -1574,6 +1604,15 @@
   .card,
   .gallerySection {
     padding: 18px;
+  }
+
+  .formattedTextColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .formattedTextColumns p {
+    text-align: left;
+    hyphens: manual;
   }
 
   .ctaRow {

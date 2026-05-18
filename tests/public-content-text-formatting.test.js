@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { buildEntityPayload } from "../lib/admin/entity-form-data.js";
-import { ENTITY_TYPES, PAGE_SECTION_TYPES, PAGE_TYPES } from "../lib/content-core/content-types.js";
+import { ENTITY_TYPES, PAGE_SECTION_TYPES, PAGE_TYPES, SERVICE_SCOPE_DISPLAY_MODES } from "../lib/content-core/content-types.js";
 import { normalizeEntityInput } from "../lib/content-core/pure.js";
 import { buildFormattedPlainTextBlocks } from "../lib/public-launch/formatted-plain-text.js";
 
@@ -15,6 +15,7 @@ test("entity form payload and normalization preserve internal line breaks in pub
   formData.set("h1", "Форматированная услуга");
   formData.set("summary", FORMATTED_TEXT);
   formData.set("serviceScope", FORMATTED_TEXT);
+  formData.set("serviceScopeDisplayMode", SERVICE_SCOPE_DISPLAY_MODES.COLUMNS);
   formData.set("problemsSolved", FORMATTED_TEXT);
   formData.set("methods", FORMATTED_TEXT);
   formData.set("ctaVariant", "Позвонить");
@@ -23,6 +24,7 @@ test("entity form payload and normalization preserve internal line breaks in pub
 
   assert.equal(payload.summary, FORMATTED_TEXT);
   assert.equal(payload.serviceScope, FORMATTED_TEXT);
+  assert.equal(payload.serviceScopeDisplayMode, SERVICE_SCOPE_DISPLAY_MODES.COLUMNS);
   assert.equal(payload.problemsSolved, FORMATTED_TEXT);
   assert.equal(payload.methods, FORMATTED_TEXT);
 
@@ -30,6 +32,7 @@ test("entity form payload and normalization preserve internal line breaks in pub
 
   assert.equal(service.summary, FORMATTED_TEXT);
   assert.equal(service.serviceScope, FORMATTED_TEXT);
+  assert.equal(service.serviceScopeDisplayMode, SERVICE_SCOPE_DISPLAY_MODES.COLUMNS);
   assert.equal(service.problemsSolved, FORMATTED_TEXT);
   assert.equal(service.methods, FORMATTED_TEXT);
 });
@@ -74,11 +77,14 @@ test("public text rendering keeps textarea line breaks visible", () => {
 
   assert.match(rendererSource, /function FormattedPlainText/);
   assert.match(rendererSource, /buildFormattedPlainTextBlocks/);
+  assert.match(rendererSource, /hasOrderedList/);
   assert.match(rendererSource, /id="preview-service-methods"/);
-  assert.match(rendererSource, /<FormattedPlainText text=\{service\.serviceScope\}/);
+  assert.match(rendererSource, /variant=\{service\.serviceScopeDisplayMode === SERVICE_SCOPE_DISPLAY_MODES\.COLUMNS/);
   assert.match(rendererSource, /<FormattedPlainText text=\{service\.methods\}/);
   assert.match(css, /\.page :where\(p, figcaption\)\s*\{[\s\S]*white-space:\s*pre-line;/);
   assert.match(css, /\.formattedText\s*\{/);
+  assert.match(css, /\.formattedTextColumns\s*\{/);
+  assert.match(css, /grid-template-columns:\s*repeat\(auto-fit, minmax\(min\(100%, 260px\), 1fr\)\);/);
   assert.match(css, /\.formattedList\s*\{/);
 });
 

@@ -5,6 +5,7 @@ import { RelationChipRow } from "./RelationChipRow";
 import { SlugTitleFields } from "./SlugTitleFields";
 import { FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { resolveGlobalDefaultServiceArea } from "../../lib/content-core/geography.js";
+import { SERVICE_SCOPE_DISPLAY_MODES } from "../../lib/content-core/content-types.js";
 import { FIELD_LABELS } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
 
@@ -229,6 +230,16 @@ export function EntityTruthSections({
           <label className={styles.label}>
             <span>{FIELD_LABELS.serviceScope}</span>
             <textarea name="serviceScope" defaultValue={value.serviceScope || ""} required />
+          </label>
+          <label className={styles.label}>
+            <span>{FIELD_LABELS.serviceScopeDisplayMode}</span>
+            <select name="serviceScopeDisplayMode" defaultValue={value.serviceScopeDisplayMode || SERVICE_SCOPE_DISPLAY_MODES.DEFAULT}>
+              <option value={SERVICE_SCOPE_DISPLAY_MODES.DEFAULT}>Обычный текст</option>
+              <option value={SERVICE_SCOPE_DISPLAY_MODES.COLUMNS}>Колонки</option>
+            </select>
+            <p className={styles.helpText}>
+              Временная настройка системной страницы услуги. После рефакторинга страницы этот выбор должен стать page-owned и синхронизироваться с экраном страницы.
+            </p>
           </label>
           <label className={styles.label}>
             <span>{FIELD_LABELS.problemsSolved}</span>

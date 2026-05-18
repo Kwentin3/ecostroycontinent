@@ -8,7 +8,7 @@ import { EntityEditorValidationNotice } from "./EntityEditorValidationNotice";
 import { MediaPicker } from "./MediaPicker";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { TimelineList } from "./TimelineList";
-import { ENTITY_TYPES } from "../../lib/content-core/content-types.js";
+import { ENTITY_TYPES, SERVICE_SCOPE_DISPLAY_MODES } from "../../lib/content-core/content-types.js";
 import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
 import { ADMIN_COPY, FIELD_LABELS, normalizeLegacyCopy } from "../../lib/ui-copy.js";
 import { CHANGE_INTENT_LABEL, FIELD_HINTS } from "../../lib/admin/screen-copy.js";
@@ -429,6 +429,16 @@ export function EntityEditorForm({
                 <label className={styles.label}>
                   <span>{FIELD_LABELS.serviceScope}</span>
                   <textarea name="serviceScope" defaultValue={value.serviceScope || ""} required />
+                </label>
+                <label className={styles.label}>
+                  <span>{FIELD_LABELS.serviceScopeDisplayMode}</span>
+                  <select name="serviceScopeDisplayMode" defaultValue={value.serviceScopeDisplayMode || SERVICE_SCOPE_DISPLAY_MODES.DEFAULT}>
+                    <option value={SERVICE_SCOPE_DISPLAY_MODES.DEFAULT}>Обычный текст</option>
+                    <option value={SERVICE_SCOPE_DISPLAY_MODES.COLUMNS}>Колонки</option>
+                  </select>
+                  <p className={styles.helpText}>
+                    Временная настройка системной страницы услуги; позже должна переехать в page-owned слой.
+                  </p>
                 </label>
                 <label className={styles.label}>
                   <span>{FIELD_LABELS.problemsSolved}</span>

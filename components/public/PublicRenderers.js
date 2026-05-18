@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { PAGE_SECTION_TYPES, PAGE_TYPES } from "../../lib/content-core/content-types.js";
+import { PAGE_SECTION_TYPES, PAGE_TYPES, SERVICE_SCOPE_DISPLAY_MODES } from "../../lib/content-core/content-types.js";
 import { resolveEffectiveServiceArea } from "../../lib/content-core/geography.js";
 import { normalizePageMediaSettings } from "../../lib/content-core/page-media.js";
 import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
@@ -175,11 +175,18 @@ function analyticsProps({
 function FormattedPlainText({
   text,
   fallback = "",
-  className = ""
+  className = "",
+  variant = SERVICE_SCOPE_DISPLAY_MODES.DEFAULT
 }) {
   const normalizedText = normalizeLegacyCopy(text || fallback || "");
   const blocks = buildFormattedPlainTextBlocks(normalizedText);
-  const rootClassName = [styles.formattedText, className].filter(Boolean).join(" ");
+  const hasOrderedList = blocks.some((block) => block.type === "orderedList");
+  const useColumns = variant === SERVICE_SCOPE_DISPLAY_MODES.COLUMNS && !hasOrderedList;
+  const rootClassName = [
+    styles.formattedText,
+    useColumns ? styles.formattedTextColumns : "",
+    className
+  ].filter(Boolean).join(" ");
 
   if (blocks.length === 0) {
     return null;
@@ -1299,7 +1306,13 @@ export function ServicePage({
           className={getSectionClassName([styles.card, styles.previewSection], { surfaceTone: "plain", textEmphasisPreset: "standard" })}
         >
           <h2>{PUBLIC_COPY.serviceScopeHeading}</h2>
-          <FormattedPlainText text={service.serviceScope} />
+          {/* serviceScopeDisplayMode is a temporary presentation hint for the system service detail page until service detail sections become page-owned. */}
+          <FormattedPlainText
+            text={service.serviceScope}
+            variant={service.serviceScopeDisplayMode === SERVICE_SCOPE_DISPLAY_MODES.COLUMNS
+              ? SERVICE_SCOPE_DISPLAY_MODES.COLUMNS
+              : SERVICE_SCOPE_DISPLAY_MODES.DEFAULT}
+          />
           <FormattedPlainText text={service.problemsSolved} />
         </section>
         {service.methods ? (

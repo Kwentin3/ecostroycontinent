@@ -36,6 +36,17 @@ test("entity truth sections use compact disclosures so secondary groups do not o
   assert.match(css, /\.editorSectionDisclosureBody \.label textarea\s*\{/);
 });
 
+test("service editor exposes the temporary service scope display mode selector", () => {
+  const truthSource = readUtf8("components/admin/EntityTruthSections.js");
+  const legacySource = readUtf8("components/admin/EntityEditorForm.js");
+
+  assert.match(truthSource, /FIELD_LABELS\.serviceScopeDisplayMode/);
+  assert.match(truthSource, /name="serviceScopeDisplayMode"/);
+  assert.match(truthSource, /SERVICE_SCOPE_DISPLAY_MODES\.COLUMNS/);
+  assert.match(truthSource, /page-owned/);
+  assert.match(legacySource, /name="serviceScopeDisplayMode"/);
+});
+
 test("entity editor keeps right rail status and actions compact", () => {
   const source = readUtf8("components/admin/EntityEditorForm.js");
 

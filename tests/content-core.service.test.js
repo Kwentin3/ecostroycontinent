@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { CHANGE_CLASSES, ENTITY_TYPES, PAGE_TYPES } from "../lib/content-core/content-types.js";
+import { CHANGE_CLASSES, ENTITY_TYPES, PAGE_TYPES, SERVICE_SCOPE_DISPLAY_MODES } from "../lib/content-core/content-types.js";
 import {
   assertEntityType,
   buildChangeSummary,
@@ -299,6 +299,36 @@ test("change classification and owner review rules follow first-slice canon", ()
   assert.equal(
     determineChangeClass(ENTITY_TYPES.CASE, previousCasePayload, nextCasePayload),
     CHANGE_CLASSES.MINOR_EDITORIAL
+  );
+});
+
+test("service scope display mode defaults, preserves columns, and participates in change summary", () => {
+  const basePayload = {
+    slug: "drainage",
+    title: "Drainage",
+    h1: "Drainage works",
+    summary: "Summary",
+    serviceScope: "Scope",
+    problemsSolved: "",
+    methods: "",
+    ctaVariant: "default",
+    relatedCaseIds: [],
+    galleryIds: [],
+    primaryMediaAssetId: "",
+    seo: {}
+  };
+
+  const defaultService = normalizeEntityInput(ENTITY_TYPES.SERVICE, basePayload);
+  const columnsService = normalizeEntityInput(ENTITY_TYPES.SERVICE, {
+    ...basePayload,
+    serviceScopeDisplayMode: SERVICE_SCOPE_DISPLAY_MODES.COLUMNS
+  });
+
+  assert.equal(defaultService.serviceScopeDisplayMode, SERVICE_SCOPE_DISPLAY_MODES.DEFAULT);
+  assert.equal(columnsService.serviceScopeDisplayMode, SERVICE_SCOPE_DISPLAY_MODES.COLUMNS);
+  assert.deepEqual(
+    buildChangeSummary(ENTITY_TYPES.SERVICE, defaultService, columnsService),
+    ["serviceScopeDisplayMode"]
   );
 });
 

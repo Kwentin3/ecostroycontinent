@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { ENTITY_TYPES } from "../lib/content-core/content-types.js";
+import { ENTITY_TYPES, SERVICE_SCOPE_DISPLAY_MODES } from "../lib/content-core/content-types.js";
 import { normalizeEntityInput } from "../lib/content-core/pure.js";
 import { buildLlmConfigSnapshot } from "../lib/llm/config.js";
 import {
@@ -114,12 +114,13 @@ test("buildServiceLandingCandidateRequest produces a structured-output prompt bo
   assert.match(request.promptPacket.prompt, /Memory context/);
   assert.match(request.promptPacket.prompt, /Action slice: service_landing_generation/);
   assert.equal(request.responseJsonSchema.properties.slug.type, "string");
+  assert.equal(request.responseJsonSchema.properties.serviceScopeDisplayMode.enum.includes(SERVICE_SCOPE_DISPLAY_MODES.COLUMNS), true);
   assert.match(request.prompt, /service-first landing candidate/i);
   assert.match(request.prompt, /"serviceScope": "We design and install drainage systems\."/);
 });
 
 test("requestServiceLandingCandidate preserves the base revision through the structured-output boundary", async () => {
-  const payload = makeServicePayload();
+  const payload = makeServicePayload({ serviceScopeDisplayMode: SERVICE_SCOPE_DISPLAY_MODES.COLUMNS });
   const sourceContextSummary = buildServiceLandingSourceContextSummary({
     entityId: "entity_1",
     baseRevision: { id: "rev_1" },
@@ -146,12 +147,14 @@ test("requestServiceLandingCandidate preserves the base revision through the str
       providerAdapter: {
         requestStructuredArtifact: async (request) => {
           requests.push(request);
+          const artifact = { ...payload };
+          delete artifact.serviceScopeDisplayMode;
 
           return {
             providerId: "gemini",
             modelId: "gemini-3-flash-preview",
             providerRequestId: "provider_req_1",
-            text: JSON.stringify(payload),
+            text: JSON.stringify(artifact),
             transportUsed: "socks5"
           };
         }
@@ -193,6 +196,7 @@ test("requestServiceLandingCandidate preserves the base revision through the str
   assert.equal(result.spec.routeFamily, SERVICE_LANDING_ROUTE_FAMILY);
   assert.equal(result.spec.sections.length, 6);
   assert.equal(result.spec.payload.slug, payload.slug);
+  assert.equal(result.spec.payload.serviceScopeDisplayMode, SERVICE_SCOPE_DISPLAY_MODES.COLUMNS);
   assert.match(result.promptPacket.prompt, /Action slice: service_landing_generation/);
   assert.match(requests[0].prompt, /Source service payload:/);
   assert.match(requests[0].prompt, /service-first landing candidate/);
