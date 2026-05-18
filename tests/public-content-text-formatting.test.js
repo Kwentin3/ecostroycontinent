@@ -79,7 +79,8 @@ test("public text rendering keeps textarea line breaks visible", () => {
   assert.match(rendererSource, /buildFormattedPlainTextBlocks/);
   assert.match(rendererSource, /hasOrderedList/);
   assert.match(rendererSource, /id="preview-service-methods"/);
-  assert.match(rendererSource, /variant=\{service\.serviceScopeDisplayMode === SERVICE_SCOPE_DISPLAY_MODES\.COLUMNS/);
+  assert.match(rendererSource, /const serviceScopeVariant = service\.serviceScopeDisplayMode === SERVICE_SCOPE_DISPLAY_MODES\.COLUMNS/);
+  assert.match(rendererSource, /<FormattedPlainText text=\{service\.problemsSolved\} variant=\{serviceScopeVariant\}/);
   assert.match(rendererSource, /<FormattedPlainText text=\{service\.methods\}/);
   assert.match(css, /\.page :where\(p, figcaption\)\s*\{[\s\S]*white-space:\s*pre-line;/);
   assert.match(css, /\.formattedText\s*\{/);

@@ -1256,6 +1256,9 @@ export function ServicePage({
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
   const serviceContactActions = buildContactActionList(contactProjection);
   const serviceAreaModel = resolveEffectiveServiceArea({ service, globalSettings });
+  const serviceScopeVariant = service.serviceScopeDisplayMode === SERVICE_SCOPE_DISPLAY_MODES.COLUMNS
+    ? SERVICE_SCOPE_DISPLAY_MODES.COLUMNS
+    : SERVICE_SCOPE_DISPLAY_MODES.DEFAULT;
   const equipmentCardsModel = buildEquipmentCardsSectionModel({
     equipmentRecords: relatedEquipment,
     resolveMedia,
@@ -1309,11 +1312,9 @@ export function ServicePage({
           {/* serviceScopeDisplayMode is a temporary presentation hint for the system service detail page until service detail sections become page-owned. */}
           <FormattedPlainText
             text={service.serviceScope}
-            variant={service.serviceScopeDisplayMode === SERVICE_SCOPE_DISPLAY_MODES.COLUMNS
-              ? SERVICE_SCOPE_DISPLAY_MODES.COLUMNS
-              : SERVICE_SCOPE_DISPLAY_MODES.DEFAULT}
+            variant={serviceScopeVariant}
           />
-          <FormattedPlainText text={service.problemsSolved} />
+          <FormattedPlainText text={service.problemsSolved} variant={serviceScopeVariant} />
         </section>
         {service.methods ? (
           <section
