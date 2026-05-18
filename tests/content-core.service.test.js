@@ -10,6 +10,40 @@ import {
   toBoolean,
   requiresOwnerReview
 } from "../lib/content-core/pure.js";
+import { getEditableDraftRevision, getWorkingRevision } from "../lib/content-core/service.js";
+
+function buildRevision(id, revisionNumber, state, payload = {}) {
+  return {
+    id,
+    revisionNumber,
+    state,
+    payload
+  };
+}
+
+test("working revision ignores stale drafts below the active publication", () => {
+  const published = buildRevision("rev_published_6", 6, "published", { title: "Published" });
+  const staleDraft = buildRevision("rev_draft_4", 4, "draft", { title: "Old draft" });
+  const aggregate = {
+    revisions: [published, staleDraft],
+    activePublishedRevision: published
+  };
+
+  assert.equal(getEditableDraftRevision(aggregate), null);
+  assert.equal(getWorkingRevision(aggregate), published);
+});
+
+test("working revision keeps drafts above the active publication", () => {
+  const draft = buildRevision("rev_draft_7", 7, "draft", { title: "Current draft" });
+  const published = buildRevision("rev_published_6", 6, "published", { title: "Published" });
+  const aggregate = {
+    revisions: [draft, published],
+    activePublishedRevision: published
+  };
+
+  assert.equal(getEditableDraftRevision(aggregate), draft);
+  assert.equal(getWorkingRevision(aggregate), draft);
+});
 
 test("normalizeEntityInput keeps fixed page route truth for contacts pages", () => {
   const page = normalizeEntityInput(ENTITY_TYPES.PAGE, {

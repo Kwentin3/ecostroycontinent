@@ -9,12 +9,11 @@ import { userCanEditContent } from "../../../../../../lib/auth/session.js";
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
 import { getEntityAggregate } from "../../../../../../lib/content-core/repository.js";
 import { ENTITY_TYPES, PAGE_CREATE_MODES, PAGE_TYPES } from "../../../../../../lib/content-core/content-types.js";
-import { listEntityCards, saveDraft } from "../../../../../../lib/content-core/service.js";
+import { getWorkingRevision, listEntityCards, saveDraft } from "../../../../../../lib/content-core/service.js";
 import { assertPageTypeAllowedForLaunchOwnership } from "../../../../../../lib/public-launch/ownership.js";
 
 function getWorkingRevisionPayload(aggregate) {
-  const currentDraft = aggregate?.revisions?.find((revision) => revision.state === "draft");
-  return currentDraft?.payload || aggregate?.activePublishedRevision?.payload || null;
+  return getWorkingRevision(aggregate)?.payload || null;
 }
 
 async function buildPageCreatePayload(formPayload, formData, deps = {}) {

@@ -4,7 +4,7 @@ import { requireRouteUser } from "../../../../../../../lib/admin/route-helpers.j
 import { userCanEditContent } from "../../../../../../../lib/auth/session.js";
 import { findEntityById, getEntityAggregate } from "../../../../../../../lib/content-core/repository.js";
 import { ENTITY_TYPES } from "../../../../../../../lib/content-core/content-types.js";
-import { saveDraft } from "../../../../../../../lib/content-core/service.js";
+import { getEditableDraftRevision, getWorkingRevision, saveDraft } from "../../../../../../../lib/content-core/service.js";
 import { submitRevisionForReview } from "../../../../../../../lib/content-ops/workflow.js";
 import {
   buildLandingWorkspaceProofBasis,
@@ -25,11 +25,7 @@ import {
 import { assertPageTypeAllowedForLaunchOwnership } from "../../../../../../../lib/public-launch/ownership.js";
 
 function getCurrentDraft(aggregate) {
-  return aggregate?.revisions?.find((revision) => revision.state === "draft") ?? null;
-}
-
-function getWorkingRevision(aggregate) {
-  return getCurrentDraft(aggregate) ?? aggregate?.activePublishedRevision ?? null;
+  return getEditableDraftRevision(aggregate);
 }
 
 function serializeRevision(revision = null) {

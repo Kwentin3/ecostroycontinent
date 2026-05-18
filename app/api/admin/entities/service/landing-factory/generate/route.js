@@ -5,7 +5,7 @@ import { requireRouteUser } from "../../../../../../../lib/admin/route-helpers.j
 import { userCanEditContent } from "../../../../../../../lib/auth/session.js";
 import { ENTITY_TYPES } from "../../../../../../../lib/content-core/content-types.js";
 import { findEntityById, getEntityAggregate } from "../../../../../../../lib/content-core/repository.js";
-import { saveDraft } from "../../../../../../../lib/content-core/service.js";
+import { getEditableDraftRevision, saveDraft } from "../../../../../../../lib/content-core/service.js";
 import { evaluateReadiness } from "../../../../../../../lib/content-ops/readiness.js";
 import { submitRevisionForReview } from "../../../../../../../lib/content-ops/workflow.js";
 import { applyAcceptedMemoryDelta, readMemoryCardSlice } from "../../../../../../../lib/ai-workspace/memory-card.js";
@@ -102,7 +102,7 @@ export async function POST(request, overrides = {}) {
     }
 
     const baseRevision = aggregate?.activePublishedRevision ?? null;
-    const currentDraft = aggregate?.revisions?.find((revision) => revision.state === "draft") ?? null;
+    const currentDraft = getEditableDraftRevision(aggregate);
     const baseRevisionId = baseRevision?.id ?? "";
     const memorySlice = await routeDeps.readMemoryCardSlice({
       entityType: ENTITY_TYPES.SERVICE,
