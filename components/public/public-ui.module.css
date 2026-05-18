@@ -87,6 +87,10 @@
   line-height: 1.6;
 }
 
+.page :where(p, figcaption) {
+  white-space: pre-line;
+}
+
 .page a {
   color: var(--page-link);
 }
