@@ -101,10 +101,11 @@
 .formattedTextColumns {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   align-items: start;
-  gap: 14px 24px;
+  gap: 8px 24px;
 }
 
 .formattedTextColumns p {
+  line-height: 1.45;
   text-align: justify;
   text-align-last: left;
   hyphens: auto;
@@ -1234,6 +1235,7 @@
 }
 
 :global([data-preview-device="mobile"]) .formattedTextColumns p {
+  line-height: 1.55;
   text-align: left;
   hyphens: manual;
 }
@@ -1611,6 +1613,7 @@
   }
 
   .formattedTextColumns p {
+    line-height: 1.55;
     text-align: left;
     hyphens: manual;
   }

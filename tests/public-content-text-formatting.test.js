@@ -86,6 +86,8 @@ test("public text rendering keeps textarea line breaks visible", () => {
   assert.match(css, /\.formattedText\s*\{/);
   assert.match(css, /\.formattedTextColumns\s*\{/);
   assert.match(css, /grid-template-columns:\s*repeat\(auto-fit, minmax\(min\(100%, 260px\), 1fr\)\);/);
+  assert.match(css, /gap:\s*8px 24px;/);
+  assert.match(css, /\.formattedTextColumns p\s*\{[\s\S]*line-height:\s*1\.45;/);
   assert.match(css, /\.formattedList\s*\{/);
 });
 
