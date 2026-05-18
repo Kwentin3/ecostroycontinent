@@ -71,6 +71,9 @@ test("equipment card model exposes full public rental data when every field is p
   assert.equal(card.primaryMedia.alt, "Экскаватор на объекте");
   assert.equal(card.galleryAssets.length, 1);
   assert.equal(card.action.href, "/contacts#contact-request");
+  assert.equal(card.actions.length, 1);
+  assert.equal(card.actions[0].href, card.action.href);
+  assert.equal(card.actions[0].label, card.action.label);
   assert.equal(card.action.label, "Уточнить наличие техники");
   assertNoNullishScreenText(card);
 });
@@ -94,7 +97,34 @@ test("equipment card model omits image, scenarios and operator blocks for partia
   assert.deepEqual(card.keySpecs, ["Грузоподъёмность: 2.8 т"]);
   assert.deepEqual(card.usageScenarios, []);
   assert.equal(card.operatorMode, "");
+  assert.equal(card.actions.length, 1);
+  assert.equal(card.actions[0].href, "/contacts#contact-request");
   assert.equal(card.action.label, "Обсудить задачу");
+  assertNoNullishScreenText(card);
+});
+
+test("equipment card model can expose two direct contact actions without service CTA wording", () => {
+  const card = buildEquipmentCardModel({
+    equipment: {
+      entityId: "equipment_contacts",
+      title: "Excavator",
+      equipmentType: "Excavator"
+    },
+    ctaActions: [
+      { href: "tel:+79991234567", label: "Call" },
+      { href: "mailto:hello@example.com", label: "Email" },
+      { href: "mailto:hello@example.com", label: "Email" }
+    ]
+  });
+
+  assert.deepEqual(
+    card.actions.map((action) => [action.href, action.label]),
+    [
+      ["tel:+79991234567", "Call"],
+      ["mailto:hello@example.com", "Email"]
+    ]
+  );
+  assert.equal(card.action.label, "Call");
   assertNoNullishScreenText(card);
 });
 
@@ -115,6 +145,7 @@ test("equipment card model stays tidy for minimal title and type without CTA", (
   assert.deepEqual(card.usageScenarios, []);
   assert.equal(card.operatorMode, "");
   assert.equal(card.action, null);
+  assert.deepEqual(card.actions, []);
   assertNoNullishScreenText(card);
 });
 
@@ -140,6 +171,7 @@ test("equipment card model drops empty arrays and whitespace-only values", () =>
   assert.deepEqual(card.usageScenarios, []);
   assert.equal(card.operatorMode, "");
   assert.equal(card.action, null);
+  assert.deepEqual(card.actions, []);
   assert.equal(card.hasDetails, false);
   assertNoNullishScreenText(card);
 });
@@ -167,5 +199,6 @@ test("renderer implementation stays inside service page and does not create publ
   assert.match(source, /keySpecs/);
   assert.match(source, /usageScenarios/);
   assert.match(source, /operatorMode/);
+  assert.match(source, /card\.actions\.map/);
   assert.equal(fs.existsSync(path.resolve("app/equipment")), false);
 });

@@ -67,11 +67,11 @@ export default async function CasesPage({ searchParams }) {
   const resolvedGlobalSettings = globalSettings || (placeholderMode ? getPlaceholderGlobalSettings() : null);
 
   return (
-      <PublicListPage
+    <PublicListPage
       eyebrow="Слой подтверждений"
       title="Кейсы"
       intro="Раздел показывает подтверждённые кейсы и ведёт к детальным страницам с задачей, объёмом работ и результатом."
-        items={resolvedCases}
+      items={resolvedCases}
       itemHrefPrefix="/cases"
       globalSettings={resolvedGlobalSettings}
       currentPath="/cases"
@@ -90,6 +90,7 @@ export default async function CasesPage({ searchParams }) {
       nextStepSecondaryHref="/contacts"
       nextStepSecondaryLabel="Открыть контакты"
       nextStepTone="tinted"
+      showIntroHero={false}
     />
   );
 }

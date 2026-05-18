@@ -337,6 +337,13 @@ function ContactAction({
   return <a className={className} href={href} {...props}>{label}</a>;
 }
 
+function buildContactActionList(contactProjection) {
+  return [
+    contactProjection?.primaryAction,
+    ...(Array.isArray(contactProjection?.secondaryActions) ? contactProjection.secondaryActions : [])
+  ].filter((action) => action?.href);
+}
+
 function PublicContactMeta({ contactProjection, includeRegion = true }) {
   const contactItems = Array.isArray(contactProjection?.publicContactItems)
     ? contactProjection.publicContactItems
@@ -533,12 +540,17 @@ export function EquipmentCardsSection({ model, heading }) {
                   </div>
                 </section>
               ) : null}
-              {card.action ? (
-                <ContactAction
-                  action={card.action}
-                  className={styles.actionLink}
-                  defaultLabel={PUBLIC_COPY.ctaFallback}
-                />
+              {card.actions?.length > 0 ? (
+                <div className={styles.linkRow}>
+                  {card.actions.map((action, index) => (
+                    <ContactAction
+                      key={action.key || `${action.href}-${index}`}
+                      action={action}
+                      className={index === 0 ? styles.actionLink : styles.actionLinkSecondary}
+                      defaultLabel={PUBLIC_COPY.ctaFallback}
+                    />
+                  ))}
+                </div>
               ) : null}
             </div>
           </article>
@@ -1202,19 +1214,13 @@ export function ServicePage({
   const currentPath = `/services/${service.slug}`;
   const trail = buildPublicBreadcrumbs({ pathname: currentPath, pageTitle: service.h1 || service.title });
   const contactProjection = buildPublicContactProjection(globalSettings, { currentPath });
-  const serviceHeroAction = contactProjection.primaryAction
-    ? {
-        ...contactProjection.primaryAction,
-        label: service.ctaVariant || contactProjection.primaryAction.label
-      }
-    : null;
+  const serviceContactActions = buildContactActionList(contactProjection);
   const serviceAreaModel = resolveEffectiveServiceArea({ service, globalSettings });
   const equipmentCardsModel = buildEquipmentCardsSectionModel({
     equipmentRecords: relatedEquipment,
     resolveMedia,
     resolveGallery: galleries,
-    ctaAction: contactProjection.primaryAction,
-    ctaLabel: service.ctaVariant || contactProjection.defaultCtaLabel
+    ctaActions: serviceContactActions
   });
   const serviceStructuredData = buildServiceStructuredData({
     service,
@@ -1243,11 +1249,14 @@ export function ServicePage({
           <h1>{service.h1}</h1>
           <p>{service.summary}</p>
           <div className={styles.linkRow}>
-            <ContactAction
-              action={serviceHeroAction}
-              className={styles.actionLink}
-              defaultLabel={globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}
-            />
+            {serviceContactActions.map((action, index) => (
+              <ContactAction
+                key={action.key || `${action.href}-${index}`}
+                action={action}
+                className={index === 0 ? styles.actionLink : styles.actionLinkSecondary}
+                defaultLabel={globalSettings?.defaultCtaLabel || PUBLIC_COPY.ctaFallback}
+              />
+            ))}
           </div>
         </section>
         <MediaHero asset={primaryMedia} sectionId="preview-service-media" sectionName="media" />
@@ -1264,29 +1273,39 @@ export function ServicePage({
         <ServiceAreaNote serviceAreaModel={serviceAreaModel} />
         {relatedCases.length > 0 ? (
           <section id="preview-service-related-cases" data-preview-section="related-cases" className={`${styles.grid} ${styles.previewSection}`}>
-            {relatedCases.map((item) => (
-              <article key={item.entityId} className={styles.card}>
-                <h3>{item.title}</h3>
-                <CaseLocationLabel location={item.location} />
-                <p>{item.result}</p>
-                <Link
-                  className={styles.actionLink}
-                  href={`/cases/${item.slug}`}
-                  {...analyticsProps({
-                    id: `service_related_case_${item.entityId || item.slug}`,
-                    event: "case_card_opened",
-                    section: "related-cases",
-                    entityType: "service",
-                    entityId: service.entityId || "",
-                    targetType: "case",
-                    targetId: item.entityId || item.slug,
-                    cardAction: "open"
-                  })}
-                >
-                  {PUBLIC_COPY.openCase}
-                </Link>
-              </article>
-            ))}
+            {relatedCases.map((item) => {
+              const proofMediaAssets = buildListCardMediaAssets({
+                item,
+                resolveMedia,
+                resolveGallery: galleries,
+                limit: 6
+              });
+
+              return (
+                <article key={item.entityId} className={styles.card}>
+                  <h3>{item.title}</h3>
+                  <CaseLocationLabel location={item.location} />
+                  <p>{item.result}</p>
+                  <ListCardMediaStrip assets={proofMediaAssets} label={`Фотоподтверждения кейса: ${item.title}`} />
+                  <Link
+                    className={styles.actionLink}
+                    href={`/cases/${item.slug}`}
+                    {...analyticsProps({
+                      id: `service_related_case_${item.entityId || item.slug}`,
+                      event: "case_card_opened",
+                      section: "related-cases",
+                      entityType: "service",
+                      entityId: service.entityId || "",
+                      targetType: "case",
+                      targetId: item.entityId || item.slug,
+                      cardAction: "open"
+                    })}
+                  >
+                    {PUBLIC_COPY.openCase}
+                  </Link>
+                </article>
+              );
+            })}
           </section>
         ) : null}
         <EquipmentCardsSection
@@ -1304,12 +1323,11 @@ export function ServicePage({
           <h2>Следующий шаг</h2>
           <p className={styles.note}>{contactProjection.defaultCtaDescription}</p>
           <div className={styles.linkRow}>
-            <ContactAction action={contactProjection.primaryAction} className={styles.actionLink} defaultLabel={PUBLIC_COPY.ctaFallback} />
-            {contactProjection.secondaryActions.map((action) => (
+            {serviceContactActions.map((action, index) => (
               <ContactAction
-                key={action.key || action.href}
+                key={action.key || `${action.href}-${index}`}
                 action={action}
-                className={styles.actionLinkSecondary}
+                className={index === 0 ? styles.actionLink : styles.actionLinkSecondary}
                 defaultLabel={PUBLIC_COPY.ctaFallback}
               />
             ))}
@@ -1332,23 +1350,6 @@ export function ServicePage({
                 Смотреть кейсы
               </Link>
             ) : null}
-            <Link
-              className={styles.actionLinkSecondary}
-              href="/contacts"
-              {...analyticsProps({
-                id: "service_next_contacts",
-                event: "cta_clicked",
-                section: "next-steps",
-                entityType: "service",
-                entityId: service.entityId || "",
-                targetType: "page",
-                targetId: "/contacts",
-                ctaKind: "contact_page",
-                destinationKind: "contact_page"
-              })}
-            >
-              Связаться
-            </Link>
           </div>
         </section>
       </main>
@@ -1370,6 +1371,8 @@ export function CasePage({
 }) {
   const primaryMedia = resolveMedia && item.primaryMediaAssetId ? resolveMedia(item.primaryMediaAssetId) : null;
   const trail = buildPublicBreadcrumbs({ pathname: `/cases/${item.slug}`, pageTitle: item.title });
+  const contactProjection = buildPublicContactProjection(globalSettings, { currentPath: `/cases/${item.slug}` });
+  const caseContactActions = buildContactActionList(contactProjection);
 
   return (
     <PublicPageShell
@@ -1471,23 +1474,14 @@ export function CasePage({
             >
               Перейти к услугам
             </Link>
-            <Link
-              className={styles.actionLinkSecondary}
-              href="/contacts"
-              {...analyticsProps({
-                id: "case_next_contacts",
-                event: "cta_clicked",
-                section: "next-steps",
-                entityType: "case",
-                entityId: item.entityId || "",
-                targetType: "page",
-                targetId: "/contacts",
-                ctaKind: "contact_page",
-                destinationKind: "contact_page"
-              })}
-            >
-              Оставить заявку
-            </Link>
+            {caseContactActions.map((action, index) => (
+              <ContactAction
+                key={action.key || `${action.href}-${index}`}
+                action={action}
+                className={styles.actionLinkSecondary}
+                defaultLabel={PUBLIC_COPY.ctaFallback}
+              />
+            ))}
           </div>
         </section>
       </main>
