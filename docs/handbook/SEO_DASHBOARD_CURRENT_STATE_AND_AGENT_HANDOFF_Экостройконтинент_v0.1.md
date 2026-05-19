@@ -27,6 +27,7 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - R4 Readiness Audit is complete. Full R4 is not recommended yet.
 - R4-lite PRD/Blueprint are created: `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md` and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
 - R4-lite `External Source State and Readiness Integration` is implemented and accepted on canonical runtime at code commit `6bc7d11ce6c30dfb38a9de79e791048077f8ec25`. The read model exposes `external_source_readiness` for `yandex_metrica` and `yandex_webmaster`; `/admin/visibility` renders compact source readiness diagnostics; Metrica zeros and absent Webmaster query rows remain limitations, not primary metrics or recommendation triggers.
+- R3B PRD/Blueprint drafts are created: `docs/product-ux/PRD_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md` and `docs/blueprints/BLUEPRINT_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`. Implementation is not started. Next step is review R3B design, then implement R3B if approved.
 
 ## 3. Architecture snapshot
 
@@ -153,10 +154,13 @@ UI не должен собирать метрики напрямую из Ян�
    `docs/reports/2026-05-19/R4_READINESS_AUDIT_Экостройконтинент_v0.1.report.md`,
    `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`,
    and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
-8. Recommended next implementation slice: R3B query/page visibility import, unless the team explicitly chooses R2B Metrica source/device/region/landing dimensions first.
-9. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
-10. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
-11. Later LLM Copilot Safety Gate and UI.
+8. Review R3B design docs:
+   `docs/product-ux/PRD_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`
+   and `docs/blueprints/BLUEPRINT_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`.
+9. Recommended next implementation slice after review: R3B query/page visibility import, unless the team explicitly chooses R2B Metrica source/device/region/landing dimensions first.
+10. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
+11. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
+12. Later LLM Copilot Safety Gate and UI.
 
 ## 11. Do-not-do list
 
@@ -187,6 +191,8 @@ Primary product docs:
 - `docs/blueprints/BLUEPRINT_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`
 - `docs/product-ux/PRD_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
 - `docs/blueprints/BLUEPRINT_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`
 - `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`
 - `docs/mockups/fixtures/seo-dashboard-analytics-contract.sample.json`
 
