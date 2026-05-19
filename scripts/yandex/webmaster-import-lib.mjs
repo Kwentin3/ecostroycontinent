@@ -17,6 +17,9 @@ export const R3A_DEFAULT_LIMIT = 10;
 export const R3A_DEFAULT_QUERY_DAYS = 14;
 export const R3A_TIMEZONE_OFFSET = "+03:00";
 export const R3A_DEFAULT_PUBLIC_SITE_URL = "https://ecostroycontinent.ru";
+export const R3B_DEFAULT_LIMIT = 100;
+export const R3B_DEFAULT_QUERY_DAYS = 14;
+export const R3B_DEFAULT_MAX_PAGES = 2;
 
 const WEBMASTER_API_BASE = "https://api.webmaster.yandex.net/v4";
 const TRACKING_PARAM_PATTERN = /^(utm_|yclid$|ymclid$|gclid$|fbclid$|_openstat$|from$)/i;
@@ -27,6 +30,9 @@ const OPTIONAL_ENDPOINTS = new Set([
   "in_search_samples",
   "query_analytics"
 ]);
+const R3B_SYNC_LIMITATION = "webmaster_query_analytics_complementary_indicator_limited";
+const R3B_ZERO_ROWS_LIMITATION = "webmaster_query_visibility_zero_rows_for_period";
+const R3B_BETA_UNAVAILABLE_LIMITATION = "webmaster_advanced_query_export_beta_not_used";
 
 function compactString(value, maxLength = 500) {
   return typeof value === "string"
@@ -100,6 +106,40 @@ export function resolveR3aPeriods({
   };
 }
 
+export function resolveR3bPeriods({
+  now = new Date(),
+  date1 = "",
+  date2 = "",
+  days = R3B_DEFAULT_QUERY_DAYS
+} = {}) {
+  if (date1 || date2) {
+    assertDateText(date1, "date1");
+    assertDateText(date2, "date2");
+    if (date1 > date2) {
+      throw new Error("date1 must be earlier than or equal to date2.");
+    }
+
+    return {
+      queryDate1: date1,
+      queryDate2: date2,
+      timezone: R3A_TIMEZONE_OFFSET
+    };
+  }
+
+  const todayMoscow = moscowDateText(now);
+  const conservativeEnd = addUtcDays(todayMoscow, -2);
+  const conservativeStart = addUtcDays(
+    conservativeEnd,
+    -Math.max(1, Number(days) || R3B_DEFAULT_QUERY_DAYS) + 1
+  );
+
+  return {
+    queryDate1: conservativeStart,
+    queryDate2: conservativeEnd,
+    timezone: R3A_TIMEZONE_OFFSET
+  };
+}
+
 function validateR3aEnv(env) {
   const token = String(env.YANDEX_WEBMASTER_OAUTH_TOKEN || "").trim();
   const hostId = String(env.YANDEX_WEBMASTER_HOST_ID || "").trim();
@@ -128,8 +168,24 @@ function safeApiError(error, category) {
     error_category: category,
     http_status: normalized.http_status ?? null,
     safe_error_message: redactSensitive(normalized.safe_error_message || "Yandex Webmaster API request failed."),
-    safe_body: redactSensitive(normalized.safe_body ?? null)
+    safe_body: stripSensitiveObjectKeys(redactSensitive(normalized.safe_body ?? null))
   };
+}
+
+function stripSensitiveObjectKeys(value) {
+  if (Array.isArray(value)) {
+    return value.map(stripSensitiveObjectKeys);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => !/(authorization|access_token|refresh_token|oauth|token|client_secret|secret)/i.test(key))
+        .map(([key, nested]) => [key, stripSensitiveObjectKeys(nested)])
+    );
+  }
+
+  return value;
 }
 
 function endpointSummary(endpoint) {
@@ -185,13 +241,14 @@ async function fetchOptionalEndpoint({ endpoint, required = false, run }) {
   }
 }
 
-function buildQueryAnalyticsBody({ date1, date2, limit }) {
+function buildQueryAnalyticsBody({ date1, date2, limit, offset = 0, textIndicator = "URL" }) {
+  const normalizedTextIndicator = textIndicator === "QUERY" ? "QUERY" : "URL";
   return {
-    offset: 0,
+    offset,
     limit,
     device_type_indicator: "ALL",
     search_location: "WEB_LOCATION",
-    text_indicator: "URL",
+    text_indicator: normalizedTextIndicator,
     statistic_filters: [
       {
         statistic_field: "IMPRESSIONS",
@@ -279,6 +336,200 @@ async function fetchR3aEndpoints({
     endpoints,
     hostInfo,
     verification
+  };
+}
+
+async function fetchWebmasterIdentity({ env, fetchImpl }) {
+  const validation = validateR3aEnv(env);
+  const { token, hostId } = validation;
+  const userData = await webmasterRequest("/user", { token, fetchImpl });
+  const userId = userData.user_id;
+
+  if (!userId) {
+    throw new Error("Yandex Webmaster API did not return user_id.");
+  }
+
+  const encodedUser = encodeURIComponent(userId);
+  const encodedHost = encodeURIComponent(hostId);
+  const hostInfo = await webmasterRequest(`/user/${encodedUser}/hosts/${encodedHost}`, { token, fetchImpl });
+  const verification = await webmasterRequest(`/user/${encodedUser}/hosts/${encodedHost}/verification`, { token, fetchImpl });
+
+  return {
+    validation,
+    token,
+    hostId,
+    userId,
+    encodedUser,
+    encodedHost,
+    hostInfo,
+    verification
+  };
+}
+
+async function fetchR3bBetaCapabilities({ token, encodedUser, encodedHost, fetchImpl }) {
+  return [
+    await fetchOptionalEndpoint({
+      endpoint: "advanced_export_limits",
+      run: () => webmasterRequest(`/user/${encodedUser}/hosts/${encodedHost}/pro/limits`, { token, fetchImpl })
+    }),
+    await fetchOptionalEndpoint({
+      endpoint: "advanced_export_dates",
+      run: () => webmasterRequest(`/user/${encodedUser}/hosts/${encodedHost}/pro/serp/dates`, { token, fetchImpl })
+    }),
+    await fetchOptionalEndpoint({
+      endpoint: "advanced_export_regions",
+      run: () => webmasterRequest(`/user/${encodedUser}/hosts/${encodedHost}/pro/regions`, { token, fetchImpl })
+    })
+  ];
+}
+
+function buildR3bEndpointStrategy({ requestedStrategy, betaCapabilities }) {
+  const betaReady = betaCapabilities.length > 0 && betaCapabilities.every((endpoint) => endpoint.status === "ok");
+  const normalizedRequested = requestedStrategy === "beta" || requestedStrategy === "sync"
+    ? requestedStrategy
+    : "auto";
+
+  if (normalizedRequested === "beta") {
+    return {
+      selected: "query_analytics_sync_fallback",
+      beta_ready: betaReady,
+      limitations: betaReady
+        ? ["webmaster_advanced_query_export_beta_async_deferred"]
+        : [R3B_BETA_UNAVAILABLE_LIMITATION]
+    };
+  }
+
+  if (normalizedRequested === "sync") {
+    return {
+      selected: "query_analytics_sync_fallback",
+      beta_ready: betaReady,
+      limitations: [R3B_SYNC_LIMITATION]
+    };
+  }
+
+  return {
+    selected: "query_analytics_sync_fallback",
+    beta_ready: betaReady,
+    limitations: betaReady
+      ? [R3B_SYNC_LIMITATION, "webmaster_advanced_query_export_beta_async_deferred"]
+      : [R3B_SYNC_LIMITATION, R3B_BETA_UNAVAILABLE_LIMITATION]
+  };
+}
+
+async function fetchR3bQueryAnalyticsPages({
+  token,
+  encodedUser,
+  encodedHost,
+  fetchImpl,
+  periods,
+  limit,
+  maxPages,
+  textIndicator
+}) {
+  const pages = [];
+  let offset = 0;
+  let totalCount = null;
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const data = await webmasterRequest(`/user/${encodedUser}/hosts/${encodedHost}/query-analytics/list`, {
+      method: "POST",
+      token,
+      fetchImpl,
+      body: buildQueryAnalyticsBody({
+        date1: periods.queryDate1,
+        date2: periods.queryDate2,
+        limit,
+        offset,
+        textIndicator
+      })
+    });
+    const items = Array.isArray(data?.text_indicator_to_statistics)
+      ? data.text_indicator_to_statistics
+      : [];
+
+    pages.push({
+      offset,
+      count: Number.isFinite(Number(data?.count)) ? Number(data.count) : null,
+      items
+    });
+
+    totalCount = Number.isFinite(Number(data?.count)) ? Number(data.count) : totalCount;
+    if (items.length < limit || (Number.isFinite(totalCount) && offset + items.length >= totalCount)) {
+      break;
+    }
+
+    offset += limit;
+  }
+
+  return {
+    count: totalCount ?? pages.reduce((sum, page) => sum + page.items.length, 0),
+    pages: pages.length,
+    text_indicator_to_statistics: pages.flatMap((page) => page.items)
+  };
+}
+
+async function fetchR3bEndpoints({
+  env,
+  fetchImpl,
+  periods,
+  limit,
+  maxPages,
+  textIndicator,
+  strategy
+}) {
+  const identity = await fetchWebmasterIdentity({ env, fetchImpl });
+  const betaCapabilities = await fetchR3bBetaCapabilities({
+    token: identity.token,
+    encodedUser: identity.encodedUser,
+    encodedHost: identity.encodedHost,
+    fetchImpl
+  });
+  const endpointStrategy = buildR3bEndpointStrategy({
+    requestedStrategy: strategy,
+    betaCapabilities
+  });
+
+  const queryEndpoint = await fetchOptionalEndpoint({
+    endpoint: "query_analytics_sync",
+    required: true,
+    run: () => fetchR3bQueryAnalyticsPages({
+      token: identity.token,
+      encodedUser: identity.encodedUser,
+      encodedHost: identity.encodedHost,
+      fetchImpl,
+      periods,
+      limit,
+      maxPages,
+      textIndicator
+    })
+  });
+
+  return {
+    ...identity,
+    endpointStrategy,
+    betaCapabilities,
+    selectedTextIndicator: textIndicator,
+    endpoints: [
+      {
+        endpoint: "host_info",
+        required: true,
+        status: "ok",
+        data: identity.hostInfo,
+        rows: 1,
+        count: 1
+      },
+      {
+        endpoint: "verification",
+        required: true,
+        status: "ok",
+        data: identity.verification,
+        rows: 1,
+        count: 1
+      },
+      ...betaCapabilities,
+      queryEndpoint
+    ],
+    queryEndpoint
   };
 }
 
@@ -459,7 +710,14 @@ function makeQueryRows({
   hostId,
   queryAnalytics,
   importRunId,
-  publicSiteUrl
+  publicSiteUrl,
+  endpoint = "query_analytics",
+  sourceEndpoint = "query-analytics/list",
+  reportShape = "url_with_popular_complementary_query",
+  limitations = [],
+  device = "all",
+  country = "",
+  region = ""
 }) {
   const rows = [];
   for (const item of Array.isArray(queryAnalytics?.text_indicator_to_statistics) ? queryAnalytics.text_indicator_to_statistics : []) {
@@ -489,10 +747,11 @@ function makeQueryRows({
       const clicks = integerMetric(metrics.CLICKS);
       const ctr = impressions > 0 ? Number((clicks / impressions).toFixed(6)) : 0;
       const position = Number.isFinite(metrics.POSITION) ? Number(metrics.POSITION.toFixed(2)) : null;
-      const key = [hostId, date, query, normalized.normalized_url, "all", "", ""];
+      const key = [hostId, date, query, normalized.normalized_url, device, country, region];
 
       rows.push({
         id: stableId("webmaster_query", key),
+        endpoint,
         source_system: R3A_SOURCE_SYSTEM,
         host_id: hostId,
         date,
@@ -502,16 +761,19 @@ function makeQueryRows({
         page_path: normalized.page_path,
         entity_type: null,
         entity_id: null,
-        device: "all",
-        country: "",
-        region: "",
+        device,
+        country,
+        region,
         impressions,
         clicks,
         ctr,
         average_position: position,
         import_run_id: importRunId,
         metadata: safeMetadata({
-          endpoint: "query_analytics",
+          endpoint,
+          source_endpoint: sourceEndpoint,
+          report_shape: reportShape,
+          limitations,
           original_host: normalized.original_host,
           stripped_tracking_params: normalized.stripped_tracking_params,
           text_indicator_type: textIndicator.type ?? "",
@@ -596,6 +858,36 @@ function normalizeR3aRecords({
   return records;
 }
 
+function normalizeR3bRecords({
+  fetched,
+  importRunId,
+  textIndicator
+}) {
+  const records = {
+    hostSnapshots: [],
+    indexationSnapshots: [],
+    urlSamples: [],
+    queryRows: []
+  };
+
+  if (fetched.queryEndpoint?.status === "ok") {
+    records.queryRows.push(...makeQueryRows({
+      hostId: fetched.validation.hostId,
+      queryAnalytics: fetched.queryEndpoint.data,
+      importRunId,
+      publicSiteUrl: fetched.validation.publicSiteUrl,
+      endpoint: "query_analytics_sync",
+      sourceEndpoint: "query-analytics/list",
+      reportShape: textIndicator === "QUERY"
+        ? "query_with_popular_complementary_url"
+        : "url_with_popular_complementary_query",
+      limitations: fetched.endpointStrategy.limitations
+    }));
+  }
+
+  return records;
+}
+
 function countRecords(records) {
   return records.hostSnapshots.length
     + records.indexationSnapshots.length
@@ -627,6 +919,22 @@ function combinedStatus({ fetched, records }) {
   }
 
   return "ok";
+}
+
+function r3bStatus({ fetched }) {
+  if (!hostIsVerified(fetched.hostInfo, fetched.verification)) {
+    return "failed";
+  }
+
+  if (fetched.queryEndpoint?.status === "ok") {
+    return "ok";
+  }
+
+  if (fetched.queryEndpoint?.status === "failed") {
+    return "failed";
+  }
+
+  return "partial";
 }
 
 function errorsFromEndpoints(endpoints) {
@@ -680,6 +988,63 @@ function buildSummary({
       query_visibility_rows: 0
     },
     unmapped_url_count: unmappedUrlCount,
+    safe_error_message: safeErrorMessage,
+    errors: safeErrors
+  });
+}
+
+function buildR3bSummary({
+  mode,
+  status,
+  hostId,
+  periods,
+  importRunId,
+  fetched = null,
+  records = null,
+  errors = [],
+  unmappedUrlCount = 0,
+  limitations = []
+}) {
+  const safeErrors = errors.map((error) => redactSensitive(error));
+  const safeErrorMessage = safeErrors
+    .map((error) => error.safe_error_message || error.error_category || "")
+    .filter(Boolean)
+    .join("; ");
+  const queryRows = records?.queryRows ?? [];
+  const queryEndpoint = fetched?.queryEndpoint ?? null;
+  const mergedLimitations = Array.from(new Set([
+    ...limitations,
+    ...(fetched?.endpointStrategy?.limitations ?? []),
+    ...(queryRows.length === 0 && queryEndpoint?.status === "ok" ? [R3B_ZERO_ROWS_LIMITATION] : [])
+  ])).filter(Boolean);
+
+  return redactSensitive({
+    status,
+    dry_run: mode !== "write",
+    source_system: R3A_SOURCE_SYSTEM,
+    domain_slice: "R3B",
+    host_id: hostId || "",
+    endpoint_strategy: fetched?.endpointStrategy?.selected ?? "query_analytics_sync_fallback",
+    beta_ready: fetched?.endpointStrategy?.beta_ready ?? false,
+    selected_endpoint: "query-analytics/list",
+    selected_text_indicator: fetched?.selectedTextIndicator ?? "URL",
+    query_period_start: periods.queryDate1,
+    query_period_end: periods.queryDate2,
+    import_run_id: importRunId,
+    beta_capability: fetched ? Object.fromEntries(
+      fetched.betaCapabilities.map((endpoint) => [endpoint.endpoint, endpoint.status])
+    ) : {},
+    selected_endpoints: fetched ? fetched.endpoints.map(endpointSummary) : [],
+    rows_prepared: records ? queryRows.length : 0,
+    rows_imported: mode === "write" && records ? queryRows.length : 0,
+    record_counts: {
+      query_visibility_rows: records ? queryRows.length : 0
+    },
+    query_source_shape: fetched?.endpointStrategy?.selected === "query_analytics_sync_fallback"
+      ? "synchronous_query_analytics_list_with_popular_complementary_indicator"
+      : fetched?.endpointStrategy?.selected ?? "unknown",
+    unmapped_url_count: unmappedUrlCount,
+    limitations: mergedLimitations,
     safe_error_message: safeErrorMessage,
     errors: safeErrors
   });
@@ -1046,6 +1411,24 @@ async function persistR3aImport({ db, records, syncState }) {
   return { unmappedUrlCount: unmapped.length };
 }
 
+async function persistR3bImport({ db, records, syncState }) {
+  // R3B stores aggregate query/page evidence only. It must not join to
+  // user/session/contact/lead records or mutate Content Core.
+  const unmapped = await resolveUrlRecords(db, records);
+
+  for (const record of records.queryRows) {
+    await persistQueryRow(db, record);
+  }
+  for (const diagnostic of unmapped) {
+    await persistUnmappedDiagnostic(db, diagnostic);
+  }
+
+  syncState.unmapped_url_count = unmapped.length;
+  await persistSyncState(db, syncState);
+
+  return { unmappedUrlCount: unmapped.length };
+}
+
 async function persistSyncStateOnly({ withTransactionFn, syncState }) {
   if (typeof withTransactionFn !== "function") {
     throw new Error("withTransactionFn is required for write mode.");
@@ -1161,6 +1544,167 @@ export async function runWebmasterR3a({
   } catch (error) {
     const safeError = safeApiError(error, "import_failed");
     const summary = buildSummary({
+      mode: normalizedMode,
+      status: "failed",
+      hostId: validation.hostId,
+      periods,
+      importRunId,
+      errors: [safeError]
+    });
+
+    if (normalizedMode === "write") {
+      await persistSyncStateOnly({
+        withTransactionFn,
+        syncState: syncStateFromSummary({
+          status: "failed",
+          periods,
+          rowsImported: 0,
+          safeErrorMessage: summary.safe_error_message,
+          unmappedUrlCount: 0
+        })
+      });
+    }
+
+    return summary;
+  }
+}
+
+export async function runWebmasterR3b({
+  mode = "dry-run",
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+  withTransactionFn = null,
+  now = new Date(),
+  date1 = "",
+  date2 = "",
+  days = R3B_DEFAULT_QUERY_DAYS,
+  limit = R3B_DEFAULT_LIMIT,
+  maxPages = R3B_DEFAULT_MAX_PAGES,
+  textIndicator = "URL",
+  strategy = "auto"
+} = {}) {
+  const normalizedMode = mode === "write" ? "write" : "dry-run";
+  const importRunId = `r3b_${new Date(now).toISOString().replace(/[:.]/g, "-")}_${randomUUID()}`;
+  const normalizedTextIndicator = textIndicator === "QUERY" ? "QUERY" : "URL";
+  const normalizedLimit = Math.min(500, Math.max(1, Number(limit) || R3B_DEFAULT_LIMIT));
+  const normalizedMaxPages = Math.min(20, Math.max(1, Number(maxPages) || R3B_DEFAULT_MAX_PAGES));
+  let periods;
+
+  try {
+    periods = resolveR3bPeriods({ now, date1, date2, days });
+  } catch (error) {
+    return buildR3bSummary({
+      mode: normalizedMode,
+      status: "failed",
+      hostId: validateR3aEnv(env).hostId,
+      periods: { queryDate1: "", queryDate2: "", timezone: R3A_TIMEZONE_OFFSET },
+      importRunId,
+      errors: [{ error_category: "invalid_date_range", safe_error_message: redactSensitive(error.message) }]
+    });
+  }
+
+  const validation = validateR3aEnv(env);
+  if (!validation.ok) {
+    const safeErrorMessage = `Missing required Webmaster env: ${validation.missing.join(", ")}.`;
+    const summary = buildR3bSummary({
+      mode: normalizedMode,
+      status: "not_configured",
+      hostId: validation.hostId,
+      periods,
+      importRunId,
+      errors: [{ error_category: "not_configured", safe_error_message: safeErrorMessage }]
+    });
+
+    if (normalizedMode === "write") {
+      await persistSyncStateOnly({
+        withTransactionFn,
+        syncState: syncStateFromSummary({
+          status: "not_configured",
+          periods,
+          rowsImported: 0,
+          safeErrorMessage: summary.safe_error_message,
+          unmappedUrlCount: 0
+        })
+      });
+    }
+
+    return summary;
+  }
+
+  try {
+    const fetched = await fetchR3bEndpoints({
+      env,
+      fetchImpl,
+      periods,
+      limit: normalizedLimit,
+      maxPages: normalizedMaxPages,
+      textIndicator: normalizedTextIndicator,
+      strategy
+    });
+    const records = normalizeR3bRecords({
+      fetched,
+      importRunId,
+      textIndicator: normalizedTextIndicator
+    });
+    const status = r3bStatus({ fetched });
+    const endpointErrors = errorsFromEndpoints(
+      fetched.endpoints.filter((endpoint) => endpoint.required || endpoint.endpoint === "query_analytics_sync")
+    );
+    if (!hostIsVerified(fetched.hostInfo, fetched.verification)) {
+      endpointErrors.push({
+        error_category: "host_not_verified",
+        safe_error_message: "Yandex Webmaster host is not verified."
+      });
+    }
+
+    let unmappedUrlCount = 0;
+    const summaryBeforeWrite = buildR3bSummary({
+      mode: normalizedMode,
+      status,
+      hostId: validation.hostId,
+      periods,
+      importRunId,
+      fetched,
+      records,
+      errors: endpointErrors,
+      unmappedUrlCount
+    });
+
+    if (normalizedMode === "write") {
+      if (typeof withTransactionFn !== "function") {
+        throw new Error("withTransactionFn is required for write mode.");
+      }
+
+      await withTransactionFn(async (db) => {
+        const persisted = await persistR3bImport({
+          db,
+          records,
+          syncState: syncStateFromSummary({
+            status,
+            periods,
+            rowsImported: records.queryRows.length,
+            safeErrorMessage: summaryBeforeWrite.safe_error_message,
+            unmappedUrlCount
+          })
+        });
+        unmappedUrlCount = persisted.unmappedUrlCount;
+      });
+    }
+
+    return buildR3bSummary({
+      mode: normalizedMode,
+      status,
+      hostId: validation.hostId,
+      periods,
+      importRunId,
+      fetched,
+      records,
+      errors: endpointErrors,
+      unmappedUrlCount
+    });
+  } catch (error) {
+    const safeError = safeApiError(error, "r3b_import_failed");
+    const summary = buildR3bSummary({
       mode: normalizedMode,
       status: "failed",
       hostId: validation.hostId,
