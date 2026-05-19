@@ -17,10 +17,10 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - Yandex Webmaster подключен и verified.
 - Yandex Metrica counter `109037342` доступен, 11 required goals созданы.
 - Scheduled imports Яндекс Метрики/Вебмастера еще не реализованы.
-- Public Metrica counter script еще не включен на public site.
+- Public Metrica counter script реализован, но production enablement остается env-gated и safe-disabled по умолчанию до privacy/cookie approval.
 - LLM provider/UI не подключались.
 - `/about` и `/contacts` опубликованы в production и отдают `200` (verified 2026-05-19): есть published Content Core pages `Page(type=about)` и `Page(type=contacts)` с `active_published_revision_id`; sitemap включает оба URL.
-- R1 PRD/Blueprint drafts созданы; implementation R1 не начинался. New framing: internal telemetry is operational truth; Metrica is optional external mirror. Next step: review PRD/Blueprint and approve privacy/bridge architecture.
+- R1 implementation deployed on 2026-05-19 at commit `64599542d2da214378298356f5afe1002b1ff5f5`: internal telemetry remains operational truth; optional Metrica mirror is implemented as env-gated external mirror. Production Metrica enablement was not turned on without privacy/cookie approval.
 
 ## 3. Architecture snapshot
 
@@ -73,8 +73,8 @@ UI не должен собирать метрики напрямую из Ян�
 
 ## 6. What is intentionally not implemented yet
 
-- Yandex Metrica public counter injection.
-- Optional first-party telemetry -> `ym(..., "reachGoal", ...)` mirror.
+- Scheduled production enablement of Yandex Metrica public counter after privacy/cookie approval.
+- Delayed live Metrica goal verification after the env flag is approved/enabled.
 - Scheduled Yandex Metrica imports.
 - Scheduled Yandex Webmaster imports.
 - Real external aggregates in read model.
@@ -116,17 +116,17 @@ UI не должен собирать метрики напрямую из Ян�
 
 ## 10. Next recommended steps
 
-1. Review `docs/product-ux/PRD_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`.
-2. Review `docs/blueprints/BLUEPRINT_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`.
-3. Approve privacy/cookie posture, Metrica init options, Webvisor/clickmap/session replay posture and telemetry-to-goal mapping.
-4. Approve R1 bridge architecture with internal telemetry as primary and Metrica as optional mirror. Current draft recommendation: controlled client-side/hybrid adapter.
-5. Then implement R1: operational public telemetry smoke first, optional env-gated Yandex Metrica counter/reachGoal mirror second.
-6. Live smoke: first-party telemetry storage independently from Metrica; optional Metrica goal after acceptable delay if mirror is enabled.
-7. Implement scheduled Metrica imports.
-8. Implement scheduled Webmaster imports.
-9. Integrate imported aggregates into read model.
-10. UX/UI refine `/admin/visibility`.
-11. Later LLM Copilot Safety Gate and UI.
+1. Review R1 implementation/conformity reports:
+   `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+2. Decide privacy/cookie posture for production Metrica counter enablement.
+3. If approved, set `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true` in canonical runtime/build context, rebuild/redeploy, and run delayed Metrica goal verification.
+4. If Metrica mirror remains disabled, proceed only with internal telemetry evidence; do not treat this as loss of operational truth.
+5. Implement scheduled Metrica imports.
+6. Implement scheduled Webmaster imports.
+7. Integrate imported aggregates into read model.
+8. UX/UI refine `/admin/visibility`.
+9. Later LLM Copilot Safety Gate and UI.
 
 ## 11. Do-not-do list
 

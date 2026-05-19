@@ -82,7 +82,7 @@ Supporting documents:
 
 ### Finish 2. Public Operational Measurement Live
 
-Статус: ближайший следующий уровень.
+Статус: implemented safe-disabled on 2026-05-19; production Metrica enablement remains privacy/cookie-gated.
 
 Критерии:
 
@@ -956,15 +956,14 @@ Recommended next domain slice:
 R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror
 ```
 
-R1 next action is not implementation yet.
+R1 implementation is now available in commit `64599542d2da214378298356f5afe1002b1ff5f5` and deployed to canonical runtime in safe-disabled posture.
 
 Correct next action:
 
-1. Review `docs/product-ux/PRD_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`.
-2. Review `docs/blueprints/BLUEPRINT_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`.
-3. Approve privacy/cookie posture.
-4. Approve the technical bridge design: controlled client-side/hybrid adapter.
-5. Then implement R1.
+1. Review implementation and conformity audit reports.
+2. Decide privacy/cookie posture for production Metrica counter enablement.
+3. If approved, enable `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true` in canonical runtime/build context, rebuild/redeploy, and run delayed Metrica goal verification.
+4. If the mirror remains disabled, continue with internal telemetry as operational truth and proceed to R2/R3 only when external aggregate imports are separately approved.
 
 Why:
 
@@ -972,8 +971,8 @@ Why:
 - Metrica API is ready;
 - 11 Metrica goals exist for optional external mirroring;
 - Webmaster is verified;
-- public Metrica script is still disabled;
-- optional reachGoal mirror is absent;
+- public Metrica script is implemented but remains disabled by env in production;
+- optional reachGoal mirror is implemented as a centralized, best-effort adapter;
 - scheduled imports should enrich the system after local telemetry is proven, not become the primary path for operational user-action truth.
 
 Definition of finish for the nearest implementation cycle after PRD/Blueprint:
@@ -982,7 +981,7 @@ Definition of finish for the nearest implementation cycle after PRD/Blueprint:
 - internal telemetry remains usable when Metrica is disabled or blocked;
 - public counter enabled behind env flag;
 - approved optional mirror sends or causes approved reachGoal signals when enabled;
-- one or more live goals are observed in Metrica if mirror is enabled;
+- one or more live goals are observed in Metrica only after the mirror is explicitly approved and enabled;
 - no secrets leak;
 - no direct UI/Yandex API coupling is introduced;
 - handoff/report records exact mapping and smoke evidence.
@@ -1002,7 +1001,7 @@ Future scope:
 | Phase | Status | Why now / why later | Dependencies | Acceptance | Output artifact |
 | --- | --- | --- | --- | --- | --- |
 | R0. Current State Baseline | Done | Needed to stop stale-memory work. | Current audit evidence. | Factual state and handoff updated. | Current state audit report. |
-| R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror | Next / design drafts created | Internal telemetry is operational truth; optional Metrica mirror needs review/approval gates. | R1 PRD draft, R1 Blueprint draft, privacy/cookie approval, counter options, goal mapping, bridge design. | PRD/Blueprint reviewed; internal telemetry smoke first; optional mirror smoke second. | R1 PRD draft created; R1 Blueprint draft created; implementation report later. |
+| R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror | Implemented safe-disabled / production mirror gated | Internal telemetry is operational truth; optional Metrica mirror is implemented but production enablement waits for privacy/cookie approval. | R1 PRD/Blueprint, conservative privacy posture, env flags, centralized adapter, tests, deploy. | Internal telemetry smoke passed with Metrica disabled; optional Metrica browser-level mirror covered by tests; live goal verification pending explicit env-on approval. | Implementation report and conformity audit. |
 | R2. Metrica Import Foundation | Later, after R1 | Imports are external aggregate enrichment after local telemetry is proven. | R1 telemetry smoke, optional mirror smoke if enabled, cadence, retention, API field check. | Idempotent aggregate imports and source_sync_state. | Metrica import report. |
 | R3. Webmaster Import Foundation | Later, after R1; parallel with R2 possible | Webmaster verified, but data not imported. | Host id, cadence, API capability check. | Idempotent visibility/indexation imports and safe states. | Webmaster import report. |
 | R4. Read Model With Real External Aggregates | After R2/R3 | Read model needs imported rows. | Imported data and source sync state. | Yandex sources show truthful ok/stale/failed states and aggregate evidence. | Read model integration report. |

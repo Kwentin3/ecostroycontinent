@@ -179,6 +179,20 @@ YANDEX_WEBMASTER_OAUTH_TOKEN=
 }
 ```
 
+### 5.1. R1 public runtime mirror
+
+R1 public runtime behavior is separate from bootstrap tooling:
+
+- internal first-party telemetry remains the operational source of truth;
+- public actions continue to be ingested through `/api/telemetry/events`;
+- Yandex Metrica is an optional external mirror, not the source of truth for Content Core mapping, operational dashboard decisions or lead/contact distinction;
+- public counter loading is controlled only by browser-safe `NEXT_PUBLIC_YANDEX_METRICA_ENABLED` and `NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID`;
+- OAuth tokens, Webmaster tokens, client secret and refresh tokens must never be exposed through public config or browser bundles;
+- default R1 init posture is conservative: `webvisor=false`, `clickmap=false`, `ecommerce=false`, `trackLinks=false`, `accurateTrackBounce=false`;
+- `reachGoal` calls are allowed only through the approved centralized Metrica bootstrap/adapter boundary.
+
+Production enablement of the public counter remains gated by privacy/cookie approval. If the flag stays disabled, internal telemetry is still valid and operational.
+
 ## 6. Яндекс Вебмастер
 
 `check-webmaster` делает следующее:
