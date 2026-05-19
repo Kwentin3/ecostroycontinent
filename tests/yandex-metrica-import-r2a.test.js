@@ -200,6 +200,34 @@ test("dry-run validates API and prepares traffic and 11 goal rows without DB wri
   assert.equal(fetchImpl.calls.some((call) => call.url.includes("/stat/v1/data")), true);
 });
 
+test("empty API rows with zero totals produce explicit zero-valued daily aggregate rows", async () => {
+  const result = await runMetricaR2a({
+    mode: "dry-run",
+    env: COMPLETE_ENV,
+    fetchImpl: makeFetch({
+      statHandler: async (url) => {
+        const metrics = url.searchParams.get("metrics").split(",");
+
+        return jsonResponse({
+          data: [],
+          total_rows: 0,
+          sampled: false,
+          sample_share: 1,
+          data_lag: 0,
+          totals: metrics.map(() => 0)
+        });
+      }
+    }),
+    date1: "2026-05-16",
+    date2: "2026-05-18"
+  });
+
+  assert.equal(result.status, "ok");
+  assert.equal(result.report_summaries.traffic_total.api_rows, 0);
+  assert.equal(result.rows_prepared, 42);
+  assert.equal(result.rows_imported, 0);
+});
+
 test("write import persists minimal aggregate rows and ok source sync state", async () => {
   const db = makeMemoryDb();
   const result = await runMetricaR2a({

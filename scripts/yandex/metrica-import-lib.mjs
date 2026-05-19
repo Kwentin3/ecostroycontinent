@@ -433,6 +433,18 @@ function numericMetric(value) {
   return Number.isFinite(numeric) && numeric >= 0 ? numeric : 0;
 }
 
+function dateList(dateRange) {
+  const dates = [];
+  let current = dateRange.date1;
+
+  while (current <= dateRange.date2) {
+    dates.push(current);
+    current = addDays(current, 1);
+  }
+
+  return dates;
+}
+
 function aggregateId(record) {
   return `metrica_${hashStableJson({
     source_system: record.source_system,
@@ -444,19 +456,66 @@ function aggregateId(record) {
   }).slice(0, 40)}`;
 }
 
-function metricMetadata(response, metric) {
+function metricMetadata(response, metric, extra = {}) {
   return {
     api_metric: metric.apiMetric,
     report_source: "yandex_metrica_reporting_api",
     sampled: Boolean(response?.sampled),
     sample_share: response?.sample_share ?? null,
-    data_lag: response?.data_lag ?? null
+    data_lag: response?.data_lag ?? null,
+    ...extra
   };
 }
 
-function recordsFromReport({ reportType, response, metrics }) {
+function totalsAreAllZero(response) {
+  return Array.isArray(response?.totals)
+    && response.totals.length > 0
+    && response.totals.every((value) => numericMetric(value) === 0);
+}
+
+function buildRecord({ reportType, date, metric, metricValue, metadata }) {
+  const record = {
+    id: "",
+    source_system: R2A_SOURCE_SYSTEM,
+    date,
+    period_grain: "day",
+    report_type: reportType,
+    dimension_hash: EMPTY_DIMENSIONS_HASH,
+    dimensions: EMPTY_DIMENSIONS,
+    metric_key: metric.metricKey,
+    metric_value: numericMetric(metricValue),
+    goal_id: metric.goalId ?? "",
+    goal_name: metric.goalName ?? "",
+    import_run_id: "",
+    metadata
+  };
+
+  record.id = aggregateId(record);
+  return record;
+}
+
+function recordsFromReport({ reportType, response, metrics, dateRange }) {
   const rows = Array.isArray(response?.data) ? response.data : [];
   const records = [];
+
+  if (rows.length === 0 && totalsAreAllZero(response)) {
+    for (const date of dateList(dateRange)) {
+      for (const metric of metrics) {
+        records.push(buildRecord({
+          reportType,
+          date,
+          metric,
+          metricValue: 0,
+          metadata: metricMetadata(response, metric, {
+            zero_filled_from_empty_api_rows: true,
+            zero_fill_reason: "api_totals_zero"
+          })
+        }));
+      }
+    }
+
+    return records;
+  }
 
   for (const row of rows) {
     const date = extractDate(row);
@@ -465,24 +524,13 @@ function recordsFromReport({ reportType, response, metrics }) {
     }
 
     for (const [index, metric] of metrics.entries()) {
-      const record = {
-        id: "",
-        source_system: R2A_SOURCE_SYSTEM,
+      records.push(buildRecord({
+        reportType,
         date,
-        period_grain: "day",
-        report_type: reportType,
-        dimension_hash: EMPTY_DIMENSIONS_HASH,
-        dimensions: EMPTY_DIMENSIONS,
-        metric_key: metric.metricKey,
-        metric_value: numericMetric(row.metrics?.[index]),
-        goal_id: metric.goalId ?? "",
-        goal_name: metric.goalName ?? "",
-        import_run_id: "",
+        metric,
+        metricValue: row.metrics?.[index],
         metadata: metricMetadata(response, metric)
-      };
-
-      record.id = aggregateId(record);
-      records.push(record);
+      }));
     }
   }
 
@@ -503,7 +551,8 @@ function summarizeStatResponse(response) {
 export function normalizeR2aRecords({
   trafficReport,
   goalReport,
-  importRunId
+  importRunId,
+  dateRange
 }) {
   const records = [];
 
@@ -511,7 +560,8 @@ export function normalizeR2aRecords({
     records.push(...recordsFromReport({
       reportType: "traffic_total",
       response: trafficReport.response,
-      metrics: trafficReport.metrics
+      metrics: trafficReport.metrics,
+      dateRange
     }));
   }
 
@@ -519,7 +569,8 @@ export function normalizeR2aRecords({
     records.push(...recordsFromReport({
       reportType: "goal_reaches",
       response: goalSlice.response,
-      metrics: goalSlice.metrics
+      metrics: goalSlice.metrics,
+      dateRange
     }));
   }
 
@@ -844,7 +895,8 @@ export async function runMetricaR2a({
     const records = normalizeR2aRecords({
       trafficReport: fetched.trafficReport,
       goalReport: fetched.goalReport,
-      importRunId
+      importRunId,
+      dateRange
     });
     const status = combinedStatus([
       fetched.plan.status,
