@@ -377,11 +377,13 @@ test("R2A migration defines aggregate table and excludes raw/user-level fields",
   assert.doesNotMatch(migration, /\b(session_id|anonymous_visitor_id|ip_address|user_agent|form_values|authorization|access_token)\b/i);
 });
 
-test("R2A importer does not write Metrica aggregates into internal analytics events or read model", () => {
+test("R2A importer does not write Metrica aggregates into internal analytics events and R4-lite keeps them diagnostic", () => {
   const importer = fs.readFileSync("scripts/yandex/metrica-import-lib.mjs", "utf8");
   const readModel = fs.readFileSync("lib/analytics/read-model.js", "utf8");
 
   assert.doesNotMatch(importer, /analytics_event\b/);
   assert.doesNotMatch(importer, /telemetry_events\b/);
-  assert.doesNotMatch(readModel, /external_metrica_daily_aggregate/);
+  assert.match(readModel, /external_source_readiness/);
+  assert.match(readModel, /external_metrica_not_operational_truth/);
+  assert.doesNotMatch(readModel, /Metrica.*source of truth/i);
 });

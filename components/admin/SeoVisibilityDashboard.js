@@ -23,7 +23,7 @@ function formatPercent(value) {
 }
 
 function sourceTone(status) {
-  if (status === "ok") {
+  if (status === "ok" || status === "fresh") {
     return "Ok";
   }
 
@@ -59,6 +59,30 @@ function statusLabel(status) {
     not_ready: "не готов",
     not_applicable: "не применимо"
   }[status] || status;
+}
+
+function actionabilityLabel(value) {
+  return {
+    readiness_only: "только готовность источника",
+    limited_external_diagnostic: "ограниченная внешняя диагностика",
+    readiness_and_limited_indexation_evidence: "готовность и ограниченная индексация",
+    limited_search_visibility_evidence: "ограниченная поисковая видимость"
+  }[value] || value || "нет данных";
+}
+
+function readinessSourceLabel(source) {
+  return {
+    yandex_metrica: "Метрика: внешний слой",
+    yandex_webmaster: "Вебмастер: внешний слой"
+  }[source] || sourceLabel(source);
+}
+
+function formatSourcePeriod(item) {
+  if (!item?.imported_period_start && !item?.imported_period_end) {
+    return "период не задан";
+  }
+
+  return `${item.imported_period_start || "?"} - ${item.imported_period_end || "?"}`;
 }
 
 function priorityLabel(priority) {
@@ -446,6 +470,7 @@ function Recommendations({ recommendations }) {
 function Diagnostics({ readModel }) {
   const states = readModel.source_diagnostics?.states || {};
   const unmapped = readModel.source_diagnostics?.unmapped_urls || [];
+  const readiness = readModel.external_source_readiness || readModel.source_diagnostics?.external_source_readiness || {};
 
   return (
     <section className={styles.panel} aria-labelledby="source-diagnostics">
@@ -466,6 +491,22 @@ function Diagnostics({ readModel }) {
               строк импортировано: {formatNumber(item.rows_imported)} · несопоставленных URL: {formatNumber(item.unmapped_url_count)}
             </p>
             {item.safe_error_message ? <p className={styles.muted}>{item.safe_error_message}</p> : null}
+          </article>
+        ))}
+        {Object.entries(readiness).map(([source, item]) => (
+          <article key={`readiness-${source}`} className={styles.diagnosticCard}>
+            <div className={styles.diagnosticRow}>
+              <strong>{readinessSourceLabel(source)}</strong>
+              <span className={`${styles.badge} ${styles[`badge${sourceTone(item.freshness?.status || item.status)}`]}`}>
+                {statusLabel(item.freshness?.status || item.status)}
+              </span>
+            </div>
+            <p className={styles.smallText}>
+              период: {formatSourcePeriod(item)} · строк: {formatNumber(item.rows_imported)} · {actionabilityLabel(item.data_actionability)}
+            </p>
+            {item.limitations?.length ? (
+              <p className={styles.muted}>ограничения: {item.limitations.slice(0, 3).join(", ")}</p>
+            ) : null}
           </article>
         ))}
         {unmapped.length ? (

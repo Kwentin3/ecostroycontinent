@@ -444,13 +444,14 @@ test("R3A migration defines dedicated Webmaster tables and excludes raw/user-lev
   assert.doesNotMatch(migration, /\b(session_id|lead_id|contact_journey_id|ip_address|user_agent|form_values|authorization|access_token|refresh_token)\b/i);
 });
 
-test("R3A importer does not wire Webmaster data into read model, UI, sessions or leads", () => {
+test("R3A importer does not wire Webmaster data into sessions, leads, Content Core or direct Yandex UI calls", () => {
   const importer = fs.readFileSync("scripts/yandex/webmaster-import-lib.mjs", "utf8");
   const readModel = fs.readFileSync("lib/analytics/read-model.js", "utf8");
   const visibilityPage = fs.readFileSync("components/admin/SeoVisibilityDashboard.js", "utf8");
 
-  assert.doesNotMatch(readModel, /external_webmaster_(host_snapshot|indexation_snapshot|url_sample|query_visibility_daily)/);
-  assert.doesNotMatch(visibilityPage, /external_webmaster_/);
+  assert.match(readModel, /external_source_readiness/);
+  assert.match(readModel, /webmaster_not_content_core_truth/);
+  assert.doesNotMatch(visibilityPage, /api\.webmaster|webmaster\.yandex|Authorization|fetch\s*\(/i);
   assert.doesNotMatch(importer, /\b(session_id|lead_id|contact_journey|qualified_lead)\b/);
   assert.doesNotMatch(importer, /UPDATE\s+content_entities|INSERT\s+INTO\s+content_entities/i);
 });
