@@ -24,7 +24,9 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - R1 public Metrica enablement deployed on canonical runtime at commit `90896a9e4015864f15fb633cfc2259af8cce99cb`: `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true`, counter `109037342`, conservative init options, browser/network reachGoal proof passed. Yandex Reporting API stats visibility for visits/goals was still delayed/pending as of `2026-05-19T10:19:00Z`.
 - R2/R3 PRD and Blueprint drafts are created and refined for external imports. R2A is implemented and accepted on canonical runtime at commit `6d5d976abcb086edb15b5c1a6a62a25d8876a5e8`: dry-run/write commands exist, `external_metrica_daily_aggregate` stores minimal daily traffic/goals, `analytics_source_sync_state` for `yandex_metrica` is `ok`, and same-period rerun is idempotent.
 - R3A `Webmaster Host / Indexation / Query Visibility Dry Run` is implemented and accepted on canonical runtime at commit `8a8e2e5ea6668375637fc4fdd16ea3b2e77a22c8`: dry-run/write commands exist, dedicated `external_webmaster_*` tables store host/indexation/URL sample rows, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and same snapshot/period rerun is idempotent. Query analytics was capability-checked but returned `0` rows for the accepted period.
-- R2/R3 remain split into minimal slices. The next decision is whether to deepen R2/R3 with explicit sub-slices or start R4 read model integration from accepted external source states/rows.
+- R4 Readiness Audit is complete. Full R4 is not recommended yet; the recommended next slice is R4-lite `External Source State and Readiness Integration`.
+- R4-lite PRD/Blueprint are created: `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md` and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
+- R4-lite is source-state/readiness only: it must not make Metrica/Webmaster operational truth, must not use Metrica zeros as primary traffic/contact truth, and must not generate query/CTR recommendations from absent Webmaster query rows.
 
 ## 3. Architecture snapshot
 
@@ -142,10 +144,14 @@ UI не должен собирать метрики напрямую из Ян�
 5. Review R3A implementation/conformity reports:
    `docs/reports/2026-05-19/R3A_WEBMASTER_IMPORT_FOUNDATION_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
    and `docs/reports/2026-05-19/R3A_WEBMASTER_IMPORT_FOUNDATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
-6. Decide next slice: deepen R2/R3 with explicit import sub-slices or move to R4 read model integration using accepted external source states/rows.
-7. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model integration before R4.
-8. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
-9. Later LLM Copilot Safety Gate and UI.
+6. Review R4 readiness/design docs:
+   `docs/reports/2026-05-19/R4_READINESS_AUDIT_Экостройконтинент_v0.1.report.md`,
+   `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`,
+   and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
+7. Recommended next implementation slice: R4-lite source-state/readiness integration. Full R4, R2B/R3B deep imports, UX refine, LLM and lead/intake remain separate later decisions.
+8. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
+9. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
+10. Later LLM Copilot Safety Gate and UI.
 
 ## 11. Do-not-do list
 

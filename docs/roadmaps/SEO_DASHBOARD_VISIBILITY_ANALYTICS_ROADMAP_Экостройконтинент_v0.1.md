@@ -519,11 +519,52 @@ Next handoff:
 
 - document exact Webmaster data now available and what remains unavailable.
 
+### Phase R4-lite. External Source State and Readiness Integration
+
+Status: PRD/Blueprint created; recommended next slice after R4 readiness audit.
+
+Текущая боль: R2A/R3A prove external import plumbing and source states, but the data is too thin for full R4. Metrica imported only zero external aggregates, and Webmaster query visibility returned no rows.
+
+Цель фазы: expose truthful external source readiness in the analytics read model without treating weak/zero external data as operational truth.
+
+Scope:
+
+- source readiness for `yandex_metrica` and `yandex_webmaster`;
+- imported periods, rows, last success/attempt and safe errors;
+- compact Metrica import summary with all-zero limitation;
+- compact Webmaster host/indexation/URL sample/query-empty summary;
+- limitations and data actionability labels.
+
+Non-goals:
+
+- full external metric/evidence integration;
+- recommendations from Metrica zeros;
+- low CTR/query recommendations from absent Webmaster query rows;
+- R2B/R3B imports;
+- UI redesign;
+- scheduled jobs;
+- LLM;
+- lead/intake.
+
+Deliverables:
+
+- R4-lite PRD: `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`;
+- R4-lite Blueprint: `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`;
+- implementation later should add compact readiness DTO/tests/report only.
+
+Acceptance criteria:
+
+- read model exposes source state/readiness truthfully;
+- Metrica zero rows do not feed primary traffic/contact metrics;
+- absent Webmaster query rows do not generate query/CTR recommendations;
+- no Yandex API calls happen in read model request path;
+- secrets/raw external responses are not exposed.
+
 ### Phase R4. Read Model With Real External Aggregates
 
-Status: after R2/R3 have data.
+Status: after R4-lite and/or deeper R2B/R3B data, not current next slice.
 
-Текущая боль: read model currently shows Yandex sources as `not_configured` from the dashboard point of view because source sync/import rows are absent.
+Текущая боль: read model needs real external aggregates/evidence, but current R2A/R3A data is not rich enough for full traffic/search recommendations.
 
 Цель фазы: make analytics read model consume imported Metrica/Webmaster aggregates and show truthful source health/freshness.
 
@@ -990,9 +1031,13 @@ Correct next decision:
    `docs/reports/2026-05-19/R2A_METRICA_IMPORT_FOUNDATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`,
    `docs/reports/2026-05-19/R3A_WEBMASTER_IMPORT_FOUNDATION_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`,
    and `docs/reports/2026-05-19/R3A_WEBMASTER_IMPORT_FOUNDATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
-2. Decide whether to deepen R2/R3 with explicit sub-slices or start R4 read model integration from accepted external source states/rows.
-3. Optionally rerun delayed Metrica stats visibility check after Yandex processing catches up.
-4. Do not make Metrica or Webmaster imported counts the operational source of truth for public user actions.
+2. Review R4 readiness/design docs:
+   `docs/reports/2026-05-19/R4_READINESS_AUDIT_Экостройконтинент_v0.1.report.md`,
+   `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`,
+   and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
+3. Recommended next implementation slice: R4-lite source-state/readiness integration.
+4. Optionally rerun delayed Metrica stats visibility check after Yandex processing catches up.
+5. Do not make Metrica or Webmaster imported counts the operational source of truth for public user actions.
 
 R2/R3 are not one-shot monoliths. They are domain phases with internal sub-slices:
 
@@ -1004,7 +1049,7 @@ R3A -> R3B/R3C/R3D
 Recommended implementation order:
 
 ```text
-R2A(done) -> R3A(done) -> decide: deepen R2/R3 or move to R4
+R2A(done) -> R3A(done) -> R4-lite -> decide: R3B/R2B deeper data or full R4
 ```
 
 Why:
@@ -1051,7 +1096,8 @@ Future scope:
 | R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror | Enabled / server acceptance closed with delayed external stats visibility | Internal telemetry is operational truth; optional Metrica mirror is enabled after owner prototype-stage approval, with no Webvisor/clickmap/ecommerce/session replay. | R1 PRD/Blueprint, owner privacy posture decision, env flags, centralized adapter, tests, deploy. | Internal telemetry smoke passed; public counter and browser/network reachGoal mirror passed; Yandex Reporting API stats visibility for visits/goals remained `0` as of `2026-05-19T10:19:00Z` and needs delayed recheck. | Implementation, conformity, detailed delivery, and final enablement reports. |
 | R2. Metrica Import Foundation | R2A accepted; R2B/R2C later | R2A proved API access, storage, source_sync_state and idempotency without broad BI dimensions. Deeper dimensions and scheduling should wait for explicit next slice. | R1 telemetry smoke, R2 PRD/Blueprint/addendum, migration `010`, canonical runtime acceptance. | R2A minimal daily traffic/goals import and source_sync_state accepted; no read model/UI/scheduler added. | R2A implementation/conformity reports; later R2B/R2C reports. |
 | R3. Webmaster Import Foundation | R3A accepted; R3B/R3C/R3D later | R3A proved host/verification/site summary/in-search sample/query capability, dedicated storage, source_sync_state and idempotency without broad endpoint sweep. | Host id, R3 PRD/Blueprint/addendum, migration `011`, canonical runtime acceptance. | R3A host/indexation/URL sample import and `yandex_webmaster` source_sync_state accepted; query analytics returned zero rows for accepted period; no read model/UI/scheduler added. | R3A implementation/conformity reports; later R3B/R3C/R3D reports. |
-| R4. Read Model With Real External Aggregates | After accepted R2A/R3A rows from at least one source | Read model needs imported rows and truthful source state. | Accepted imported data and source sync state from at least one external source. | Yandex sources show truthful ok/stale/failed states and aggregate evidence. | Read model integration report. |
+| R4-lite. External Source State and Readiness Integration | PRD/Blueprint created; next recommended slice | R2A/R3A data is enough for source-state/readiness but too thin for full R4 evidence. | R4 readiness audit, R2A/R3A accepted source states/rows. | Read model exposes source readiness/limitations; Metrica zeros and absent Webmaster query rows do not drive primary metrics or recommendations. | R4-lite PRD, Blueprint, later implementation report. |
+| R4. Read Model With Real External Aggregates | Later | Full R4 needs richer external aggregates/evidence than current R2A/R3A. | R4-lite and/or R2B/R3B deeper data. | Yandex sources show truthful aggregate evidence without overclaiming weak data. | Full read model integration report. |
 | R5. Operational Recommendations Refinement | After R4 | Rules need real data and sample size. | External aggregates in read model. | Evidence-backed deterministic recommendations with attribution safety. | Recommendation refinement report/spec. |
 | R6. UX/UI Product Refinement | Later | UI should follow real workflow, not empty states. | R4/R5. | SEO Manager can inspect pages, evidence, freshness and actions. | UX/UI spec and later implementation report. |
 | R7. LLM Copilot Safety Gate and First UI | Future | Needs read model, evals and safety posture. | R4/R5, provider decision, evals. | Safe context packets and advisory-only first scenario. | LLM safety gate report. |
@@ -1072,6 +1118,8 @@ Product and contracts:
 - `docs/product-ux/PRD_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
 - `docs/blueprints/BLUEPRINT_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
 - `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`
 
 Current-state docs:
 
