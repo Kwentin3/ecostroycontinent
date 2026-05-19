@@ -6,7 +6,7 @@
 - SEO Dashboard handoff: `docs/handbook/SEO_DASHBOARD_CURRENT_STATE_AND_AGENT_HANDOFF_Экостройконтинент_v0.1.md`.
 - Current roadmap for SEO Dashboard domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTICS_ROADMAP_Экостройконтинент_v0.1.md`.
 - R1 public Metrica enablement is deployed: internal telemetry remains primary; optional Metrica mirror is enabled as an external layer with conservative options. Browser/network mirror proof passed; delayed Yandex Reporting API stats visibility still needs optional recheck.
-- R2/R3 PRD and Blueprint drafts are refined for minimal import slices. Next likely implementation is R2A dry-run + minimal daily traffic/goals + source_sync_state, then R3A host/indexation/query dry-run; internal telemetry remains operational truth.
+- R2A Metrica import foundation is implemented and accepted on canonical runtime: dry-run/write commands, `external_metrica_daily_aggregate`, `analytics_source_sync_state=yandex_metrica:ok`, idempotent rerun. Next likely implementation is R3A host/indexation/query dry-run; R2B/R2C and read model integration remain later.
 - Before touching analytics code, read the SEO PRD, taxonomy, read model contract and LLM context contract.
 - Launch-hardening P1s are closed: Next high advisory, DB-backed readiness, launch smoke matrix, runtime commit marker, branch/worktree cleanup, and media delivery `auto`.
 - `/about` and `/contacts` are now published on production (verified 2026-05-19) and should be expected as `200`; keep them Content Core sourced and do not add hardcoded fallback content.

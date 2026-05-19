@@ -90,6 +90,25 @@ printf '%s' "$YANDEX_OAUTH_AUTH_CODE" | npm run yandex:exchange-oauth-code -- \
 npm run yandex:check-metrica
 ```
 
+R2A Metrica aggregate import commands:
+
+```bash
+# Dry-run: validates env, counter, goals and Reporting API plan; writes nothing.
+npm run yandex:metrica-import:dry-run -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD
+
+# Write import: server-only aggregate import into project storage and analytics_source_sync_state.
+npm run yandex:metrica-import:r2a -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD
+```
+
+R2A importer rules:
+
+- uses only server-side `YANDEX_METRICA_OAUTH_TOKEN`;
+- writes external aggregate enrichment into `external_metrica_daily_aggregate`;
+- updates `analytics_source_sync_state` for `source_system = yandex_metrica`;
+- imports only minimal daily traffic/goals in R2A: `visits`, `pageviews`, `users` if supported, and reaches for the 11 configured goals;
+- if Reporting API returns empty rows with zero totals, writes explicit zero-valued daily rows with safe metadata instead of treating internal telemetry as zero;
+- does not schedule imports, change `/admin/visibility`, or wire imported rows into the analytics read model.
+
 Создать недостающие цели Метрики:
 
 ```bash
