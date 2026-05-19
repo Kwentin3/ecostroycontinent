@@ -23,7 +23,9 @@
     "yandex:bootstrap-metrica-goals": "node scripts/yandex/bootstrap.mjs bootstrap-goals",
     "yandex:check-webmaster": "node scripts/yandex/bootstrap.mjs check-webmaster",
     "yandex:metrica-import:dry-run": "node scripts/yandex/import-metrica-aggregates.mjs --dry-run",
-    "yandex:metrica-import:r2a": "node scripts/yandex/import-metrica-aggregates.mjs --write"
+    "yandex:metrica-import:r2a": "node scripts/yandex/import-metrica-aggregates.mjs --write",
+    "yandex:webmaster-import:dry-run": "node scripts/yandex/import-webmaster-data.mjs --dry-run",
+    "yandex:webmaster-import:r3a": "node scripts/yandex/import-webmaster-data.mjs --write"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1018.0",
