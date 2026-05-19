@@ -27,7 +27,7 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - R4 Readiness Audit is complete. Full R4 is not recommended yet.
 - R4-lite PRD/Blueprint are created: `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md` and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
 - R4-lite `External Source State and Readiness Integration` is implemented and accepted on canonical runtime at code commit `6bc7d11ce6c30dfb38a9de79e791048077f8ec25`. The read model exposes `external_source_readiness` for `yandex_metrica` and `yandex_webmaster`; `/admin/visibility` renders compact source readiness diagnostics; Metrica zeros and absent Webmaster query rows remain limitations, not primary metrics or recommendation triggers.
-- R3B PRD/Blueprint drafts are created: `docs/product-ux/PRD_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md` and `docs/blueprints/BLUEPRINT_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`. Implementation is not started. Next step is review R3B design, then implement R3B if approved.
+- R3B `Webmaster Query / Page Visibility Import` is implemented and accepted on canonical runtime at code commit `d7d35d7f4df60f57443372e664d37a79b0ceb92f`: dry-run/write commands exist, advanced export beta capability checks pass, synchronous `query-analytics/list` fallback is implemented, `external_webmaster_query_visibility_daily` remains the storage target, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and the accepted period `2026-05-04..2026-05-17` returned a valid zero-row result with explicit limitations.
 
 ## 3. Architecture snapshot
 
@@ -85,12 +85,13 @@ UI не должен собирать метрики напрямую из Ян�
 - `analytics_source_sync_state` row for `yandex_webmaster` from accepted R3A import.
 - R4-lite `external_source_readiness` block in analytics read model.
 - Compact `/admin/visibility` source readiness diagnostics for Metrica/Webmaster.
+- R3B server-side Webmaster query/page visibility importer and commands: `npm run yandex:webmaster-query-import:dry-run` and `npm run yandex:webmaster-query-import:r3b`.
 
 ## 6. What is intentionally not implemented yet
 
 - Delayed external Yandex Reporting API visibility for the live Metrica goal smoke; browser/network proof already passed.
 - Scheduled Yandex Metrica imports beyond operator-triggered R2A.
-- Scheduled Yandex Webmaster imports beyond operator-triggered R3A.
+- Scheduled Yandex Webmaster imports beyond operator-triggered R3A/R3B.
 - Full real external aggregate/evidence integration in read model.
 - Lead/intake domain as a separate future epic; intent events are not lead records.
 - LLM provider integration.
@@ -154,10 +155,10 @@ UI не должен собирать метрики напрямую из Ян�
    `docs/reports/2026-05-19/R4_READINESS_AUDIT_Экостройконтинент_v0.1.report.md`,
    `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`,
    and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
-8. Review R3B design docs:
-   `docs/product-ux/PRD_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`
-   and `docs/blueprints/BLUEPRINT_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`.
-9. Recommended next implementation slice after review: R3B query/page visibility import, unless the team explicitly chooses R2B Metrica source/device/region/landing dimensions first.
+8. Review R3B implementation/conformity reports:
+   `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+9. Recommended next slice: choose either R2B Metrica source/device/region/landing dimensions or a dedicated delayed advanced-export Webmaster pass before full R4. Do not start recommendation rules from R3B zero-row data.
 10. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
 11. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
 12. Later LLM Copilot Safety Gate and UI.

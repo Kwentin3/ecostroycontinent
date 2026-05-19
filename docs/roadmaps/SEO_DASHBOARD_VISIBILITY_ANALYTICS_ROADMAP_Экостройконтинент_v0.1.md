@@ -521,9 +521,9 @@ Next handoff:
 
 ### Phase R3B. Webmaster Query / Page Visibility Import
 
-Status: PRD/Blueprint draft created; implementation not started.
+Status: implemented and accepted with synchronous fallback; valid zero-row result.
 
-Текущая боль: R3A proved Webmaster host/indexation/source-state import, and R4-lite now exposes source readiness, but query/page visibility rows are still absent. Without those rows full R4 cannot honestly show low CTR, query/page opportunity or search visibility evidence.
+Текущая боль: R3B now proves the Webmaster query/page import path and source-state update, but the accepted `query-analytics/list` period returned zero rows. Full R4 still must not claim low CTR, query/page opportunity or search visibility evidence until non-empty aggregate rows or a completed beta export exist.
 
 Цель фазы: import aggregate Webmaster query/page visibility rows without making Webmaster a user/session/lead attribution source.
 
@@ -547,7 +547,8 @@ Deliverables:
 
 - R3B PRD: `docs/product-ux/PRD_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`;
 - R3B Blueprint: `docs/blueprints/BLUEPRINT_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`;
-- future implementation report only after review/approval.
+- R3B implementation report: `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`;
+- R3B conformity audit: `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
 
 Non-goals:
 
@@ -1074,13 +1075,13 @@ R4-lite. External Source State and Readiness Integration
 
 R4-lite implementation is available in commit `6bc7d11ce6c30dfb38a9de79e791048077f8ec25` and was accepted on canonical runtime on 2026-05-19. It adds `external_source_readiness` to the analytics read model and compact `/admin/visibility` source readiness diagnostics. Metrica status is `ok/fresh`, period `2026-05-16..2026-05-18`, rows `42`, `all_values_zero=true`, `data_actionability=readiness_only`. Webmaster status is `ok/fresh`, period `2026-05-05..2026-05-17`, rows `3`, host verified, one URL sample resolved to `/`, and `query_visibility_rows=0`. These are readiness/limited diagnostics only, not full R4 evidence.
 
-Current R3B planning status:
+Current R3B implementation status:
 
 ```text
 R3B. Webmaster Query / Page Visibility Import
 ```
 
-R3B PRD and Blueprint drafts are created. Implementation is not started. The design keeps Webmaster query/page visibility aggregate-only, chooses advanced query analytics by URL beta as the primary endpoint candidate if access/quota/dates are confirmed, and keeps `query-analytics/list` as a conservative fallback with explicit "popular complementary query" limitation.
+R3B implementation is available in commit `d7d35d7f4df60f57443372e664d37a79b0ceb92f` and was accepted on canonical runtime on 2026-05-19. It adds server-only dry-run/write commands `yandex:webmaster-query-import:dry-run` and `yandex:webmaster-query-import:r3b`, checks advanced export beta capability, uses synchronous `query-analytics/list` fallback, writes aggregate query/page rows into `external_webmaster_query_visibility_daily` when rows exist, updates `analytics_source_sync_state`, normalizes URLs, and keeps query data aggregate-only. Accepted period `2026-05-04..2026-05-17` returned a valid zero-row result; source state is `ok`, rows imported `0`, unmapped URL count `0`. Beta capability endpoints were available, but async export was deferred because it is offline and can take from minutes to hours.
 
 Correct next decision:
 
@@ -1096,10 +1097,10 @@ Correct next decision:
 3. Review R4-lite implementation/conformity reports:
    `docs/reports/2026-05-19/R4_LITE_EXTERNAL_SOURCE_READINESS_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
    and `docs/reports/2026-05-19/R4_LITE_EXTERNAL_SOURCE_READINESS_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
-4. Review R3B design docs:
-   `docs/product-ux/PRD_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`
-   and `docs/blueprints/BLUEPRINT_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`.
-5. Recommended next implementation slice after review: R3B query/page visibility import, unless the team explicitly chooses R2B Metrica source/device/region/landing dimensions first.
+4. Review R3B implementation/conformity reports:
+   `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+5. Recommended next implementation slice: choose R2B Metrica source/device/region/landing dimensions or a bounded advanced-export Webmaster pass before full R4. Do not start R5-style recommendation rules from R3B zero-row data.
 6. Optionally rerun delayed Metrica stats visibility check after Yandex processing catches up.
 7. Do not make Metrica or Webmaster imported counts the operational source of truth for public user actions.
 
@@ -1113,7 +1114,7 @@ R3A -> R3B/R3C/R3D
 Recommended implementation order:
 
 ```text
-R2A(done) -> R3A(done) -> R4-lite(done) -> R3B PRD/Blueprint(done) -> decide/implement R3B or R2B deeper data
+R2A(done) -> R3A(done) -> R4-lite(done) -> R3B(done; zero-row sync fallback) -> decide R2B or delayed Webmaster beta/deeper data before full R4
 ```
 
 Why:
@@ -1159,7 +1160,7 @@ Future scope:
 | R0. Current State Baseline | Done | Needed to stop stale-memory work. | Current audit evidence. | Factual state and handoff updated. | Current state audit report. |
 | R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror | Enabled / server acceptance closed with delayed external stats visibility | Internal telemetry is operational truth; optional Metrica mirror is enabled after owner prototype-stage approval, with no Webvisor/clickmap/ecommerce/session replay. | R1 PRD/Blueprint, owner privacy posture decision, env flags, centralized adapter, tests, deploy. | Internal telemetry smoke passed; public counter and browser/network reachGoal mirror passed; Yandex Reporting API stats visibility for visits/goals remained `0` as of `2026-05-19T10:19:00Z` and needs delayed recheck. | Implementation, conformity, detailed delivery, and final enablement reports. |
 | R2. Metrica Import Foundation | R2A accepted; R2B/R2C later | R2A proved API access, storage, source_sync_state and idempotency without broad BI dimensions. Deeper dimensions and scheduling should wait for explicit next slice. | R1 telemetry smoke, R2 PRD/Blueprint/addendum, migration `010`, canonical runtime acceptance. | R2A minimal daily traffic/goals import and source_sync_state accepted; no read model/UI/scheduler added. | R2A implementation/conformity reports; later R2B/R2C reports. |
-| R3. Webmaster Import Foundation | R3A accepted; R3B PRD/Blueprint created; implementation not started | R3A proved host/verification/site summary/in-search sample/query capability, but useful query/page visibility rows are still missing. R3B is the next designed deepening slice. | Host id, R3/R3B PRD/Blueprint/addendum, migration `011`, canonical runtime acceptance. | R3A host/indexation/URL sample import and `yandex_webmaster` source_sync_state accepted; R3B design selects beta query/page export as primary candidate with sync fallback; no read model/UI/scheduler added. | R3A implementation/conformity reports; R3B PRD/Blueprint/design report; later R3B implementation report. |
+| R3. Webmaster Import Foundation | R3A accepted; R3B implemented/accepted with zero-row sync fallback | R3A proved host/indexation/sample imports. R3B proved query/page import plumbing and source state, but accepted `query-analytics/list` returned zero rows; beta export capability is available but async/deferred. | Host id, R3/R3B PRD/Blueprint/addendum, migration `011`, canonical runtime acceptance. | R3A host/indexation/URL sample import and R3B query/page importer/source_sync_state accepted; no read model/UI/scheduler added. | R3A and R3B implementation/conformity reports. |
 | R4-lite. External Source State and Readiness Integration | Implemented and accepted | R2A/R3A data was enough for source-state/readiness but too thin for full R4 evidence. | R4 readiness audit, R2A/R3A accepted source states/rows. | Read model exposes source readiness/limitations; Metrica zeros and absent Webmaster query rows do not drive primary metrics or recommendations. | R4-lite implementation and conformity reports. |
 | R4. Read Model With Real External Aggregates | Later | Full R4 needs richer external aggregates/evidence than current R2A/R3A. | R4-lite and/or R2B/R3B deeper data. | Yandex sources show truthful aggregate evidence without overclaiming weak data. | Full read model integration report. |
 | R5. Operational Recommendations Refinement | After R4 | Rules need real data and sample size. | External aggregates in read model. | Evidence-backed deterministic recommendations with attribution safety. | Recommendation refinement report/spec. |

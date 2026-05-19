@@ -1,4 +1,4 @@
-# YANDEX_SEO_DASHBOARD_BOOTSTRAP_Экостройконтинент_v0.1
+﻿# YANDEX_SEO_DASHBOARD_BOOTSTRAP_Экостройконтинент_v0.1
 
 Статус: tooling/bootstrap note  
 Дата: 2026-05-04  
@@ -139,6 +139,26 @@ R3A importer rules:
 - updates `analytics_source_sync_state` for `source_system = yandex_webmaster`;
 - normalizes Webmaster URLs and writes unmapped URLs to diagnostics when applicable;
 - treats query data as aggregate page-level evidence only, never as user/session/lead attribution;
+- does not schedule imports, change `/admin/visibility`, mutate Content Core, or wire imported rows into the analytics read model.
+R3B Webmaster query/page visibility import commands:
+
+```bash
+# Dry-run: checks beta export capabilities and synchronous query analytics fallback; writes nothing.
+npm run yandex:webmaster-query-import:dry-run -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD --limit=100 --max-pages=2
+
+# Write import: imports accepted aggregate query/page rows if the endpoint returns rows, then updates analytics_source_sync_state.
+npm run yandex:webmaster-query-import:r3b -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD --limit=100 --max-pages=2
+```
+
+R3B importer rules:
+
+- uses only server-side `YANDEX_WEBMASTER_OAUTH_TOKEN`;
+- checks advanced export beta capability endpoints, but defaults to synchronous `query-analytics/list` fallback when beta export is async/deferred;
+- writes only aggregate query/page visibility rows to `external_webmaster_query_visibility_daily` when rows exist;
+- treats a successful zero-row API response as a truthful zero-row external result, not fabricated data and not proof of zero demand;
+- updates `analytics_source_sync_state` for `source_system = yandex_webmaster`;
+- normalizes Webmaster URLs and writes unmapped URLs to diagnostics when applicable;
+- keeps query data aggregate-only and never joins it to users, sessions, contact journeys or leads;
 - does not schedule imports, change `/admin/visibility`, mutate Content Core, or wire imported rows into the analytics read model.
 
 Скрипты автоматически читают локальный `.env`, если он есть, и не перезаписывают уже экспортированные переменные окружения.
