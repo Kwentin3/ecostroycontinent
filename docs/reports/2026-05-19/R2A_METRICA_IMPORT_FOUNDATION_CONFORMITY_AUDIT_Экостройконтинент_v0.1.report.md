@@ -175,6 +175,39 @@ Implementation clarification:
 
 - Zero-valued daily rows are written when Yandex API explicitly returns empty rows and zero totals. This was necessary because the live counter currently has no external Reporting API rows for the accepted period, while R2A acceptance requires project-owned aggregate rows. The rows are marked through safe metadata and remain external aggregate enrichment only.
 
+## Audit Refresh
+
+Дата refresh: 2026-05-19
+Branch: `feat/r2a-metrica-import-foundation`
+Head before refresh: `4998b38`
+
+После отдельного запроса на аудит выполнения второго implementation-домена проведена повторная сверка R2A с PRD, Blueprint and Storage Addendum.
+
+Fresh checks:
+
+```text
+node --experimental-specifier-resolution=node --test tests/yandex-metrica-import-r2a.test.js tests/telemetry-no-direct-adapters.test.js
+result: 15 pass, 0 fail
+
+npm test
+result: 535 pass, 0 fail
+```
+
+Additional boundary scans confirmed:
+
+- no `external_metrica_daily_aggregate` use in `app`, `components` or `lib` runtime/read-model surfaces;
+- no scheduled import wiring beyond explicit package scripts;
+- no direct public tracker call to `/api/analytics/events`;
+- no browser/UI direct Yandex API calls added by R2A.
+
+Refresh verdict:
+
+```text
+No blocker found.
+R2A still conforms to PRD/Blueprint/Addendum.
+Closure decision remains valid.
+```
+
 ## Closure Decision
 
 R2A can be closed.
@@ -189,4 +222,12 @@ Do not start R4 read model integration until imported rows and source states fro
 
 ## Git Status
 
-At audit authoring time, the remaining local changes are the R2A reports and minimal handoff/roadmap/Yandex docs updates. They are intended to be committed as the closure/docs commit after this audit is written. No runtime code remains uncommitted.
+The original conformity audit was committed in the R2A closure docs commit.
+
+Before this audit refresh, the branch was clean at:
+
+```text
+4998b38 docs: add r2a detailed closure report
+```
+
+This refresh is docs-only and does not change runtime behavior.

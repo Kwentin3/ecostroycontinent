@@ -574,6 +574,84 @@ This is intentional. Scheduled cadence belongs to later R2C or an explicitly app
 
 It only runs when API rows are empty and totals are explicitly zero. It does not invent nonzero rows.
 
+## Post-Closure Audit Update
+
+Дата audit refresh: 2026-05-19
+Audit target: second implementation domain after R1, `R2A Metrica Import Foundation`
+Branch at audit start: `feat/r2a-metrica-import-foundation`
+Head at audit start: `4998b38`
+
+Дополнительно выполнена сверка фактической реализации R2A с:
+
+- `docs/product-ux/PRD_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`;
+- `docs/blueprints/BLUEPRINT_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`;
+- `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`;
+- implementation report;
+- conformity audit;
+- migration/importer/package scripts/tests.
+
+### Audit Verdict
+
+R2A implementation conforms to the PRD, Blueprint and Storage Addendum.
+
+No blocking mismatch was found. The domain remains closed.
+
+The only report-level correction needed after the audit was to refresh stale Git Status wording in the conformity audit: the previous report text still described closure files as pending local changes, but those changes had already been committed before this audit refresh.
+
+### PRD / Blueprint Comparison Matrix
+
+| Requirement | Audit result | Evidence |
+| --- | --- | --- |
+| Server-only importer | Pass | Importer lives under `scripts/yandex/*`; no browser/client API wiring was added. |
+| Dry-run before write import | Pass | `npm run yandex:metrica-import:dry-run` exists and tested dry-run writes nothing. |
+| Explicit operator-triggered write command | Pass | `npm run yandex:metrica-import:r2a`; no scheduler/cron/workflow was added. |
+| Minimal R2A report set only | Pass | Traffic totals by date plus goal reaches for 11 configured goals; no source/device/region/landing dimensions. |
+| Project-owned aggregate storage | Pass | `external_metrica_daily_aggregate` from migration `010_external_metrica_daily_aggregate.sql`. |
+| Storage matches addendum direction | Pass | source system, date, day grain, report type, dimension hash, dimensions JSON, metric key/value, goal fields, import metadata. |
+| Idempotent same-period rerun | Pass | Upsert key matches addendum direction; server proof showed `rows_before=42`, `rows_after=42`. |
+| `analytics_source_sync_state` updated | Pass | Importer writes `source_system=yandex_metrica`, status, attempted/success timestamps, period, rows and safe error. |
+| Safe error mapping | Pass | Tests cover missing env, invalid metrics, rate-limit/network-like failures and token redaction. |
+| Internal telemetry remains operational truth | Pass | Importer does not write to `analytics_event`; read model/UI do not consume imported Metrica rows. |
+| Read model integration deferred to R4 | Pass | Boundary scan found no `external_metrica_daily_aggregate` use in `app`, `components` or `lib` runtime surfaces. |
+| No UI changes | Pass | No `/admin/visibility` or public UI dependency on imported Metrica rows. |
+| No scheduled imports | Pass | Only package scripts exist; no scheduler-first implementation. |
+| No secrets in reports/output | Pass | CLI uses redaction; audit secret scan found no token-like values in the detailed report. |
+
+### Fresh Checks Run During This Audit
+
+Targeted audit tests:
+
+```text
+node --experimental-specifier-resolution=node --test tests/yandex-metrica-import-r2a.test.js tests/telemetry-no-direct-adapters.test.js
+result: 15 pass, 0 fail
+```
+
+Full test suite:
+
+```text
+npm test
+result: 535 pass, 0 fail
+```
+
+Boundary scans:
+
+- no `external_metrica_daily_aggregate` references in `app`, `components` or `lib`;
+- no scheduled import wiring outside package scripts;
+- no new public tracker call to `/api/analytics/events`;
+- no browser/UI direct Yandex API calls introduced by R2A.
+
+Build was not rerun during this audit refresh because no runtime code was changed after the accepted R2A closure. The implementation report already records the production build pass for the deployed implementation commit.
+
+### Audit Findings
+
+No product or architecture blockers.
+
+One nuance remains important for future agents:
+
+- R2A acceptance used a period where Yandex returned empty API rows and explicit zero totals. The zero-valued rows are valid external aggregate storage proof for R2A, but they must not be interpreted as proof of zero internal user actions.
+
+The next implementation should preserve this distinction. Internal telemetry is still the operational source of truth; Metrica imported rows are external enrichment.
+
 ## Closure Decision
 
 R2A closure status:
