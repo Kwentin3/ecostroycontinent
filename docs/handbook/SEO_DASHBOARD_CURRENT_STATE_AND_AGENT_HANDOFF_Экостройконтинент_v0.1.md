@@ -22,8 +22,9 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - `/about` и `/contacts` опубликованы в production и отдают `200` (verified 2026-05-19): есть published Content Core pages `Page(type=about)` и `Page(type=contacts)` с `active_published_revision_id`; sitemap включает оба URL.
 - R1 implementation deployed on 2026-05-19 at commit `64599542d2da214378298356f5afe1002b1ff5f5`: internal telemetry remains operational truth; optional Metrica mirror is implemented as env-gated external mirror.
 - R1 public Metrica enablement deployed on canonical runtime at commit `90896a9e4015864f15fb633cfc2259af8cce99cb`: `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true`, counter `109037342`, conservative init options, browser/network reachGoal proof passed. Yandex Reporting API stats visibility for visits/goals was still delayed/pending as of `2026-05-19T10:19:00Z`.
-- R2/R3 PRD and Blueprint drafts are created and refined for external imports. R2A is now implemented and accepted on canonical runtime at commit `6d5d976abcb086edb15b5c1a6a62a25d8876a5e8`: dry-run/write commands exist, `external_metrica_daily_aggregate` stores minimal daily traffic/goals, `analytics_source_sync_state` for `yandex_metrica` is `ok`, and same-period rerun is idempotent.
-- R2/R3 remain split into minimal slices. The next likely implementation is R3A `Webmaster Host / Indexation / Query Visibility Dry Run`; R2B/R2C broad dimensions/scheduled cadence and R4 read model integration remain later.
+- R2/R3 PRD and Blueprint drafts are created and refined for external imports. R2A is implemented and accepted on canonical runtime at commit `6d5d976abcb086edb15b5c1a6a62a25d8876a5e8`: dry-run/write commands exist, `external_metrica_daily_aggregate` stores minimal daily traffic/goals, `analytics_source_sync_state` for `yandex_metrica` is `ok`, and same-period rerun is idempotent.
+- R3A `Webmaster Host / Indexation / Query Visibility Dry Run` is implemented and accepted on canonical runtime at commit `8a8e2e5ea6668375637fc4fdd16ea3b2e77a22c8`: dry-run/write commands exist, dedicated `external_webmaster_*` tables store host/indexation/URL sample rows, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and same snapshot/period rerun is idempotent. Query analytics was capability-checked but returned `0` rows for the accepted period.
+- R2/R3 remain split into minimal slices. The next decision is whether to deepen R2/R3 with explicit sub-slices or start R4 read model integration from accepted external source states/rows.
 
 ## 3. Architecture snapshot
 
@@ -76,12 +77,15 @@ UI не должен собирать метрики напрямую из Ян�
 - R2A server-side Metrica aggregate importer.
 - `external_metrica_daily_aggregate`.
 - `analytics_source_sync_state` row for `yandex_metrica` from accepted R2A import.
+- R3A server-side Webmaster import foundation.
+- `external_webmaster_host_snapshot`, `external_webmaster_indexation_snapshot`, `external_webmaster_url_sample`, `external_webmaster_query_visibility_daily`.
+- `analytics_source_sync_state` row for `yandex_webmaster` from accepted R3A import.
 
 ## 6. What is intentionally not implemented yet
 
 - Delayed external Yandex Reporting API visibility for the live Metrica goal smoke; browser/network proof already passed.
 - Scheduled Yandex Metrica imports beyond operator-triggered R2A.
-- Scheduled Yandex Webmaster imports.
+- Scheduled Yandex Webmaster imports beyond operator-triggered R3A.
 - Real external aggregates in read model.
 - Lead/intake domain as a separate future epic; intent events are not lead records.
 - LLM provider integration.
@@ -135,9 +139,11 @@ UI не должен собирать метрики напрямую из Ян�
 4. Review R2A implementation/conformity reports:
    `docs/reports/2026-05-19/R2A_METRICA_IMPORT_FOUNDATION_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
    and `docs/reports/2026-05-19/R2A_METRICA_IMPORT_FOUNDATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
-5. Recommended default implementation order now: R3A next, then decide whether to deepen R2/R3 or move to R4.
-6. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model integration until R4 unless explicitly scoped as safe source state.
-7. Integrate imported aggregates into read model in R4 only after accepted imported rows + source_sync_state exist from at least one source.
+5. Review R3A implementation/conformity reports:
+   `docs/reports/2026-05-19/R3A_WEBMASTER_IMPORT_FOUNDATION_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R3A_WEBMASTER_IMPORT_FOUNDATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+6. Decide next slice: deepen R2/R3 with explicit import sub-slices or move to R4 read model integration using accepted external source states/rows.
+7. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model integration before R4.
 8. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
 9. Later LLM Copilot Safety Gate and UI.
 

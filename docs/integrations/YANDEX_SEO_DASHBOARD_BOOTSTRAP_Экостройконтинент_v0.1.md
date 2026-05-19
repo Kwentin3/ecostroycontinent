@@ -121,6 +121,26 @@ npm run yandex:bootstrap-metrica-goals
 npm run yandex:check-webmaster
 ```
 
+R3A Webmaster import commands:
+
+```bash
+# Dry-run: validates env, host, verification and selected endpoint capability; writes nothing.
+npm run yandex:webmaster-import:dry-run -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD --observed-date=YYYY-MM-DD --limit=10
+
+# Write import: server-only Webmaster enrichment import into dedicated storage and analytics_source_sync_state.
+npm run yandex:webmaster-import:r3a -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD --observed-date=YYYY-MM-DD --limit=10
+```
+
+R3A importer rules:
+
+- uses only server-side `YANDEX_WEBMASTER_OAUTH_TOKEN`;
+- checks `YANDEX_WEBMASTER_HOST_ID` and host verification before import;
+- writes accepted external search/indexation enrichment into dedicated `external_webmaster_*` tables;
+- updates `analytics_source_sync_state` for `source_system = yandex_webmaster`;
+- normalizes Webmaster URLs and writes unmapped URLs to diagnostics when applicable;
+- treats query data as aggregate page-level evidence only, never as user/session/lead attribution;
+- does not schedule imports, change `/admin/visibility`, mutate Content Core, or wire imported rows into the analytics read model.
+
 Скрипты автоматически читают локальный `.env`, если он есть, и не перезаписывают уже экспортированные переменные окружения.
 
 ## 4. OAuth
