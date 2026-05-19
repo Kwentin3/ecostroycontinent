@@ -975,9 +975,31 @@ R2/R3. External Import Foundations: Metrica + Webmaster aggregates
 
 Correct next action:
 
-1. Optionally rerun delayed Metrica stats visibility check after Yandex processing catches up.
-2. If approved, design/implement R2 Metrica aggregate import and/or R3 Webmaster aggregate import as external enrichment.
-3. Do not make Metrica imported counts the operational source of truth for public user actions.
+1. Review R2/R3 PRD and Blueprint drafts:
+   `docs/product-ux/PRD_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/BLUEPRINT_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/product-ux/PRD_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/BLUEPRINT_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`.
+2. Start with sub-slices, not one-shot imports:
+   `R2A. Metrica Import Dry Run + Source Sync State + Minimal Daily Traffic/Goals`,
+   then `R3A. Webmaster Host / Indexation / Query Visibility Dry Run`, unless the team chooses R3A first because Metrica stats remain delayed.
+3. Optionally rerun delayed Metrica stats visibility check after Yandex processing catches up.
+4. Implement only the approved sub-slice; keep read model integration for R4 unless explicitly limited to safe source state.
+5. Do not make Metrica or Webmaster imported counts the operational source of truth for public user actions.
+
+R2/R3 are not one-shot monoliths. They are domain phases with internal sub-slices:
+
+```text
+R2A -> R2B/R2C/R2D
+R3A -> R3B/R3C/R3D
+```
+
+Recommended implementation order:
+
+```text
+R2A -> R3A -> decide: deepen R2/R3 or move to R4
+```
 
 Why:
 
@@ -991,14 +1013,18 @@ Why:
 
 Definition of finish for the nearest implementation cycle after PRD/Blueprint:
 
-- public action is stored in internal telemetry through `/api/telemetry/events`;
-- internal telemetry remains usable when Metrica is disabled or blocked;
-- public counter enabled behind env flag;
-- approved optional mirror sends approved reachGoal signals when enabled;
-- browser/network proof exists for the Metrica mirror; external Metrica stats visibility may lag and should be rechecked separately;
+- selected R2 or R3 importer runs server-side only;
+- imported data is aggregate external enrichment in project storage;
+- `analytics_source_sync_state` records truthful `ok`/`stale`/`failed`/`partial`/`not_configured` state;
+- import reruns are idempotent for the same bounded period or endpoint;
+- R2A imports only minimal daily traffic/goals before broad dimensions;
+- R3A imports only accepted host/indexation/query dry-run rows before broad endpoint sweep;
+- URL mapping failures become diagnostics, not silent drops;
 - no secrets leak;
 - no direct UI/Yandex API coupling is introduced;
-- handoff/report records exact mapping and smoke evidence.
+- internal telemetry remains the operational truth;
+- read model integration waits for R4 unless a safe source-state-only change is explicitly approved;
+- acceptance report records imported dimensions/endpoints, rows, limitations and smoke evidence.
 
 Future scope:
 
@@ -1016,9 +1042,9 @@ Future scope:
 | --- | --- | --- | --- | --- | --- |
 | R0. Current State Baseline | Done | Needed to stop stale-memory work. | Current audit evidence. | Factual state and handoff updated. | Current state audit report. |
 | R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror | Enabled / server acceptance closed with delayed external stats visibility | Internal telemetry is operational truth; optional Metrica mirror is enabled after owner prototype-stage approval, with no Webvisor/clickmap/ecommerce/session replay. | R1 PRD/Blueprint, owner privacy posture decision, env flags, centralized adapter, tests, deploy. | Internal telemetry smoke passed; public counter and browser/network reachGoal mirror passed; Yandex Reporting API stats visibility for visits/goals remained `0` as of `2026-05-19T10:19:00Z` and needs delayed recheck. | Implementation, conformity, detailed delivery, and final enablement reports. |
-| R2. Metrica Import Foundation | Later, after R1 | Imports are external aggregate enrichment after local telemetry is proven. | R1 telemetry smoke, optional mirror smoke if enabled, cadence, retention, API field check. | Idempotent aggregate imports and source_sync_state. | Metrica import report. |
-| R3. Webmaster Import Foundation | Later, after R1; parallel with R2 possible | Webmaster verified, but data not imported. | Host id, cadence, API capability check. | Idempotent visibility/indexation imports and safe states. | Webmaster import report. |
-| R4. Read Model With Real External Aggregates | After R2/R3 | Read model needs imported rows. | Imported data and source sync state. | Yandex sources show truthful ok/stale/failed states and aggregate evidence. | Read model integration report. |
+| R2. Metrica Import Foundation | PRD/Blueprint refined; R2A next by default | Imports are external aggregate enrichment after local telemetry is proven; first slice should prove API/storage/idempotency, not broad BI dimensions. | R1 telemetry smoke, R2 PRD/Blueprint/addendum review, API dry-run, likely migration decision. | R2A minimal daily traffic/goals import and source_sync_state accepted before R2B/C depth. | R2 PRD, R2 Blueprint, storage addendum, later R2A import report. |
+| R3. Webmaster Import Foundation | PRD/Blueprint refined; R3A next after R2A or first if Metrica remains delayed | Webmaster verified, but API is heterogeneous; first slice should prove host/indexation/query endpoint capability and storage shape. | Host id, R3 PRD/Blueprint/addendum review, endpoint dry-run, likely migration decision. | R3A host/indexation/query dry-run import and source_sync_state accepted before broad endpoint sweep. | R3 PRD, R3 Blueprint, storage addendum, later R3A import report. |
+| R4. Read Model With Real External Aggregates | After accepted R2A/R3A rows from at least one source | Read model needs imported rows and truthful source state. | Accepted imported data and source sync state from at least one external source. | Yandex sources show truthful ok/stale/failed states and aggregate evidence. | Read model integration report. |
 | R5. Operational Recommendations Refinement | After R4 | Rules need real data and sample size. | External aggregates in read model. | Evidence-backed deterministic recommendations with attribution safety. | Recommendation refinement report/spec. |
 | R6. UX/UI Product Refinement | Later | UI should follow real workflow, not empty states. | R4/R5. | SEO Manager can inspect pages, evidence, freshness and actions. | UX/UI spec and later implementation report. |
 | R7. LLM Copilot Safety Gate and First UI | Future | Needs read model, evals and safety posture. | R4/R5, provider decision, evals. | Safe context packets and advisory-only first scenario. | LLM safety gate report. |
@@ -1034,6 +1060,11 @@ Product and contracts:
 - `docs/product-ux/SEO_Dashboard_LLM_Context_Contract_Экостройконтинент_v0.1.md`
 - `docs/product-ux/PRD_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`
 - `docs/blueprints/BLUEPRINT_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`
 
 Current-state docs:
 

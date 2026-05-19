@@ -22,6 +22,8 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - `/about` и `/contacts` опубликованы в production и отдают `200` (verified 2026-05-19): есть published Content Core pages `Page(type=about)` и `Page(type=contacts)` с `active_published_revision_id`; sitemap включает оба URL.
 - R1 implementation deployed on 2026-05-19 at commit `64599542d2da214378298356f5afe1002b1ff5f5`: internal telemetry remains operational truth; optional Metrica mirror is implemented as env-gated external mirror.
 - R1 public Metrica enablement deployed on canonical runtime at commit `90896a9e4015864f15fb633cfc2259af8cce99cb`: `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true`, counter `109037342`, conservative init options, browser/network reachGoal proof passed. Yandex Reporting API stats visibility for visits/goals was still delayed/pending as of `2026-05-19T10:19:00Z`.
+- R2/R3 PRD and Blueprint drafts are created and refined for external imports; implementation has not started. R2/R3 must enrich project storage with aggregate external data and must not replace internal telemetry as operational truth.
+- R2/R3 are now split into minimal first slices: R2A `Metrica Import Dry Run + Source Sync State + Minimal Daily Traffic/Goals`, then R3A `Webmaster Host / Indexation / Query Visibility Dry Run`, unless the team intentionally chooses R3A first because Metrica stats remain delayed.
 
 ## 3. Architecture snapshot
 
@@ -120,12 +122,18 @@ UI не должен собирать метрики напрямую из Ян�
    `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
    `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`
    and `docs/reports/2026-05-19/R1_METRICA_PUBLIC_ENABLEMENT_AND_FINAL_SMOKE_Экостройконтинент_v0.1.report.md`.
-2. Optionally rerun delayed Yandex Reporting API stats visibility check for `click_to_call` after processing delay.
-3. If approved, implement scheduled Metrica imports.
-4. If approved, implement scheduled Webmaster imports.
-5. Integrate imported aggregates into read model.
-6. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
-7. Later LLM Copilot Safety Gate and UI.
+2. Review R2/R3 design docs:
+   `docs/product-ux/PRD_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/BLUEPRINT_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/product-ux/PRD_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/BLUEPRINT_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`.
+3. Optionally rerun delayed Yandex Reporting API stats visibility check for `click_to_call` after processing delay.
+4. Recommended default implementation order: R2A first, then R3A, then decide whether to deepen R2/R3 or move to R4. R3A may go first if Metrica Reporting API remains delayed.
+5. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model integration until R4 unless explicitly scoped as safe source state.
+6. Integrate imported aggregates into read model in R4 only after accepted imported rows + source_sync_state exist from at least one source.
+7. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
+8. Later LLM Copilot Safety Gate and UI.
 
 ## 11. Do-not-do list
 
@@ -152,6 +160,11 @@ Primary product docs:
 - `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTICS_ROADMAP_Экостройконтинент_v0.1.md`
 - `docs/product-ux/PRD_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`
 - `docs/blueprints/BLUEPRINT_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`
 - `docs/mockups/fixtures/seo-dashboard-analytics-contract.sample.json`
 
 Fresh reports:
