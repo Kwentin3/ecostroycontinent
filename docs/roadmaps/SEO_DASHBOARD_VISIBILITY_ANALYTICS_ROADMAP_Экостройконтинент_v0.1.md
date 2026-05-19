@@ -82,7 +82,7 @@ Supporting documents:
 
 ### Finish 2. Public Operational Measurement Live
 
-Статус: implemented safe-disabled on 2026-05-19; production Metrica enablement remains privacy/cookie-gated.
+Статус: enabled on 2026-05-19 after owner prototype-stage approval. Server acceptance passed for internal telemetry and browser/network Metrica mirror; external Metrica stats visibility remains delayed/pending as of `2026-05-19T10:19:00Z`.
 
 Критерии:
 
@@ -90,7 +90,7 @@ Supporting documents:
 - internal telemetry remains the primary operational source for user actions;
 - telemetry events continue through `/api/telemetry/events`;
 - telemetry storage can be used for future operational read model integration;
-- optional Yandex Metrica counter and `reachGoal` mirror can be enabled only through approved privacy/cookie posture;
+- optional Yandex Metrica counter and `reachGoal` mirror are enabled only through approved privacy/cookie posture;
 - Metrica mirror does not replace internal telemetry;
 - live smoke proves internal telemetry storage first;
 - if Metrica mirror is enabled, smoke also proves selected Metrica goal signal after acceptable delay;
@@ -950,20 +950,34 @@ Consumer boundaries:
 
 ## 10. Current Next Slice Recommendation
 
-Recommended next domain slice:
+Current R1 status:
 
 ```text
 R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror
 ```
 
-R1 implementation is now available in commit `64599542d2da214378298356f5afe1002b1ff5f5` and deployed to canonical runtime in safe-disabled posture.
+R1 implementation is available in commit `64599542d2da214378298356f5afe1002b1ff5f5`. Public Metrica enablement was completed on canonical runtime at commit `90896a9e4015864f15fb633cfc2259af8cce99cb` after owner approval for the prototype-stage no-banner posture.
+
+R1 acceptance state:
+
+1. Internal telemetry remains operational truth and stores public actions through `/api/telemetry/events`.
+2. `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true` is set in canonical runtime/build context.
+3. Public browser runtime loads Yandex Metrica counter `109037342` with conservative options.
+4. Approved `phone_clicked` action triggered `ym(109037342, "reachGoal", "click_to_call")` through the centralized adapter.
+5. Browser/network smoke confirmed Yandex `tag.js`, `watch/109037342`, telemetry `202`, and no browser-exposed secrets.
+6. Yandex Reporting API still returned `0` for visits/pageviews/`click_to_call` as of `2026-05-19T10:19:00Z`; treat this as delayed external stats visibility, not as a failure of internal telemetry.
+
+Recommended next domain slice:
+
+```text
+R2/R3. External Import Foundations: Metrica + Webmaster aggregates
+```
 
 Correct next action:
 
-1. Review implementation and conformity audit reports.
-2. Decide privacy/cookie posture for production Metrica counter enablement.
-3. If approved, enable `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true` in canonical runtime/build context, rebuild/redeploy, and run delayed Metrica goal verification.
-4. If the mirror remains disabled, continue with internal telemetry as operational truth and proceed to R2/R3 only when external aggregate imports are separately approved.
+1. Optionally rerun delayed Metrica stats visibility check after Yandex processing catches up.
+2. If approved, design/implement R2 Metrica aggregate import and/or R3 Webmaster aggregate import as external enrichment.
+3. Do not make Metrica imported counts the operational source of truth for public user actions.
 
 Why:
 
@@ -971,7 +985,7 @@ Why:
 - Metrica API is ready;
 - 11 Metrica goals exist for optional external mirroring;
 - Webmaster is verified;
-- public Metrica script is implemented but remains disabled by env in production;
+- public Metrica script is enabled by env in production after owner prototype-stage approval;
 - optional reachGoal mirror is implemented as a centralized, best-effort adapter;
 - scheduled imports should enrich the system after local telemetry is proven, not become the primary path for operational user-action truth.
 
@@ -980,8 +994,8 @@ Definition of finish for the nearest implementation cycle after PRD/Blueprint:
 - public action is stored in internal telemetry through `/api/telemetry/events`;
 - internal telemetry remains usable when Metrica is disabled or blocked;
 - public counter enabled behind env flag;
-- approved optional mirror sends or causes approved reachGoal signals when enabled;
-- one or more live goals are observed in Metrica only after the mirror is explicitly approved and enabled;
+- approved optional mirror sends approved reachGoal signals when enabled;
+- browser/network proof exists for the Metrica mirror; external Metrica stats visibility may lag and should be rechecked separately;
 - no secrets leak;
 - no direct UI/Yandex API coupling is introduced;
 - handoff/report records exact mapping and smoke evidence.
@@ -1001,7 +1015,7 @@ Future scope:
 | Phase | Status | Why now / why later | Dependencies | Acceptance | Output artifact |
 | --- | --- | --- | --- | --- | --- |
 | R0. Current State Baseline | Done | Needed to stop stale-memory work. | Current audit evidence. | Factual state and handoff updated. | Current state audit report. |
-| R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror | Implemented safe-disabled / production mirror gated | Internal telemetry is operational truth; optional Metrica mirror is implemented but production enablement waits for privacy/cookie approval. | R1 PRD/Blueprint, conservative privacy posture, env flags, centralized adapter, tests, deploy. | Internal telemetry smoke passed with Metrica disabled; optional Metrica browser-level mirror covered by tests; live goal verification pending explicit env-on approval. | Implementation report and conformity audit. |
+| R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror | Enabled / server acceptance closed with delayed external stats visibility | Internal telemetry is operational truth; optional Metrica mirror is enabled after owner prototype-stage approval, with no Webvisor/clickmap/ecommerce/session replay. | R1 PRD/Blueprint, owner privacy posture decision, env flags, centralized adapter, tests, deploy. | Internal telemetry smoke passed; public counter and browser/network reachGoal mirror passed; Yandex Reporting API stats visibility for visits/goals remained `0` as of `2026-05-19T10:19:00Z` and needs delayed recheck. | Implementation, conformity, detailed delivery, and final enablement reports. |
 | R2. Metrica Import Foundation | Later, after R1 | Imports are external aggregate enrichment after local telemetry is proven. | R1 telemetry smoke, optional mirror smoke if enabled, cadence, retention, API field check. | Idempotent aggregate imports and source_sync_state. | Metrica import report. |
 | R3. Webmaster Import Foundation | Later, after R1; parallel with R2 possible | Webmaster verified, but data not imported. | Host id, cadence, API capability check. | Idempotent visibility/indexation imports and safe states. | Webmaster import report. |
 | R4. Read Model With Real External Aggregates | After R2/R3 | Read model needs imported rows. | Imported data and source sync state. | Yandex sources show truthful ok/stale/failed states and aggregate evidence. | Read model integration report. |

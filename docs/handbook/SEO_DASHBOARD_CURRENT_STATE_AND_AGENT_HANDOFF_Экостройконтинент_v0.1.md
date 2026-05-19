@@ -17,10 +17,11 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - Yandex Webmaster подключен и verified.
 - Yandex Metrica counter `109037342` доступен, 11 required goals созданы.
 - Scheduled imports Яндекс Метрики/Вебмастера еще не реализованы.
-- Public Metrica counter script реализован, но production enablement остается env-gated и safe-disabled по умолчанию до privacy/cookie approval.
+- Public Metrica counter script реализован и включен в production после owner prototype-stage approval; enablement остается env-controlled and reversible.
 - LLM provider/UI не подключались.
 - `/about` и `/contacts` опубликованы в production и отдают `200` (verified 2026-05-19): есть published Content Core pages `Page(type=about)` и `Page(type=contacts)` с `active_published_revision_id`; sitemap включает оба URL.
-- R1 implementation deployed on 2026-05-19 at commit `64599542d2da214378298356f5afe1002b1ff5f5`: internal telemetry remains operational truth; optional Metrica mirror is implemented as env-gated external mirror. Production Metrica enablement was not turned on without privacy/cookie approval.
+- R1 implementation deployed on 2026-05-19 at commit `64599542d2da214378298356f5afe1002b1ff5f5`: internal telemetry remains operational truth; optional Metrica mirror is implemented as env-gated external mirror.
+- R1 public Metrica enablement deployed on canonical runtime at commit `90896a9e4015864f15fb633cfc2259af8cce99cb`: `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true`, counter `109037342`, conservative init options, browser/network reachGoal proof passed. Yandex Reporting API stats visibility for visits/goals was still delayed/pending as of `2026-05-19T10:19:00Z`.
 
 ## 3. Architecture snapshot
 
@@ -73,8 +74,7 @@ UI не должен собирать метрики напрямую из Ян�
 
 ## 6. What is intentionally not implemented yet
 
-- Scheduled production enablement of Yandex Metrica public counter after privacy/cookie approval.
-- Delayed live Metrica goal verification after the env flag is approved/enabled.
+- Delayed external Yandex Reporting API visibility for the live Metrica goal smoke; browser/network proof already passed.
 - Scheduled Yandex Metrica imports.
 - Scheduled Yandex Webmaster imports.
 - Real external aggregates in read model.
@@ -116,17 +116,16 @@ UI не должен собирать метрики напрямую из Ян�
 
 ## 10. Next recommended steps
 
-1. Review R1 implementation/conformity reports:
+1. Review R1 implementation/conformity/final enablement reports:
    `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
-   and `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
-2. Decide privacy/cookie posture for production Metrica counter enablement.
-3. If approved, set `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true` in canonical runtime/build context, rebuild/redeploy, and run delayed Metrica goal verification.
-4. If Metrica mirror remains disabled, proceed only with internal telemetry evidence; do not treat this as loss of operational truth.
-5. Implement scheduled Metrica imports.
-6. Implement scheduled Webmaster imports.
-7. Integrate imported aggregates into read model.
-8. UX/UI refine `/admin/visibility`.
-9. Later LLM Copilot Safety Gate and UI.
+   `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R1_METRICA_PUBLIC_ENABLEMENT_AND_FINAL_SMOKE_Экостройконтинент_v0.1.report.md`.
+2. Optionally rerun delayed Yandex Reporting API stats visibility check for `click_to_call` after processing delay.
+3. If approved, implement scheduled Metrica imports.
+4. If approved, implement scheduled Webmaster imports.
+5. Integrate imported aggregates into read model.
+6. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
+7. Later LLM Copilot Safety Gate and UI.
 
 ## 11. Do-not-do list
 
