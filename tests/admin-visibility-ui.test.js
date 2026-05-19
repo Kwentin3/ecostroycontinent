@@ -8,6 +8,7 @@ test("admin visibility UI route is wired to read model and action-first Russian 
   const pageSource = readFileSync(new URL("../app/admin/(console)/visibility/page.js", import.meta.url), "utf8");
   const componentSource = readFileSync(new URL("../components/admin/SeoVisibilityDashboard.js", import.meta.url), "utf8");
   const rendererSource = readFileSync(new URL("../components/public/PublicRenderers.js", import.meta.url), "utf8");
+  const trackingBoundarySource = readFileSync(new URL("../components/public/PublicTrackingBoundary.js", import.meta.url), "utf8");
 
   assert.match(pageSource, /buildSeoDashboardReadModel/);
   assert.match(pageSource, /activeHref="\/admin\/visibility"/);
@@ -18,7 +19,8 @@ test("admin visibility UI route is wired to read model and action-first Russian 
   assert.match(componentSource, /Очередь рекомендаций/);
   assert.equal(/First-party|Lead domain|Content Core|Backlog|Semantic click map|Revision|Indexation|rows:|unmapped:/.test(componentSource), false);
   assert.match(rendererSource, /data-analytics-id/);
-  assert.match(rendererSource, /AnalyticsTracker/);
+  assert.match(rendererSource, /PublicTrackingBoundary/);
+  assert.match(trackingBoundarySource, /AnalyticsTracker/);
 });
 
 test("read model endpoint requires auth and returns terminal redirect for unauthorized users", async () => {

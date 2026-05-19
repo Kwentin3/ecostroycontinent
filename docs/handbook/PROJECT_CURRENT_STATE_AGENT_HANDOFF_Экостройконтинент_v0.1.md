@@ -23,7 +23,7 @@ This document is intentionally compact. It does not replace PRDs or domain contr
   - app proxy remains fallback if CDN probing fails
 - Stable media smoke evidence currently uses:
   - `https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/e3604676-6db4-4205-b9f8-96c0318bf4f7.jpg`
-- `/about` and `/contacts` are known owner/content blockers while approved Content Core pages are missing. 404 is honest in this state.
+- `/about` and `/contacts` are published on production as of 2026-05-19. They are no longer owner/content blockers; both should resolve to `200` and be present in sitemap.
 
 ## Closed Tech Debt Items
 
@@ -36,8 +36,8 @@ This document is intentionally compact. It does not replace PRDs or domain contr
 
 ## Known Blockers
 
-- `/about`: missing owner-approved `Page(type=about)` content. Do not hardcode fallback content.
-- `/contacts`: missing confirmed public contact truth and owner-approved `Page(type=contacts)` content. Do not hardcode fallback content.
+- `/about`: published Content Core `Page(type=about)` exists. Keep the route Content Core sourced; do not hardcode fallback content.
+- `/contacts`: published Content Core `Page(type=contacts)` exists and contact truth is confirmed. Keep the route Content Core sourced; do not hardcode fallback content.
 - Lead/intake: important P1 product/domain epic, but intentionally not implemented in launch-hardening closeout.
 - Yandex Metrica public counter and scheduled imports remain separate SEO/analytics follow-up work.
 - Moderate dependency advisories remain separate dependency-security backlog.
@@ -69,22 +69,26 @@ Use production/stage URL explicitly:
 ```powershell
 $env:APP_BASE_URL = 'https://ecostroycontinent.ru'
 $env:EXPECT_RUNTIME_COMMIT = 'true'
+$env:EXPECT_ABOUT = 'published'
+$env:EXPECT_CONTACTS = 'published'
 $env:EXPECT_MEDIA_URL = 'https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/e3604676-6db4-4205-b9f8-96c0318bf4f7.jpg'
 npm run smoke:launch
 Remove-Item Env:APP_BASE_URL
 Remove-Item Env:EXPECT_RUNTIME_COMMIT
+Remove-Item Env:EXPECT_ABOUT
+Remove-Item Env:EXPECT_CONTACTS
 Remove-Item Env:EXPECT_MEDIA_URL
 ```
 
-Expected while owner content is missing:
+Expected current production state:
 
 - `/api/health`: 200 lightweight liveness
 - `/api/readiness`: 200, `status=ready`, `database.status=ok`, non-null `runtime.commit`
 - `/`, `/services`, `/cases`: 200
 - `/robots.txt`, `/sitemap.xml`: 200
 - `/admin` routes: auth redirect, 401, or 403; never public open or 500
-- `/about`, `/contacts`: `known_content_blocker` if `EXPECT_*` remains `known_missing`
-- sitemap must not list `/about` or `/contacts` while they resolve to 404
+- `/about`, `/contacts`: `passed` with `EXPECT_ABOUT=published` and `EXPECT_CONTACTS=published`
+- sitemap must list `/about` and `/contacts` while both resolve to 200
 - media URL check passes when `EXPECT_MEDIA_URL` is supplied
 
 ## Architecture Boundaries
@@ -100,8 +104,8 @@ Expected while owner content is missing:
 
 ## Dangerous Files And Areas
 
-- `app/about/page.js`, `app/contacts/page.js`: honest 404 until published Content Core pages exist.
-- `app/sitemap.js`: must not list routes that resolve to 404.
+- `app/about/page.js`, `app/contacts/page.js`: Content Core sourced; still honest 404 if published pages are ever removed.
+- `app/sitemap.js`: lists `/about` and `/contacts` only while published projections exist.
 - `app/api/readiness/route.js`, `lib/health/readiness.js`: strict secret-free DB-backed readiness.
 - `app/api/health/route.js`: lightweight liveness only.
 - `scripts/smoke-launch-readonly.mjs`: read-only launch acceptance; no auth or production mutation.
@@ -125,7 +129,7 @@ Read these before reopening launch-hardening decisions:
 
 ## Next Epics
 
-- Owner-approved `/about` and `/contacts` content through Content Core/Admin and explicit publish.
+- Keep `/about` and `/contacts` production state monitored as published Content Core pages; do not replace with fallback content.
 - Lead/intake domain as its own product/domain epic.
 - Yandex Metrica public counter and scheduled imports after privacy/cookie decision.
 - CDN hardening only if `auto` mode shows regressions or the team decides to move to hard CDN mode.

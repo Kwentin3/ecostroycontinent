@@ -6,6 +6,8 @@
 
 Launch-hardening current state now lives in `docs/handbook/PROJECT_CURRENT_STATE_AGENT_HANDOFF_Экостройконтинент_v0.1.md`. Read it first for readiness, smoke, media delivery and known owner/content blockers.
 
+Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTICS_ROADMAP_Экостройконтинент_v0.1.md`.
+
 ## 2. Executive current state
 
 - SEO Dashboard MVP backend/foundation реализован.
@@ -17,7 +19,8 @@ Launch-hardening current state now lives in `docs/handbook/PROJECT_CURRENT_STATE
 - Scheduled imports Яндекс Метрики/Вебмастера еще не реализованы.
 - Public Metrica counter script еще не включен на public site.
 - LLM provider/UI не подключались.
-- `/about` и `/contacts` сейчас 404 по content-state: нет опубликованных Content Core pages `Page(type=about)` и `Page(type=contacts)`.
+- `/about` и `/contacts` опубликованы в production и отдают `200` (verified 2026-05-19): есть published Content Core pages `Page(type=about)` и `Page(type=contacts)` с `active_published_revision_id`; sitemap включает оба URL.
+- R1 PRD/Blueprint drafts созданы; implementation R1 не начинался. New framing: internal telemetry is operational truth; Metrica is optional external mirror. Next step: review PRD/Blueprint and approve privacy/bridge architecture.
 
 ## 3. Architecture snapshot
 
@@ -41,7 +44,7 @@ UI не должен собирать метрики напрямую из Ян�
 - External imports - будущий слой для Яндекс/Google агрегатов.
 - Analytics read model - view model / DTO для потребителей.
 - Recommendation state - work-management signal, не публикация и не Content Core mutation.
-- Яндекс Метрика - внешний aggregate layer, не замена first-party events.
+- Яндекс Метрика - optional external mirror/aggregate layer, не замена first-party events и не operational source of truth.
 - Яндекс Вебмастер - внешний visibility/indexation layer.
 - LLM - advisory/draft-only layer, не source of truth.
 
@@ -71,7 +74,7 @@ UI не должен собирать метрики напрямую из Ян�
 ## 6. What is intentionally not implemented yet
 
 - Yandex Metrica public counter injection.
-- First-party event -> `ym(..., "reachGoal", ...)` bridge.
+- Optional first-party telemetry -> `ym(..., "reachGoal", ...)` mirror.
 - Scheduled Yandex Metrica imports.
 - Scheduled Yandex Webmaster imports.
 - Real external aggregates in read model.
@@ -82,13 +85,13 @@ UI не должен собирать метрики напрямую из Ян�
 - Owner reduced DTO.
 - Full UX/UI design of `/admin/visibility`.
 
-## 7. Critical known content-state blocker
+## 7. Public about/contacts current state
 
-`/about` и `/contacts` сейчас 404. Это не route-code bug.
+`/about` и `/contacts` больше не являются content-state blocker.
 
-Причина: в `published_only` режиме нет опубликованных `Page(type=about)` и `Page(type=contacts)`. `app/about/page.js` и `app/contacts/page.js` корректно вызывают `notFound()` при отсутствии published Content Core page. `app/sitemap.js` корректно не публикует эти URL, пока они разрешаются в 404.
+Факт на 2026-05-19: в `published_only` режиме оба маршрута отдают `200`, потому что существуют опубликованные Content Core pages `Page(type=about)` и `Page(type=contacts)` с `active_published_revision_id`. `app/about/page.js` и `app/contacts/page.js` остаются честными: при отсутствии published page они вызывают `notFound()` и не должны получать hardcoded fallback content. `app/sitemap.js` теперь корректно публикует `/about` и `/contacts`, так как live routes разрешаются в `200`.
 
-Не создавать fake content и не добавлять fallback content без Content Core решения. Правильный следующий шаг - создать, review и publish approved Content Core pages через Admin Console / Content Core workflow.
+Не создавать fake content и не добавлять fallback content без Content Core решения. Если эти pages когда-либо пропадут из published state, правильный repair path остается через Admin Console / Content Core workflow, а не через route fallback.
 
 ## 8. Yandex state
 
@@ -113,15 +116,17 @@ UI не должен собирать метрики напрямую из Ян�
 
 ## 10. Next recommended steps
 
-1. Publish owner-approved Content Core pages for `/about` and `/contacts`.
-2. Enable Yandex Metrica counter on public site via env flag after privacy/cookie decision.
-3. Add first-party event -> `ym` reachGoal bridge.
-4. Live smoke: first-party event + Metrica goal.
-5. Implement scheduled Metrica imports.
-6. Implement scheduled Webmaster imports.
-7. Integrate imported aggregates into read model.
-8. UX/UI refine `/admin/visibility`.
-9. Later LLM Copilot Safety Gate and UI.
+1. Review `docs/product-ux/PRD_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`.
+2. Review `docs/blueprints/BLUEPRINT_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`.
+3. Approve privacy/cookie posture, Metrica init options, Webvisor/clickmap/session replay posture and telemetry-to-goal mapping.
+4. Approve R1 bridge architecture with internal telemetry as primary and Metrica as optional mirror. Current draft recommendation: controlled client-side/hybrid adapter.
+5. Then implement R1: operational public telemetry smoke first, optional env-gated Yandex Metrica counter/reachGoal mirror second.
+6. Live smoke: first-party telemetry storage independently from Metrica; optional Metrica goal after acceptable delay if mirror is enabled.
+7. Implement scheduled Metrica imports.
+8. Implement scheduled Webmaster imports.
+9. Integrate imported aggregates into read model.
+10. UX/UI refine `/admin/visibility`.
+11. Later LLM Copilot Safety Gate and UI.
 
 ## 11. Do-not-do list
 
@@ -145,6 +150,9 @@ Primary product docs:
 - `docs/product-ux/SEO_Dashboard_Data_and_Event_Taxonomy_Экостройконтинент_v0.1.md`
 - `docs/product-ux/SEO_Dashboard_Analytics_Read_Model_Contract_Экостройконтинент_v0.1.md`
 - `docs/product-ux/SEO_Dashboard_LLM_Context_Contract_Экостройконтинент_v0.1.md`
+- `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTICS_ROADMAP_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`
 - `docs/mockups/fixtures/seo-dashboard-analytics-contract.sample.json`
 
 Fresh reports:

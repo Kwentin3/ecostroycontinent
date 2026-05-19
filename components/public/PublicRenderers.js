@@ -23,7 +23,7 @@ import {
   buildServiceStructuredData,
   serializeStructuredData
 } from "../../lib/public-launch/seo-structured-data.js";
-import { AnalyticsTracker } from "./AnalyticsTracker.js";
+import { PublicTrackingBoundary } from "./PublicTrackingBoundary.js";
 import { ListCardMediaStrip } from "./ListCardMediaStrip.js";
 import styles from "./public-ui.module.css";
 
@@ -666,7 +666,7 @@ export function PublicPageShell({
       data-contact-consistency-token={contactProjection.consistencyToken}
     >
       <StructuredDataScripts items={structuredDataItems} />
-      <AnalyticsTracker />
+      <PublicTrackingBoundary currentPath={currentPath} />
       <header className={styles.publicShellHeader}>
         <Link
           className={styles.publicShellBrand}
