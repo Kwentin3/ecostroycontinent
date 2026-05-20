@@ -148,7 +148,8 @@
 .actionGrid,
 .metricGrid,
 .sourceGrid,
-.detailGrid {
+.detailGrid,
+.splitGrid {
   display: grid;
   gap: 12px;
 }
@@ -170,11 +171,29 @@
   align-items: start;
 }
 
+.splitGrid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: start;
+}
+
 .panel,
 .detailPanel {
   display: grid;
   gap: 14px;
   padding: 16px;
+}
+
+.sectionBlock {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sectionBlock h4 {
+  margin: 0;
+  color: #1f2a22;
+  font-size: 0.98rem;
+  line-height: 1.25;
 }
 
 .actionCard,
@@ -233,6 +252,10 @@
   width: 100%;
   min-width: 1040px;
   border-collapse: collapse;
+}
+
+.compactTable {
+  min-width: 720px;
 }
 
 .table th,
