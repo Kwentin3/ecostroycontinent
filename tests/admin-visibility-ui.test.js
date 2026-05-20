@@ -16,6 +16,7 @@ test("admin visibility UI route is wired to read model and action-first Russian 
   assert.match(componentSource, /Семантическая карта кликов/);
   assert.match(componentSource, /Домен лидов/);
   assert.match(componentSource, /Google Search Console/);
+  assert.match(componentSource, /External evidence/);
   assert.match(componentSource, /Очередь рекомендаций/);
   assert.equal(/First-party|Lead domain|Content Core|Backlog|Semantic click map|Revision|Indexation|rows:|unmapped:/.test(componentSource), false);
   assert.match(rendererSource, /data-analytics-id/);
@@ -52,6 +53,8 @@ test("read model endpoint returns required contract sections for authorized user
       selected_page_detail: null,
       recommendations: [],
       evidence_items: [],
+      external_source_readiness: {},
+      external_evidence: {},
       analytics_history: {}
     })
   });
@@ -59,7 +62,7 @@ test("read model endpoint returns required contract sections for authorized user
 
   assert.equal(response.status, 200);
   assert.equal(body.ok, true);
-  for (const key of ["overview", "traffic_sources", "page_list", "selected_page_detail", "recommendations", "evidence_items", "analytics_history"]) {
+  for (const key of ["overview", "traffic_sources", "page_list", "selected_page_detail", "recommendations", "evidence_items", "external_source_readiness", "external_evidence", "analytics_history"]) {
     assert.equal(key in body.data, true);
   }
 });

@@ -204,6 +204,70 @@ LLM usage:
 - mention material limitations;
 - avoid unsupported conclusions from absent sources.
 
+### 5.1. R4 External Evidence DTO
+
+R4 adds an additive `external_evidence` block next to `external_source_readiness`.
+
+`external_evidence` is a compact enrichment/evidence layer built only from project-owned storage. It must not replace `overview`, must not call live Yandex APIs from the read model path, and must not generate recommendations.
+
+Recommended shape:
+
+```json
+{
+  "external_evidence": {
+    "yandex_metrica": {
+      "status": "ok",
+      "freshness": { "status": "fresh" },
+      "data_actionability": "limited_external_evidence",
+      "limitations": [
+        "external_metrica_not_operational_truth",
+        "metrica_external_enrichment_only",
+        "do_not_feed_metrica_into_primary_overview"
+      ],
+      "imported_period_start": "2026-05-17",
+      "imported_period_end": "2026-05-19",
+      "traffic_sources": { "rows": [], "totals": {}, "limitations": [] },
+      "source_details": { "rows": [], "totals": {}, "limitations": [] },
+      "devices": { "rows": [], "totals": {}, "limitations": [] },
+      "geography": {
+        "countries": [],
+        "regions": [],
+        "country_totals": {},
+        "region_totals": {},
+        "limitations": []
+      },
+      "landings": {
+        "rows": [],
+        "totals": {},
+        "mapped_count": 0,
+        "unmapped_count": 0,
+        "limitations": ["unmapped_urls_are_diagnostics_only"]
+      }
+    },
+    "yandex_webmaster": {
+      "status": "ok",
+      "freshness": { "status": "fresh" },
+      "data_actionability": "readiness_and_limited_indexation_evidence",
+      "limitations": [
+        "webmaster_not_content_core_truth",
+        "webmaster_external_search_evidence_only"
+      ],
+      "host_indexation": {},
+      "url_samples": { "sample_count": 0, "resolved_count": 0, "unmapped_count": 0, "rows": [], "limitations": [] },
+      "query_visibility": { "row_count": 0, "rows": [], "totals": {}, "limitations": [] }
+    }
+  }
+}
+```
+
+Rules:
+
+- keep rows top-N and compact;
+- expose safe summaries, not raw external responses or metadata;
+- keep Metrica visits/users/pageviews external-only;
+- treat Webmaster zero query rows as a limitation, not as zero demand;
+- keep landing URL mapping read-only and diagnostic-only when unmapped.
+
 ## 6. Dashboard Overview Contract
 
 The overview is not just a metric strip. Each metric should be a signal with explanation and next action where relevant.

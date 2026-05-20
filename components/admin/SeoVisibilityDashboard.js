@@ -62,6 +62,10 @@ function statusLabel(status) {
 }
 
 function actionabilityLabel(value) {
+  if (value === "limited_external_evidence") {
+    return "limited external evidence";
+  }
+
   return {
     readiness_only: "только готовность источника",
     limited_external_diagnostic: "ограниченная внешняя диагностика",
@@ -83,6 +87,20 @@ function formatSourcePeriod(item) {
   }
 
   return `${item.imported_period_start || "?"} - ${item.imported_period_end || "?"}`;
+}
+
+function externalMetricLine(totals = {}) {
+  return `${formatNumber(totals.visits)} visits - ${formatNumber(totals.users)} users - ${formatNumber(totals.pageviews)} pageviews`;
+}
+
+function firstLabel(row = {}, keys = []) {
+  for (const key of keys) {
+    if (row[key]) {
+      return row[key];
+    }
+  }
+
+  return "n/a";
 }
 
 function priorityLabel(priority) {
@@ -467,6 +485,96 @@ function Recommendations({ recommendations }) {
   );
 }
 
+// Keep limitations visible: this block renders prepared read model evidence only.
+function ExternalEvidence({ evidence }) {
+  const metrica = evidence?.yandex_metrica;
+  const webmaster = evidence?.yandex_webmaster;
+
+  if (!metrica && !webmaster) {
+    return null;
+  }
+
+  const metricaCards = [
+    {
+      key: "metrica-sources",
+      title: "Metrica sources",
+      totals: metrica?.traffic_sources?.totals,
+      items: metrica?.traffic_sources?.rows || [],
+      keys: ["traffic_source_name", "traffic_source"]
+    },
+    {
+      key: "metrica-devices",
+      title: "Metrica devices",
+      totals: metrica?.devices?.totals,
+      items: metrica?.devices?.rows || [],
+      keys: ["device_category_name", "device_category"]
+    },
+    {
+      key: "metrica-geo",
+      title: "Metrica geo",
+      totals: metrica?.geography?.country_totals,
+      items: metrica?.geography?.countries || [],
+      keys: ["country_name", "country"]
+    },
+    {
+      key: "metrica-landings",
+      title: "Metrica landings",
+      totals: metrica?.landings?.totals,
+      items: metrica?.landings?.rows || [],
+      keys: ["page_path", "normalized_url"]
+    }
+  ];
+
+  return (
+    <section className={styles.panel} aria-labelledby="external-evidence">
+      <div className={styles.panelHeader}>
+        <h3 id="external-evidence">External evidence</h3>
+        <p className={styles.muted}>Read-only external aggregates for context; primary metrics stay internal.</p>
+      </div>
+      <div className={styles.sourceGrid}>
+        {metricaCards.map((card) => (
+          <article key={card.key} className={styles.diagnosticCard}>
+            <div className={styles.diagnosticRow}>
+              <strong>{card.title}</strong>
+              <span className={`${styles.badge} ${styles[`badge${sourceTone(metrica?.freshness?.status || metrica?.status)}`]}`}>
+                {statusLabel(metrica?.freshness?.status || metrica?.status)}
+              </span>
+            </div>
+            <p className={styles.sourceValue}>{externalMetricLine(card.totals)}</p>
+            {card.items.slice(0, 3).map((row) => (
+              <p key={`${card.key}-${firstLabel(row, card.keys)}`} className={styles.smallText}>
+                {firstLabel(row, card.keys)} - {formatNumber(row.visits)} visits
+              </p>
+            ))}
+          </article>
+        ))}
+        <article className={styles.diagnosticCard}>
+          <div className={styles.diagnosticRow}>
+            <strong>Webmaster search state</strong>
+            <span className={`${styles.badge} ${styles[`badge${sourceTone(webmaster?.freshness?.status || webmaster?.status)}`]}`}>
+              {statusLabel(webmaster?.freshness?.status || webmaster?.status)}
+            </span>
+          </div>
+          <p className={styles.smallText}>
+            pages: {formatNumber(webmaster?.host_indexation?.searchable_pages_count)} - excluded: {formatNumber(webmaster?.host_indexation?.excluded_pages_count)}
+          </p>
+          <p className={styles.smallText}>
+            URL samples: {formatNumber(webmaster?.url_samples?.sample_count)} - resolved: {formatNumber(webmaster?.url_samples?.resolved_count)}
+          </p>
+          <p className={styles.smallText}>
+            query evidence count {formatNumber(webmaster?.query_visibility?.row_count)}
+          </p>
+        </article>
+      </div>
+      <div className={styles.chips}>
+        {[...(metrica?.limitations || []), ...(webmaster?.limitations || [])].slice(0, 8).map((item) => (
+          <span key={item} className={`${styles.badge} ${styles.badgeInfo}`}>{item}</span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Diagnostics({ readModel }) {
   const states = readModel.source_diagnostics?.states || {};
   const unmapped = readModel.source_diagnostics?.unmapped_urls || [];
@@ -591,6 +699,7 @@ export function SeoVisibilityDashboard({ readModel, period }) {
 
       <Recommendations recommendations={readModel.recommendations || []} />
       <TrafficSources sources={readModel.traffic_sources || []} />
+      <ExternalEvidence evidence={readModel.external_evidence} />
       <Diagnostics readModel={readModel} />
     </div>
   );
