@@ -109,6 +109,25 @@ R2A importer rules:
 - if Reporting API returns empty rows with zero totals, writes explicit zero-valued daily rows with safe metadata instead of treating internal telemetry as zero;
 - does not schedule imports, change `/admin/visibility`, or wire imported rows into the analytics read model.
 
+R2B Metrica source/device/country/landing import commands:
+
+```bash
+# Dry-run: validates env and bounded Reporting API plans; writes nothing.
+npm run yandex:metrica-import:r2b:dry-run -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD
+
+# Write import: server-only external aggregate enrichment with landing diagnostics.
+npm run yandex:metrica-import:r2b -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD
+```
+
+R2B importer rules:
+
+- uses only server-side `YANDEX_METRICA_OAUTH_TOKEN`;
+- imports bounded external aggregate reports for traffic source, device, country and landing URL/path;
+- may safe-skip optional source detail or region reports when cardinality is too high;
+- normalizes landing URLs and writes unmapped paths as diagnostics only;
+- does not import raw sessions/logs, city reports, dimensioned goals or source-device-region-landing cross-products;
+- does not schedule imports, change `/admin/visibility`, or wire imported rows into the analytics read model.
+
 Создать недостающие цели Метрики:
 
 ```bash

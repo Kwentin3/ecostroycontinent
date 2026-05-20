@@ -458,7 +458,7 @@ Next handoff:
 
 ### Phase R2B. Metrica Traffic Source / Device / Region / Landing Import
 
-Status: PRD/Blueprint drafts created; implementation not started.
+Status: implemented locally at commit `1cec46216e996ae27d2393b3a7fcc3e67ef0eae7`; canonical server dry-run/write acceptance pending.
 
 Текущая боль: R2A proves Metrica API/storage/source state for minimal daily totals and goals, but it does not explain traffic composition. R4-lite can show source readiness, but full R4 still lacks external source/device/region/landing evidence.
 
@@ -479,7 +479,9 @@ Deliverables:
 
 - R2B PRD: `docs/product-ux/PRD_R2B_Metrica_Traffic_Source_Device_Region_Landing_Import_Экостройконтинент_v0.1.md`;
 - R2B Blueprint: `docs/blueprints/BLUEPRINT_R2B_Metrica_Traffic_Source_Device_Region_Landing_Import_Экостройконтинент_v0.1.md`;
-- R2B design report: `docs/reports/2026-05-19/R2B_METRICA_TRAFFIC_SOURCE_DEVICE_REGION_LANDING_PRD_BLUEPRINT_DESIGN_Экостройконтинент_v0.1.report.md`.
+- R2B design report: `docs/reports/2026-05-19/R2B_METRICA_TRAFFIC_SOURCE_DEVICE_REGION_LANDING_PRD_BLUEPRINT_DESIGN_Экостройконтинент_v0.1.report.md`;
+- R2B implementation report: `docs/reports/2026-05-20/R2B_METRICA_TRAFFIC_SOURCE_DEVICE_REGION_LANDING_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`;
+- R2B conformity audit: `docs/reports/2026-05-20/R2B_METRICA_TRAFFIC_SOURCE_DEVICE_REGION_LANDING_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
 
 Non-goals:
 
@@ -1139,7 +1141,7 @@ Correct next decision:
 4. Review R3B implementation/conformity reports:
    `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
    and `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
-5. R2B PRD/Blueprint drafts are created. Recommended next implementation slice: review R2B docs, then implement R2B if approved; alternatively run a bounded delayed Webmaster beta pass before full R4. Do not start R5-style recommendation rules from R3B zero-row data.
+5. R2B implementation is locally complete and conformant at commit `1cec46216e996ae27d2393b3a7fcc3e67ef0eae7`; canonical server dry-run/write acceptance is pending.
 6. Optionally rerun delayed Metrica stats visibility check after Yandex processing catches up.
 7. Do not make Metrica or Webmaster imported counts the operational source of truth for public user actions.
 
@@ -1153,7 +1155,7 @@ R3A -> R3B/R3C/R3D
 Recommended implementation order:
 
 ```text
-R2A(done) -> R3A(done) -> R4-lite(done) -> R3B(done; zero-row sync fallback) -> R2B docs(done; implementation not started) -> implement R2B if approved or run delayed Webmaster beta before full R4
+R2A(done) -> R3A(done) -> R4-lite(done) -> R3B(done; zero-row sync fallback) -> R2B implementation(local done; server acceptance pending) -> full R4 only after accepted evidence, or R2C/R3C operational follow-up
 ```
 
 Why:
@@ -1183,7 +1185,7 @@ Definition of finish for the nearest implementation cycle after PRD/Blueprint:
 
 Future scope:
 
-- R2B/R2C deeper Metrica imports;
+- R2B server acceptance, then R2C scheduled Metrica imports if cadence is approved;
 - R3 imports;
 - R4 real external aggregates in read model;
 - R5 recommendation refinement;
@@ -1198,7 +1200,7 @@ Future scope:
 | --- | --- | --- | --- | --- | --- |
 | R0. Current State Baseline | Done | Needed to stop stale-memory work. | Current audit evidence. | Factual state and handoff updated. | Current state audit report. |
 | R1. Public Telemetry Operational Measurement + Optional Metrica Goal Mirror | Enabled / server acceptance closed with delayed external stats visibility | Internal telemetry is operational truth; optional Metrica mirror is enabled after owner prototype-stage approval, with no Webvisor/clickmap/ecommerce/session replay. | R1 PRD/Blueprint, owner privacy posture decision, env flags, centralized adapter, tests, deploy. | Internal telemetry smoke passed; public counter and browser/network reachGoal mirror passed; Yandex Reporting API stats visibility for visits/goals remained `0` as of `2026-05-19T10:19:00Z` and needs delayed recheck. | Implementation, conformity, detailed delivery, and final enablement reports. |
-| R2. Metrica Import Foundation | R2A accepted; R2B PRD/Blueprint created; R2B implementation not started | R2A proved API access, storage, source_sync_state and idempotency without broad BI dimensions. R2B is now specified to add source/device/country-or-region/landing reports with cardinality controls. Scheduling remains later R2C. | R1 telemetry smoke, R2 PRD/Blueprint/addendum, migration `010`, canonical runtime acceptance, R2B PRD/Blueprint. | R2A minimal daily traffic/goals accepted; R2B implementation must prove bounded report plans, storage, source_sync_state, landing URL diagnostics and idempotency without read model/UI/scheduler. | R2A reports; R2B PRD/Blueprint/design report; later R2B implementation/conformity reports. |
+| R2. Metrica Import Foundation | R2A accepted; R2B implemented locally, server acceptance pending | R2A proved API access, storage, source_sync_state and idempotency without broad BI dimensions. R2B adds bounded source/device/country-or-region/landing reports with cardinality controls. Scheduling remains later R2C. | R1 telemetry smoke, R2 PRD/Blueprint/addendum, migrations `010` and `012`, canonical runtime acceptance, R2B PRD/Blueprint. | R2A minimal daily traffic/goals accepted; R2B still needs canonical dry-run/write/rerun proof for bounded report plans, storage, source_sync_state, landing URL diagnostics and no read model/UI/scheduler. | R2A reports; R2B PRD/Blueprint/design report; R2B implementation/conformity reports. |
 | R3. Webmaster Import Foundation | R3A accepted; R3B implemented/accepted with zero-row sync fallback | R3A proved host/indexation/sample imports. R3B proved query/page import plumbing and source state, but accepted `query-analytics/list` returned zero rows; beta export capability is available but async/deferred. | Host id, R3/R3B PRD/Blueprint/addendum, migration `011`, canonical runtime acceptance. | R3A host/indexation/URL sample import and R3B query/page importer/source_sync_state accepted; no read model/UI/scheduler added. | R3A and R3B implementation/conformity reports. |
 | R4-lite. External Source State and Readiness Integration | Implemented and accepted | R2A/R3A data was enough for source-state/readiness but too thin for full R4 evidence. | R4 readiness audit, R2A/R3A accepted source states/rows. | Read model exposes source readiness/limitations; Metrica zeros and absent Webmaster query rows do not drive primary metrics or recommendations. | R4-lite implementation and conformity reports. |
 | R4. Read Model With Real External Aggregates | Later | Full R4 needs richer external aggregates/evidence than current R2A/R3A. | R4-lite and/or R2B/R3B deeper data. | Yandex sources show truthful aggregate evidence without overclaiming weak data. | Full read model integration report. |
