@@ -47,7 +47,6 @@ Scope: SEO Dashboard / Visibility / Analytics Foundation
 - optional telemetry event -> `ym(..., "reachGoal", ...)` mirror;
 - scheduled Metrica imports;
 - scheduled Webmaster imports;
-- Minimal SEO Admin Panel implementation;
 - R5 recommendation refinement from external evidence;
 - lead/intake domain;
 - full UX/UI refine of `/admin/visibility`;
@@ -113,7 +112,7 @@ Supporting documents:
 
 ### Finish 4. Operational SEO Dashboard
 
-Статус: backend/data foundation closed; next implementation domain is Minimal SEO Admin Panel.
+Статус: Minimal SEO Admin Panel implemented and accepted; backend/data foundation and first minimal UI slice are closed.
 
 Критерии:
 
@@ -720,9 +719,9 @@ Next handoff:
 
 ### Phase UI-M1. Minimal SEO Admin Panel
 
-Status: PRD/Blueprint created; implementation not started.
+Status: implemented and accepted on canonical runtime at commit `1a37fce8e1eba4c72ebd3983590251d967b544ee`.
 
-Текущая боль: backend/data foundation now exposes first-party metrics, source readiness and external evidence, but `/admin/visibility` is still a technical surface. The next user value is to show already collected data clearly before adding recommendation logic.
+Текущая боль была: backend/data foundation exposed first-party metrics, source readiness and external evidence, but `/admin/visibility` was still a technical surface. The implemented panel now shows already collected data clearly before adding recommendation logic.
 
 Цель фазы: build a minimal operational SEO panel in admin that answers basic traffic/source/device/geo/landing/action/source-health questions from the analytics read model only.
 
@@ -768,9 +767,16 @@ Acceptance criteria:
 - auth boundary remains intact;
 - build and admin smoke pass.
 
+Acceptance evidence:
+
+- implementation report: `docs/reports/2026-05-20/MINIMAL_SEO_ADMIN_PANEL_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`;
+- conformity audit: `docs/reports/2026-05-20/MINIMAL_SEO_ADMIN_PANEL_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`;
+- deployed image: `ghcr.io/kwentin3/ecostroycontinent-app@sha256:9ec33691ee27e8f47664c02d3479571776556bb2ac75b375d43a67692a236962`;
+- server acceptance: read model `200`, `/admin/visibility` `200`, telemetry test event `202`, launch smoke `28 passed / 0 failed`.
+
 Next handoff:
 
-- after Minimal SEO Admin Panel, decide between UX refinement, R2C/R3C cadence, or R5 recommendation design if data volume justifies it.
+- decide between UX refinement, R2C/R3C cadence, or R5 recommendation design if data volume justifies it. R5 remains deferred until sample-size/actionability guards are explicit.
 
 ### Phase R5. Operational Recommendations Refinement
 
@@ -1222,7 +1228,7 @@ R3A -> R3B/R3C/R3D
 Recommended implementation order:
 
 ```text
-R2A(done) -> R3A(done) -> R4-lite(done) -> R3B(done; zero-row sync fallback) -> R2B(done; 30-row accepted import) -> R4(done; external_evidence) -> UI-M1(next; minimal panel) -> R5/R2C/R3C depending on priority
+R2A(done) -> R3A(done) -> R4-lite(done) -> R3B(done; zero-row sync fallback) -> R2B(done; 30-row accepted import) -> R4(done; external_evidence) -> UI-M1(done; minimal panel) -> R5/R2C/R3C depending on priority
 ```
 
 Why:
@@ -1248,7 +1254,7 @@ Definition of finish for the nearest implementation cycle after PRD/Blueprint:
 - no direct UI/Yandex API coupling is introduced;
 - internal telemetry remains the operational truth;
 - R4 source-state/readiness and external evidence integration are closed; R5 waits for richer external evidence and sample-size guards;
-- backend/data foundation epic is closed; the next product slice is Minimal SEO Admin Panel;
+- backend/data foundation epic is closed; Minimal SEO Admin Panel is also closed in bounded scope;
 - acceptance report records imported dimensions/endpoints, rows, limitations and smoke evidence.
 
 Future scope:
@@ -1256,7 +1262,6 @@ Future scope:
 - R2C scheduled Metrica imports if cadence is approved;
 - R3 deeper imports;
 - R4 external aggregates in read model is closed in bounded evidence scope;
-- Minimal SEO Admin Panel implementation;
 - R5 recommendation refinement;
 - R6 UX/UI refinement;
 - R7 LLM copilot;
@@ -1273,8 +1278,8 @@ Future scope:
 | R3. Webmaster Import Foundation | R3A accepted; R3B implemented/accepted with zero-row sync fallback | R3A proved host/indexation/sample imports. R3B proved query/page import plumbing and source state, but accepted `query-analytics/list` returned zero rows; beta export capability is available but async/deferred. | Host id, R3/R3B PRD/Blueprint/addendum, migration `011`, canonical runtime acceptance. | R3A host/indexation/URL sample import and R3B query/page importer/source_sync_state accepted; no read model/UI/scheduler added. | R3A and R3B implementation/conformity reports. |
 | R4-lite. External Source State and Readiness Integration | Implemented and accepted | R2A/R3A data was enough for source-state/readiness but too thin for full R4 evidence. | R4 readiness audit, R2A/R3A accepted source states/rows. | Read model exposes source readiness/limitations; Metrica zeros and absent Webmaster query rows do not drive primary metrics or recommendations. | R4-lite implementation and conformity reports. |
 | R4. Read Model With Real External Aggregates | Implemented and accepted | R2B/R3A/R3B accepted storage was enough for bounded evidence integration, but not for R5 recommendation claims. | R4-lite, R2B, R3A/R3B accepted storage and source states. | `external_evidence` exposes Metrica/Webmaster evidence with limitations; primary metrics remain first-party; no live API calls or recommendations. | R4 implementation/conformity reports. |
-| UI-M1. Minimal SEO Admin Panel | PRD/Blueprint ready; implementation not started | Backend/data foundation is closed enough to show facts before designing recommendations. | R4 read model with `external_source_readiness` and `external_evidence`; existing `/admin/visibility`. | Panel shows traffic, sources, devices, geo, landings, actions, Webmaster state and limitations from read model only; no recommendations/BI/LLM. | Minimal SEO Admin Panel PRD/Blueprint and design report. |
-| R5. Operational Recommendations Refinement | After R4 and more evidence | Rules need real data and sample-size guards. | External aggregates in read model and sufficient accumulated evidence. | Evidence-backed deterministic recommendations with attribution safety. | Recommendation refinement report/spec. |
+| UI-M1. Minimal SEO Admin Panel | Implemented and accepted | Backend/data foundation is closed enough to show facts before designing recommendations. | R4 read model with `external_source_readiness` and `external_evidence`; existing `/admin/visibility`. | Panel shows traffic, sources, devices, geo, landings, actions, Webmaster state and limitations from read model only; no new recommendations/BI/LLM. | Minimal SEO Admin Panel PRD/Blueprint/design report plus implementation/conformity reports. |
+| R5. Operational Recommendations Refinement | Deferred until after more evidence | Rules need real data and sample-size guards; UI-M1 intentionally did not add R5. | External aggregates in read model and sufficient accumulated evidence. | Evidence-backed deterministic recommendations with attribution safety. | Recommendation refinement report/spec. |
 | R6. UX/UI Product Refinement | Later | UI should follow real workflow, not empty states. | R4/R5. | SEO Manager can inspect pages, evidence, freshness and actions. | UX/UI spec and later implementation report. |
 | R7. LLM Copilot Safety Gate and First UI | Future | Needs read model, evals and safety posture. | R4/R5, provider decision, evals. | Safe context packets and advisory-only first scenario. | LLM safety gate report. |
 | R8. Lead / Intake Attribution | Adjacent | Important, but not SEO foundation blocker. | Lead/intake ownership and definition. | Leads have separate source of truth; SEO consumes aggregates only. | Lead/intake spec/roadmap. |
