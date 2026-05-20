@@ -28,7 +28,7 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - R4-lite PRD/Blueprint are created: `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md` and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
 - R4-lite `External Source State and Readiness Integration` is implemented and accepted on canonical runtime at code commit `6bc7d11ce6c30dfb38a9de79e791048077f8ec25`. The read model exposes `external_source_readiness` for `yandex_metrica` and `yandex_webmaster`; `/admin/visibility` renders compact source readiness diagnostics; Metrica zeros and absent Webmaster query rows remain limitations, not primary metrics or recommendation triggers.
 - R3B `Webmaster Query / Page Visibility Import` is implemented and accepted on canonical runtime at code commit `d7d35d7f4df60f57443372e664d37a79b0ceb92f`: dry-run/write commands exist, advanced export beta capability checks pass, synchronous `query-analytics/list` fallback is implemented, `external_webmaster_query_visibility_daily` remains the storage target, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and the accepted period `2026-05-04..2026-05-17` returned a valid zero-row result with explicit limitations.
-- R2B `Metrica Traffic Source / Device / Region / Landing Import` is implemented locally on branch `feat/r2b-metrica-traffic-dimensions` at commit `1cec46216e996ae27d2393b3a7fcc3e67ef0eae7`: bounded server-side source/device/country/landing imports, optional source detail/region safe-skip, landing URL diagnostics and no read model/UI/scheduler changes. Local tests/build passed; canonical server dry-run/write acceptance is pending because the local runtime has no `YANDEX_METRICA_OAUTH_TOKEN`.
+- R2B `Metrica Traffic Source / Device / Region / Landing Import` is implemented and accepted on canonical runtime at deployed commit `d008b4bb5dc3ebf9d075b83194fba422f42181f3` (implementation commit `1cec46216e996ae27d2393b3a7fcc3e67ef0eae7`): bounded server-side source/device/country/landing imports, optional source detail/region, landing URL diagnostics and no read model/UI/scheduler changes. Accepted period `2026-05-17..2026-05-19` imported `30` rows; source state `yandex_metrica` is `ok`; unmapped landing diagnostics `0`; same-period rerun is idempotent.
 
 ## 3. Architecture snapshot
 
@@ -92,7 +92,7 @@ UI не должен собирать метрики напрямую из Ян�
 ## 6. What is intentionally not implemented yet
 
 - Delayed external Yandex Reporting API visibility for the live Metrica goal smoke; browser/network proof already passed.
-- Scheduled Yandex Metrica imports beyond operator-triggered R2A/R2B. R2B canonical server acceptance is pending; no scheduler/read model/UI changes were added.
+- Scheduled Yandex Metrica imports beyond operator-triggered R2A/R2B. R2B is accepted as operator-triggered only; no scheduler/read model/UI changes were added.
 - Scheduled Yandex Webmaster imports beyond operator-triggered R3A/R3B.
 - Full real external aggregate/evidence integration in read model.
 - Lead/intake domain as a separate future epic; intent events are not lead records.
@@ -163,14 +163,13 @@ UI не должен собирать метрики напрямую из Ян�
 9. Review R2B implementation/conformity reports:
    `docs/reports/2026-05-20/R2B_METRICA_TRAFFIC_SOURCE_DEVICE_REGION_LANDING_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
    and `docs/reports/2026-05-20/R2B_METRICA_TRAFFIC_SOURCE_DEVICE_REGION_LANDING_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
-10. Run canonical R2B server acceptance: deploy branch, apply migration, run dry-run/write/rerun for a bounded completed period, prove rows/source state/unmapped diagnostics and smoke internal telemetry plus R4-lite.
-11. R2B source docs remain authoritative for scope:
+10. R2B source docs remain authoritative for scope:
    `docs/product-ux/PRD_R2B_Metrica_Traffic_Source_Device_Region_Landing_Import_Экостройконтинент_v0.1.md`
    and `docs/blueprints/BLUEPRINT_R2B_Metrica_Traffic_Source_Device_Region_Landing_Import_Экостройконтинент_v0.1.md`.
-12. Recommended next slice after R2B acceptance: full R4 only if R2B/R3B evidence is sufficient, or R2C scheduler/R3C beta export lifecycle if operational cadence is prioritized. Do not start recommendation rules from R3B zero-row data.
-13. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
-14. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
-15. Later LLM Copilot Safety Gate and UI.
+11. Recommended next slice: full R4 only if R2B/R3B evidence is sufficient, or R2C scheduler/R3C beta export lifecycle if operational cadence is prioritized. Do not start recommendation rules from R3B zero-row data.
+12. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
+13. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
+14. Later LLM Copilot Safety Gate and UI.
 
 
 ## 11. Do-not-do list

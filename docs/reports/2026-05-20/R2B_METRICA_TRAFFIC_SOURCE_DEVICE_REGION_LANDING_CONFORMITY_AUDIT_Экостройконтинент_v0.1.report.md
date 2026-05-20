@@ -3,12 +3,13 @@
 Date: 2026-05-20  
 Branch: `feat/r2b-metrica-traffic-dimensions`  
 Implementation commit: `1cec46216e996ae27d2393b3a7fcc3e67ef0eae7`
+Deployed runtime commit: `d008b4bb5dc3ebf9d075b83194fba422f42181f3`
 
 ## Verdict
 
-The local R2B implementation conforms to PRD R2B, Blueprint R2B, PRD/Blueprint R2, the R2/R3 Storage Addendum, the roadmap, handoff constraints and R4-lite boundaries for the code paths that could be verified locally.
+R2B conforms to PRD R2B, Blueprint R2B, PRD/Blueprint R2, the R2/R3 Storage Addendum, the roadmap, handoff constraints and R4-lite boundaries.
 
-Production closure is not final at report creation time because canonical server dry-run/write acceptance has not yet been executed. The correct closure state is: implementation ready, local tests/build passed, server acceptance pending.
+Production closure is accepted on the canonical Selectel runtime. The accepted period `2026-05-17..2026-05-19` produced `30` R2B aggregate rows, source state `ok`, zero unmapped landing diagnostics and a stable same-period idempotent rerun.
 
 ## Scope Audit
 
@@ -89,14 +90,13 @@ No read model integration and no UI integration were added. R4-lite source readi
 
 ## Security Audit
 
-Conforms locally.
+Conforms.
 
 - Token use is server-side only.
 - Error handling redacts sensitive fields.
 - Tests assert no token leakage for mocked invalid/rate-limit/API failure paths.
 - No Authorization headers, OAuth tokens, raw sessions, IP addresses, user identifiers, user-agent history or form values are stored.
-
-Canonical server logs still need acceptance review after dry-run/write.
+- Canonical dry-run/write output contained no secrets or Authorization headers.
 
 ## Error and Limitation Handling
 
@@ -121,19 +121,28 @@ Local checks passed:
 
 Tests cover missing env, dry-run writes nothing, normalized report rows, optional skip, landing normalization/mapping, unmapped diagnostics, idempotent rerun, cardinality guard, users fallback, partial failure, invalid/rate-limit safe handling and token redaction.
 
-## Acceptance Gap
+## Acceptance Evidence
 
-The following items remain pending because they require canonical server runtime access with the production Metrica token:
+Passed on canonical runtime:
 
-- real R2B dry-run against counter `109037342`
-- real R2B write import
-- SQL proof for rows by `report_type`
-- SQL proof for `analytics_source_sync_state`
-- SQL proof for unmapped diagnostics where applicable
-- canonical idempotent rerun
-- canonical no-secret-output review
-- internal telemetry and R4-lite smoke after deploy
+- Build workflow `26145890987`: success.
+- Deploy workflow `26145991372`: success.
+- Pinned image: `ghcr.io/kwentin3/ecostroycontinent-app@sha256:a015c93dba5ab59a079f0d69a33c15c41f5d6c23000997de321e2dd87b59a602`.
+- Runtime readiness commit: `d008b4bb5dc3ebf9d075b83194fba422f42181f3`.
+- R2B dry-run against counter `109037342`: `ok`, rows prepared `30`, writes `0`.
+- R2B write import: `ok`, rows imported `30`.
+- Same-period write rerun: `ok`, SQL row count remained `30`.
+- Required reports completed: `traffic_source`, `device`, `country`, `landing_url`.
+- Optional reports completed safely: `source_detail`, `region`.
+- Source sync state: `yandex_metrica|ok|2026-05-17|2026-05-19|30|0`.
+- Open unmapped Metrica diagnostics: `0`.
+- R2B rows in `analytics_event`: `0`.
+- Internal telemetry smoke: `POST /api/telemetry/events` returned `202` and stored a test `page_viewed` event.
+- R4-lite source readiness still builds and returns Metrica/Webmaster `ok/fresh` without adding full R4 semantics.
+- Read-only launch smoke: `28` passed, `0` failed, `1` optional media check skipped.
 
 ## Closure Decision
 
-R2B can be considered locally implementation-complete and conformant. It should be marked production-closed only after canonical server dry-run/write/import/idempotency proof passes and this audit is updated with the actual server evidence.
+R2B is production-closed as a bounded external aggregate enrichment slice.
+
+Closure does not approve full R4, scheduled R2C imports, recommendations, lead attribution, LLM or UI/read-model expansion. Those remain separate future slices.
