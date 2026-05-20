@@ -30,6 +30,10 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - R3B `Webmaster Query / Page Visibility Import` is implemented and accepted on canonical runtime at code commit `d7d35d7f4df60f57443372e664d37a79b0ceb92f`: dry-run/write commands exist, advanced export beta capability checks pass, synchronous `query-analytics/list` fallback is implemented, `external_webmaster_query_visibility_daily` remains the storage target, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and the accepted period `2026-05-04..2026-05-17` returned a valid zero-row result with explicit limitations.
 - R2B `Metrica Traffic Source / Device / Region / Landing Import` is implemented and accepted on canonical runtime at deployed commit `d008b4bb5dc3ebf9d075b83194fba422f42181f3` (implementation commit `1cec46216e996ae27d2393b3a7fcc3e67ef0eae7`): bounded server-side source/device/country/landing imports, optional source detail/region, landing URL diagnostics and no read model/UI/scheduler changes. Accepted period `2026-05-17..2026-05-19` imported `30` rows; source state `yandex_metrica` is `ok`; unmapped landing diagnostics `0`; same-period rerun is idempotent.
 - R4 `External Aggregates in Analytics Read Model / External Evidence Integration` is implemented and accepted on canonical runtime at commit `e3f9749f409258f8ebbfdd7b8de2101e07ede9d3`: read model exposes additive `external_evidence` for Metrica R2B source/detail/device/country/region/landing evidence and Webmaster R3A/R3B host/indexation/URL/query evidence. `/admin/visibility` renders a compact external evidence block. Metrica remains external enrichment, Webmaster remains external search evidence, primary overview remains first-party, R3B zero query rows remain a limitation, and no recommendations/scheduler/live Yandex API calls were added.
+- SEO Dashboard backend/data-foundation epic is closed as of `2026-05-20`. Closure report: `docs/reports/2026-05-20/SEO_DASHBOARD_BACKEND_DATA_FOUNDATION_EPIC_CLOSURE_Экостройконтинент_v0.1.report.md`.
+- Next domain is `Minimal SEO Admin Panel / Минимальная операционная SEO-панель в админке`. PRD and Blueprint are created, implementation not started:
+  - `docs/product-ux/PRD_Minimal_SEO_Admin_Panel_Экостройконтинент_v0.1.md`;
+  - `docs/blueprints/BLUEPRINT_Minimal_SEO_Admin_Panel_Экостройконтинент_v0.1.md`.
 
 ## 3. Architecture snapshot
 
@@ -89,6 +93,7 @@ UI не должен собирать метрики напрямую из Ян�
 - R4 `external_evidence` block in analytics read model.
 - Compact `/admin/visibility` source readiness diagnostics for Metrica/Webmaster.
 - Compact `/admin/visibility` external evidence rendering for Metrica/Webmaster.
+- PRD/Blueprint for Minimal SEO Admin Panel.
 - R3B server-side Webmaster query/page visibility importer and commands: `npm run yandex:webmaster-query-import:dry-run` and `npm run yandex:webmaster-query-import:r3b`.
 - R2B server-side Metrica source/device/country/landing importer and commands: `npm run yandex:metrica-import:r2b:dry-run` and `npm run yandex:metrica-import:r2b`.
 
@@ -98,6 +103,7 @@ UI не должен собирать метрики напрямую из Ян�
 - Scheduled Yandex Metrica imports beyond operator-triggered R2A/R2B. R2B is accepted as operator-triggered only; no scheduler/read model/UI changes were added.
 - Scheduled Yandex Webmaster imports beyond operator-triggered R3A/R3B.
 - R5 recommendation refinement from external evidence.
+- Minimal SEO Admin Panel implementation.
 - Lead/intake domain as a separate future epic; intent events are not lead records.
 - LLM provider integration.
 - LLM UI.
@@ -174,10 +180,14 @@ UI не должен собирать метрики напрямую из Ян�
    and `docs/reports/2026-05-20/R4_EXTERNAL_EVIDENCE_READ_MODEL_INTEGRATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
 12. R4 source addendum:
    `docs/blueprints/ADDENDUM_R4_External_Evidence_Read_Model_Integration_Экостройконтинент_v0.1.md`.
-13. Recommended next slice: R5 only after enough evidence accumulates for safe deterministic recommendations, or R2C/R3C if scheduler/deeper import cadence is prioritized. Do not start recommendation rules from R3B zero-row data.
-14. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
-15. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
-16. Later LLM Copilot Safety Gate and UI.
+13. Review backend/data-foundation closure and Minimal SEO Admin Panel design:
+   `docs/reports/2026-05-20/SEO_DASHBOARD_BACKEND_DATA_FOUNDATION_EPIC_CLOSURE_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-20/MINIMAL_SEO_ADMIN_PANEL_PRD_BLUEPRINT_DESIGN_Экостройконтинент_v0.1.report.md`.
+14. Next implementation slice: Minimal SEO Admin Panel. It should render already collected data from analytics read model only.
+15. R5 remains deferred until after the minimal panel and enough evidence/sample-size guards. Do not start recommendation rules from R3B zero-row data.
+16. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
+17. UX/UI refine beyond minimal panel only after real data shapes the workflow.
+18. Later LLM Copilot Safety Gate and UI.
 
 
 ## 11. Do-not-do list
