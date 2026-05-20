@@ -1,5 +1,11 @@
 import { createHash, randomUUID } from "node:crypto";
 
+import { resolveRouteEntity } from "../../lib/analytics/route-resolver.js";
+import { ENTITY_TYPES, PAGE_TYPES } from "../../lib/content-core/content-types.js";
+import {
+  findPublishedBySlug,
+  findPublishedPageByPageType
+} from "../../lib/content-core/repository.js";
 import {
   REQUIRED_METRICA_GOALS,
   diffMetricaGoals,
@@ -18,11 +24,22 @@ export const R2A_TRAFFIC_METRICS = [
   { metricKey: "pageviews", apiMetric: "ym:s:pageviews" },
   { metricKey: "users", apiMetric: "ym:s:users" }
 ];
+export const R2B_TRAFFIC_METRICS = [
+  { metricKey: "visits", apiMetric: "ym:s:visits" },
+  { metricKey: "users", apiMetric: "ym:s:users" },
+  { metricKey: "pageviews", apiMetric: "ym:s:pageviews" }
+];
+export const R2B_DEFAULT_LIMIT = 1000;
+export const R2B_DEFAULT_MAX_PAGES = 5;
+export const R2B_DEFAULT_MAX_ROWS = 5000;
+export const R2B_LANDING_MAX_ROWS = 2000;
+export const R2B_DEFAULT_ATTRIBUTION = "lastsign";
 
 const EMPTY_DIMENSIONS = Object.freeze({});
 const EMPTY_DIMENSIONS_HASH = hashStableJson(EMPTY_DIMENSIONS);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/u;
 const RECOVERABLE_IMPORT_STATUSES = new Set(["ok", "partial"]);
+const TRACKING_PARAM_PATTERN = /^(utm_|yclid$|ymclid$|gclid$|fbclid$|_openstat$|mc_)/i;
 
 export function hashStableJson(value) {
   return createHash("sha256")
@@ -131,18 +148,21 @@ function buildStatUrl({
   counterId,
   dateRange,
   metrics,
-  dimensions = "ym:s:date"
+  dimensions = "ym:s:date",
+  limit = 100000,
+  offset = 1
 }) {
   const url = new URL(R2A_STAT_API_URL);
 
   url.searchParams.set("ids", counterId);
   url.searchParams.set("metrics", metrics.join(","));
-  url.searchParams.set("dimensions", dimensions);
+  url.searchParams.set("dimensions", Array.isArray(dimensions) ? dimensions.join(",") : dimensions);
   url.searchParams.set("date1", dateRange.date1);
   url.searchParams.set("date2", dateRange.date2);
   url.searchParams.set("timezone", R2A_TIMEZONE_OFFSET);
   url.searchParams.set("accuracy", "full");
-  url.searchParams.set("limit", "100000");
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("offset", String(offset));
 
   return url.toString();
 }
@@ -257,9 +277,33 @@ function safeApiError(error, errorCategory = "api_error") {
 
   return {
     error_category: errorCategory,
-    ...normalized,
+    ...stripSensitiveErrorKeys(normalized),
     safe_error_message: normalized.safe_error_message || "Yandex Metrica API request failed."
   };
+}
+
+function stripSensitiveErrorKeys(value) {
+  if (value == null || typeof value !== "object") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(stripSensitiveErrorKeys);
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => ![
+        "authorization",
+        "access_token",
+        "refresh_token",
+        "oauth_token",
+        "client_secret",
+        "password",
+        "secret"
+      ].includes(key.toLowerCase()))
+      .map(([key, nested]) => [key, stripSensitiveErrorKeys(nested)])
+  );
 }
 
 async function fetchStatReport({
@@ -267,12 +311,18 @@ async function fetchStatReport({
   token,
   dateRange,
   metrics,
-  fetchImpl
+  fetchImpl,
+  dimensions = "ym:s:date",
+  limit = 100000,
+  offset = 1
 }) {
   const url = buildStatUrl({
     counterId,
     dateRange,
-    metrics: metrics.map((metric) => metric.apiMetric)
+    metrics: metrics.map((metric) => metric.apiMetric),
+    dimensions,
+    limit,
+    offset
   });
 
   return yandexJsonRequest(url, { token, fetchImpl });
@@ -462,6 +512,11 @@ function metricMetadata(response, metric, extra = {}) {
     report_source: "yandex_metrica_reporting_api",
     sampled: Boolean(response?.sampled),
     sample_share: response?.sample_share ?? null,
+    sample_size: response?.sample_size ?? null,
+    sample_space: response?.sample_space ?? null,
+    total_rows: response?.total_rows ?? null,
+    total_rows_rounded: Boolean(response?.total_rows_rounded),
+    contains_sensitive_data: Boolean(response?.contains_sensitive_data),
     data_lag: response?.data_lag ?? null,
     ...extra
   };
@@ -541,10 +596,576 @@ function summarizeStatResponse(response) {
   return {
     api_rows: Array.isArray(response?.data) ? response.data.length : 0,
     total_rows: response?.total_rows ?? null,
+    total_rows_rounded: Boolean(response?.total_rows_rounded),
     sampled: Boolean(response?.sampled),
     sample_share: response?.sample_share ?? null,
+    sample_size: response?.sample_size ?? null,
+    sample_space: response?.sample_space ?? null,
+    contains_sensitive_data: Boolean(response?.contains_sensitive_data),
     data_lag: response?.data_lag ?? null,
     totals: Array.isArray(response?.totals) ? response.totals.map(numericMetric) : []
+  };
+}
+
+function compactString(value, max = 500) {
+  return String(value ?? "").trim().slice(0, max);
+}
+
+function normalizeAttribution(value) {
+  return [
+    "first",
+    "last",
+    "lastsign",
+    "last_yandex_direct_click",
+    "cross_device_first",
+    "cross_device_last",
+    "cross_device_last_significant",
+    "cross_device_last_yandex_direct_click",
+    "automatic"
+  ].includes(value) ? value : R2B_DEFAULT_ATTRIBUTION;
+}
+
+export function buildR2bReportPlan({
+  attribution = R2B_DEFAULT_ATTRIBUTION,
+  maxRows = R2B_DEFAULT_MAX_ROWS,
+  landingMaxRows = R2B_LANDING_MAX_ROWS
+} = {}) {
+  const model = normalizeAttribution(attribution);
+
+  return [
+    {
+      report_type: "traffic_source",
+      required: true,
+      dimensions: ["ym:s:date", `ym:s:${model}TrafficSource`],
+      dimension_keys: ["date", "traffic_source"],
+      max_rows: maxRows,
+      attribution_model: model
+    },
+    {
+      report_type: "source_detail",
+      required: false,
+      dimensions: ["ym:s:date", `ym:s:${model}TrafficSource`, `ym:s:${model}SourceEngine`],
+      dimension_keys: ["date", "traffic_source", "source_engine"],
+      max_rows: maxRows,
+      attribution_model: model
+    },
+    {
+      report_type: "device",
+      required: true,
+      dimensions: ["ym:s:date", "ym:s:deviceCategory"],
+      dimension_keys: ["date", "device_category"],
+      max_rows: maxRows,
+      attribution_model: ""
+    },
+    {
+      report_type: "country",
+      required: true,
+      dimensions: ["ym:s:date", "ym:s:regionCountry"],
+      dimension_keys: ["date", "country"],
+      max_rows: maxRows,
+      attribution_model: ""
+    },
+    {
+      report_type: "region",
+      required: false,
+      dimensions: ["ym:s:date", "ym:s:regionCountry", "ym:s:regionArea"],
+      dimension_keys: ["date", "country", "region_area"],
+      max_rows: maxRows,
+      attribution_model: ""
+    },
+    {
+      report_type: "landing_url",
+      required: true,
+      dimensions: ["ym:s:date", "ym:s:startURLPath"],
+      dimension_keys: ["date", "landing_path"],
+      max_rows: landingMaxRows,
+      attribution_model: ""
+    }
+  ];
+}
+
+function dimensionAt(row, index) {
+  const dimension = Array.isArray(row?.dimensions) ? row.dimensions[index] : null;
+  const id = compactString(dimension?.id, 1000);
+  const name = compactString(dimension?.name, 1000);
+
+  return {
+    id: id || name,
+    name: name || id
+  };
+}
+
+function r2bDimensionPayload({ plan, row, publicSiteUrl }) {
+  const payload = {
+    report_type: plan.report_type,
+    api_dimensions: plan.dimensions
+  };
+  const date = extractDate(row);
+
+  if (plan.attribution_model) {
+    payload.attribution_model = plan.attribution_model;
+  }
+
+  for (let index = 1; index < plan.dimension_keys.length; index += 1) {
+    const key = plan.dimension_keys[index];
+    const dimension = dimensionAt(row, index);
+
+    payload[key] = dimension.id;
+    payload[`${key}_name`] = dimension.name;
+  }
+
+  if (plan.report_type === "landing_url") {
+    const rawLanding = dimensionAt(row, 1).id || dimensionAt(row, 1).name;
+    const normalized = normalizeMetricaLandingUrl(rawLanding, { publicSiteUrl });
+    payload.landing_url = normalized.normalized_url;
+    payload.landing_path = normalized.page_path;
+    payload.normalized_url = normalized.normalized_url;
+    payload.page_path = normalized.page_path;
+    payload.stripped_tracking_params = normalized.stripped_tracking_params;
+  }
+
+  return { date, dimensions: payload };
+}
+
+export function normalizeMetricaLandingUrl(rawUrl, { publicSiteUrl = "https://ecostroycontinent.ru" } = {}) {
+  const canonical = new URL(publicSiteUrl || "https://ecostroycontinent.ru");
+  const parsed = new URL(compactString(rawUrl, 2000) || "/", canonical.origin);
+  const strippedParams = [];
+
+  parsed.hash = "";
+  for (const key of Array.from(parsed.searchParams.keys())) {
+    if (TRACKING_PARAM_PATTERN.test(key)) {
+      strippedParams.push(key);
+      parsed.searchParams.delete(key);
+    }
+  }
+
+  let path = parsed.pathname || "/";
+  try {
+    path = decodeURI(path);
+  } catch {
+    path = parsed.pathname || "/";
+  }
+
+  if (!path.startsWith("/")) {
+    path = `/${path}`;
+  }
+
+  path = path.replace(/\/{2,}/g, "/");
+  if (path.length > 1) {
+    path = path.replace(/\/+$/u, "");
+  }
+
+  return {
+    normalized_url: `${canonical.protocol}//${canonical.host}${path}`,
+    page_path: path,
+    original_host: parsed.host,
+    stripped_tracking_params: strippedParams.sort()
+  };
+}
+
+function buildR2bRecord({ plan, row, metric, metricValue, response, publicSiteUrl }) {
+  const { date, dimensions } = r2bDimensionPayload({ plan, row, publicSiteUrl });
+
+  if (!date) {
+    return null;
+  }
+
+  const normalizedUrl = plan.report_type === "landing_url" ? dimensions.normalized_url : null;
+  const pagePath = plan.report_type === "landing_url" ? dimensions.page_path : null;
+  const dimensionHash = hashStableJson({
+    report_type: plan.report_type,
+    dimensions
+  });
+  const record = {
+    id: "",
+    source_system: R2A_SOURCE_SYSTEM,
+    date,
+    period_grain: "day",
+    report_type: plan.report_type,
+    dimension_hash: dimensionHash,
+    dimensions,
+    metric_key: metric.metricKey,
+    metric_value: numericMetric(metricValue),
+    goal_id: "",
+    goal_name: "",
+    normalized_url: normalizedUrl,
+    page_path: pagePath,
+    entity_type: null,
+    entity_id: null,
+    import_run_id: "",
+    metadata: metricMetadata(response, metric, {
+      api_dimensions: plan.dimensions,
+      required_report: plan.required,
+      attribution_model: plan.attribution_model || null,
+      external_enrichment_only: true
+    })
+  };
+
+  record.id = aggregateId(record);
+  return record;
+}
+
+function normalizeR2bReportRecords({ report, importRunId, publicSiteUrl }) {
+  if (!["ok", "partial"].includes(report?.status)) {
+    return [];
+  }
+
+  if (!Array.isArray(report?.response?.data)) {
+    return [];
+  }
+
+  const records = [];
+  for (const row of report.response.data) {
+    for (const [index, metric] of report.metrics.entries()) {
+      const record = buildR2bRecord({
+        plan: report.plan,
+        row,
+        metric,
+        metricValue: row.metrics?.[index],
+        response: report.response,
+        publicSiteUrl
+      });
+
+      if (record) {
+        records.push({
+          ...record,
+          import_run_id: importRunId
+        });
+      }
+    }
+  }
+
+  return records;
+}
+
+export function normalizeR2bRecords({ reports, importRunId, publicSiteUrl }) {
+  return reports.flatMap((report) => normalizeR2bReportRecords({
+    report,
+    importRunId,
+    publicSiteUrl
+  }));
+}
+
+function r2bReportLimitations(report) {
+  const limitations = [];
+
+  if (report.status === "skipped") {
+    limitations.push(`${report.report_type}_skipped_${report.skip_reason || "cardinality"}`);
+  }
+
+  if (report.unavailable_metrics?.includes("users")) {
+    limitations.push(`${report.report_type}_users_metric_unavailable`);
+  }
+
+  const response = report.response;
+  if (response?.sampled) {
+    limitations.push(`${report.report_type}_sampled`);
+  }
+
+  if (response?.total_rows_rounded) {
+    limitations.push(`${report.report_type}_total_rows_rounded`);
+  }
+
+  if (response?.contains_sensitive_data) {
+    limitations.push(`${report.report_type}_contains_limited_disclosure_data`);
+  }
+
+  if (Array.isArray(response?.data) && response.data.length === 0) {
+    limitations.push(`${report.report_type}_zero_rows_for_period`);
+  }
+
+  return limitations;
+}
+
+function r2bStatus({ reports }) {
+  const required = reports.filter((report) => report.plan?.required);
+  const usable = required.filter((report) => ["ok", "partial"].includes(report.status));
+  const bad = required.filter((report) => ["failed", "skipped"].includes(report.status));
+
+  if (usable.length === 0) {
+    return "failed";
+  }
+
+  if (bad.length > 0 || required.some((report) => report.status === "partial")) {
+    return "partial";
+  }
+
+  return "ok";
+}
+
+function r2bReportSummary(report) {
+  return {
+    report_type: report.report_type,
+    required: Boolean(report.plan?.required),
+    status: report.status,
+    skip_reason: report.skip_reason || "",
+    dimensions: report.plan?.dimensions ?? [],
+    metrics: report.metrics?.map((metric) => metric.metricKey) ?? [],
+    api_metrics: report.metrics?.map((metric) => metric.apiMetric) ?? [],
+    max_rows: report.plan?.max_rows ?? null,
+    unavailable_metrics: report.unavailable_metrics ?? [],
+    limitations: r2bReportLimitations(report),
+    response: report.response ? summarizeStatResponse(report.response) : null
+  };
+}
+
+function buildR2bSummary({
+  mode,
+  status,
+  counterId,
+  dateRange,
+  importRunId,
+  reports,
+  records,
+  errors,
+  unmappedUrlCount = 0,
+  attribution
+}) {
+  const summaries = reports.map(r2bReportSummary);
+  const limitations = Array.from(new Set(summaries.flatMap((summary) => summary.limitations)));
+
+  return redactSensitive({
+    status,
+    mode,
+    domain_slice: "R2B",
+    source_system: R2A_SOURCE_SYSTEM,
+    counter_id: counterId || null,
+    date_range: dateRange,
+    attribution_model: attribution,
+    import_run_id: importRunId,
+    dry_run: mode === "dry-run",
+    selected_reports: Object.fromEntries(summaries.map((summary) => [summary.report_type, summary.metrics])),
+    selected_api_dimensions: Object.fromEntries(summaries.map((summary) => [summary.report_type, summary.dimensions])),
+    selected_api_metrics: Object.fromEntries(summaries.map((summary) => [summary.report_type, summary.api_metrics])),
+    report_summaries: summaries,
+    rows_prepared: records.length,
+    rows_imported: mode === "write" ? records.length : 0,
+    unmapped_url_count: unmappedUrlCount,
+    sync_state_written: mode === "write",
+    limitations,
+    unavailable_metrics: Array.from(new Set(reports.flatMap((report) => report.unavailable_metrics ?? []))),
+    safe_error_message: safeErrorMessage(errors),
+    errors
+  });
+}
+
+async function fetchR2bReportPage({
+  counterId,
+  token,
+  dateRange,
+  plan,
+  metrics,
+  fetchImpl,
+  limit,
+  offset
+}) {
+  return fetchStatReport({
+    counterId,
+    token,
+    dateRange,
+    metrics,
+    dimensions: plan.dimensions,
+    fetchImpl,
+    limit,
+    offset
+  });
+}
+
+async function fetchR2bReportWithMetricFallback({
+  counterId,
+  token,
+  dateRange,
+  plan,
+  fetchImpl,
+  limit,
+  offset
+}) {
+  try {
+    const response = await fetchR2bReportPage({
+      counterId,
+      token,
+      dateRange,
+      plan,
+      metrics: R2B_TRAFFIC_METRICS,
+      fetchImpl,
+      limit,
+      offset
+    });
+
+    return {
+      status: "ok",
+      metrics: R2B_TRAFFIC_METRICS,
+      response,
+      unavailable_metrics: [],
+      errors: []
+    };
+  } catch (error) {
+    const fallbackMetrics = R2B_TRAFFIC_METRICS.filter((metric) => metric.metricKey !== "users");
+
+    try {
+      const response = await fetchR2bReportPage({
+        counterId,
+        token,
+        dateRange,
+        plan,
+        metrics: fallbackMetrics,
+        fetchImpl,
+        limit,
+        offset
+      });
+
+      return {
+        status: "partial",
+        metrics: fallbackMetrics,
+        response,
+        unavailable_metrics: ["users"],
+        errors: [safeApiError(error, "metric_unavailable")]
+      };
+    } catch (fallbackError) {
+      return {
+        status: "failed",
+        metrics: fallbackMetrics,
+        response: null,
+        unavailable_metrics: R2B_TRAFFIC_METRICS.map((metric) => metric.metricKey),
+        errors: [
+          safeApiError(error, `${plan.report_type}_failed`),
+          safeApiError(fallbackError, `${plan.report_type}_failed`)
+        ]
+      };
+    }
+  }
+}
+
+async function fetchR2bReport({
+  counterId,
+  token,
+  dateRange,
+  plan,
+  fetchImpl,
+  limit,
+  maxPages
+}) {
+  const probe = await fetchR2bReportWithMetricFallback({
+    counterId,
+    token,
+    dateRange,
+    plan,
+    fetchImpl,
+    limit: 1,
+    offset: 1
+  });
+
+  if (probe.status === "failed") {
+    return {
+      report_type: plan.report_type,
+      status: "failed",
+      plan,
+      metrics: probe.metrics,
+      response: null,
+      unavailable_metrics: probe.unavailable_metrics,
+      errors: probe.errors
+    };
+  }
+
+  const totalRows = Number(probe.response?.total_rows ?? 0);
+  const maxAllowedRows = Math.min(plan.max_rows, limit * maxPages);
+  if (totalRows > maxAllowedRows) {
+    return {
+      report_type: plan.report_type,
+      status: "skipped",
+      skip_reason: "cardinality_limit_exceeded",
+      plan,
+      metrics: probe.metrics,
+      response: probe.response,
+      unavailable_metrics: probe.unavailable_metrics,
+      errors: [{
+        error_category: "cardinality_limit_exceeded",
+        safe_error_message: `${plan.report_type} returned ${totalRows} rows, above the R2B limit ${maxAllowedRows}.`
+      }]
+    };
+  }
+
+  const data = [];
+  let lastResponse = probe.response;
+  let offset = 1;
+  let pages = 0;
+
+  while (pages < maxPages) {
+    const page = await fetchR2bReportPage({
+      counterId,
+      token,
+      dateRange,
+      plan,
+      metrics: probe.metrics,
+      fetchImpl,
+      limit,
+      offset
+    });
+    const rows = Array.isArray(page?.data) ? page.data : [];
+    data.push(...rows);
+    lastResponse = page;
+    pages += 1;
+
+    if (rows.length < limit || data.length >= totalRows || data.length >= plan.max_rows) {
+      break;
+    }
+
+    offset += limit;
+  }
+
+  return {
+    report_type: plan.report_type,
+    status: probe.status,
+    plan,
+    metrics: probe.metrics,
+    response: {
+      ...lastResponse,
+      data,
+      total_rows: lastResponse?.total_rows ?? probe.response?.total_rows ?? data.length
+    },
+    unavailable_metrics: probe.unavailable_metrics,
+    errors: probe.errors
+  };
+}
+
+export async function fetchR2bReports({
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+  dateRange,
+  attribution = R2B_DEFAULT_ATTRIBUTION,
+  limit = R2B_DEFAULT_LIMIT,
+  maxPages = R2B_DEFAULT_MAX_PAGES,
+  maxRows = R2B_DEFAULT_MAX_ROWS,
+  landingMaxRows = R2B_LANDING_MAX_ROWS
+} = {}) {
+  const validation = validateR2aEnv(env);
+  if (!validation.ok) {
+    return {
+      status: "not_configured",
+      reports: [],
+      errors: summarizeUnavailableEnv(validation.missing).errors
+    };
+  }
+
+  const plan = buildR2bReportPlan({ attribution, maxRows, landingMaxRows });
+  const reports = [];
+  for (const reportPlan of plan) {
+    reports.push(await fetchR2bReport({
+      counterId: validation.counterId,
+      token: validation.token,
+      dateRange,
+      plan: reportPlan,
+      fetchImpl,
+      limit,
+      maxPages
+    }));
+  }
+
+  return {
+    status: r2bStatus({ reports }),
+    reports,
+    errors: reports.flatMap((report) => report.errors ?? [])
   };
 }
 
@@ -721,11 +1342,15 @@ export async function persistR2aImport({
         metric_value,
         goal_id,
         goal_name,
+        normalized_url,
+        page_path,
+        entity_type,
+        entity_id,
         imported_at,
         import_run_id,
         metadata
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, NOW(), $12, $13::jsonb
+        $1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), $16, $17::jsonb
       )
       ON CONFLICT (
         source_system,
@@ -738,6 +1363,10 @@ export async function persistR2aImport({
         metric_value = EXCLUDED.metric_value,
         imported_at = EXCLUDED.imported_at,
         import_run_id = EXCLUDED.import_run_id,
+        normalized_url = EXCLUDED.normalized_url,
+        page_path = EXCLUDED.page_path,
+        entity_type = EXCLUDED.entity_type,
+        entity_id = EXCLUDED.entity_id,
         metadata = EXCLUDED.metadata
     `, [
       record.id,
@@ -751,6 +1380,10 @@ export async function persistR2aImport({
       record.metric_value,
       record.goal_id,
       record.goal_name,
+      record.normalized_url ?? null,
+      record.page_path ?? null,
+      record.entity_type ?? null,
+      record.entity_id ?? null,
       record.import_run_id,
       JSON.stringify(record.metadata)
     ]);
@@ -776,7 +1409,7 @@ export async function persistR2aImport({
       $3,
       $4,
       $5,
-      0,
+      $8,
       $6,
       NOW()
     )
@@ -800,8 +1433,120 @@ export async function persistR2aImport({
     syncState.imported_period_end,
     syncState.safe_error_message,
     syncState.rows_imported,
-    Array.from(RECOVERABLE_IMPORT_STATUSES)
+    Array.from(RECOVERABLE_IMPORT_STATUSES),
+    syncState.unmapped_url_count ?? 0
   ]);
+}
+
+async function resolveMetricaRouteEntityWithDb(db, pagePath) {
+  return resolveRouteEntity(pagePath, {
+    getPublishedServiceBySlug: async (slug) => {
+      const record = await findPublishedBySlug(ENTITY_TYPES.SERVICE, slug, db);
+      return record ? { entityId: record.entityId, revisionId: record.revision?.id || null } : null;
+    },
+    getPublishedCaseBySlug: async (slug) => {
+      const record = await findPublishedBySlug(ENTITY_TYPES.CASE, slug, db);
+      return record ? { entityId: record.entityId, revisionId: record.revision?.id || null } : null;
+    },
+    getPublishedHomePage: async () => {
+      const record = await findPublishedPageByPageType(PAGE_TYPES.HOME, db);
+      return record ? { entityId: record.entityId, revisionId: record.revision?.id || null } : null;
+    },
+    getPublishedAboutPage: async () => {
+      const record = await findPublishedPageByPageType(PAGE_TYPES.ABOUT, db);
+      return record ? { entityId: record.entityId, revisionId: record.revision?.id || null } : null;
+    },
+    getPublishedContactsPage: async () => {
+      const record = await findPublishedPageByPageType(PAGE_TYPES.CONTACTS, db);
+      return record ? { entityId: record.entityId, revisionId: record.revision?.id || null } : null;
+    }
+  });
+}
+
+async function resolveR2bLandingRecords(db, records) {
+  const unmapped = new Map();
+
+  for (const record of records.filter((item) => item.report_type === "landing_url")) {
+    // Landing URLs are diagnostics only; resolving must never create Content Core state.
+    const resolution = await resolveMetricaRouteEntityWithDb(db, record.page_path || "/");
+    record.page_path = resolution.page_path;
+    record.entity_type = resolution.entity_type;
+    record.entity_id = resolution.entity_id;
+    record.metadata = {
+      ...record.metadata,
+      resolution_status: resolution.resolution_status,
+      page_kind: resolution.page_kind ?? null,
+      published_revision_id: resolution.published_revision_id ?? null
+    };
+
+    if (resolution.resolution_status === "unmapped" && !unmapped.has(resolution.page_path)) {
+      unmapped.set(resolution.page_path, {
+        page_path: resolution.page_path,
+        normalized_url: record.normalized_url || record.dimensions?.normalized_url || "",
+        reason: "metrica_landing_url_unmapped"
+      });
+    }
+  }
+
+  return Array.from(unmapped.values());
+}
+
+async function persistMetricaUnmappedDiagnostic(db, diagnostic) {
+  await db.query(`
+    INSERT INTO analytics_unmapped_url_diagnostic (
+      id,
+      page_path,
+      source_system,
+      sample_referrer,
+      safe_reason,
+      metadata
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6::jsonb
+    )
+    ON CONFLICT (page_path, source_system)
+    WHERE status = 'open'
+    DO UPDATE SET
+      last_seen_at = NOW(),
+      hit_count = analytics_unmapped_url_diagnostic.hit_count + 1,
+      sample_referrer = EXCLUDED.sample_referrer,
+      safe_reason = EXCLUDED.safe_reason,
+      metadata = analytics_unmapped_url_diagnostic.metadata || EXCLUDED.metadata
+  `, [
+    `unmapped_url_${hashStableJson([R2A_SOURCE_SYSTEM, diagnostic.page_path]).slice(0, 40)}`,
+    diagnostic.page_path,
+    R2A_SOURCE_SYSTEM,
+    diagnostic.normalized_url,
+    diagnostic.reason,
+    JSON.stringify({
+      source_report: "landing_url",
+      normalized_url: diagnostic.normalized_url
+    })
+  ]);
+}
+
+async function persistR2bImport({
+  db,
+  records,
+  syncState
+}) {
+  // R2B imports Metrica aggregates as external enrichment only.
+  // Do not route these rows into first-party telemetry or make Metrica operational truth.
+  const unmapped = await resolveR2bLandingRecords(db, records);
+
+  for (const diagnostic of unmapped) {
+    await persistMetricaUnmappedDiagnostic(db, diagnostic);
+  }
+
+  await persistR2aImport({
+    db,
+    records,
+    syncState: {
+      ...syncState,
+      unmapped_url_count: unmapped.length
+    }
+  });
+
+  return { unmappedUrlCount: unmapped.length };
 }
 
 async function persistSyncStateOnly({
@@ -821,13 +1566,14 @@ async function persistSyncStateOnly({
   });
 }
 
-function syncStateFromSummary({ status, dateRange, rowsImported, safeErrorMessage, importRunId }) {
+function syncStateFromSummary({ status, dateRange, rowsImported, safeErrorMessage, importRunId, unmappedUrlCount = 0 }) {
   return {
     status,
     imported_period_start: dateRange.date1,
     imported_period_end: dateRange.date2,
     safe_error_message: safeErrorMessage || "",
     rows_imported: rowsImported,
+    unmapped_url_count: unmappedUrlCount,
     import_run_id: importRunId,
     metadata: {}
   };
@@ -961,6 +1707,161 @@ export async function runMetricaR2a({
           rowsImported: 0,
           safeErrorMessage: summary.safe_error_message,
           importRunId
+        })
+      });
+    }
+
+    return summary;
+  }
+}
+
+export async function runMetricaR2b({
+  mode = "dry-run",
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+  withTransactionFn = null,
+  now = new Date(),
+  date1 = "",
+  date2 = "",
+  days = R2A_DEFAULT_DAYS,
+  attribution = R2B_DEFAULT_ATTRIBUTION,
+  limit = R2B_DEFAULT_LIMIT,
+  maxPages = R2B_DEFAULT_MAX_PAGES,
+  maxRows = R2B_DEFAULT_MAX_ROWS,
+  landingMaxRows = R2B_LANDING_MAX_ROWS
+} = {}) {
+  const normalizedMode = mode === "write" ? "write" : "dry-run";
+  const dateRange = resolveR2aDateRange({ now, date1, date2, days });
+  const normalizedAttribution = normalizeAttribution(attribution);
+  const normalizedLimit = Math.min(100000, Math.max(1, Number(limit) || R2B_DEFAULT_LIMIT));
+  const normalizedMaxPages = Math.min(20, Math.max(1, Number(maxPages) || R2B_DEFAULT_MAX_PAGES));
+  const normalizedMaxRows = Math.min(20000, Math.max(1, Number(maxRows) || R2B_DEFAULT_MAX_ROWS));
+  const normalizedLandingMaxRows = Math.min(normalizedMaxRows, Math.max(1, Number(landingMaxRows) || R2B_LANDING_MAX_ROWS));
+  const importRunId = `r2b_${new Date(now).toISOString().replace(/[:.]/g, "-")}_${randomUUID()}`;
+  const validation = validateR2aEnv(env);
+  const publicSiteUrl = env.PUBLIC_SITE_URL || "https://ecostroycontinent.ru";
+
+  if (!validation.ok) {
+    const errors = summarizeUnavailableEnv(validation.missing).errors;
+    const summary = buildR2bSummary({
+      mode: normalizedMode,
+      status: "not_configured",
+      counterId: validation.counterId,
+      dateRange,
+      importRunId,
+      reports: [],
+      records: [],
+      errors,
+      attribution: normalizedAttribution
+    });
+
+    if (normalizedMode === "write") {
+      await persistSyncStateOnly({
+        withTransactionFn,
+        syncState: syncStateFromSummary({
+          status: "not_configured",
+          dateRange,
+          rowsImported: 0,
+          safeErrorMessage: summary.safe_error_message,
+          importRunId,
+          unmappedUrlCount: 0
+        })
+      });
+    }
+
+    return summary;
+  }
+
+  try {
+    const fetched = await fetchR2bReports({
+      env,
+      fetchImpl,
+      dateRange,
+      attribution: normalizedAttribution,
+      limit: normalizedLimit,
+      maxPages: normalizedMaxPages,
+      maxRows: normalizedMaxRows,
+      landingMaxRows: normalizedLandingMaxRows
+    });
+    const records = normalizeR2bRecords({
+      reports: fetched.reports,
+      importRunId,
+      publicSiteUrl
+    });
+    const status = fetched.status;
+    const summaryBeforeWrite = buildR2bSummary({
+      mode: normalizedMode,
+      status,
+      counterId: validation.counterId,
+      dateRange,
+      importRunId,
+      reports: fetched.reports,
+      records,
+      errors: fetched.errors,
+      attribution: normalizedAttribution
+    });
+
+    if (normalizedMode === "write") {
+      if (typeof withTransactionFn !== "function") {
+        throw new Error("withTransactionFn is required for write mode.");
+      }
+
+      let unmappedUrlCount = 0;
+      await withTransactionFn(async (db) => {
+        const persisted = await persistR2bImport({
+          db,
+          records,
+          syncState: syncStateFromSummary({
+            status,
+            dateRange,
+            rowsImported: records.length,
+            safeErrorMessage: summaryBeforeWrite.safe_error_message,
+            importRunId,
+            unmappedUrlCount
+          })
+        });
+        unmappedUrlCount = persisted.unmappedUrlCount;
+      });
+
+      return buildR2bSummary({
+        mode: normalizedMode,
+        status,
+        counterId: validation.counterId,
+        dateRange,
+        importRunId,
+        reports: fetched.reports,
+        records,
+        errors: fetched.errors,
+        unmappedUrlCount,
+        attribution: normalizedAttribution
+      });
+    }
+
+    return summaryBeforeWrite;
+  } catch (error) {
+    const safeError = safeApiError(error, "r2b_import_failed");
+    const summary = buildR2bSummary({
+      mode: normalizedMode,
+      status: "failed",
+      counterId: validation.counterId,
+      dateRange,
+      importRunId,
+      reports: [],
+      records: [],
+      errors: [safeError],
+      attribution: normalizedAttribution
+    });
+
+    if (normalizedMode === "write") {
+      await persistSyncStateOnly({
+        withTransactionFn,
+        syncState: syncStateFromSummary({
+          status: "failed",
+          dateRange,
+          rowsImported: 0,
+          safeErrorMessage: summary.safe_error_message,
+          importRunId,
+          unmappedUrlCount: 0
         })
       });
     }

@@ -2,24 +2,35 @@
 
 import { withTransaction } from "../../lib/db/client.js";
 import { isFailureStatus, loadLocalEnvFile, redactSensitive } from "./bootstrap-lib.mjs";
-import { runMetricaR2a } from "./metrica-import-lib.mjs";
+import { runMetricaR2a, runMetricaR2b } from "./metrica-import-lib.mjs";
 
 function parseArgs(argv) {
   const args = {
-    mode: "dry-run",
+    runMode: "dry-run",
+    importMode: "r2a",
     date1: "",
     date2: "",
-    days: undefined
+    days: undefined,
+    limit: undefined,
+    maxPages: undefined,
+    maxRows: undefined,
+    landingMaxRows: undefined,
+    attribution: undefined
   };
 
   for (const arg of argv) {
     if (arg === "--dry-run") {
-      args.mode = "dry-run";
+      args.runMode = "dry-run";
       continue;
     }
 
     if (arg === "--write") {
-      args.mode = "write";
+      args.runMode = "write";
+      continue;
+    }
+
+    if (arg.startsWith("--mode=")) {
+      args.importMode = arg.slice("--mode=".length).toLowerCase();
       continue;
     }
 
@@ -38,6 +49,31 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (arg.startsWith("--limit=")) {
+      args.limit = Number(arg.slice("--limit=".length));
+      continue;
+    }
+
+    if (arg.startsWith("--max-pages=")) {
+      args.maxPages = Number(arg.slice("--max-pages=".length));
+      continue;
+    }
+
+    if (arg.startsWith("--max-rows=")) {
+      args.maxRows = Number(arg.slice("--max-rows=".length));
+      continue;
+    }
+
+    if (arg.startsWith("--landing-max-rows=")) {
+      args.landingMaxRows = Number(arg.slice("--landing-max-rows=".length));
+      continue;
+    }
+
+    if (arg.startsWith("--attribution=")) {
+      args.attribution = arg.slice("--attribution=".length);
+      continue;
+    }
+
     if (arg === "--help" || arg === "-h") {
       args.help = true;
       continue;
@@ -52,13 +88,14 @@ function parseArgs(argv) {
 
 function printUsage() {
   console.log([
-    "R2A Yandex Metrica aggregate import tooling",
+    "Yandex Metrica aggregate import tooling",
     "",
     "Usage:",
-    "  node scripts/yandex/import-metrica-aggregates.mjs --dry-run [--date1=YYYY-MM-DD --date2=YYYY-MM-DD]",
-    "  node scripts/yandex/import-metrica-aggregates.mjs --write [--date1=YYYY-MM-DD --date2=YYYY-MM-DD]",
+    "  node scripts/yandex/import-metrica-aggregates.mjs --dry-run [--mode=r2a|r2b] [--date1=YYYY-MM-DD --date2=YYYY-MM-DD]",
+    "  node scripts/yandex/import-metrica-aggregates.mjs --write [--mode=r2a|r2b] [--date1=YYYY-MM-DD --date2=YYYY-MM-DD]",
     "",
-    "Defaults to a dry-run over the last 3 completed Europe/Moscow dates.",
+    "Defaults to R2A dry-run over the last 3 completed Europe/Moscow dates.",
+    "R2B adds bounded source/device/country/landing external aggregate imports.",
     "The tool uses only server-side YANDEX_METRICA_OAUTH_TOKEN and redacts output."
   ].join("\n"));
 }
@@ -84,19 +121,34 @@ async function main() {
     return;
   }
 
+  if (!["r2a", "r2b"].includes(args.importMode)) {
+    printSafeJson({
+      status: "failed",
+      safe_error_message: `Unknown import mode: ${args.importMode}`
+    });
+    process.exitCode = 1;
+    return;
+  }
+
   loadLocalEnvFile();
 
-  const result = await runMetricaR2a({
-    mode: args.mode,
+  const runner = args.importMode === "r2b" ? runMetricaR2b : runMetricaR2a;
+  const result = await runner({
+    mode: args.runMode,
     env: process.env,
     withTransactionFn: withTransaction,
     date1: args.date1,
     date2: args.date2,
-    days: args.days
+    days: args.days,
+    limit: args.limit,
+    maxPages: args.maxPages,
+    maxRows: args.maxRows,
+    landingMaxRows: args.landingMaxRows,
+    attribution: args.attribution
   });
 
   printSafeJson({
-    command: args.mode === "write" ? "metrica-import-r2a" : "metrica-import-dry-run",
+    command: args.runMode === "write" ? `metrica-import-${args.importMode}` : `metrica-import-${args.importMode}-dry-run`,
     ...result
   });
 
