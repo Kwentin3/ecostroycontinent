@@ -47,7 +47,7 @@ Scope: SEO Dashboard / Visibility / Analytics Foundation
 - optional telemetry event -> `ym(..., "reachGoal", ...)` mirror;
 - scheduled Metrica imports;
 - scheduled Webmaster imports;
-- imported aggregates in analytics read model;
+- R5 recommendation refinement from external evidence;
 - lead/intake domain;
 - full UX/UI refine of `/admin/visibility`;
 - LLM provider/UI;
@@ -99,7 +99,7 @@ Supporting documents:
 
 ### Finish 3. External Imports Into Project Storage
 
-Статус: after Finish 2.
+Статус: partially closed for operator-triggered R2A/R2B/R3A/R3B imports; scheduled cadence remains R2C/R3C.
 
 Критерии:
 
@@ -112,7 +112,7 @@ Supporting documents:
 
 ### Finish 4. Operational SEO Dashboard
 
-Статус: after real operational data is available.
+Статус: R4 external evidence layer implemented; operational recommendation refinement remains later.
 
 Критерии:
 
@@ -460,7 +460,7 @@ Next handoff:
 
 Status: implemented and accepted on canonical runtime at deployed commit `d008b4bb5dc3ebf9d075b83194fba422f42181f3`.
 
-Текущая боль: R2A proves Metrica API/storage/source state for minimal daily totals and goals, but it does not explain traffic composition. R4-lite can show source readiness, but full R4 still lacks external source/device/region/landing evidence.
+Текущая боль: R2A proves Metrica API/storage/source state for minimal daily totals and goals, but it does not explain traffic composition. R4-lite can show source readiness; R2B was needed before R4 could expose source/device/region/landing evidence.
 
 Цель фазы: import bounded Yandex Metrica aggregate reports for traffic source, device, country/region and landing/start URL without turning Metrica into operational truth or a BI warehouse.
 
@@ -564,7 +564,7 @@ Next handoff:
 
 Status: implemented and accepted with synchronous fallback; valid zero-row result.
 
-Текущая боль: R3B now proves the Webmaster query/page import path and source-state update, but the accepted `query-analytics/list` period returned zero rows. Full R4 still must not claim low CTR, query/page opportunity or search visibility evidence until non-empty aggregate rows or a completed beta export exist.
+Текущая боль: R3B now proves the Webmaster query/page import path and source-state update, but the accepted `query-analytics/list` period returned zero rows. R4/R5 must not claim low CTR, query/page opportunity or search demand from absent query rows.
 
 Цель фазы: import aggregate Webmaster query/page visibility rows without making Webmaster a user/session/lead attribution source.
 
@@ -646,48 +646,56 @@ Acceptance criteria:
 
 ### Phase R4. Read Model With Real External Aggregates
 
-Status: after R4-lite and/or deeper R2B/R3B data, not current next slice.
+Status: implemented and accepted on canonical runtime at commit `e3f9749f409258f8ebbfdd7b8de2101e07ede9d3`.
 
-Текущая боль: read model needs real external aggregates/evidence, but current R2A/R3A data is not rich enough for full traffic/search recommendations.
+Текущая боль: read model needed accepted external aggregate evidence without turning thin Metrica/Webmaster data into operational truth or recommendations.
 
-Цель фазы: make analytics read model consume imported Metrica/Webmaster aggregates and show truthful source health/freshness.
+Цель фазы: make analytics read model consume imported Metrica/Webmaster aggregates as a bounded external evidence layer with truthful limitations.
 
 Prerequisites:
 
-- R2 and/or R3 imported rows exist;
-- source sync state exists;
-- mapping of imported URLs to route owners is stable enough.
+- R2B accepted Metrica rows exist;
+- R3A/R3B accepted Webmaster rows/source state exist;
+- route/entity mapping for landing/URL samples is read-only.
 
 Scope:
 
-- `yandex_metrica` state no longer `not_configured` when successful data exists;
-- `yandex_webmaster` state no longer `not_configured` when successful data exists;
-- traffic sources from imported Metrica data;
-- search visibility from imported Webmaster data;
-- evidence items from imported data;
-- limitations and freshness in read model;
-- no secrets/raw imports in DTO.
+- additive `external_evidence` block in read model;
+- Metrica traffic source/source detail/device/country/region/landing evidence;
+- Webmaster host/indexation/URL sample/query visibility evidence;
+- R3B zero query rows represented as limitation, not zero demand;
+- compact `/admin/visibility` rendering from read model only;
+- limitations/freshness/actionability in DTO;
+- no secrets/raw imports in DTO;
+- no live Yandex API calls in read model path.
 
 Non-goals:
 
-- UX polish;
+- R5 recommendation refinement;
+- scheduled imports;
+- UX redesign;
 - LLM;
 - lead conversion;
-- arbitrary BI filters.
+- arbitrary BI filters;
+- Content Core mutation.
 
 Deliverables:
 
 - read model integration;
-- contract-aligned source states;
-- tests for ok/stale/failed/not_configured states;
-- report with sample read model evidence.
+- contract-aligned `external_evidence` DTO;
+- repository helpers for compact project-owned storage summaries;
+- tests for evidence, limitations, recommendations guardrails and no live API calls;
+- implementation report and conformity audit.
 
 Acceptance criteria:
 
-- absent source is unavailable/not_configured, not zero;
-- stale/failed source is visible;
-- read model exposes aggregate facts only;
-- UI still consumes DTO, not import tables or external APIs directly.
+- `external_source_readiness` remains intact;
+- `external_evidence` exists;
+- Metrica values do not overwrite primary overview;
+- Webmaster zero query rows are limitations, not zero demand;
+- no recommendations are generated from external thin/zero data;
+- UI consumes DTO only;
+- no secrets/raw responses exposed.
 
 Risks:
 
@@ -697,14 +705,17 @@ Risks:
 
 Recommended tests/smoke:
 
-- read model tests with source states;
+- read model tests with external evidence;
 - privacy forbidden-key scan;
 - admin route auth smoke;
-- selected page detail with imported evidence.
+- selected page detail with imported evidence;
+- server `/api/admin/visibility/read-model?period=28`;
+- `/admin/visibility` HTTP 200;
+- internal telemetry smoke.
 
 Next handoff:
 
-- proceed to R5 after enough real source data exists.
+- proceed to R5 only after enough evidence accumulates for safe recommendation rules, or R2C/R3C if cadence/deeper imports are prioritized.
 
 ### Phase R5. Operational Recommendations Refinement
 
@@ -1155,7 +1166,7 @@ R3A -> R3B/R3C/R3D
 Recommended implementation order:
 
 ```text
-R2A(done) -> R3A(done) -> R4-lite(done) -> R3B(done; zero-row sync fallback) -> R2B(done; 30-row accepted import) -> full R4 only after accepted evidence, or R2C/R3C operational follow-up
+R2A(done) -> R3A(done) -> R4-lite(done) -> R3B(done; zero-row sync fallback) -> R2B(done; 30-row accepted import) -> R4(done; external_evidence) -> R5/R2C/R3C depending on priority
 ```
 
 Why:
@@ -1180,14 +1191,14 @@ Definition of finish for the nearest implementation cycle after PRD/Blueprint:
 - no secrets leak;
 - no direct UI/Yandex API coupling is introduced;
 - internal telemetry remains the operational truth;
-- R4-lite source-state/readiness integration is closed; full R4 waits for richer external evidence;
+- R4 source-state/readiness and external evidence integration are closed; R5 waits for richer external evidence and sample-size guards;
 - acceptance report records imported dimensions/endpoints, rows, limitations and smoke evidence.
 
 Future scope:
 
 - R2C scheduled Metrica imports if cadence is approved;
-- R3 imports;
-- R4 real external aggregates in read model;
+- R3 deeper imports;
+- R4 external aggregates in read model is closed in bounded evidence scope;
 - R5 recommendation refinement;
 - R6 UX/UI refinement;
 - R7 LLM copilot;
@@ -1203,8 +1214,8 @@ Future scope:
 | R2. Metrica Import Foundation | R2A accepted; R2B accepted | R2A proved API access, storage, source_sync_state and idempotency without broad BI dimensions. R2B adds bounded source/device/country-or-region/landing reports with cardinality controls. Scheduling remains later R2C. | R1 telemetry smoke, R2 PRD/Blueprint/addendum, migrations `010` and `012`, canonical runtime acceptance, R2B PRD/Blueprint. | R2A minimal daily traffic/goals accepted; R2B canonical dry-run/write/rerun accepted for bounded report plans, storage, source_sync_state, landing URL diagnostics and no read model/UI/scheduler. | R2A reports; R2B PRD/Blueprint/design report; R2B implementation/conformity reports. |
 | R3. Webmaster Import Foundation | R3A accepted; R3B implemented/accepted with zero-row sync fallback | R3A proved host/indexation/sample imports. R3B proved query/page import plumbing and source state, but accepted `query-analytics/list` returned zero rows; beta export capability is available but async/deferred. | Host id, R3/R3B PRD/Blueprint/addendum, migration `011`, canonical runtime acceptance. | R3A host/indexation/URL sample import and R3B query/page importer/source_sync_state accepted; no read model/UI/scheduler added. | R3A and R3B implementation/conformity reports. |
 | R4-lite. External Source State and Readiness Integration | Implemented and accepted | R2A/R3A data was enough for source-state/readiness but too thin for full R4 evidence. | R4 readiness audit, R2A/R3A accepted source states/rows. | Read model exposes source readiness/limitations; Metrica zeros and absent Webmaster query rows do not drive primary metrics or recommendations. | R4-lite implementation and conformity reports. |
-| R4. Read Model With Real External Aggregates | Later | Full R4 needs richer external aggregates/evidence than current R2A/R3A. | R4-lite and/or R2B/R3B deeper data. | Yandex sources show truthful aggregate evidence without overclaiming weak data. | Full read model integration report. |
-| R5. Operational Recommendations Refinement | After R4 | Rules need real data and sample size. | External aggregates in read model. | Evidence-backed deterministic recommendations with attribution safety. | Recommendation refinement report/spec. |
+| R4. Read Model With Real External Aggregates | Implemented and accepted | R2B/R3A/R3B accepted storage was enough for bounded evidence integration, but not for R5 recommendation claims. | R4-lite, R2B, R3A/R3B accepted storage and source states. | `external_evidence` exposes Metrica/Webmaster evidence with limitations; primary metrics remain first-party; no live API calls or recommendations. | R4 implementation/conformity reports. |
+| R5. Operational Recommendations Refinement | After R4 and more evidence | Rules need real data and sample-size guards. | External aggregates in read model and sufficient accumulated evidence. | Evidence-backed deterministic recommendations with attribution safety. | Recommendation refinement report/spec. |
 | R6. UX/UI Product Refinement | Later | UI should follow real workflow, not empty states. | R4/R5. | SEO Manager can inspect pages, evidence, freshness and actions. | UX/UI spec and later implementation report. |
 | R7. LLM Copilot Safety Gate and First UI | Future | Needs read model, evals and safety posture. | R4/R5, provider decision, evals. | Safe context packets and advisory-only first scenario. | LLM safety gate report. |
 | R8. Lead / Intake Attribution | Adjacent | Important, but not SEO foundation blocker. | Lead/intake ownership and definition. | Leads have separate source of truth; SEO consumes aggregates only. | Lead/intake spec/roadmap. |

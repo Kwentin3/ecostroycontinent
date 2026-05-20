@@ -24,11 +24,12 @@ Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTI
 - R1 public Metrica enablement deployed on canonical runtime at commit `90896a9e4015864f15fb633cfc2259af8cce99cb`: `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true`, counter `109037342`, conservative init options, browser/network reachGoal proof passed. Yandex Reporting API stats visibility for visits/goals was still delayed/pending as of `2026-05-19T10:19:00Z`.
 - R2/R3 PRD and Blueprint drafts are created and refined for external imports. R2A is implemented and accepted on canonical runtime at commit `6d5d976abcb086edb15b5c1a6a62a25d8876a5e8`: dry-run/write commands exist, `external_metrica_daily_aggregate` stores minimal daily traffic/goals, `analytics_source_sync_state` for `yandex_metrica` is `ok`, and same-period rerun is idempotent.
 - R3A `Webmaster Host / Indexation / Query Visibility Dry Run` is implemented and accepted on canonical runtime at commit `8a8e2e5ea6668375637fc4fdd16ea3b2e77a22c8`: dry-run/write commands exist, dedicated `external_webmaster_*` tables store host/indexation/URL sample rows, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and same snapshot/period rerun is idempotent. Query analytics was capability-checked but returned `0` rows for the accepted period.
-- R4 Readiness Audit is complete. Full R4 is not recommended yet.
+- R4 Readiness Audit is complete. Full R4 was later implemented in bounded external evidence/read model scope after R2B/R3B acceptance.
 - R4-lite PRD/Blueprint are created: `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md` and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
 - R4-lite `External Source State and Readiness Integration` is implemented and accepted on canonical runtime at code commit `6bc7d11ce6c30dfb38a9de79e791048077f8ec25`. The read model exposes `external_source_readiness` for `yandex_metrica` and `yandex_webmaster`; `/admin/visibility` renders compact source readiness diagnostics; Metrica zeros and absent Webmaster query rows remain limitations, not primary metrics or recommendation triggers.
 - R3B `Webmaster Query / Page Visibility Import` is implemented and accepted on canonical runtime at code commit `d7d35d7f4df60f57443372e664d37a79b0ceb92f`: dry-run/write commands exist, advanced export beta capability checks pass, synchronous `query-analytics/list` fallback is implemented, `external_webmaster_query_visibility_daily` remains the storage target, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and the accepted period `2026-05-04..2026-05-17` returned a valid zero-row result with explicit limitations.
 - R2B `Metrica Traffic Source / Device / Region / Landing Import` is implemented and accepted on canonical runtime at deployed commit `d008b4bb5dc3ebf9d075b83194fba422f42181f3` (implementation commit `1cec46216e996ae27d2393b3a7fcc3e67ef0eae7`): bounded server-side source/device/country/landing imports, optional source detail/region, landing URL diagnostics and no read model/UI/scheduler changes. Accepted period `2026-05-17..2026-05-19` imported `30` rows; source state `yandex_metrica` is `ok`; unmapped landing diagnostics `0`; same-period rerun is idempotent.
+- R4 `External Aggregates in Analytics Read Model / External Evidence Integration` is implemented and accepted on canonical runtime at commit `e3f9749f409258f8ebbfdd7b8de2101e07ede9d3`: read model exposes additive `external_evidence` for Metrica R2B source/detail/device/country/region/landing evidence and Webmaster R3A/R3B host/indexation/URL/query evidence. `/admin/visibility` renders a compact external evidence block. Metrica remains external enrichment, Webmaster remains external search evidence, primary overview remains first-party, R3B zero query rows remain a limitation, and no recommendations/scheduler/live Yandex API calls were added.
 
 ## 3. Architecture snapshot
 
@@ -85,7 +86,9 @@ UI не должен собирать метрики напрямую из Ян�
 - `external_webmaster_host_snapshot`, `external_webmaster_indexation_snapshot`, `external_webmaster_url_sample`, `external_webmaster_query_visibility_daily`.
 - `analytics_source_sync_state` row for `yandex_webmaster` from accepted R3A import.
 - R4-lite `external_source_readiness` block in analytics read model.
+- R4 `external_evidence` block in analytics read model.
 - Compact `/admin/visibility` source readiness diagnostics for Metrica/Webmaster.
+- Compact `/admin/visibility` external evidence rendering for Metrica/Webmaster.
 - R3B server-side Webmaster query/page visibility importer and commands: `npm run yandex:webmaster-query-import:dry-run` and `npm run yandex:webmaster-query-import:r3b`.
 - R2B server-side Metrica source/device/country/landing importer and commands: `npm run yandex:metrica-import:r2b:dry-run` and `npm run yandex:metrica-import:r2b`.
 
@@ -94,7 +97,7 @@ UI не должен собирать метрики напрямую из Ян�
 - Delayed external Yandex Reporting API visibility for the live Metrica goal smoke; browser/network proof already passed.
 - Scheduled Yandex Metrica imports beyond operator-triggered R2A/R2B. R2B is accepted as operator-triggered only; no scheduler/read model/UI changes were added.
 - Scheduled Yandex Webmaster imports beyond operator-triggered R3A/R3B.
-- Full real external aggregate/evidence integration in read model.
+- R5 recommendation refinement from external evidence.
 - Lead/intake domain as a separate future epic; intent events are not lead records.
 - LLM provider integration.
 - LLM UI.
@@ -166,10 +169,15 @@ UI не должен собирать метрики напрямую из Ян�
 10. R2B source docs remain authoritative for scope:
    `docs/product-ux/PRD_R2B_Metrica_Traffic_Source_Device_Region_Landing_Import_Экостройконтинент_v0.1.md`
    and `docs/blueprints/BLUEPRINT_R2B_Metrica_Traffic_Source_Device_Region_Landing_Import_Экостройконтинент_v0.1.md`.
-11. Recommended next slice: full R4 only if R2B/R3B evidence is sufficient, or R2C scheduler/R3C beta export lifecycle if operational cadence is prioritized. Do not start recommendation rules from R3B zero-row data.
-12. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
-13. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
-14. Later LLM Copilot Safety Gate and UI.
+11. Review R4 implementation/conformity reports:
+   `docs/reports/2026-05-20/R4_EXTERNAL_EVIDENCE_READ_MODEL_INTEGRATION_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-20/R4_EXTERNAL_EVIDENCE_READ_MODEL_INTEGRATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+12. R4 source addendum:
+   `docs/blueprints/ADDENDUM_R4_External_Evidence_Read_Model_Integration_Экостройконтинент_v0.1.md`.
+13. Recommended next slice: R5 only after enough evidence accumulates for safe deterministic recommendations, or R2C/R3C if scheduler/deeper import cadence is prioritized. Do not start recommendation rules from R3B zero-row data.
+14. Implement only the chosen sub-slice; no direct UI -> Yandex API and no read model request-path external API calls.
+15. UX/UI refine `/admin/visibility` only after real data shapes the workflow.
+16. Later LLM Copilot Safety Gate and UI.
 
 
 ## 11. Do-not-do list
