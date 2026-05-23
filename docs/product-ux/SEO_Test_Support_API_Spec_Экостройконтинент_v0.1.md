@@ -20,8 +20,8 @@
 
 ## Canon Assumptions
 - SEO role already exists in the product model.
-- SEO can edit drafts, submit for review, inspect review and history, and upload media.
-- SEO cannot publish.
+- SEO can edit drafts, submit for review, inspect review and history, upload media, and publish approved review revisions.
+- SEO cannot publish draft, pending or unapproved revisions.
 - `Approval != Publish`.
 - Current prod SEO user is inactive, so the default probe target is stage/dev or a disposable test fixture.
 - No new privileged runtime surface should be added if existing routes and semantic HTML can be probed safely.
@@ -60,7 +60,7 @@ It does:
 
 It does not:
 - create new authority;
-- bypass publish/review boundaries;
+- bypass publish/review/approval boundaries;
 - bypass role checks;
 - write to raw DB or raw storage;
 - expose secrets;

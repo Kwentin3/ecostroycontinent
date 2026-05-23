@@ -19,6 +19,7 @@ import {
   getRemovalUnmarkHref
 } from "../../lib/admin/removal-quarantine.js";
 import { getPublishActionCopy, getWorkingRevisionStatusModel } from "../../lib/admin/workflow-status.js";
+import { userCanPublishRevision } from "../../lib/auth/roles.js";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -400,11 +401,19 @@ function isWaitingForOwnerApproval(item) {
 }
 
 function canOpenMediaPublishReadiness(item, currentUserRole) {
+  // Approved media leaves the review queue; publish from the card through RBAC.
+  const revision = item?.currentRevisionId
+    ? {
+      state: item.statusKey,
+      ownerApprovalStatus: item.ownerApprovalStatus
+    }
+    : null;
+
   return Boolean(
     item?.currentRevisionId
     && item?.statusKey === "review"
-    && currentUserRole === "superadmin"
     && item?.ownerApprovalStatus === "approved"
+    && userCanPublishRevision({ role: currentUserRole }, "media_asset", revision)
   );
 }
 
@@ -610,7 +619,7 @@ function MediaInspector({
           {canOpenPublishReadiness && publishHref ? (
             <Link href={publishHref} className={styles.primaryButton}>{publishAction.label}</Link>
           ) : null}
-          {item.statusKey === "review" && reviewHref ? (
+          {item.statusKey === "review" && item.ownerApprovalStatus !== "approved" && reviewHref ? (
             <Link href={reviewHref} className={styles.secondaryButton}>Открыть проверку</Link>
           ) : null}
           {waitingForOwnerApproval ? (

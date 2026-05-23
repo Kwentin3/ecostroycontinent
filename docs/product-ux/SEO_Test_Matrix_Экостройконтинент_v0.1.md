@@ -19,8 +19,8 @@
 
 ## Canon Assumptions
 - SEO Manager edits drafts and prepares review.
-- SEO Manager does not publish.
-- Publish remains explicit and superadmin-only.
+- SEO Manager may publish approved review revisions.
+- Publish remains explicit and separate from approval.
 - Owner review remains separate.
 - Current production SEO user is inactive, so prod runtime testing is not a valid default fixture.
 
@@ -66,7 +66,7 @@
 | Submit draft for review | revision moves to review state | UI-as-is | no new API | SEO can do this.
 | Review queue detail | preview and diff are visible | UI-as-is | no new API | Review-as-editor, not owner.
 | Owner action absent for SEO | approval controls hidden or blocked | UI-as-is | no new API | Negative RBAC boundary.
-| Publish page blocked for SEO | route redirects to no-access | UI-as-is | no new API | Explicit publish boundary.
+| Approved publish page opens for SEO | publish readiness surface is accessible after approval | UI-as-is | no new API | Explicit post-approval publish boundary.
 | Review readiness warnings visible | blocking readiness messages show | UI-as-is | no new API | Important for launch-critical pages.
 
 ### 5. Media Surface
@@ -89,7 +89,7 @@
 | Scenario | Expected result | Current coverage | Support needed | Notes |
 | --- | --- | --- | --- | --- |
 | `/admin/users` blocked | no-access page or redirect | UI-as-is | no new API | Nav link exists, access must still fail closed.
-| Publish route blocked | no-access page or redirect | UI-as-is | no new API | SEO must never publish.
+| Unapproved publish route blocked | no-access page or redirect | UI-as-is | no new API | SEO must not publish draft, pending or unapproved revisions.
 | Owner-action route blocked | no-access page or redirect | UI-as-is | no new API | Business Owner path must not leak.
 | Raw admin backend unavailable | no DB shell, no storage shell | UI-as-is | no new API | Must remain true in test support too.
 | SEO cannot manage roles/users | forbidden | UI-as-is | no new API | Permission boundary.
@@ -123,7 +123,7 @@
 
 ## Decisions Not Reopened By Default
 - Do not add a broad QA platform.
-- Do not widen SEO permissions to make tests easier.
+- Do not widen SEO publish beyond approved review revisions.
 - Do not use raw DB/storage access for testing.
 - Do not restore hidden publish to satisfy media tests.
 - Do not convert the test matrix into a product roadmap.

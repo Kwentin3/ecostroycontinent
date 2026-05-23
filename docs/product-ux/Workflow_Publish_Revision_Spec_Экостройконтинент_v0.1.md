@@ -60,7 +60,7 @@
 | `Review` | approve | `Review` | approval marker only; does not publish |
 | `Review` | reject | `Draft` | history remains intact |
 | `Review` | send back with comment | `Draft` | same as reject but comment-forward |
-| `Review` | publish | `Published` | `Superadmin`; `SEO Manager` only for `Page` revisions after required owner approval |
+| `Review` | publish | `Published` | `Superadmin`; `SEO Manager` only for approved review revisions |
 | `Published` | create next revision | `Draft` | new draft starts from published baseline |
 | `Published` | rollback | `Published` | switch active published revision to previous published revision |
 
@@ -150,7 +150,7 @@ The implementation and docs must not imply any of the following:
 Publish may be executed by:
 
 - `Superadmin` for any publishable entity type in first slice;
-- `SEO Manager` only for `Page` revisions that are already in `Review` and already have required owner approval.
+- `SEO Manager` for supported Content Core entity types only when the revision is already in `Review` and has explicit approval.
 
 Publish requires:
 

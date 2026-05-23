@@ -35,9 +35,9 @@
 
 ## Canon assumptions
 
-- `Superadmin` is the publish authority in MVP.
+- `Superadmin` remains the operational publish/rollback authority.
+- `SEO Manager` is the day-to-day editor and may publish Content Core revisions only after review approval.
 - `Business Owner` is review authority for claims-heavy and launch-critical changes.
-- `SEO Manager` is the day-to-day editor.
 - The internal agent is not a free-standing human role; it acts only under delegation.
 - AI never publishes and never silently mutates canonical truth.
 
@@ -54,7 +54,7 @@
 | Actor | Primary posture |
 | --- | --- |
 | `Superadmin` | operational integrity, publish/rollback, users/roles, bounded maintenance |
-| `SEO Manager` | content ops, media ops, review prep, bounded diagnostics |
+| `SEO Manager` | content ops, media ops, review prep, approved revision publish, bounded diagnostics |
 | `Business Owner` | explicit review authority and truth confirmation only, not general editing |
 | Internal delegated agent | bounded executor under a named delegation and allowlist |
 
@@ -81,7 +81,7 @@ Legend:
 | Submit revision for review | Yes | Yes | No | Delegated |
 | View review packet / diff | Yes | Yes | Yes | Delegated |
 | Approve / reject / send back | Yes, backup only | No | Yes | No |
-| Publish revision | Yes | No | No | No |
+| Publish revision | Yes | Yes, approved review revisions only | No | No |
 | Roll back published revision | Yes | No | No | No |
 | Run read-only diagnostics | Yes | Yes | Yes, review-scoped | Delegated |
 | Run maintenance / repair wrappers | Yes | No by default | No | Delegated only through Superadmin envelope |
@@ -123,12 +123,14 @@ Allowed:
 - draft content CRUD;
 - media metadata and bounded media operations;
 - review preparation;
+- publish approved review revisions for Content Core entity types;
 - diagnostics relevant to content readiness;
 - safe read-only or bounded wrappers that do not mutate canonical truth outside allowlist.
 
 Not allowed:
 
-- publish / rollback;
+- publishing draft, pending, unapproved or already published revisions;
+- rollback;
 - user and role management;
 - arbitrary maintenance actions;
 - unrestricted DB or storage access.
@@ -159,7 +161,7 @@ Posture:
 ## Risks / failure modes
 
 - Business Owner becomes a hidden CMS editor instead of review authority;
-- SEO Manager gains publish capability by convenience;
+- SEO Manager publishes a draft, pending or unapproved revision by convenience;
 - agent capability bundle becomes indistinguishable from a human superuser;
 - a bounded truth form quietly turns into a general editor surface;
 - DB or storage wrapper access expands beyond allowlist discipline.
@@ -173,7 +175,8 @@ Posture:
 
 ## Decisions that must not be reopened by default
 
-- `Superadmin` remains the publish authority in MVP.
+- `SEO Manager` may publish only review-state revisions with explicit approval.
+- `Superadmin` remains rollback, user/role and operational integrity authority.
 - `Business Owner` remains a review authority, not a general content operator.
 - The agent remains bounded and delegated.
 - No raw unrestricted DB access.

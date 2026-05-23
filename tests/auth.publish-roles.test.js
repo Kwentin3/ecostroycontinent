@@ -14,28 +14,39 @@ test("publish role matrix keeps global publish reserved for superadmin", () => {
   assert.equal(userCanPublish({ role: "business_owner" }), false);
 });
 
-test("seo manager can publish only page entities", () => {
+test("seo manager can publish every content entity type", () => {
   const seoUser = { role: "seo_manager" };
 
-  assert.equal(userCanPublishEntity(seoUser, ENTITY_TYPES.PAGE), true);
-  assert.equal(userCanPublishEntity(seoUser, ENTITY_TYPES.SERVICE), false);
-  assert.equal(userCanPublishEntity(seoUser, ENTITY_TYPES.CASE), false);
-  assert.equal(userCanPublishEntity(seoUser, ENTITY_TYPES.GLOBAL_SETTINGS), false);
+  for (const entityType of Object.values(ENTITY_TYPES)) {
+    assert.equal(userCanPublishEntity(seoUser, entityType), true, entityType);
+  }
 });
 
-test("revision-level publish helper keeps seo manager inside reviewed pages only", () => {
+test("revision-level publish helper lets seo publish only approved review revisions", () => {
   const seoUser = { role: "seo_manager" };
 
+  for (const entityType of Object.values(ENTITY_TYPES)) {
+    assert.equal(
+      userCanPublishRevision(seoUser, entityType, { state: "review", ownerApprovalStatus: "approved" }),
+      true,
+      entityType
+    );
+  }
+
   assert.equal(
-    userCanPublishRevision(seoUser, ENTITY_TYPES.PAGE, { state: "review" }),
-    true
-  );
-  assert.equal(
-    userCanPublishRevision(seoUser, ENTITY_TYPES.PAGE, { state: "draft" }),
+    userCanPublishRevision(seoUser, ENTITY_TYPES.MEDIA_ASSET, { state: "review", ownerApprovalStatus: "pending" }),
     false
   );
   assert.equal(
-    userCanPublishRevision(seoUser, ENTITY_TYPES.SERVICE, { state: "review" }),
+    userCanPublishRevision(seoUser, ENTITY_TYPES.SERVICE, { state: "draft", ownerApprovalStatus: "approved" }),
+    false
+  );
+  assert.equal(
+    userCanPublishRevision(seoUser, ENTITY_TYPES.PAGE, { state: "published", ownerApprovalStatus: "approved" }),
+    false
+  );
+  assert.equal(
+    userCanPublishRevision(seoUser, ENTITY_TYPES.PAGE),
     false
   );
 });

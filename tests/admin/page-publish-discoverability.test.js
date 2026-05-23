@@ -21,6 +21,7 @@ test("page publish CTAs stay discoverable in workspace, review, and fallback edi
   assert.match(reviewSource, /Открыть карточку/);
   assert.match(reviewSource, /Публикация и снятие с публикации выполняются (из|в) карточке сущности/);
   assert.match(genericEditorSource, /userCanPublishRevision/);
+  assert.match(genericEditorSource, /currentRevision\.ownerApprovalStatus !== "approved"/);
   assert.match(genericEditorSource, /Открыть проверку/);
   assert.match(genericEditorSource, /publishAction\.label/);
   assert.match(genericEditorSource, /name="returnTo" value=\{redirectTo\}/);

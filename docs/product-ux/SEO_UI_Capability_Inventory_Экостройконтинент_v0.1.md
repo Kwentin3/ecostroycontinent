@@ -41,7 +41,7 @@
 - `Approval != Publish`.
 - `AI` and internal agents are assistive only.
 - `Business Owner` is review-first / truth-confirmation, not default editor.
-- `SEO Manager` is day-to-day content and SEO operator, not publisher.
+- `SEO Manager` is day-to-day content and SEO operator, including publish for approved review revisions.
 
 ## Current Runtime Reality
 - The codebase exposes a full SEO-capable admin surface.
@@ -67,7 +67,7 @@
 | `/admin/entities/*/[entityId]` | yes | Entity editor detail pages.
 | `/admin/entities/*/[entityId]/history` | yes | Revision history and audit timeline.
 | `/admin/users` | no | Static nav link exists, access denied by route guard.
-| `/admin/revisions/[revisionId]/publish` | no | Superadmin only.
+| `/admin/revisions/[revisionId]/publish` | yes, gated | Only for approved review revisions; draft, pending and unapproved revisions are forbidden.
 | `/admin/revisions/[revisionId]/owner-action` | no | Business Owner / Superadmin only.
 | `/admin/entities/*/[entityId]/rollback` | no | Superadmin only.
 
@@ -82,7 +82,7 @@
 | Readiness inspection | present | Readiness panel on editor and publish surfaces.
 | Audit timeline inspection | present | History pages and timeline widgets.
 | Inline media upload | present | Editor media upload form for non-global_settings entities.
-| Publish | forbidden | Superadmin only.
+| Publish | present, gated | Approved review revisions only; approval and readiness checks stay separate.
 | Rollback | forbidden | Superadmin only.
 | User management | forbidden | Superadmin only.
 
@@ -105,7 +105,7 @@
 | `page` | page type, slug, title, H1, intro, body blocks, contact note, CTA fields, linked entities, primary media, SEO subfields.
 
 ## Forbidden Capabilities
-- publishing revisions;
+- publishing draft, pending, unapproved or already published revisions;
 - owner approving/rejecting as Business Owner role;
 - rollback;
 - user creation or status change;
@@ -139,7 +139,7 @@
 - Misreading draft media upload as published media availability.
 - Assuming production SEO login works when the user is inactive.
 - Adding a broad test backdoor instead of a narrow probe harness.
-- Using hidden publish as a workaround for media picker visibility.
+- Using hidden publish or approval bypass as a workaround for media picker visibility.
 
 ## Open Questions
 - Should the deterministic SEO probe run only in stage/dev or also against production read-only?
@@ -147,7 +147,7 @@
 - Do we need stable `data-testid` hooks, or are semantic labels sufficient for the current surface?
 
 ## Decisions Not Reopened By Default
-- SEO does not get publish authority.
+- SEO publish authority is limited to approved review revisions.
 - Business Owner does not become a default editor.
 - No raw DB/storage shell for test support.
 - No hidden publish path to make media tests easier.

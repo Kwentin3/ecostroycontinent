@@ -375,9 +375,9 @@ Why this order is safer than “build admin UI first”:
 
 ### 9.3 Role and permission checks
 
-- `SEO Manager` can create, edit, link, submit.
+- `SEO Manager` can create, edit, link, submit and publish approved review revisions.
 - `Business Owner` can approve/reject/send back from review surface only.
-- `Superadmin` alone can publish and rollback.
+- `Superadmin` can publish, rollback and handle operational integrity actions.
 
 ### 9.4 Publish/read-side correctness checks
 

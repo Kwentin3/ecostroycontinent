@@ -189,7 +189,12 @@ export function EntityEditorForm({
   );
   const reviewHref = currentRevision ? `/admin/review/${currentRevision.id}` : "";
   const publishHref = currentRevision ? `/admin/revisions/${currentRevision.id}/publish` : "";
-  const canOpenReview = Boolean(currentRevision && currentRevision.state === "review" && reviewHref);
+  const canOpenReview = Boolean(
+    currentRevision
+    && currentRevision.state === "review"
+    && currentRevision.ownerApprovalStatus !== "approved"
+    && reviewHref
+  );
   // Publish stays on the entity surface on purpose. Review grants approval for
   // the candidate revision, but the live pointer changes only through the
   // explicit publish action opened from this screen.

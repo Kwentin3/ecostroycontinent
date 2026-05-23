@@ -35,8 +35,8 @@
 
 - Approval and publish are separate operations.
 - `Business Owner` is review authority where owner review is required.
-- `Superadmin` is publish authority in first slice.
-- `SEO Manager` works in editor / content operations mode.
+- `Superadmin` remains operational publish/rollback authority in first slice.
+- `SEO Manager` works in editor / content operations mode and may publish approved review revisions.
 - Published read-side consumes only validated published revisions.
 - `reviewable revision` is a frozen decision snapshot.
 - AI is assistive only and never publishes.
@@ -46,14 +46,14 @@
 | Actor | Main role | Can submit to review | Can approve owner-required revision | Can publish | Can rollback |
 | --- | --- | --- | --- | --- | --- |
 | `Superadmin` | Publish and operational integrity authority | Yes | Backup only in explicit exception handling | Yes | Yes |
-| `SEO Manager` | Editorial and SEO operations actor | Yes | No | No | No |
+| `SEO Manager` | Editorial and SEO operations actor | Yes | No | Approved review revisions only | No |
 | `Business Owner` | Review authority for business-sensitive changes | No | Yes | No | No |
 
 ### Action authority rules
 
-- `SEO Manager` may create and edit drafts, prepare reviewable revisions and respond to send-back comments.
+- `SEO Manager` may create and edit drafts, prepare reviewable revisions, respond to send-back comments and publish approved review revisions.
 - `Business Owner` reviews decision-ready candidates, not raw editing state.
-- `Superadmin` executes publish and rollback only after required approvals and checks.
+- `Superadmin` keeps rollback, exception publish and operational integrity actions behind required approvals and checks.
 
 ## 5. Revision lifecycle state machine
 
@@ -167,10 +167,12 @@ If preview fails because of content invalidity, broken refs or candidate-specifi
 ### Publish may be executed only by
 
 - `Superadmin`
+- `SEO Manager`, only for review-state revisions with explicit approval
 
 ### Publish requires
 
 - revision in reviewable state
+- actor passes the revision-level publish gate
 - all `blocking` readiness checks passed
 - owner approval where required
 - preview basis known
