@@ -66,6 +66,48 @@ function buildAssetHaystack(item) {
   return [item.title, item.alt, item.originalFilename, item.collectionLabel].filter(Boolean).join(" ").toLowerCase();
 }
 
+function assetHasPublishedRevision(asset) {
+  return Boolean(asset?.publishedRevisionNumber || asset?.statusKey === "published");
+}
+
+function buildCollectionPublishReadiness({ fields, mediaMap, selectedCollection }) {
+  const blockers = [];
+  const title = fields.title.trim();
+  const assetIds = fields.assetIds.filter(Boolean);
+  const selectedAssets = assetIds.map((assetId) => mediaMap.get(assetId)).filter(Boolean);
+  const missingAssetIds = assetIds.filter((assetId) => !mediaMap.has(assetId));
+  const unpublishedAssets = selectedAssets.filter((asset) => !assetHasPublishedRevision(asset));
+
+  if (!title) {
+    blockers.push("Укажите название коллекции.");
+  }
+
+  if (selectedCollection?.markedForRemovalAt) {
+    blockers.push("Снимите пометку удаления перед публикацией.");
+  }
+
+  if (assetIds.length === 0) {
+    blockers.push("Добавьте хотя бы одну фотографию.");
+  }
+
+  if (!fields.primaryAssetId || !assetIds.includes(fields.primaryAssetId)) {
+    blockers.push("Выберите главный кадр из состава коллекции.");
+  }
+
+  if (missingAssetIds.length > 0) {
+    blockers.push("В составе есть медиафайлы, которых нет в медиатеке.");
+  }
+
+  if (unpublishedAssets.length > 0) {
+    blockers.push("В составе есть неопубликованные медиафайлы.");
+  }
+
+  return {
+    ready: blockers.length === 0,
+    blockers
+  };
+}
+
 export function MediaCollectionOverlay({
   open,
   busy,
@@ -138,6 +180,13 @@ export function MediaCollectionOverlay({
 
   const selectedCollection = selectedCollectionId === NEW_COLLECTION_ID ? null : collectionMap.get(selectedCollectionId) ?? null;
   const selectedAssets = fields.assetIds.map((assetId) => mediaMap.get(assetId)).filter(Boolean);
+  const publishReadiness = useMemo(
+    () => buildCollectionPublishReadiness({ fields, mediaMap, selectedCollection }),
+    [fields, mediaMap, selectedCollection]
+  );
+  const hasLiveCollection = Boolean(selectedCollection?.publishedRevisionNumber);
+  const publishActionLabel = hasLiveCollection ? "Сохранить и опубликовать изменения" : "Сохранить и опубликовать";
+  const draftActionLabel = selectedCollection ? "Сохранить черновик" : "Создать черновик";
   const openGraphOptions = mediaItems.map((item) => ({
     id: item.id,
     label: item.title || item.originalFilename || item.id
@@ -199,12 +248,17 @@ export function MediaCollectionOverlay({
     });
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault();
+  async function submitCollection({ publish = false } = {}) {
     await onSave({
       entityId: selectedCollectionId === NEW_COLLECTION_ID ? "" : selectedCollectionId,
-      fields
+      fields,
+      publish
     });
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    await submitCollection({ publish: false });
   }
 
   return (
@@ -239,6 +293,16 @@ export function MediaCollectionOverlay({
         </div>
 
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
+        {selectedCollection ? (
+          <div className={styles.statusPanelInfo}>
+            <strong>{selectedCollection.liveStatusLabel || selectedCollection.statusLabel}</strong>
+            <p className={styles.helpText}>
+              {hasLiveCollection
+                ? "Live-версия уже есть. Обычное сохранение создаёт черновик изменений, а публикация применяет их на сайте."
+                : "Коллекция пока не опубликована и не появится в связях кейсов до явной публикации."}
+            </p>
+          </div>
+        ) : null}
         {selectedCollection?.markedForRemovalAt ? (
           <div className={styles.statusPanelInfo}>
             Коллекция помечена на удаление. Новые ссылки на неё блокируются, а финальная очистка запускается из центра очистки.
@@ -532,14 +596,45 @@ export function MediaCollectionOverlay({
                 </div>
               ) : (
                 <p className={styles.helpText}>
-                  Эта коллекция пока никуда не привязана. После сохранения её можно выбирать в `Страницах`, `Кейсах` и `Услугах`.
+                  Эта коллекция пока никуда не привязана. После публикации её можно выбирать в страницах, кейсах и услугах.
                 </p>
               )}
             </section>
 
+            <section className={styles.mediaInspectorSection} aria-live="polite">
+              <h4>Публикация</h4>
+              <div className={publishReadiness.ready ? styles.statusPanelInfo : styles.statusPanelBlocking}>
+                <strong>{publishReadiness.ready ? "Готово к публикации" : "Публикация пока недоступна"}</strong>
+                {publishReadiness.ready ? (
+                  <p className={styles.helpText}>
+                    Коллекция состоит из опубликованных медиа и после публикации станет доступна в связях кейсов.
+                  </p>
+                ) : (
+                  <div className={styles.stack}>
+                    {publishReadiness.blockers.map((blocker) => (
+                      <p key={blocker} className={styles.helpText}>{blocker}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
             <div className={styles.mediaOverlayActions}>
-              <button type="submit" className={styles.primaryButton} disabled={busy}>
-                {busy ? "Сохраняем..." : selectedCollection ? "Сохранить коллекцию" : "Создать коллекцию"}
+              <button
+                type="submit"
+                className={publishReadiness.ready ? styles.secondaryButton : styles.primaryButton}
+                disabled={busy}
+              >
+                {busy ? "Сохраняем..." : draftActionLabel}
+              </button>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                disabled={busy || !publishReadiness.ready}
+                title={publishReadiness.ready ? publishActionLabel : publishReadiness.blockers.join(" ")}
+                onClick={() => submitCollection({ publish: true })}
+              >
+                {busy ? "Публикуем..." : publishActionLabel}
               </button>
               <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={busy}>
                 Отмена

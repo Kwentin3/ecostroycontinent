@@ -1478,7 +1478,7 @@ export function MediaGalleryWorkspace({
     }
   }
 
-  async function handleCollectionSubmit({ entityId, fields }) {
+  async function handleCollectionSubmit({ entityId, fields, publish = false }) {
     setOverlayBusy(true);
     setOverlayError("");
 
@@ -1494,6 +1494,7 @@ export function MediaGalleryWorkspace({
     formData.set("openGraphTitle", fields.openGraphTitle);
     formData.set("openGraphDescription", fields.openGraphDescription);
     formData.set("openGraphImageAssetId", fields.openGraphImageAssetId);
+    formData.set("publicationIntent", publish ? "publish" : "draft");
 
     for (const assetId of fields.assetIds) {
       formData.append("assetIds", assetId);
