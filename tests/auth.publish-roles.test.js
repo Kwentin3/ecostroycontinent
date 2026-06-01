@@ -2,11 +2,28 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { ENTITY_TYPES } from "../lib/content-core/content-types.js";
+import { AUTH_PERMISSIONS, AUTH_ROLES, canUser } from "../lib/auth/policy.js";
 import {
+  userCanEditContent,
+  userCanOwnerApprove,
   userCanPublish,
   userCanPublishEntity,
+  userCanReadAdminMediaPreview,
+  userCanRollback,
+  userCanRunMaintenancePurge,
   userCanPublishRevision
 } from "../lib/auth/roles.js";
+
+test("auth policy is the canonical permission matrix behind runtime role helpers", () => {
+  const superadmin = { role: AUTH_ROLES.SUPERADMIN };
+  const seoUser = { role: AUTH_ROLES.SEO_MANAGER };
+  const owner = { role: AUTH_ROLES.BUSINESS_OWNER };
+
+  assert.equal(canUser(seoUser, AUTH_PERMISSIONS.CONTENT_EDIT), userCanEditContent(seoUser));
+  assert.equal(canUser(owner, AUTH_PERMISSIONS.OWNER_APPROVE), userCanOwnerApprove(owner));
+  assert.equal(canUser(superadmin, AUTH_PERMISSIONS.REVISION_ROLLBACK), userCanRollback(superadmin));
+  assert.equal(canUser(superadmin, AUTH_PERMISSIONS.MAINTENANCE_PURGE), userCanRunMaintenancePurge(superadmin));
+});
 
 test("publish role matrix keeps global publish reserved for superadmin", () => {
   assert.equal(userCanPublish({ role: "superadmin" }), true);
@@ -62,4 +79,13 @@ test("superadmin keeps revision-level publish access for every entity type", () 
     userCanPublishRevision(superadmin, ENTITY_TYPES.SERVICE, { state: "review" }),
     true
   );
+});
+
+test("review-scoped media preview permission does not turn owner into an editor", () => {
+  const owner = { role: AUTH_ROLES.BUSINESS_OWNER };
+
+  assert.equal(userCanEditContent(owner), false);
+  assert.equal(userCanReadAdminMediaPreview(owner, { reviewVisible: false }), false);
+  assert.equal(userCanReadAdminMediaPreview(owner, { reviewVisible: true }), true);
+  assert.equal(userCanReadAdminMediaPreview({ role: AUTH_ROLES.SEO_MANAGER }, { reviewVisible: false }), true);
 });

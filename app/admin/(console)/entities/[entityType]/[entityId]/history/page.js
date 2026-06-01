@@ -12,6 +12,7 @@ import { CHANGE_INTENT_LABEL, getScreenLegend } from "../../../../../../../lib/a
 import { buildHumanReadableDiff } from "../../../../../../../lib/content-core/diff.js";
 import { getEntityEditorState } from "../../../../../../../lib/content-core/service";
 import { getAuditTimeline } from "../../../../../../../lib/content-ops/audit";
+import { userCanRollback } from "../../../../../../../lib/auth/session.js";
 import { getChangeClassLabel, getEntityTypeLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../../../../../../lib/ui-copy.js";
 
 export default async function EntityHistoryPage({ params, searchParams }) {
@@ -78,7 +79,7 @@ export default async function EntityHistoryPage({ params, searchParams }) {
                     rows={diffRows}
                     emptyLabel="Изменений верхнего уровня нет."
                   />
-                  {user.role === "superadmin" && revision.state === "published" ? (
+                  {userCanRollback(user) && revision.state === "published" ? (
                     <div className={styles.inlineActions}>
                       <ConfirmActionForm
                         action={`/api/admin/entities/${entityType}/${entityId}/rollback`}

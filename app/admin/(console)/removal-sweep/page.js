@@ -9,7 +9,7 @@ import { listRemovalSweepComponents } from "../../../../lib/admin/removal-sweep-
 import { getRemovalSweepHref } from "../../../../lib/admin/removal-quarantine.js";
 import { listRecentDestructiveEvents } from "../../../../lib/content-ops/destructive-forensics.js";
 import { getEntityTypeLabel, normalizeLegacyCopy } from "../../../../lib/ui-copy.js";
-import { userIsSuperadmin } from "../../../../lib/auth/roles.js";
+import { userCanRunMaintenancePurge } from "../../../../lib/auth/roles.js";
 
 function renderItemList(items = [], emptyLabel = "Ничего не найдено.") {
   if (items.length === 0) {
@@ -206,6 +206,7 @@ export default async function RemovalSweepPage({ searchParams }) {
   ]);
   const readyComponents = components.filter((component) => component.verdict === "ready");
   const blockedComponents = components.filter((component) => component.verdict !== "ready");
+  const canPurge = userCanRunMaintenancePurge(user);
 
   return (
     <AdminShell
@@ -255,14 +256,14 @@ export default async function RemovalSweepPage({ searchParams }) {
         {readyComponents.length > 0 ? (
           <section className={styles.stack}>
             <h3>Готовы к очистке</h3>
-            {readyComponents.map((component) => renderComponent(component, { canPurge: userIsSuperadmin(user) }))}
+            {readyComponents.map((component) => renderComponent(component, { canPurge }))}
           </section>
         ) : null}
 
         {blockedComponents.length > 0 ? (
           <section className={styles.stack}>
             <h3>Пока заблокированы</h3>
-            {blockedComponents.map((component) => renderComponent(component, { canPurge: userIsSuperadmin(user) }))}
+            {blockedComponents.map((component) => renderComponent(component, { canPurge }))}
           </section>
         ) : null}
       </div>

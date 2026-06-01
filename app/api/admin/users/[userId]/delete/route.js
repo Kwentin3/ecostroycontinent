@@ -1,5 +1,6 @@
 import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
 import { redirectToAdmin, redirectWithError, redirectWithQuery } from "../../../../../../lib/admin/operation-feedback";
+import { AUTH_ROLES } from "../../../../../../lib/auth/policy.js";
 import { userCanManageUsers } from "../../../../../../lib/auth/session";
 import { deleteUserRecord, findUserById, listUsers } from "../../../../../../lib/content-core/repository";
 import { recordAuditEvent } from "../../../../../../lib/content-ops/audit";
@@ -29,9 +30,9 @@ export async function POST(request, { params }) {
   }
 
   const users = await listUsers();
-  const activeSuperadminCount = users.filter((item) => item.role === "superadmin" && item.active).length;
+  const activeSuperadminCount = users.filter((item) => item.role === AUTH_ROLES.SUPERADMIN && item.active).length;
 
-  if (current.role === "superadmin" && current.active && activeSuperadminCount <= 1) {
+  if (current.role === AUTH_ROLES.SUPERADMIN && current.active && activeSuperadminCount <= 1) {
     return redirectWithError(request, `/admin/users/${userId}`, new Error("Нельзя удалить последнего активного суперадмина."));
   }
 

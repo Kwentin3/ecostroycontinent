@@ -32,7 +32,7 @@ import {
   getPublishActionCopy,
   getWorkingRevisionStatusModel
 } from "../../lib/admin/workflow-status.js";
-import { userCanPublishRevision } from "../../lib/auth/session.js";
+import { userCanEditContent, userCanPublish, userCanPublishRevision } from "../../lib/auth/session.js";
 import styles from "./admin-ui.module.css";
 
 const OBLIGATION_LABELS = {
@@ -167,7 +167,7 @@ export function EntityEditorForm({
   const canUseRemovalQuarantine = Boolean(entityId && isRemovalQuarantineEntityTypeSupported(entityType));
   const canDeletePreview = Boolean(entityId && isDeleteToolEntityTypeSupported(entityType));
   const canDeleteEntity = false; // Entity delete now always goes through the explicit preview screen.
-  const canPublish = user.role === "superadmin";
+  const canPublish = userCanPublish(user);
   const isMarkedForRemoval = Boolean(markedForRemovalAt);
   const canLiveDeactivate = Boolean(
     entityId
@@ -204,7 +204,7 @@ export function EntityEditorForm({
     && userCanPublishRevision(user, entityType, currentRevision)
     && currentRevision.ownerApprovalStatus === "approved"
   );
-  const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
+  const canSubmit = userCanEditContent(user);
   const surfaceTitle = entityType === "global_settings" ? "Глобальные настройки" : getPayloadLabel(value);
   const readinessBlocking = readiness ? readiness.results.filter((result) => result.severity === "blocking").length : 0;
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
@@ -569,7 +569,7 @@ export function EntityEditorForm({
                 <div key={obligation.id} className={styles.timelineItem}>
                   <strong>{OBLIGATION_LABELS[obligation.obligationType] || obligation.obligationType}</strong>
                   <p className={styles.mutedText}>{OBLIGATION_STATUS_LABELS[obligation.status] || obligation.status}</p>
-                  {user.role === "superadmin" && obligation.status === "open" ? (
+                  {canPublish && obligation.status === "open" ? (
                     <form action={`/api/admin/obligations/${obligation.id}/complete`} method="post">
                       <input type="hidden" name="redirectTo" value={redirectTo} />
                       <button type="submit" className={styles.secondaryButton}>Отметить выполненным</button>

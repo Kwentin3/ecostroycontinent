@@ -19,7 +19,7 @@ import {
   getRemovalUnmarkHref
 } from "../../lib/admin/removal-quarantine.js";
 import { getPublishActionCopy, getWorkingRevisionStatusModel } from "../../lib/admin/workflow-status.js";
-import { userCanPublishRevision } from "../../lib/auth/roles.js";
+import { userCanEditContent, userCanPublish, userCanPublishRevision } from "../../lib/auth/roles.js";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -385,7 +385,7 @@ function mergeById(currentItems, nextItems) {
 }
 
 function isEditorRole(role) {
-  return role === "superadmin" || role === "seo_manager";
+  return userCanEditContent({ role });
 }
 
 function canSubmitMediaForReview(item, currentUserRole) {
@@ -484,7 +484,7 @@ function MediaInspector({
   const publishAction = getPublishActionCopy({ activePublishedRevision });
   const reviewHref = item.currentRevisionId ? `/admin/review/${item.currentRevisionId}` : "";
   const publishHref = item.currentRevisionId ? `/admin/revisions/${item.currentRevisionId}/publish` : "";
-  const liveDeactivationHref = item.publishedRevisionNumber && currentUserRole === "superadmin"
+  const liveDeactivationHref = item.publishedRevisionNumber && userCanPublish({ role: currentUserRole })
     ? getMediaLiveDeactivationHref(item.id, returnTo)
     : "";
   const publicationNote = getPublicationNote(item, currentUserRole);

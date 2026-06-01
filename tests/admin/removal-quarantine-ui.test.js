@@ -28,15 +28,16 @@ test("media workspace and collection overlay expose removal quarantine controls"
 });
 
 test("cleanup center is wired into admin navigation and purge flow", () => {
-  const shellSource = readUtf8(new URL("../../components/admin/AdminShell.js", import.meta.url));
+  const navSource = readUtf8(new URL("../../lib/admin/nav.js", import.meta.url));
   const pageSource = readUtf8(new URL("../../app/admin/(console)/removal-sweep/page.js", import.meta.url));
   const routeSource = readUtf8(new URL("../../app/api/admin/removal-sweep/purge/route.js", import.meta.url));
 
-  assert.match(shellSource, /\/admin\/removal-sweep/);
+  assert.match(navSource, /\/admin\/removal-sweep/);
+  assert.match(navSource, /visible: userCanEditContent/);
   assert.match(pageSource, /listRemovalSweepComponents/);
   assert.match(pageSource, /listRecentDestructiveEvents/);
   assert.match(pageSource, /Destructive ledger/);
   assert.match(pageSource, /\/api\/admin\/removal-sweep\/purge/);
   assert.match(routeSource, /executeRemovalSweep/);
-  assert.match(routeSource, /userIsSuperadmin/);
+  assert.match(routeSource, /userCanRunMaintenancePurge/);
 });

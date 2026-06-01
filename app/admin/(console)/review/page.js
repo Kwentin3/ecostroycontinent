@@ -10,6 +10,7 @@ import { getEntityAdminHref } from "../../../../lib/admin/entity-links.js";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
 import { loadAdminPagePreviewPayload } from "../../../../lib/admin/page-preview-loader.js";
 import { appendAdminReturnTo } from "../../../../lib/admin/relation-navigation.js";
+import { userCanEditContent, userCanOwnerApprove } from "../../../../lib/auth/roles.js";
 import {
   buildOwnerReviewGalleryCards,
   buildOwnerReviewModalModel,
@@ -286,6 +287,7 @@ export default async function ReviewQueuePage({ searchParams }) {
     })
     : closeHref;
   const entityHref = selectedCard
+    && userCanEditContent(user)
     ? appendAdminReturnTo(getEntityAdminHref(selectedCard.entityType, selectedCard.entityId), errorReturnTo)
     : "";
   const pageModalModels = new Map(
@@ -296,7 +298,7 @@ export default async function ReviewQueuePage({ searchParams }) {
   let pagePreviewPayload = null;
   const canResolveOwnerReview = Boolean(
     selectedCard
-    && (user.role === "business_owner" || user.role === "superadmin")
+    && userCanOwnerApprove(user)
     && selectedCard.status.key === "needs_owner"
   );
 
@@ -518,7 +520,7 @@ export default async function ReviewQueuePage({ searchParams }) {
                       Если нужно доработать материал, просто опишите, что исправить. После возврата он снова появится в галерее, когда SEO пришлет обновленную версию.
                     </p>
                   </form>
-                ) : (user.role === "business_owner" || user.role === "superadmin") ? (
+                ) : userCanOwnerApprove(user) ? (
                   <p className={styles.reviewModalActionNote}>
                     {selectedCard.status.key === "approved"
                       ? "Согласование уже получено. Публикация и снятие с публикации выполняются в карточке сущности."

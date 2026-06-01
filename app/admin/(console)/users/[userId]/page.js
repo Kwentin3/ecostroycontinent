@@ -7,6 +7,7 @@ import { SurfacePacket } from "../../../../../components/admin/SurfacePacket";
 import styles from "../../../../../components/admin/admin-ui.module.css";
 import { requireUserManager } from "../../../../../lib/admin/page-helpers";
 import { getScreenLegend } from "../../../../../lib/admin/screen-copy.js";
+import { AUTH_ROLES } from "../../../../../lib/auth/policy.js";
 import { getRoleLabel } from "../../../../../lib/auth/session.js";
 import { findUserById, listUsers } from "../../../../../lib/content-core/repository";
 import { normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
@@ -98,9 +99,9 @@ export default async function UserDetailPage({ params, searchParams }) {
                 <label className={styles.label}>
                   <span>Роль</span>
                   <select name="role" defaultValue={currentUser.role}>
-                    <option value="superadmin">{getRoleLabel("superadmin")}</option>
-                    <option value="seo_manager">{getRoleLabel("seo_manager")}</option>
-                    <option value="business_owner">{getRoleLabel("business_owner")}</option>
+                    <option value={AUTH_ROLES.SUPERADMIN}>{getRoleLabel(AUTH_ROLES.SUPERADMIN)}</option>
+                    <option value={AUTH_ROLES.SEO_MANAGER}>{getRoleLabel(AUTH_ROLES.SEO_MANAGER)}</option>
+                    <option value={AUTH_ROLES.BUSINESS_OWNER}>{getRoleLabel(AUTH_ROLES.BUSINESS_OWNER)}</option>
                   </select>
                 </label>
                 <label className={styles.label}>

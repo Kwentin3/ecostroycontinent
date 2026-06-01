@@ -1,21 +1,37 @@
-import { readMediaFile } from "../../../../../../lib/media/storage";
-import { getEntityEditorState } from "../../../../../../lib/content-core/service";
-import { requireRouteUser } from "../../../../../../lib/admin/route-helpers";
-import { userCanEditContent } from "../../../../../../lib/auth/session";
+import { readMediaFile } from "../../../../../../lib/media/storage.js";
+import { getEntityEditorState } from "../../../../../../lib/content-core/service.js";
+import { requireRouteUser } from "../../../../../../lib/admin/route-helpers.js";
+import { userCanEditContent, userCanReadAdminMediaPreview, userCanReview } from "../../../../../../lib/auth/session.js";
+import { mediaAssetIsVisibleInReviewQueue } from "../../../../../../lib/admin/review-media-access.js";
 
-export async function GET(request, { params }) {
-  const { user, response } = await requireRouteUser(request);
+const defaultDeps = {
+  readMediaFile,
+  getEntityEditorState,
+  requireRouteUser,
+  userCanEditContent,
+  userCanReadAdminMediaPreview,
+  userCanReview,
+  mediaAssetIsVisibleInReviewQueue
+};
+
+export async function GET(request, { params }, deps = defaultDeps) {
+  const { user, response } = await deps.requireRouteUser(request);
 
   if (response) {
     return response;
   }
 
-  if (!userCanEditContent(user)) {
+  const { entityId } = await params;
+  const reviewVisible = !deps.userCanEditContent(user)
+    && deps.userCanReview(user)
+    && await deps.mediaAssetIsVisibleInReviewQueue(entityId);
+  const canReadPreview = deps.userCanReadAdminMediaPreview(user, { reviewVisible });
+
+  if (!canReadPreview) {
     return new Response("Не найдено", { status: 404 });
   }
 
-  const { entityId } = await params;
-  const state = await getEntityEditorState(entityId);
+  const state = await deps.getEntityEditorState(entityId);
   const revision = state.revisions[0] ?? state.activePublishedRevision ?? null;
   const storageKey = revision?.payload?.storageKey;
 
@@ -24,7 +40,7 @@ export async function GET(request, { params }) {
   }
 
   try {
-    const bytes = await readMediaFile(storageKey);
+    const bytes = await deps.readMediaFile(storageKey);
 
     return new Response(bytes, {
       headers: {

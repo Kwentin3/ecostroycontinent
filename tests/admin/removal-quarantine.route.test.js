@@ -139,7 +139,7 @@ test("removal sweep purge route is superadmin-only and revalidates affected admi
     {},
     {
       requireRouteUser: async () => ({ user: { id: "user_super", role: "superadmin" }, response: null }),
-      userIsSuperadmin: () => true,
+      userCanRunMaintenancePurge: () => true,
       executeRemovalSweep: async () => ({
         deleted: [
           { entityType: "service", entityId: "service_1", label: "Service 1" },
@@ -174,7 +174,7 @@ test("removal sweep purge route rejects non-superadmin users", async () => {
     {},
     {
       requireRouteUser: async () => ({ user: { id: "user_editor", role: "seo_manager" }, response: null }),
-      userIsSuperadmin: () => false,
+      userCanRunMaintenancePurge: () => false,
       executeRemovalSweep: async () => {
         throw new Error("should not execute");
       },
