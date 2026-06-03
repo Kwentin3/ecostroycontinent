@@ -16,7 +16,8 @@
 - R5 recommendations remain deferred until enough evidence and sample-size guards exist. Do not add R5, LLM, lead/intake, scheduled imports or direct UI -> Yandex API calls without a separate domain.
 - Before touching analytics code, read the SEO PRD, taxonomy, read model contract and LLM context contract.
 - Launch-hardening P1s are closed: Next high advisory, DB-backed readiness, launch smoke matrix, runtime commit marker, branch/worktree cleanup, and media delivery `auto`.
+- Public media rendering is CDN-direct in CDN-capable modes: published read-side `previewUrl` should resolve to Selectel CDN, while `/api/media-public/:entityId` remains fallback/handoff delivery.
 - `/about` and `/contacts` are now published on production (verified 2026-05-19) and should be expected as `200`; keep them Content Core sourced and do not add hardcoded fallback content.
 - Lead/intake is a separate future epic. Do not treat analytics intent events as lead records.
-- Before deploy acceptance, use `APP_BASE_URL=https://ecostroycontinent.ru EXPECT_RUNTIME_COMMIT=true EXPECT_ABOUT=published EXPECT_CONTACTS=published npm run smoke:launch`; add `EXPECT_MEDIA_URL` from the Selectel runbook when checking media.
+- Before deploy acceptance, use `APP_BASE_URL=https://ecostroycontinent.ru EXPECT_RUNTIME_COMMIT=true EXPECT_ABOUT=published EXPECT_CONTACTS=published npm run smoke:launch`; add `EXPECT_MEDIA_URL` from the Selectel runbook when checking media, and use browser/resource checks when validating direct CDN image rendering.
 - Keep `docs/out` as a neutral delivery buffer; do not commit buffer drift unless a task explicitly asks for `docs/out` delivery.

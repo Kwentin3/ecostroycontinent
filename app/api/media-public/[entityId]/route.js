@@ -8,8 +8,9 @@ import { readMediaFile } from "../../../../lib/media/storage";
 import { getPublishedMediaAsset } from "../../../../lib/read-side/public-content";
 
 export async function GET(_request, { params }) {
-  // Sticky canon: this route redirects/streams published media but does not own
-  // media truth. Metadata stays in SQL and binary truth stays in S3/storage.
+  // Sticky canon: public markup may already point directly at CDN. This route
+  // is the fallback/handoff boundary for published media and never owns media
+  // truth. Metadata stays in SQL and binary truth stays in S3/storage.
   const { entityId } = await params;
   const asset = await getPublishedMediaAsset(entityId);
 

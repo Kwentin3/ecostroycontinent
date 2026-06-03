@@ -1,8 +1,11 @@
 import { pathToFileURL } from "node:url";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
-// Sticky canon: launch smoke must stay read-only. /about and /contacts may be
-// known_missing owner blockers; EXPECT_MEDIA_URL is operational evidence only.
+const DEFAULT_OWNER_CONTENT_EXPECTATION = "published";
+// Sticky canon: launch smoke must stay read-only. Production now expects
+// /about and /contacts as published Content Core pages; use EXPECT_*=
+// known_missing only for environments where those pages are intentionally absent.
+// EXPECT_MEDIA_URL is operational evidence only.
 const DEFAULT_PUBLIC_ROUTES = ["/", "/services", "/cases"];
 const OWNER_CONTENT_ROUTES = [
   { path: "/about", envName: "EXPECT_ABOUT", label: "about" },
@@ -50,7 +53,7 @@ function parseBoolean(name, value, fallback) {
 }
 
 function parseContentExpectation(name, value) {
-  const normalized = String(value || "known_missing").trim().toLowerCase();
+  const normalized = String(value || DEFAULT_OWNER_CONTENT_EXPECTATION).trim().toLowerCase();
 
   if (["published", "known_missing"].includes(normalized)) {
     return normalized;

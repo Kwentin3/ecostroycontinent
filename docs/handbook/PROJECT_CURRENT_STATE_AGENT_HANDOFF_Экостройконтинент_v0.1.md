@@ -1,13 +1,13 @@
 # Project Current State Agent Handoff - Экостройконтинент v0.1
 
-Date: 2026-05-06  
+Date: 2026-06-03
 Purpose: fast current-state entrypoint for future agents after the launch-hardening tech debt epic.
 
 This document is intentionally compact. It does not replace PRDs or domain contracts; it tells a new agent what is already closed, what is current production truth, and which old decisions must not be reopened by accident.
 
 ## Current Production Truth
 
-- Canonical repo state is `main` / `origin/main`; the branch/worktree cleanup collapsed old delivery branches and temporary worktrees.
+- Do not infer deployed truth from branch name alone. Verify the running SHA from live `/api/readiness` and the GitHub Actions deploy run; recent delivery has used `feat/minimal-seo-admin-panel` with pinned GHCR image digests.
 - The project runs as a Next.js app behind Traefik with PostgreSQL and S3-compatible media storage.
 - Next.js high advisory is closed: committed runtime uses `next@16.2.4`; `npm audit --audit-level=high` passes. Moderate advisories remain a separate backlog, not this closed P1.
 - `/api/health` is lightweight liveness.
@@ -19,8 +19,8 @@ This document is intentionally compact. It does not replace PRDs or domain contr
   - `MEDIA_STORAGE_MODE=s3`
   - `MEDIA_DELIVERY_MODE=auto`
   - `MEDIA_PUBLIC_BASE_URL` points to the Selectel CDN in server env
-  - CDN is the normal successful path when probing succeeds
-  - app proxy remains fallback if CDN probing fails
+  - published public markup resolves media `previewUrl` directly to the Selectel CDN when a storage key and CDN base URL are available
+  - `/api/media-public/:entityId` remains a fallback/handoff route; it can redirect to CDN or stream from storage, but public HTML should not require that app hop in CDN-capable modes
 - Stable media smoke evidence currently uses:
   - `https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/e3604676-6db4-4205-b9f8-96c0318bf4f7.jpg`
 - `/about` and `/contacts` are published on production as of 2026-05-19. They are no longer owner/content blockers; both should resolve to `200` and be present in sitemap.
@@ -31,8 +31,8 @@ This document is intentionally compact. It does not replace PRDs or domain contr
 - DB-backed readiness: `/api/readiness` added and verified with real PostgreSQL connectivity.
 - Launch smoke matrix: read-only script checks runtime, public routes, SEO honesty, admin protection, known content blockers, runtime commit marker, and optional media URL.
 - Runtime commit marker: image build injects `APP_COMMIT_SHA`, `APP_VERSION`, and `BUILD_TIME`; readiness exposes only safe marker fields.
-- Branch/worktree cleanup: one canonical repo tree on `main`.
-- Media delivery launch posture: production switched to `MEDIA_DELIVERY_MODE=auto` with CDN normal path and app proxy fallback.
+- Branch/worktree cleanup: one canonical repo tree; verify the active branch and deploy SHA before delivery.
+- Media delivery launch posture: production runs `MEDIA_DELIVERY_MODE=auto`; public read-side markup uses direct CDN URLs, while app routes remain fallback/handoff delivery boundaries.
 
 ## Known Blockers
 
@@ -48,8 +48,8 @@ This document is intentionally compact. It does not replace PRDs or domain contr
 - Do not treat `/api/health` as strict readiness. Use `/api/readiness` for DB-backed acceptance.
 - Do not remove `runtime.commit` acceptance from deploy/smoke without replacing it with equally strong deployed-image evidence.
 - Do not turn contact intent events into leads. Lead records require a dedicated lead/intake domain.
-- Do not store raw CDN URLs as editorial media truth.
-- Do not switch media to hard `cdn` or back to `app_proxy` without a narrow media delivery decision and smoke evidence.
+- Do not store raw CDN URLs as editorial media truth. CDN URLs may appear in rendered public HTML as delivery outputs only.
+- Do not switch media to hard `cdn` or back to `app_proxy` without a narrow media delivery decision, browser/resource evidence, and a fallback plan.
 - Do not resurrect old delivery branches or temporary worktrees unless a concrete rollback plan requires it.
 - Do not broaden launch-hardening into Content Core model changes, publish workflow changes, CRM-lite, Yandex rollout, or media refactor.
 
@@ -100,7 +100,7 @@ Expected current production state:
 - Analytics read model is a consumer DTO for UI/LLM/reports, not raw source truth.
 - First-party intent events are behavior signals, not leads.
 - AI/LLM is assistive and draft-only: no autonomous publish, no silent source-of-truth mutation, no invented commercial facts.
-- Media truth boundary: SQL metadata, S3 binaries, CDN delivery. App proxy is fallback delivery, not source truth.
+- Media truth boundary: SQL metadata, S3 binaries, CDN delivery. Public read-side may render CDN URLs as delivery outputs; app proxy is fallback delivery, not source truth.
 
 ## Dangerous Files And Areas
 
@@ -109,7 +109,7 @@ Expected current production state:
 - `app/api/readiness/route.js`, `lib/health/readiness.js`: strict secret-free DB-backed readiness.
 - `app/api/health/route.js`: lightweight liveness only.
 - `scripts/smoke-launch-readonly.mjs`: read-only launch acceptance; no auth or production mutation.
-- `lib/media/public-delivery.js`, `app/api/media-public/[entityId]/route.js`, `lib/read-side/public-media-url.js`: media delivery boundary.
+- `lib/media/public-delivery.js`, `app/api/media-public/[entityId]/route.js`, `lib/read-side/public-media-url.js`: media delivery boundary. Keep CDN-vs-app route decisions centralized here, not in JSX renderers.
 - `app/api/analytics/events/route.js`, `lib/analytics/read-model.js`, `lib/analytics/route-resolver.js`: analytics/lead and route-owner boundaries.
 - `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md`: production acceptance/runbook truth.
 - `.env.example`: variable names only; no production values or secrets.
@@ -132,6 +132,6 @@ Read these before reopening launch-hardening decisions:
 - Keep `/about` and `/contacts` production state monitored as published Content Core pages; do not replace with fallback content.
 - Lead/intake domain as its own product/domain epic.
 - Yandex Metrica public counter and scheduled imports after privacy/cookie decision.
-- CDN hardening only if `auto` mode shows regressions or the team decides to move to hard CDN mode.
+- CDN hardening now means object metadata/browser cache and derivative sizes (`thumb/card/gallery/hero`) unless direct-CDN rendering regresses.
 - Remaining moderate dependency advisories.
 - Backup restore drill / operational restore evidence.

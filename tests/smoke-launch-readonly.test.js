@@ -48,7 +48,9 @@ function createFetch(routes) {
   };
 }
 
-function createLaunchRoutes({ sitemapXml }) {
+function createLaunchRoutes({ sitemapXml, ownerPages = "missing" }) {
+  const ownerStatus = ownerPages === "published" ? 200 : 404;
+
   return {
     "GET /api/health": jsonResponse({
       status: "ok",
@@ -73,8 +75,8 @@ function createLaunchRoutes({ sitemapXml }) {
     "GET /": textResponse("<html>home</html>"),
     "GET /services": textResponse("<html>services</html>"),
     "GET /cases": textResponse("<html>cases</html>"),
-    "GET /about": textResponse("not found", 404),
-    "GET /contacts": textResponse("not found", 404),
+    "GET /about": textResponse(ownerPages === "published" ? "<html>about</html>" : "not found", ownerStatus),
+    "GET /contacts": textResponse(ownerPages === "published" ? "<html>contacts</html>" : "not found", ownerStatus),
     "GET /robots.txt": textResponse([
       "User-agent: *",
       "Allow: /",
@@ -109,6 +111,36 @@ test("containsSensitiveValue catches connection strings and secret-shaped fields
   assert.equal(containsSensitiveValue({ database: { status: "ok" } }), false);
   assert.equal(containsSensitiveValue({ error: "postgres://user:secret@example.test/db" }), true);
   assert.equal(containsSensitiveValue({ DATABASE_URL: "hidden" }), true);
+});
+
+test("runLaunchSmoke defaults to published owner pages for current production", async () => {
+  const sitemapXml = `
+    <urlset>
+      <url><loc>https://example.test/</loc></url>
+      <url><loc>https://example.test/services</loc></url>
+      <url><loc>https://example.test/cases</loc></url>
+      <url><loc>https://example.test/about</loc></url>
+      <url><loc>https://example.test/contacts</loc></url>
+    </urlset>
+  `;
+  const report = await runLaunchSmoke({
+    env: {
+      APP_BASE_URL: "https://example.test"
+    },
+    fetchImpl: createFetch(createLaunchRoutes({ sitemapXml, ownerPages: "published" }))
+  });
+
+  assert.equal(report.summary.failed, 0);
+  assert.equal(report.expectations.about, "published");
+  assert.equal(report.expectations.contacts, "published");
+  assert.equal(
+    report.checks.some((check) => check.path === "/sitemap.xml#/about" && check.result === "passed"),
+    true
+  );
+  assert.equal(
+    report.checks.some((check) => check.path === "/sitemap.xml#/contacts" && check.result === "passed"),
+    true
+  );
 });
 
 test("runLaunchSmoke passes with known missing owner pages and protected admin", async () => {

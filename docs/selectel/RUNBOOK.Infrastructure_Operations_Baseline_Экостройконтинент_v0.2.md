@@ -45,8 +45,9 @@ CDN surfaces:
 - Current public bucket origin: `https://media.ecostroycontinent.ru`
 - Current media bucket: `ecostroycontinent-media-ru3-20260428`
 - Origin Host header: `media.ecostroycontinent.ru`
-- Production delivery mode: `MEDIA_DELIVERY_MODE=auto` with CDN as normal successful path
-- App proxy remains fallback if the CDN probe fails; the previous cached `403 HIT` blocker was not reproduced in the 2026-05-06 switch verification
+- Production delivery mode: `MEDIA_DELIVERY_MODE=auto`.
+- Published public markup resolves media `previewUrl` directly to the Selectel CDN when a storage key and CDN base URL are available.
+- `/api/media-public/:entityId` remains a fallback/handoff route; it can redirect to CDN or stream from storage, but public HTML should not need that app hop in CDN-capable modes.
 
 ## 3. Check Container State
 
@@ -93,25 +94,30 @@ Read-only launch smoke from operator machine after PR/deploy:
 ```powershell
 $env:APP_BASE_URL = 'https://ecostroycontinent.ru'
 $env:EXPECT_RUNTIME_COMMIT = 'true'
+$env:EXPECT_ABOUT = 'published'
+$env:EXPECT_CONTACTS = 'published'
 npm run smoke:launch
 Remove-Item Env:APP_BASE_URL
 Remove-Item Env:EXPECT_RUNTIME_COMMIT
+Remove-Item Env:EXPECT_ABOUT
+Remove-Item Env:EXPECT_CONTACTS
 ```
 
-Current expected content blockers:
+Current expected owner content state:
 
 ```powershell
-$env:EXPECT_ABOUT = 'known_missing'
-$env:EXPECT_CONTACTS = 'known_missing'
+$env:EXPECT_ABOUT = 'published'
+$env:EXPECT_CONTACTS = 'published'
 ```
 
-Use `EXPECT_ABOUT=published` and/or `EXPECT_CONTACTS=published` only after approved Content Core pages are published. Keep `EXPECT_RUNTIME_COMMIT=true` for post-deploy production acceptance so `/api/readiness` must expose a non-null deployed commit marker. The smoke script must stay read-only: it checks health, readiness, public launch routes, robots, sitemap honesty, admin protection, and optional `EXPECT_MEDIA_URL`; it must not create content, authenticate, publish, migrate, or mutate production data.
+Use `EXPECT_ABOUT=known_missing` and/or `EXPECT_CONTACTS=known_missing` only for an environment where approved Content Core pages are intentionally absent. Keep `EXPECT_RUNTIME_COMMIT=true` for post-deploy production acceptance so `/api/readiness` must expose a non-null deployed commit marker. The smoke script must stay read-only: it checks health, readiness, public launch routes, robots, sitemap honesty, admin protection, and optional `EXPECT_MEDIA_URL`; it must not create content, authenticate, publish, migrate, or mutate production data.
 
-Current media launch posture as of 2026-05-06:
+Current media launch posture as of 2026-06-03:
 
 - Production media storage is S3-backed.
 - Production media delivery is switched to CDN-first safe mode: `MEDIA_DELIVERY_MODE=auto`, `MEDIA_PUBLIC_BASE_URL=https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net`.
-- `auto` mode probes CDN with read-only `HEAD` and keeps app proxy as fallback if the CDN probe fails.
+- Public HTML should contain direct `selcdn.net` image URLs for published media in CDN-capable modes.
+- App public media routes remain fallback/handoff routes; they should not be the normal image `src` on the public site.
 - Stable read-only media smoke URL for `EXPECT_MEDIA_URL`:
   - `https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/e3604676-6db4-4205-b9f8-96c0318bf4f7.jpg`
 - Public app route handoff can be checked separately:
@@ -121,10 +127,14 @@ Current media launch posture as of 2026-05-06:
 ```powershell
 $env:APP_BASE_URL = 'https://ecostroycontinent.ru'
 $env:EXPECT_RUNTIME_COMMIT = 'true'
+$env:EXPECT_ABOUT = 'published'
+$env:EXPECT_CONTACTS = 'published'
 $env:EXPECT_MEDIA_URL = 'https://bab68f25-17dd-402e-9a8e-70a294915a47.selcdn.net/media/e3604676-6db4-4205-b9f8-96c0318bf4f7.jpg'
 npm run smoke:launch
 Remove-Item Env:APP_BASE_URL
 Remove-Item Env:EXPECT_RUNTIME_COMMIT
+Remove-Item Env:EXPECT_ABOUT
+Remove-Item Env:EXPECT_CONTACTS
 Remove-Item Env:EXPECT_MEDIA_URL
 ```
 
@@ -160,7 +170,11 @@ App runtime env is sourced only from `/opt/ecostroycontinent/runtime/.env`; back
 Manual deploy trigger:
 
 ```powershell
-gh workflow run deploy-phase1.yml --repo Kwentin3/ecostroycontinent --ref main
+gh workflow run build-and-publish.yml --repo Kwentin3/ecostroycontinent --ref <branch-or-main>
+gh run watch --repo Kwentin3/ecostroycontinent <build-run-id> --exit-status
+
+# Extract the published digest from the build log, then deploy the pinned image.
+gh workflow run deploy-phase1.yml --repo Kwentin3/ecostroycontinent --ref <same-ref> -f image_ref=ghcr.io/kwentin3/ecostroycontinent-app@sha256:<digest> -f run_live_removal_acceptance=false
 ```
 
 Watch the last run:
@@ -284,7 +298,7 @@ Minimal operator check:
 3. Confirm `docker ps` shows `traefik`, `app`, `sql`.
 4. Confirm `curl -ksSf https://127.0.0.1/api/health` returns `status: ok`.
 5. Confirm `curl -ksSf https://127.0.0.1/api/readiness -H "Host: ecostroycontinent.ru"` returns `status: ready` and `database.status: ok`.
-6. Run `APP_BASE_URL=https://ecostroycontinent.ru EXPECT_RUNTIME_COMMIT=true npm run smoke:launch` from a clean repo checkout. `known_content_blocker` for `/about` and `/contacts` is acceptable only while owner content is missing; `failed` is not acceptable.
+6. Run `APP_BASE_URL=https://ecostroycontinent.ru EXPECT_RUNTIME_COMMIT=true EXPECT_ABOUT=published EXPECT_CONTACTS=published npm run smoke:launch` from a clean repo checkout. `known_content_blocker` is acceptable only for explicitly known-missing owner content in a non-production environment; `failed` is not acceptable.
 7. Confirm disk still has headroom:
 
 ```bash
