@@ -4,7 +4,11 @@ import { PAGE_SECTION_TYPES, PAGE_TYPES, SERVICE_SCOPE_DISPLAY_MODES } from "../
 import { resolveEffectiveServiceArea } from "../../lib/content-core/geography.js";
 import { normalizePageMediaSettings } from "../../lib/content-core/page-media.js";
 import { PUBLIC_COPY, normalizeLegacyCopy } from "../../lib/ui-copy.js";
-import { DEFAULT_LANDING_PAGE_THEME_KEY } from "../../lib/landing-composition/visual-semantics.js";
+import {
+  DEFAULT_LANDING_PAGE_THEME_KEY,
+  LANDING_RENDER_SLOT_KEYS,
+  getLandingRenderSlotAttributes
+} from "../../lib/landing-composition/visual-semantics.js";
 import {
   buildPublicBreadcrumbs,
   buildServiceQuickLinks,
@@ -13,6 +17,7 @@ import {
   shouldRenderServiceQuickAccess
 } from "../../lib/public-launch/navigation.js";
 import { buildPublicContactProjection } from "../../lib/public-launch/contact-projection.js";
+import { normalizeCaseTaskDisplayText } from "../../lib/public-launch/case-copy.js";
 import { PLACEHOLDER_MARKER_TEXT } from "../../lib/public-launch/placeholder-mode.js";
 import { buildEquipmentCardsSectionModel } from "../../lib/public-launch/equipment-card-model.js";
 import { buildFormattedPlainTextBlocks } from "../../lib/public-launch/formatted-plain-text.js";
@@ -37,6 +42,7 @@ const THEME_CLASS_NAMES = Object.freeze({
 });
 
 const DEFAULT_PUBLIC_SITE_THEME_KEY = "graphite_industrial";
+const MEDIA_CAPTION_SLOT_ATTRS = getLandingRenderSlotAttributes(LANDING_RENDER_SLOT_KEYS.MEDIA_CAPTION);
 
 const SURFACE_TONE_CLASS_NAMES = Object.freeze({
   plain: styles.sectionTonePlain,
@@ -176,7 +182,8 @@ function FormattedPlainText({
   text,
   fallback = "",
   className = "",
-  variant = SERVICE_SCOPE_DISPLAY_MODES.DEFAULT
+  variant = SERVICE_SCOPE_DISPLAY_MODES.DEFAULT,
+  visualSlot = ""
 }) {
   const normalizedText = normalizeLegacyCopy(text || fallback || "");
   const blocks = buildFormattedPlainTextBlocks(normalizedText);
@@ -193,7 +200,7 @@ function FormattedPlainText({
   }
 
   return (
-    <div className={rootClassName}>
+    <div className={rootClassName} {...getLandingRenderSlotAttributes(visualSlot)}>
       {blocks.map((block, blockIndex) => {
         if (block.type === "orderedList") {
           return (
@@ -268,7 +275,11 @@ function MediaHero({
       <p className={styles.eyebrow}>{label}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
-      <FormattedPlainText text={asset.caption || asset.title || asset.originalFilename || PUBLIC_COPY.mediaFallback} className={styles.mediaCaption} />
+      <FormattedPlainText
+        text={asset.caption || asset.title || asset.originalFilename || PUBLIC_COPY.mediaFallback}
+        className={styles.mediaCaption}
+        visualSlot={LANDING_RENDER_SLOT_KEYS.MEDIA_CAPTION}
+      />
     </section>
   );
 }
@@ -336,7 +347,7 @@ function GallerySection({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
                   {normalizedMediaSettings.showGalleryCaptions ? (
-                    <figcaption className={styles.mediaCaption}>{asset.caption || asset.title || PUBLIC_COPY.mediaFallback}</figcaption>
+                    <figcaption className={styles.mediaCaption} {...MEDIA_CAPTION_SLOT_ATTRS}>{asset.caption || asset.title || PUBLIC_COPY.mediaFallback}</figcaption>
                   ) : null}
                 </figure>
               ))}
@@ -530,7 +541,7 @@ export function EquipmentCardsSection({ model, heading }) {
                   decoding="async"
                 />
                 {card.primaryMedia.caption ? (
-                  <figcaption className={styles.mediaCaption}>{card.primaryMedia.caption}</figcaption>
+                  <figcaption className={styles.mediaCaption} {...MEDIA_CAPTION_SLOT_ATTRS}>{card.primaryMedia.caption}</figcaption>
                 ) : null}
               </figure>
             ) : null}
@@ -1454,7 +1465,7 @@ export function CasePage({
         <section id="preview-case-core" data-preview-section="case-core" className={`${styles.grid} ${styles.previewSection}`}>
           <article className={styles.card}>
             <h3>{PUBLIC_COPY.taskHeading}</h3>
-            <FormattedPlainText text={item.task} />
+            <FormattedPlainText text={normalizeCaseTaskDisplayText(item.task)} />
           </article>
           <article className={styles.card}>
             <h3>{PUBLIC_COPY.workScopeHeading}</h3>
@@ -1607,7 +1618,11 @@ export function StandalonePage({
             <div className={styles.heroSplitMedia}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={primaryMedia.previewUrl} alt={primaryMedia.alt || primaryMedia.title || PUBLIC_COPY.imageFallback} />
-              <FormattedPlainText text={primaryMedia.caption || primaryMedia.title || primaryMedia.originalFilename || PUBLIC_COPY.mediaFallback} className={styles.mediaCaption} />
+              <FormattedPlainText
+                text={primaryMedia.caption || primaryMedia.title || primaryMedia.originalFilename || PUBLIC_COPY.mediaFallback}
+                className={styles.mediaCaption}
+                visualSlot={LANDING_RENDER_SLOT_KEYS.MEDIA_CAPTION}
+              />
             </div>
           ) : null}
         </section>

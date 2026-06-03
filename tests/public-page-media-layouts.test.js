@@ -2,6 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
+import {
+  LANDING_RENDER_SLOT_KEYS,
+  getLandingRenderSlotAttributes
+} from "../lib/landing-composition/visual-semantics.js";
+
 const rendererPath = new URL("../components/public/PublicRenderers.js", import.meta.url);
 const cssPath = new URL("../components/public/public-ui.module.css", import.meta.url);
 
@@ -17,6 +22,22 @@ test("public page renderers wire page media settings into hero and gallery prese
   assert.match(source, /galleryGrouping === "by_collection"/);
   assert.match(source, /heroLayout=\{mediaSettings\.heroLayout\}/);
   assert.match(source, /pageType=\{page\.pageType\}/);
+});
+
+test("public media captions use the visual contract slot across renderers", () => {
+  const source = readUtf8(rendererPath);
+  const css = readUtf8(cssPath);
+
+  assert.deepEqual(
+    getLandingRenderSlotAttributes(LANDING_RENDER_SLOT_KEYS.MEDIA_CAPTION),
+    { "data-public-render-slot": "media-caption" }
+  );
+  assert.match(source, /LANDING_RENDER_SLOT_KEYS\.MEDIA_CAPTION/);
+  assert.match(source, /MEDIA_CAPTION_SLOT_ATTRS/);
+  assert.match(source, /visualSlot=\{LANDING_RENDER_SLOT_KEYS\.MEDIA_CAPTION\}/);
+  assert.match(css, /\[data-public-render-slot="media-caption"\]\s*\{/);
+  assert.match(css, /padding:\s*var\(--media-caption-padding\);/);
+  assert.match(css, /overflow-wrap:\s*anywhere;/);
 });
 
 test("public page CSS exposes bounded hero and gallery layout presets", () => {

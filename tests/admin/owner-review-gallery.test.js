@@ -186,6 +186,31 @@ test("owner review gallery filters by status, type, and compact text content", (
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "не существует" }).length, 0);
 });
 
+test("owner review gallery stays compact while modal model keeps full owner-facing text", () => {
+  const longSummary = Array.from({ length: 18 }, (_, index) => `Summary sentence ${index + 1} keeps business context readable.`).join(" ");
+  const longScope = Array.from({ length: 16 }, (_, index) => `Scope item ${index + 1} describes the real work without truncation.`).join(" ");
+  const item = buildQueueItem({
+    entityId: "service_long_content",
+    entityType: ENTITY_TYPES.SERVICE,
+    payload: {
+      title: "Long service",
+      summary: longSummary,
+      serviceScope: longScope,
+      problemsSolved: "Owner can read the complete problem statement.",
+      methods: "Owner can read the complete execution method.",
+      primaryMediaAssetId: "media_service"
+    }
+  });
+  const [card] = buildOwnerReviewGalleryCards([item]);
+  const modalModel = buildOwnerReviewModalModel(item);
+
+  assert.ok(card.summary.length < longSummary.length);
+  assert.equal(modalModel.summary, longSummary);
+  assert.equal(modalModel.sections[0].value, longScope);
+  assert.equal(modalModel.sections[1].value, "Owner can read the complete problem statement.");
+  assert.equal(modalModel.sections[2].value, "Owner can read the complete execution method.");
+});
+
 test("owner review gallery summary exposes compact counts for filters", () => {
   const cards = buildOwnerReviewGalleryCards([
     buildQueueItem({
