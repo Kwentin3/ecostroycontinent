@@ -179,10 +179,6 @@ export default async function EntityListPage({ params, searchParams }) {
       workspaceQuery.set("error", query.error);
     }
 
-    if (testOnly) {
-      workspaceQuery.set("testOnly", "1");
-    }
-
     if (workspaceReturnTo) {
       workspaceQuery.set("returnTo", workspaceReturnTo);
     }
@@ -207,8 +203,7 @@ export default async function EntityListPage({ params, searchParams }) {
             initialSelectedId={selectedAssetId}
             initialCollectionId={initialCollectionId}
             initialCompose={initialCompose}
-            initialFilterKey={testOnly ? "test-only" : "all"}
-            currentUsername={user.username}
+            initialFilterKey="all"
             currentUserRole={user.role}
             initialMessage={query?.message ? normalizeLegacyCopy(query.message) : ""}
             initialError={query?.error ? normalizeLegacyCopy(query.error) : ""}

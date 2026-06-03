@@ -26,12 +26,13 @@ test("media workspace keeps service cleanup and legacy tools out of the main too
 
   assert.match(source, /mediaToolbarFieldRow/);
   assert.match(source, /mediaToolbarPrimaryActions/);
-  assert.match(source, /Cleanup-операции остаются под рукой, но не забирают место у основного сценария медиатеки/);
-  assert.match(source, /Cleanup, legacy-проверка и история остаются доступны отдельно/);
+  assert.match(source, /mediaBulkActionBar/);
+  assert.match(source, /Дополнительно/);
   assert.equal((source.match(/Проверить удаление \(legacy\)/g) || []).length, 1);
-  assert.equal((source.match(/Служебные действия/g) || []).length, 2);
+  assert.equal((source.match(/Служебные действия/g) || []).length, 0);
   assert.match(css, /\.mediaToolbarFieldRow,\s*\.mediaToolbarPrimaryActions\s*\{/);
-  assert.match(css, /\.mediaToolbarServiceDisclosure\s*\{/);
+  assert.match(css, /\.mediaBulkActionBar\s*\{/);
+  assert.doesNotMatch(css, /\.mediaToolbarServiceDisclosure\s*\{/);
 });
 
 test("media collection overlay demotes cleanup controls behind a service disclosure", () => {
