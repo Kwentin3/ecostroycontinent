@@ -90,7 +90,12 @@ export function ListCardMediaStrip({ assets = [], label = "Изображени�
       <div ref={stripRef} className={styles.listCardMediaStrip}>
         {assets.map((asset) => (
           <figure key={asset.entityId || asset.previewUrl}>
-            <img src={asset.previewUrl} alt={asset.alt || PUBLIC_COPY.imageFallback} />
+            <img
+              src={asset.previewUrl}
+              alt={asset.alt || PUBLIC_COPY.imageFallback}
+              loading="lazy"
+              decoding="async"
+            />
           </figure>
         ))}
       </div>

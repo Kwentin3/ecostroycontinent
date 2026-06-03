@@ -1,5 +1,9 @@
 import { getAppConfig } from "../../../../lib/config";
-import { resolvePublicMediaDelivery } from "../../../../lib/media/public-delivery";
+import {
+  PUBLIC_MEDIA_APP_PROXY_CACHE_CONTROL,
+  createPublicMediaRedirectResponse,
+  resolvePublicMediaDelivery
+} from "../../../../lib/media/public-delivery";
 import { readMediaFile } from "../../../../lib/media/storage";
 import { getPublishedMediaAsset } from "../../../../lib/read-side/public-content";
 
@@ -19,7 +23,7 @@ export async function GET(_request, { params }) {
   });
 
   if (delivery.mode === "cdn" && delivery.url) {
-    return Response.redirect(delivery.url, 302);
+    return createPublicMediaRedirectResponse(delivery.url);
   }
 
   try {
@@ -28,7 +32,7 @@ export async function GET(_request, { params }) {
     return new Response(bytes, {
       headers: {
         "content-type": asset.mimeType || "application/octet-stream",
-        "cache-control": "public, max-age=3600"
+        "cache-control": PUBLIC_MEDIA_APP_PROXY_CACHE_CONTROL
       }
     });
   } catch {

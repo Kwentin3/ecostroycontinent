@@ -274,7 +274,11 @@ function MediaHero({
     >
       <p className={styles.eyebrow}>{label}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
+      <img
+        src={asset.previewUrl}
+        alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback}
+        decoding="async"
+      />
       <FormattedPlainText
         text={asset.caption || asset.title || asset.originalFilename || PUBLIC_COPY.mediaFallback}
         className={styles.mediaCaption}
@@ -345,7 +349,12 @@ function GallerySection({
               {group.items.map((asset, index) => (
                 <figure key={`${group.key}-${asset.entityId || asset.id || index}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={asset.previewUrl} alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback} />
+                  <img
+                    src={asset.previewUrl}
+                    alt={asset.alt || asset.title || PUBLIC_COPY.imageFallback}
+                    loading="lazy"
+                    decoding="async"
+                  />
                   {normalizedMediaSettings.showGalleryCaptions ? (
                     <figcaption className={styles.mediaCaption} {...MEDIA_CAPTION_SLOT_ATTRS}>{asset.caption || asset.title || PUBLIC_COPY.mediaFallback}</figcaption>
                   ) : null}
@@ -1617,7 +1626,12 @@ export function StandalonePage({
           {showSplitHeroMedia ? (
             <div className={styles.heroSplitMedia}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={primaryMedia.previewUrl} alt={primaryMedia.alt || primaryMedia.title || PUBLIC_COPY.imageFallback} />
+              <img
+                src={primaryMedia.previewUrl}
+                alt={primaryMedia.alt || primaryMedia.title || PUBLIC_COPY.imageFallback}
+                decoding="async"
+                fetchPriority="high"
+              />
               <FormattedPlainText
                 text={primaryMedia.caption || primaryMedia.title || primaryMedia.originalFilename || PUBLIC_COPY.mediaFallback}
                 className={styles.mediaCaption}

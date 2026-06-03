@@ -2,7 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  PUBLIC_MEDIA_CDN_REDIRECT_CACHE_CONTROL,
   clearPublicMediaDeliveryProbeCache,
+  createPublicMediaRedirectResponse,
   getAppProxyMediaUrl,
   getCdnMediaUrl,
   resolvePublicMediaDelivery
@@ -75,4 +77,12 @@ test("public media delivery falls back to app proxy when CDN probe fails", async
     url: "/api/media-public/media_123",
     fallbackUrl: "https://cdn.example.test/media/asset%20123.webp"
   });
+});
+
+test("public media CDN redirect response is short-cacheable at the app boundary", () => {
+  const response = createPublicMediaRedirectResponse("https://cdn.example.test/media/asset.webp");
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), "https://cdn.example.test/media/asset.webp");
+  assert.equal(response.headers.get("cache-control"), PUBLIC_MEDIA_CDN_REDIRECT_CACHE_CONTROL);
 });
