@@ -32,5 +32,8 @@ test("media workspace keeps the submit and publish path discoverable after the e
   assert.match(workspaceSource, /name="returnTo" value=\{returnTo\}/);
   assert.match(workspaceSource, /\/admin\/revisions\/\$\{item\.currentRevisionId\}\/publish/);
   assert.match(workspaceSource, /\/admin\/review\/\$\{item\.currentRevisionId\}/);
+  assert.match(workspaceSource, /userCanUnpublish/);
+  assert.match(workspaceSource, /\/admin\/entities\/media_asset\/\$\{entityId\}\/unpublish/);
+  assert.doesNotMatch(workspaceSource, /userCanPublish,/);
   assert.match(workspaceSource, /Снять с публикации/);
 });

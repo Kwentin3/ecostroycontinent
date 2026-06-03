@@ -26,13 +26,13 @@ import {
   isRemovalQuarantineEntityTypeSupported
 } from "../../lib/admin/removal-quarantine.js";
 import { getTestGraphTeardownHref, isTestGraphTeardownEntityTypeSupported } from "../../lib/admin/test-graph-teardown.js";
-import { getLiveDeactivationHref, isLiveDeactivationEntityTypeSupported } from "../../lib/admin/live-deactivation.js";
+import { getUnpublishHref, isUnpublishEntityTypeSupported } from "../../lib/admin/unpublish-workflow.js";
 import {
   getLivePublicationStatusModel,
   getPublishActionCopy,
   getWorkingRevisionStatusModel
 } from "../../lib/admin/workflow-status.js";
-import { userCanEditContent, userCanPublish, userCanPublishRevision } from "../../lib/auth/session.js";
+import { userCanEditContent, userCanPublish, userCanPublishRevision, userCanUnpublish } from "../../lib/auth/session.js";
 import styles from "./admin-ui.module.css";
 
 const OBLIGATION_LABELS = {
@@ -168,13 +168,13 @@ export function EntityEditorForm({
   const canDeletePreview = Boolean(entityId && isDeleteToolEntityTypeSupported(entityType));
   const canDeleteEntity = false; // Entity delete now always goes through the explicit preview screen.
   const canPublish = userCanPublish(user);
+  const canUnpublish = userCanUnpublish(user, entityType);
   const isMarkedForRemoval = Boolean(markedForRemovalAt);
-  const canLiveDeactivate = Boolean(
+  const canUnpublishEntity = Boolean(
     entityId
-    && canPublish
+    && canUnpublish
     && activePublishedRevision
-    && !isAgentTestCreationOrigin(entityCreationOrigin)
-    && isLiveDeactivationEntityTypeSupported(entityType)
+    && isUnpublishEntityTypeSupported(entityType)
   );
   const canTeardownTestGraph = Boolean(
     entityId
@@ -218,7 +218,7 @@ export function EntityEditorForm({
     canUseRemovalQuarantine
     || canTeardownTestGraph
     || canNormalizeLegacyTestFixture
-    || canLiveDeactivate
+    || canUnpublishEntity
     || canDeletePreview
     || canDeleteEntity
   );
@@ -756,8 +756,8 @@ export function EntityEditorForm({
                     Пометить как тестовые
                   </Link>
                 ) : null}
-                {canLiveDeactivate ? (
-                  <Link href={getLiveDeactivationHref(entityType, entityId)} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                {canUnpublishEntity ? (
+                  <Link href={getUnpublishHref(entityType, entityId)} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
                     Снять с публикации
                   </Link>
                 ) : null}

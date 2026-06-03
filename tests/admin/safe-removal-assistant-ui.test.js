@@ -16,11 +16,12 @@ test("safe removal assistant keeps delete flow as a single guided screen", () =>
   assert.match(deletePageSource, /Если это старый тестовый объект без метки/);
 });
 
-test("entity editor routes supported objects into the safe removal assistant", () => {
+test("entity editor separates unpublish from the safe removal assistant", () => {
   const editorSource = readUtf8(new URL("../../components/admin/EntityEditorForm.js", import.meta.url));
 
   assert.match(editorSource, /isDeleteToolEntityTypeSupported/);
-  assert.match(editorSource, /isLiveDeactivationEntityTypeSupported/);
+  assert.match(editorSource, /isUnpublishEntityTypeSupported/);
+  assert.match(editorSource, /getUnpublishHref/);
   assert.match(editorSource, /isTestGraphTeardownEntityTypeSupported/);
   assert.match(editorSource, /Безопасно убрать/);
 });

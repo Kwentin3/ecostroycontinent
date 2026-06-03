@@ -23,7 +23,7 @@ import {
   mediaAssetCanSubmitForReview
 } from "../../lib/admin/media-review-actions.js";
 import { getPublishActionCopy, getWorkingRevisionStatusModel } from "../../lib/admin/workflow-status.js";
-import { userCanPublish, userCanPublishRevision } from "../../lib/auth/roles.js";
+import { userCanPublishRevision, userCanUnpublish } from "../../lib/auth/roles.js";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -56,8 +56,8 @@ function getDeletePreviewHref(entityType, entityId, returnTo = "") {
   return appendAdminReturnTo(`/admin/entities/${entityType}/${entityId}/delete`, returnTo);
 }
 
-function getMediaLiveDeactivationHref(entityId, returnTo = "") {
-  return appendAdminReturnTo(`/admin/entities/media_asset/${entityId}/live-deactivation`, returnTo);
+function getMediaUnpublishHref(entityId, returnTo = "") {
+  return appendAdminReturnTo(`/admin/entities/media_asset/${entityId}/unpublish`, returnTo);
 }
 
 function buildTitleFromFilename(filename) {
@@ -474,8 +474,8 @@ function MediaInspector({
   const publishAction = getPublishActionCopy({ activePublishedRevision });
   const reviewHref = item.currentRevisionId ? `/admin/review/${item.currentRevisionId}` : "";
   const publishHref = item.currentRevisionId ? `/admin/revisions/${item.currentRevisionId}/publish` : "";
-  const liveDeactivationHref = item.publishedRevisionNumber && userCanPublish({ role: currentUserRole })
-    ? getMediaLiveDeactivationHref(item.id, returnTo)
+  const unpublishHref = item.publishedRevisionNumber && userCanUnpublish({ role: currentUserRole }, "media_asset")
+    ? getMediaUnpublishHref(item.id, returnTo)
     : "";
   const publicationNote = getPublicationNote(item, currentUserRole);
 
@@ -531,8 +531,8 @@ function MediaInspector({
           {waitingForOwnerApproval ? (
             <button type="button" className={styles.secondaryButton} disabled>Ждёт согласования</button>
           ) : null}
-          {liveDeactivationHref ? (
-            <Link href={liveDeactivationHref} className={styles.secondaryButton}>Снять с публикации</Link>
+          {unpublishHref ? (
+            <Link href={unpublishHref} className={styles.secondaryButton}>Снять с публикации</Link>
           ) : null}
         </div>
       </section>

@@ -11,7 +11,8 @@ import {
   userCanReadAdminMediaPreview,
   userCanRollback,
   userCanRunMaintenancePurge,
-  userCanPublishRevision
+  userCanPublishRevision,
+  userCanUnpublish
 } from "../lib/auth/roles.js";
 
 test("auth policy is the canonical permission matrix behind runtime role helpers", () => {
@@ -29,6 +30,31 @@ test("publish role matrix keeps global publish reserved for superadmin", () => {
   assert.equal(userCanPublish({ role: "superadmin" }), true);
   assert.equal(userCanPublish({ role: "seo_manager" }), false);
   assert.equal(userCanPublish({ role: "business_owner" }), false);
+});
+
+test("unpublish role matrix is global for seo without granting maintenance publish", () => {
+  const seoUser = { role: "seo_manager" };
+  const owner = { role: "business_owner" };
+  const superadmin = { role: "superadmin" };
+  const unpublishableTypes = [
+    ENTITY_TYPES.PAGE,
+    ENTITY_TYPES.SERVICE,
+    ENTITY_TYPES.EQUIPMENT,
+    ENTITY_TYPES.CASE,
+    ENTITY_TYPES.GALLERY,
+    ENTITY_TYPES.MEDIA_ASSET
+  ];
+
+  for (const entityType of unpublishableTypes) {
+    assert.equal(userCanUnpublish(seoUser, entityType), true, entityType);
+    assert.equal(userCanUnpublish(superadmin, entityType), true, entityType);
+    assert.equal(userCanUnpublish(owner, entityType), false, entityType);
+  }
+
+  assert.equal(userCanUnpublish(seoUser, ENTITY_TYPES.GLOBAL_SETTINGS), false);
+  assert.equal(userCanPublish(seoUser), false);
+  assert.equal(userCanRollback(seoUser), false);
+  assert.equal(userCanRunMaintenancePurge(seoUser), false);
 });
 
 test("seo manager can publish every content entity type", () => {

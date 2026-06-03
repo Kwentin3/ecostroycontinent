@@ -18,7 +18,7 @@ import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
 import { buildPublishedLookups, getPublishedGlobalSettings } from "../../../../../../lib/read-side/public-content.js";
-import { userCanEditContent, userCanPublish, userCanPublishRevision } from "../../../../../../lib/auth/session.js";
+import { userCanEditContent, userCanPublishRevision, userCanUnpublish } from "../../../../../../lib/auth/session.js";
 
 function serializeLookupMap(map) {
   return Object.fromEntries(Array.from(map?.entries?.() ?? []));
@@ -101,7 +101,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
     const lifecycle = buildPageWorkspaceLifecycleState({
       aggregate: data.state,
       permissions: {
-        canArchive: userCanPublish(user),
+        canArchive: userCanUnpublish(user, ENTITY_TYPES.PAGE),
         canDelete: userCanEditContent(user)
       }
     });
@@ -162,7 +162,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
           globalSettings={globalSettings}
           lifecycle={{
             ...lifecycle,
-            archiveUrl: `/api/admin/entities/page/${entityId}/live-deactivation`,
+            archiveUrl: `/api/admin/entities/page/${entityId}/unpublish`,
             deleteUrl: "/api/admin/entities/page/delete",
             registryHref: "/admin/entities/page"
           }}

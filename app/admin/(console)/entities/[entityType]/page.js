@@ -26,7 +26,7 @@ import { findEntityByTypeSingleton, findRevisionById, getEntityAggregate, listPu
 import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service.js";
 import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
 import { ADMIN_COPY, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
-import { userCanEditContent, userCanPublish } from "../../../../../lib/auth/session.js";
+import { userCanEditContent, userCanUnpublish } from "../../../../../lib/auth/session.js";
 
 function supportsDeleteTool(entityType) {
   return entityType === ENTITY_TYPES.MEDIA_ASSET
@@ -94,7 +94,7 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
       updatedAtLabel: formatUpdatedAtLabel(row.updatedAtTs),
       lifecycle: {
         ...lifecycle,
-        archiveUrl: `/api/admin/entities/page/${row.entityId}/live-deactivation`,
+        archiveUrl: `/api/admin/entities/page/${row.entityId}/unpublish`,
         deleteUrl: "/api/admin/entities/page/delete"
       }
     };
@@ -294,7 +294,7 @@ export default async function EntityListPage({ params, searchParams }) {
         buildPageWorkspaceLifecycleState({
           aggregate,
           permissions: {
-            canArchive: userCanPublish(user),
+            canArchive: userCanUnpublish(user, ENTITY_TYPES.PAGE),
             canDelete: userCanEditContent(user)
           }
         })
