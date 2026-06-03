@@ -7,7 +7,8 @@ import {
   createPublicMediaRedirectResponse,
   getAppProxyMediaUrl,
   getCdnMediaUrl,
-  resolvePublicMediaDelivery
+  resolvePublicMediaDelivery,
+  resolvePublicMediaMarkupDelivery
 } from "../lib/media/public-delivery.js";
 
 const asset = {
@@ -21,10 +22,50 @@ const s3Config = {
   mediaDeliveryMode: "auto"
 };
 
-test("public media delivery keeps a stable app proxy URL for page markup", () => {
+test("public media delivery keeps stable app and CDN boundary URLs", () => {
   assert.equal(getAppProxyMediaUrl(" media asset "), "/api/media-public/media%20asset");
   assert.equal(getAppProxyMediaUrl(""), "");
   assert.equal(getCdnMediaUrl({ storageKey: asset.storageKey }, s3Config), "https://cdn.example.test/media/asset%20123.webp");
+});
+
+test("public media markup uses direct CDN URLs in CDN-capable modes", () => {
+  assert.deepEqual(
+    resolvePublicMediaMarkupDelivery({
+      asset,
+      config: s3Config
+    }),
+    {
+      mode: "cdn",
+      url: "https://cdn.example.test/media/asset%20123.webp",
+      fallbackUrl: "/api/media-public/media_123"
+    }
+  );
+
+  assert.deepEqual(
+    resolvePublicMediaMarkupDelivery({
+      asset,
+      config: { ...s3Config, mediaDeliveryMode: "cdn" }
+    }),
+    {
+      mode: "cdn",
+      url: "https://cdn.example.test/media/asset%20123.webp",
+      fallbackUrl: "/api/media-public/media_123"
+    }
+  );
+});
+
+test("public media markup keeps app proxy URLs when app proxy mode is selected", () => {
+  assert.deepEqual(
+    resolvePublicMediaMarkupDelivery({
+      asset,
+      config: { ...s3Config, mediaDeliveryMode: "app_proxy" }
+    }),
+    {
+      mode: "app_proxy",
+      url: "/api/media-public/media_123",
+      fallbackUrl: "https://cdn.example.test/media/asset%20123.webp"
+    }
+  );
 });
 
 test("public media delivery streams through the app in app_proxy mode", async () => {
