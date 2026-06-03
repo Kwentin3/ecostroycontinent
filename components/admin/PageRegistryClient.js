@@ -316,8 +316,8 @@ export function PageRegistryClient({
     return result;
   };
 
-  const handleArchiveRecord = async (record) => {
-    if (!record?.lifecycle?.canArchive || actionBusyId) {
+  const handleUnpublishRecord = async (record) => {
+    if (!record?.lifecycle?.canUnpublish || actionBusyId) {
       return;
     }
 
@@ -333,7 +333,7 @@ export function PageRegistryClient({
     try {
       const formData = new FormData();
       formData.set("responseMode", "json");
-      const response = await fetch(record.lifecycle.archiveUrl, {
+      const response = await fetch(record.lifecycle.unpublishUrl, {
         method: "POST",
         body: formData
       });
@@ -353,7 +353,7 @@ export function PageRegistryClient({
               signalReason: "Страница снята с публикации.",
               lifecycle: {
                 ...item.lifecycle,
-                canArchive: false,
+                canUnpublish: false,
                 hasLivePublishedRevision: false,
                 canDelete: false
               }
@@ -511,8 +511,8 @@ export function PageRegistryClient({
                         Метаданные
                       </button>
                       <Link href={record.historyHref} className={styles.menuItem}>История</Link>
-                      {record.lifecycle?.canArchive ? (
-                        <button type="button" className={styles.menuItem} disabled={actionBusyId === record.id} onClick={() => handleArchiveRecord(record)}>
+                      {record.lifecycle?.canUnpublish ? (
+                        <button type="button" className={styles.menuItem} disabled={actionBusyId === record.id} onClick={() => handleUnpublishRecord(record)}>
                           {actionBusyId === record.id ? "Снимаем..." : "Снять с публикации"}
                         </button>
                       ) : null}
@@ -557,8 +557,8 @@ export function PageRegistryClient({
                       Метаданные
                     </button>
                     <Link href={record.historyHref} className={styles.menuItem}>История</Link>
-                    {record.lifecycle?.canArchive ? (
-                      <button type="button" className={styles.menuItem} disabled={actionBusyId === record.id} onClick={() => handleArchiveRecord(record)}>
+                    {record.lifecycle?.canUnpublish ? (
+                      <button type="button" className={styles.menuItem} disabled={actionBusyId === record.id} onClick={() => handleUnpublishRecord(record)}>
                         {actionBusyId === record.id ? "Снимаем..." : "Снять с публикации"}
                       </button>
                     ) : null}

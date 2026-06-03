@@ -66,7 +66,7 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
     const pageValue = buildPageWorkspaceBaseValue(card?.latestRevision ?? null);
     const metadata = buildPageWorkspaceMetadataState(pageValue);
     const lifecycle = lifecycleById.get(row.entityId) || {
-      canArchive: false,
+      canUnpublish: false,
       canDelete: false,
       hasLivePublishedRevision: false
     };
@@ -94,7 +94,7 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
       updatedAtLabel: formatUpdatedAtLabel(row.updatedAtTs),
       lifecycle: {
         ...lifecycle,
-        archiveUrl: `/api/admin/entities/page/${row.entityId}/unpublish`,
+        unpublishUrl: `/api/admin/entities/page/${row.entityId}/unpublish`,
         deleteUrl: "/api/admin/entities/page/delete"
       }
     };
@@ -294,7 +294,7 @@ export default async function EntityListPage({ params, searchParams }) {
         buildPageWorkspaceLifecycleState({
           aggregate,
           permissions: {
-            canArchive: userCanUnpublish(user, ENTITY_TYPES.PAGE),
+            canUnpublish: userCanUnpublish(user, ENTITY_TYPES.PAGE),
             canDelete: userCanEditContent(user)
           }
         })

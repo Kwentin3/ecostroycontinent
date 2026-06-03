@@ -101,7 +101,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
     const lifecycle = buildPageWorkspaceLifecycleState({
       aggregate: data.state,
       permissions: {
-        canArchive: userCanUnpublish(user, ENTITY_TYPES.PAGE),
+        canUnpublish: userCanUnpublish(user, ENTITY_TYPES.PAGE),
         canDelete: userCanEditContent(user)
       }
     });
@@ -162,7 +162,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
           globalSettings={globalSettings}
           lifecycle={{
             ...lifecycle,
-            archiveUrl: `/api/admin/entities/page/${entityId}/unpublish`,
+            unpublishUrl: `/api/admin/entities/page/${entityId}/unpublish`,
             deleteUrl: "/api/admin/entities/page/delete",
             registryHref: "/admin/entities/page"
           }}

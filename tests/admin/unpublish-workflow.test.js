@@ -227,8 +227,12 @@ test("executeUnpublish clears published pointer and records unpublish audit evid
         revalidationPaths: ["/services/service-live", "/services"]
       }
     }),
-    clearEntityActivePublishedRevision: async (entityId, actorUserId) => {
+    clearEntityActivePublishedRevision: async (entityId, actorUserId, db, options) => {
+      assert.deepEqual(options, {
+        expectedActivePublishedRevisionId: "rev_service_live_1"
+      });
       operations.push(`clear:${entityId}:${actorUserId}`);
+      return { id: entityId };
     },
     recordDestructiveEvent: async (input) => {
       operations.push(`event:${input.auditEventKey}:${input.operationKind}:${input.outcome}`);
@@ -240,5 +244,54 @@ test("executeUnpublish clears published pointer and records unpublish audit evid
   assert.deepEqual(operations, [
     "clear:service_live_1:user_seo",
     `event:${AUDIT_EVENT_KEYS.UNPUBLISHED}:unpublish:executed`
+  ]);
+});
+
+test("executeUnpublish blocks when active published revision changed after evaluation", async () => {
+  const operations = [];
+  const result = await executeUnpublish({
+    entityType: ENTITY_TYPES.SERVICE,
+    entityId: "service_live_1",
+    actorUserId: "user_seo"
+  }, {
+    withTransaction: async (run) => run({ kind: "db" }),
+    evaluateUnpublish: async () => ({
+      allowed: true,
+      entityType: ENTITY_TYPES.SERVICE,
+      entityId: "service_live_1",
+      blockers: [],
+      warnings: [],
+      publishedIncomingRefs: [],
+      draftIncomingRefs: [],
+      reviewResidue: [],
+      openObligations: [],
+      root: {
+        entityId: "service_live_1",
+        entityType: ENTITY_TYPES.SERVICE,
+        label: "Service live",
+        activePublishedRevisionId: "rev_service_live_1"
+      },
+      routeEffects: {
+        routePath: "/services/service-live",
+        routeOutcome: "Маршрут станет 404.",
+        revalidationPaths: ["/services/service-live", "/services"]
+      }
+    }),
+    clearEntityActivePublishedRevision: async (entityId, actorUserId, db, options) => {
+      operations.push(`clear:${entityId}:${actorUserId}:${options.expectedActivePublishedRevisionId}`);
+      return null;
+    },
+    recordDestructiveEvent: async (input) => {
+      operations.push(`event:${input.auditEventKey}:${input.operationKind}:${input.outcome}`);
+    }
+  });
+
+  assert.equal(result.executed, false);
+  assert.equal(result.revalidationPaths.length, 0);
+  assert.equal(result.evaluation.allowed, false);
+  assert.match(result.evaluation.blockers.join("\n"), /Опубликованная версия изменилась/);
+  assert.deepEqual(operations, [
+    "clear:service_live_1:user_seo:rev_service_live_1",
+    `event:${AUDIT_EVENT_KEYS.UNPUBLISH_BLOCKED}:unpublish:blocked`
   ]);
 });
