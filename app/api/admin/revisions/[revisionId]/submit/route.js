@@ -21,6 +21,18 @@ function getString(formData, key) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+export function getReviewSubmissionFeedback(feedbackCopy, result = {}) {
+  if (result.submissionStatus === "duplicate") {
+    return feedbackCopy.reviewAlreadySubmitted;
+  }
+
+  if (result.submissionStatus === "updated") {
+    return feedbackCopy.reviewUpdated;
+  }
+
+  return feedbackCopy.reviewSubmitted;
+}
+
 export async function POST(request, { params }, deps = defaultDeps) {
   const {
     requireRouteUser: requireRouteUserImpl,
@@ -53,7 +65,7 @@ export async function POST(request, { params }, deps = defaultDeps) {
     });
 
     return redirectWithQueryImpl(request, `/admin/review/${result.revision.id || revisionId}`, {
-      message: feedbackCopy.reviewSubmitted
+      message: getReviewSubmissionFeedback(feedbackCopy, result)
     });
   } catch (error) {
     return redirectWithErrorImpl(request, returnTo || `/admin/review/${revisionId}`, error);

@@ -750,7 +750,8 @@
 .reviewGalleryType,
 .reviewGallerySubmitted,
 .reviewGalleryStatus,
-.reviewGalleryWarning {
+.reviewGalleryWarning,
+.reviewGalleryUpdateMark {
   display: inline-flex;
   align-items: center;
   padding: 5px 9px;
@@ -987,6 +988,11 @@
   color: #8a5a00;
 }
 
+.reviewGalleryUpdateMark {
+  background: #e7f1ee;
+  color: #264c3b;
+}
+
 .reviewModalLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
@@ -1102,6 +1108,36 @@
   color: var(--subtle);
   font-size: 0.86rem;
   line-height: 1.45;
+}
+
+.reviewContentDiff {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.reviewContentDiffHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.reviewContentDiffHeader h3,
+.reviewContentDiffHeader p {
+  margin: 0;
+}
+
+.reviewContentDiffHeader p {
+  color: var(--subtle);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.reviewContentDiffList {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .reviewModalPageFallback {
@@ -2745,6 +2781,13 @@
   gap: var(--space-2);
 }
 
+.diffSummary {
+  margin: 4px 0 0;
+  color: var(--subtle);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
 .previewJumpLink {
   flex: 0 0 auto;
   color: #264c3b;
@@ -2778,6 +2821,31 @@
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   font: inherit;
+}
+
+.diffAddedText,
+.diffRemovedText {
+  border-radius: 4px;
+  padding: 0 2px;
+  font: inherit;
+}
+
+.diffAddedText {
+  background: #dff3e7;
+  color: #153d2b;
+}
+
+.diffRemovedText {
+  background: #ffe3de;
+  color: #7d241b;
+}
+
+.diffDetailList {
+  margin: var(--space-2) 0 0;
+  padding-left: 18px;
+  color: var(--subtle);
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
 .split {

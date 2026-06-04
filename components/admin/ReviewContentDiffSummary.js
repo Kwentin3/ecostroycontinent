@@ -18,20 +18,22 @@ function renderDiffValue(row, side) {
   );
 }
 
-export function RevisionDiffPanel({
-  title = ADMIN_COPY.diffTitle,
+export function ReviewContentDiffSummary({
+  title,
   basisLabel = "",
   rows = [],
-  emptyLabel = ADMIN_COPY.diffEmpty
+  emptyLabel = "Контентных изменений не найдено."
 }) {
   return (
-    <section className={styles.panel}>
-      <h3>{title}</h3>
-      {basisLabel ? <p className={styles.mutedText}>{basisLabel}</p> : null}
+    <section className={styles.reviewContentDiff}>
+      <div className={styles.reviewContentDiffHeader}>
+        <h3>{title}</h3>
+        {basisLabel ? <p>{basisLabel}</p> : null}
+      </div>
       {rows.length === 0 ? (
         <p className={styles.emptyHint}>{emptyLabel}</p>
       ) : (
-        <div className={styles.stack}>
+        <div className={styles.reviewContentDiffList}>
           {rows.map((row) => (
             <article key={row.field} className={styles.diffCard}>
               <div className={styles.diffCardHeader}>
@@ -39,11 +41,6 @@ export function RevisionDiffPanel({
                   <p className={styles.eyebrow}>{row.label}</p>
                   {row.summary ? <p className={styles.diffSummary}>{row.summary}</p> : null}
                 </div>
-                {row.previewTarget ? (
-                  <a href={`#${row.previewTarget}`} className={styles.previewJumpLink}>
-                    Перейти к предпросмотру
-                  </a>
-                ) : null}
               </div>
               <div className={styles.diffGrid}>
                 <div className={styles.diffCell}>

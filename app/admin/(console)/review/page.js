@@ -5,6 +5,7 @@ import { OwnerReviewDialog } from "../../../../components/admin/OwnerReviewDialo
 import { PagePreview } from "../../../../components/admin/PagePreview";
 import { PagePreviewThumbnail } from "../../../../components/admin/PagePreviewThumbnail";
 import { PreviewViewport } from "../../../../components/admin/PreviewViewport";
+import { ReviewContentDiffSummary } from "../../../../components/admin/ReviewContentDiffSummary";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { getEntityAdminHref } from "../../../../lib/admin/entity-links.js";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
@@ -276,6 +277,16 @@ export default async function ReviewQueuePage({ searchParams }) {
   const selectedCard = selectedRevisionId ? cards.find((card) => card.id === selectedRevisionId) ?? null : null;
   const selectedQueueItem = selectedRevisionId ? queue.find((item) => item.revision.id === selectedRevisionId) ?? null : null;
   const selectedModal = selectedQueueItem ? buildOwnerReviewModalModel(selectedQueueItem) : null;
+  const selectedReviewContext = selectedQueueItem?.reviewContext ?? null;
+  const selectedDiffRows = selectedReviewContext?.previousReviewDiffRows?.length
+    ? selectedReviewContext.previousReviewDiffRows
+    : selectedReviewContext?.publishedDiffRows || [];
+  const selectedDiffTitle = selectedReviewContext?.previousReviewDiffRows?.length
+    ? "Что изменилось после предыдущей отправки"
+    : "Что отличается от опубликованной версии";
+  const selectedDiffBasisLabel = selectedReviewContext?.previousReviewDiffRows?.length
+    ? "Показаны только изменения в содержимом карточки относительно предыдущей заявки на проверку."
+    : "Показаны только изменения в содержимом карточки относительно опубликованной версии.";
   const closeHref = buildReviewUrl({ query: search, status, type });
   const errorReturnTo = selectedCard
     ? buildReviewUrl({
@@ -432,6 +443,7 @@ export default async function ReviewQueuePage({ searchParams }) {
                     <span className={styles.reviewGallerySubmitted}>{card.submittedAtLabel || "На проверке"}</span>
                   </div>
                   <div className={styles.reviewGallerySignals}>
+                    {card.reviewContext?.supersedesRevisionId ? <span className={styles.reviewGalleryUpdateMark}>Обновлено</span> : null}
                     {card.needsAttention ? <span className={styles.reviewGalleryAttentionMark} aria-label="Требует решения">!</span> : null}
                     <span className={styles.reviewGalleryStatus}>{card.status.label}</span>
                   </div>
@@ -486,6 +498,14 @@ export default async function ReviewQueuePage({ searchParams }) {
                 {selectedCard.entityType === ENTITY_TYPES.PAGE && pagePreviewPayload?.globalSettings
                   ? renderPagePreview(selectedCard, selectedModal, previewMode, search, status, type, message, error, pagePreviewPayload)
                   : renderCompactEntityCard(selectedCard, selectedModal)}
+                {selectedReviewContext?.supersedesRevisionId || selectedReviewContext?.publishedRevisionId ? (
+                  <ReviewContentDiffSummary
+                    title={selectedDiffTitle}
+                    basisLabel={selectedDiffBasisLabel}
+                    rows={selectedDiffRows}
+                    emptyLabel="Контентных изменений не найдено."
+                  />
+                ) : null}
               </div>
 
               <section className={styles.reviewModalActionCard}>

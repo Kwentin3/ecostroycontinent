@@ -17,7 +17,7 @@ function buildRequest(returnTo = "") {
   });
 }
 
-function buildDeps({ ownerReviewRequired = false, submitError = null } = {}) {
+function buildDeps({ ownerReviewRequired = false, submitError = null, submissionStatus = "submitted", returnedRevisionId = "rev_1" } = {}) {
   return {
     requireRouteUser: async () => ({
       user: {
@@ -52,10 +52,11 @@ function buildDeps({ ownerReviewRequired = false, submitError = null } = {}) {
 
       return {
         revision: {
-          id: input.revisionId,
+          id: returnedRevisionId || input.revisionId,
           state: "review",
           ownerReviewRequired
-        }
+        },
+        submissionStatus
       };
     },
     userCanEditContent: () => true
@@ -86,6 +87,38 @@ test("submit route still opens review when owner action is required", async () =
   assert.equal(response.status, 303);
   assert.equal(location.pathname, "/admin/review/rev_1");
   assert.equal(location.searchParams.get("message"), FEEDBACK_COPY.reviewSubmitted);
+});
+
+test("submit route opens the existing review when identical content is already submitted", async () => {
+  const response = await POST(
+    buildRequest("/admin/entities/service/entity_1"),
+    { params: { revisionId: "rev_1" } },
+    buildDeps({
+      submissionStatus: "duplicate",
+      returnedRevisionId: "rev_existing"
+    })
+  );
+  const location = new URL(response.headers.get("location"), "http://localhost");
+
+  assert.equal(response.status, 303);
+  assert.equal(location.pathname, "/admin/review/rev_existing");
+  assert.equal(location.searchParams.get("message"), FEEDBACK_COPY.reviewAlreadySubmitted);
+});
+
+test("submit route reports when a newer request replaces the previous review request", async () => {
+  const response = await POST(
+    buildRequest("/admin/entities/service/entity_1"),
+    { params: { revisionId: "rev_2" } },
+    buildDeps({
+      submissionStatus: "updated",
+      returnedRevisionId: "rev_2"
+    })
+  );
+  const location = new URL(response.headers.get("location"), "http://localhost");
+
+  assert.equal(response.status, 303);
+  assert.equal(location.pathname, "/admin/review/rev_2");
+  assert.equal(location.searchParams.get("message"), FEEDBACK_COPY.reviewUpdated);
 });
 
 test("submit route returns errors back to the source screen when returnTo is present", async () => {
