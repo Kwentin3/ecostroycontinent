@@ -56,11 +56,14 @@ test("page registry create modal keeps the fallback route secondary", () => {
   assert.match(css, /\.createServiceBody\s*\{/);
 });
 
-test("review queue keeps operator guidance compact and collapsible", () => {
+test("review queue starts with one compact filter toolbar before the gallery", () => {
   const source = readUtf8("app/admin/(console)/review/page.js");
 
-  assert.match(source, /В очереди остаются только материалы, по которым еще нужно решение или возврат/);
-  assert.match(source, /Как устроена очередь/);
-  assert.match(source, /После согласования карточка уходит из review-очереди/);
-  assert.match(source, /compactDisclosureSummary/);
+  assert.match(source, /aria-label="Фильтры проверки"/);
+  assert.match(source, /reviewGalleryToolbar/);
+  assert.match(source, /reviewFilterSearch/);
+  assert.match(source, /reviewGalleryResultCount/);
+  assert.doesNotMatch(source, /В очереди остаются только материалы, по которым еще нужно решение или возврат/);
+  assert.doesNotMatch(source, /Как устроена очередь/);
+  assert.doesNotMatch(source, /После согласования карточка уходит из review-очереди/);
 });

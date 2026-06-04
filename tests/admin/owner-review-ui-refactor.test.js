@@ -22,7 +22,13 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(source, /styles\.reviewGalleryGrid/);
   assert.match(source, /styles\.reviewGalleryCard/);
   assert.doesNotMatch(source, /styles\.reviewGalleryCardApproved/);
-  assert.match(source, /styles\.reviewGalleryStatusFilters/);
+  assert.match(source, /styles\.reviewGalleryToolbar/);
+  assert.match(source, /styles\.reviewFilterField/);
+  assert.match(source, /styles\.reviewGalleryResultCount/);
+  assert.match(source, /aria-label="Фильтры проверки"/);
+  assert.doesNotMatch(source, /styles\.reviewGalleryStatusFilters/);
+  assert.doesNotMatch(source, /styles\.reviewScreenBar/);
+  assert.doesNotMatch(source, /Как устроена очередь/);
   assert.match(source, /styles\.reviewModalLayout/);
   assert.match(source, /renderPagePreview/);
   assert.match(source, /renderPageGalleryCardPreview/);
@@ -37,6 +43,12 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.doesNotMatch(source, /<table className=\{styles\.table\}/);
 
   assert.match(css, /\.reviewGalleryGrid\s*\{/);
+  assert.match(css, /\.reviewGalleryToolbar\s*\{/);
+  assert.match(css, /\.reviewFilterField\s*\{/);
+  assert.match(css, /\.reviewFilterInput,\s*\.reviewFilterSelect\s*\{/);
+  assert.match(css, /\.reviewGalleryResultCount\s*\{/);
+  assert.doesNotMatch(css, /\.reviewGalleryStatusFilters\s*\{/);
+  assert.doesNotMatch(css, /\.reviewScreenBar\s*\{/);
   assert.match(css, /\.reviewGalleryCardApproved\s*\{/);
   assert.match(css, /\.reviewGalleryAttentionMark\s*\{/);
   assert.match(css, /\.reviewPageThumbScreen\s*\{/);

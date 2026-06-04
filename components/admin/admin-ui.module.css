@@ -600,93 +600,74 @@
 
 .reviewGalleryControls {
   display: grid;
-  gap: var(--space-3);
-}
-
-.reviewScreenBar {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.reviewScreenStats {
-  display: flex;
-  flex-wrap: wrap;
   gap: 10px;
-  align-items: center;
-}
-
-.reviewGalleryHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.reviewGalleryHeaderCopy {
-  display: grid;
-  gap: 6px;
-}
-
-.reviewGalleryCounters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.reviewGalleryCounter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(38, 76, 59, 0.14);
-  background: rgba(255, 255, 255, 0.78);
-  color: #234535;
-  font-size: 0.88rem;
-  font-weight: 600;
 }
 
 .reviewGalleryToolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(150px, 190px) minmax(150px, 190px) auto auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid rgba(38, 76, 59, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 12px 32px rgba(37, 28, 18, 0.06);
+}
+
+.reviewFilterField {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reviewFilterSearch {
+  min-width: 0;
+}
+
+.reviewFilterLabel {
+  color: var(--subtle);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.reviewFilterInput,
+.reviewFilterSelect {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+}
+
+.reviewFilterInput:focus-visible,
+.reviewFilterSelect:focus-visible {
+  outline: 2px solid #264c3b;
+  outline-offset: 2px;
 }
 
 .reviewGalleryToolbarActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
+  justify-content: flex-end;
 }
 
-.reviewGalleryStatusFilters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.reviewGalleryStatusFilter {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(38, 76, 59, 0.14);
-  background: rgba(255, 255, 255, 0.72);
-  color: #234535;
-  text-decoration: none;
-}
-
-.reviewGalleryStatusFilterActive {
-  border-color: #264c3b;
-  background: #264c3b;
-  color: #fff;
+.reviewGalleryResultCount {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.9rem;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .reviewGalleryGrid {
@@ -3409,13 +3390,11 @@
     position: static;
   }
 
-  .reviewGalleryHeader,
   .reviewGalleryToolbar {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     align-items: stretch;
   }
 
-  .reviewScreenBar,
   .reviewModalLayout,
   .reviewModalEntityHero {
     grid-template-columns: 1fr;
@@ -3423,9 +3402,7 @@
     align-items: stretch;
   }
 
-  .reviewGalleryCounters,
-  .reviewGalleryToolbarActions,
-  .reviewGalleryStatusFilters {
+  .reviewGalleryToolbarActions {
     justify-content: flex-start;
   }
 

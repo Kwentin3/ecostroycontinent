@@ -15,8 +15,7 @@ import { userCanEditContent, userCanOwnerApprove } from "../../../../lib/auth/ro
 import {
   buildOwnerReviewGalleryCards,
   buildOwnerReviewModalModel,
-  filterOwnerReviewGalleryCards,
-  summarizeOwnerReviewGallery
+  filterOwnerReviewGalleryCards
 } from "../../../../lib/admin/owner-review.js";
 import { getReviewQueue } from "../../../../lib/content-ops/workflow";
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../../../lib/content-core/content-types.js";
@@ -273,7 +272,7 @@ export default async function ReviewQueuePage({ searchParams }) {
     status,
     type
   });
-  const summary = summarizeOwnerReviewGallery(cards);
+  const hasActiveFilters = Boolean(search || status !== "all" || type !== "all");
   const selectedCard = selectedRevisionId ? cards.find((card) => card.id === selectedRevisionId) ?? null : null;
   const selectedQueueItem = selectedRevisionId ? queue.find((item) => item.revision.id === selectedRevisionId) ?? null : null;
   const selectedModal = selectedQueueItem ? buildOwnerReviewModalModel(selectedQueueItem) : null;
@@ -330,58 +329,29 @@ export default async function ReviewQueuePage({ searchParams }) {
       <div className={styles.stack}>
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
-        <div className={styles.statusPanelInfo}>
-          В очереди остаются только материалы, по которым еще нужно решение или возврат.
-        </div>
-        <details className={styles.compactDisclosure}>
-          <summary className={styles.compactDisclosureSummary}>
-            <span className={styles.compactDisclosureMarker} aria-hidden="true" />
-            <span className={styles.compactDisclosureSummaryMain}>
-              <strong>Как устроена очередь</strong>
-              <span className={styles.compactDisclosureSummaryMeta}>
-                После согласования карточка уходит из review-очереди, а публикация выполняется уже в карточке сущности.
-              </span>
-            </span>
-          </summary>
-          <div className={styles.compactDisclosureBody}>
-            <p className={styles.mutedText}>
-              Здесь остаются только незавершенные решения. Как только материал согласован или возвращен с замечанием, дальнейшая ежедневная работа снова идет из карточки сущности.
-            </p>
-          </div>
-        </details>
-
         <section className={styles.reviewGalleryControls}>
-          <div className={styles.reviewScreenBar}>
-            <div className={styles.reviewScreenStats} aria-label="Сводка по материалам">
-              <span className={styles.reviewGalleryCounter}>Всего: {summary.total}</span>
-              <span className={styles.reviewGalleryCounter}>Требуют решения: {summary.byStatus.needs_owner || 0}</span>
-              <span className={styles.reviewGalleryCounter}>Возвращены: {summary.byStatus.returned || 0}</span>
-              <span className={styles.reviewGalleryCounter}>На проверке: {summary.byStatus.in_review || 0}</span>
-            </div>
-          </div>
-
-          <form className={styles.reviewGalleryToolbar} action="/admin/review" method="get">
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Поиск</span>
+          <form className={styles.reviewGalleryToolbar} action="/admin/review" method="get" aria-label="Фильтры проверки">
+            <label className={`${styles.reviewFilterField} ${styles.reviewFilterSearch}`}>
+              <span className={styles.reviewFilterLabel}>Поиск</span>
               <input
                 type="search"
                 name="q"
                 defaultValue={search}
-                className={styles.input}
+                className={styles.reviewFilterInput}
                 placeholder="Название, описание, содержание"
               />
             </label>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Статус</span>
-              <select name="status" defaultValue={status} className={styles.select}>
+            <label className={styles.reviewFilterField}>
+              <span className={styles.reviewFilterLabel}>Статус</span>
+              <select name="status" defaultValue={status} className={styles.reviewFilterSelect}>
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
             </label>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Тип</span>
-              <select name="type" defaultValue={type} className={styles.select}>
+            <label className={styles.reviewFilterField}>
+              <span className={styles.reviewFilterLabel}>Тип</span>
+              <select name="type" defaultValue={type} className={styles.reviewFilterSelect}>
                 {TYPE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
@@ -389,33 +359,10 @@ export default async function ReviewQueuePage({ searchParams }) {
             </label>
             <div className={styles.reviewGalleryToolbarActions}>
               <button type="submit" className={styles.primaryButton}>Применить</button>
-              <Link href="/admin/review" className={styles.secondaryButton}>Сбросить</Link>
+              {hasActiveFilters ? <Link href="/admin/review" className={styles.secondaryButton}>Сбросить</Link> : null}
             </div>
+            <p className={styles.reviewGalleryResultCount} aria-live="polite">Найдено: {filteredCards.length}</p>
           </form>
-
-          <div className={styles.reviewGalleryStatusFilters} role="list" aria-label="Быстрые фильтры по статусу">
-            {STATUS_OPTIONS.map((option) => {
-              const count = option.value === "all" ? summary.total : summary.byStatus[option.value] || 0;
-              const href = buildReviewUrl({
-                query: search,
-                type,
-                status: option.value
-              });
-              const active = option.value === status;
-
-              return (
-                <Link
-                  key={option.value}
-                  href={href}
-                  scroll={false}
-                  className={active ? `${styles.reviewGalleryStatusFilter} ${styles.reviewGalleryStatusFilterActive}` : styles.reviewGalleryStatusFilter}
-                >
-                  <span>{option.label}</span>
-                  <strong>{count}</strong>
-                </Link>
-              );
-            })}
-          </div>
         </section>
 
         {filteredCards.length === 0 ? (
