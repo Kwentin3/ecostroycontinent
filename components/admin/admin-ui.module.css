@@ -670,6 +670,116 @@
   white-space: nowrap;
 }
 
+.reviewJournal {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.reviewJournalHeader,
+.reviewJournalItemTop,
+.reviewJournalMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reviewJournalHeader {
+  justify-content: space-between;
+}
+
+.reviewJournalTitle {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.reviewJournalWindow,
+.reviewJournalTime,
+.reviewJournalMeta {
+  color: var(--subtle);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.reviewJournalList {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+
+.reviewJournalItem {
+  display: grid;
+  gap: 5px;
+  padding: 9px 0 10px;
+  border-top: 1px solid rgba(38, 76, 59, 0.1);
+}
+
+.reviewJournalItem:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.reviewJournalAction {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(38, 76, 59, 0.1);
+  color: #264c3b;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.reviewJournalAction[data-tone="success"] {
+  background: rgba(38, 110, 71, 0.12);
+  color: #22623f;
+}
+
+.reviewJournalAction[data-tone="warning"] {
+  background: rgba(165, 92, 23, 0.14);
+  color: #8a4b12;
+}
+
+.reviewJournalAction[data-tone="danger"] {
+  background: rgba(139, 46, 46, 0.12);
+  color: #8b2e2e;
+}
+
+.reviewJournalAction[data-tone="info"] {
+  background: rgba(41, 95, 128, 0.12);
+  color: #245b7a;
+}
+
+.reviewJournalAction[data-tone="muted"] {
+  background: rgba(71, 83, 77, 0.1);
+  color: #47534d;
+}
+
+.reviewJournalSummary,
+.reviewJournalEmpty {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.reviewJournalSummary {
+  font-weight: 650;
+}
+
+.reviewJournalComment {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .reviewGalleryGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

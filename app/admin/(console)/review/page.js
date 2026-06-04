@@ -6,8 +6,10 @@ import { PagePreview } from "../../../../components/admin/PagePreview";
 import { PagePreviewThumbnail } from "../../../../components/admin/PagePreviewThumbnail";
 import { PreviewViewport } from "../../../../components/admin/PreviewViewport";
 import { ReviewContentDiffSummary } from "../../../../components/admin/ReviewContentDiffSummary";
+import { ReviewJournal } from "../../../../components/admin/ReviewJournal";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { getEntityAdminHref } from "../../../../lib/admin/entity-links.js";
+import { buildReviewJournalViewModel } from "../../../../lib/admin/review-journal.js";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
 import { loadAdminPagePreviewPayload } from "../../../../lib/admin/page-preview-loader.js";
 import { appendAdminReturnTo } from "../../../../lib/admin/relation-navigation.js";
@@ -17,6 +19,7 @@ import {
   buildOwnerReviewModalModel,
   filterOwnerReviewGalleryCards
 } from "../../../../lib/admin/owner-review.js";
+import { getReviewJournalEvents } from "../../../../lib/content-ops/audit.js";
 import { getReviewQueue } from "../../../../lib/content-ops/workflow";
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../../../lib/content-core/content-types.js";
 import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
@@ -257,7 +260,10 @@ function renderPagePreview(card, modalModel, previewMode, search, status, type, 
 
 export default async function ReviewQueuePage({ searchParams }) {
   const user = await requireReviewUser();
-  const queue = await getReviewQueue();
+  const [queue, reviewJournalEvents] = await Promise.all([
+    getReviewQueue(),
+    getReviewJournalEvents()
+  ]);
   const query = await searchParams;
   const search = typeof query?.q === "string" ? query.q : "";
   const status = normalizeStatusFilter(typeof query?.status === "string" ? query.status : "all");
@@ -272,6 +278,7 @@ export default async function ReviewQueuePage({ searchParams }) {
     status,
     type
   });
+  const reviewJournalItems = buildReviewJournalViewModel(reviewJournalEvents);
   const hasActiveFilters = Boolean(search || status !== "all" || type !== "all");
   const selectedCard = selectedRevisionId ? cards.find((card) => card.id === selectedRevisionId) ?? null : null;
   const selectedQueueItem = selectedRevisionId ? queue.find((item) => item.revision.id === selectedRevisionId) ?? null : null;
@@ -364,6 +371,8 @@ export default async function ReviewQueuePage({ searchParams }) {
             <p className={styles.reviewGalleryResultCount} aria-live="polite">Найдено: {filteredCards.length}</p>
           </form>
         </section>
+
+        <ReviewJournal items={reviewJournalItems} />
 
         {filteredCards.length === 0 ? (
           <div className={styles.emptyState}>

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 
 const reviewPagePath = new URL("../../app/admin/(console)/review/page.js", import.meta.url);
 const reviewDetailPath = new URL("../../app/admin/(console)/review/[revisionId]/page.js", import.meta.url);
+const reviewJournalPath = new URL("../../components/admin/ReviewJournal.js", import.meta.url);
 const cssPath = new URL("../../components/admin/admin-ui.module.css", import.meta.url);
 
 function readUtf8(url) {
@@ -12,6 +13,7 @@ function readUtf8(url) {
 
 test("review landing is gallery-first with modal detail instead of hero and diff-first flow", () => {
   const source = readUtf8(reviewPagePath);
+  const journalSource = readUtf8(reviewJournalPath);
   const css = readUtf8(cssPath);
 
   assert.match(source, /buildOwnerReviewGalleryCards/);
@@ -25,6 +27,9 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(source, /styles\.reviewGalleryToolbar/);
   assert.match(source, /styles\.reviewFilterField/);
   assert.match(source, /styles\.reviewGalleryResultCount/);
+  assert.match(source, /getReviewJournalEvents/);
+  assert.match(source, /buildReviewJournalViewModel/);
+  assert.match(source, /<ReviewJournal items=\{reviewJournalItems\}/);
   assert.match(source, /aria-label="Фильтры проверки"/);
   assert.doesNotMatch(source, /styles\.reviewGalleryStatusFilters/);
   assert.doesNotMatch(source, /styles\.reviewScreenBar/);
@@ -47,6 +52,9 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(css, /\.reviewFilterField\s*\{/);
   assert.match(css, /\.reviewFilterInput,\s*\.reviewFilterSelect\s*\{/);
   assert.match(css, /\.reviewGalleryResultCount\s*\{/);
+  assert.match(css, /\.reviewJournal\s*\{/);
+  assert.match(css, /\.reviewJournalList\s*\{/);
+  assert.match(css, /\.reviewJournalAction\[data-tone="warning"\]\s*\{/);
   assert.doesNotMatch(css, /\.reviewGalleryStatusFilters\s*\{/);
   assert.doesNotMatch(css, /\.reviewScreenBar\s*\{/);
   assert.match(css, /\.reviewGalleryCardApproved\s*\{/);
@@ -56,6 +64,11 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(css, /\.reviewPageThumbScaler\s*\{/);
   assert.match(css, /\.reviewModalLayout\s*\{/);
   assert.match(css, /\.reviewModalEntityCard\s*\{/);
+
+  assert.match(journalSource, /aria-labelledby="review-journal-title"/);
+  assert.match(journalSource, />Журнал</);
+  assert.match(journalSource, />30 дней</);
+  assert.doesNotMatch(journalSource, /revisionId|fingerprint|raw/i);
 });
 
 test("review detail route now redirects back into gallery modal state", () => {
