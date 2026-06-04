@@ -113,6 +113,16 @@ Allowed after submission without resubmission only if the change is non-meaningf
 
 Any meaningful change requires a new review cycle.
 
+### Current runtime submission behavior
+
+The current implementation uses a content fingerprint at submit time:
+
+- same content fingerprint reuses the already active review request and does not create a duplicate queue card;
+- changed content creates a new review request and supersedes the previous active review request for the same entity;
+- the owner-facing diff is informational only: it shows what changed in content, but does not decide, recommend or auto-approve anything.
+
+See [Review_Check_Screen_Current_Landscape_Экостройконтинент_v0.1.md](./Review_Check_Screen_Current_Landscape_Экостройконтинент_v0.1.md) before changing `/admin/review`, duplicate submission handling, review diffs or the review journal.
+
 ## Owner review map
 
 | Entity / change class | Owner review required? | Notes |

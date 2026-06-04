@@ -27,6 +27,7 @@ import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
 // The review screen is intentionally limited to unresolved review-lane work.
 // Once a revision is agreed or no owner decision is required, publishing moves
 // to the source entity screen and the card should leave this queue.
+// The journal is a separate read-only memory over audit_events, not a queue source.
 const STATUS_OPTIONS = [
   { value: "all", label: "Все" },
   { value: "needs_owner", label: "Требуют решения" },
