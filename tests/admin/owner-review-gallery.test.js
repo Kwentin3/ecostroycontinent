@@ -47,7 +47,7 @@ test("owner review status model prioritizes materials that still need owner deci
   assert.equal(approvedStatus.key, "approved");
   assert.match(approvedStatus.label, /Согласовано/);
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "approved" }).key, "approved");
-  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "needs_owner");
+  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "in_review");
 });
 
 test("owner review gallery cards sort attention-first and keep page-specific preview fields", () => {
@@ -126,7 +126,7 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
 
   assert.equal(cards[0].status.key, "needs_owner");
   assert.equal(cards[1].status.key, "needs_owner");
-  assert.equal(cards.filter((card) => card.status.key === "needs_owner").length, 3);
+  assert.equal(cards.filter((card) => card.status.key === "needs_owner").length, 2);
   const returnedCard = cards.find((card) => card.status.key === "returned");
   assert.ok(returnedCard);
   assert.equal(returnedCard.mediaUrl, "/api/admin/media/media_1/preview");
@@ -138,7 +138,7 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
   assert.equal(caseCard.status.key, "approved");
   assert.match(caseCard.status.label, /Согласовано/);
   assert.match(caseCard.summary, /Объект сдан в срок/);
-  assert.equal(pageCard.status.key, "needs_owner");
+  assert.equal(pageCard.status.key, "in_review");
   assert.match(pageCard.summary, /Свяжитесь с нами/);
   assert.equal(pageCard.previewTitle, "Контакты");
   assert.equal(pageCard.previewThemeKey, "forest_contrast");
@@ -199,6 +199,38 @@ test("owner review gallery filters by status, type, and compact text content", (
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "монолитные" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "склад" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "не существует" }).length, 0);
+});
+
+test("owner review gallery sends corrected returned drafts back into owner decision filter", () => {
+  const returnedDraft = buildOwnerReviewGalleryCards([
+    buildQueueItem({
+      entityId: "service_returned",
+      entityType: ENTITY_TYPES.SERVICE,
+      ownerApprovalStatus: "rejected",
+      reviewComment: "Уточнить состав работ.",
+      payload: {
+        title: "Дренаж участка",
+        summary: "Первичная версия."
+      }
+    })
+  ]);
+  const resubmittedForOwner = buildOwnerReviewGalleryCards([
+    buildQueueItem({
+      entityId: "service_returned",
+      entityType: ENTITY_TYPES.SERVICE,
+      ownerApprovalStatus: "pending",
+      reviewComment: "",
+      payload: {
+        title: "Дренаж участка",
+        summary: "Уточненный состав работ."
+      }
+    })
+  ]);
+
+  assert.equal(filterOwnerReviewGalleryCards(returnedDraft, { status: "returned" }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(returnedDraft, { status: "needs_owner" }).length, 0);
+  assert.equal(filterOwnerReviewGalleryCards(resubmittedForOwner, { status: "needs_owner" }).length, 1);
+  assert.equal(resubmittedForOwner[0].revision.reviewComment, "");
 });
 
 test("owner review gallery stays compact while modal model keeps full owner-facing text", () => {
