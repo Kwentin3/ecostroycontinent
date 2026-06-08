@@ -514,7 +514,12 @@ export function MediaCollectionOverlay({
                 <span className={styles.mediaThumb}>
                       {asset.previewUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={asset.previewUrl} alt={asset.alt || asset.title || asset.originalFilename || "Предпросмотр"} />
+                        <img
+                          src={asset.thumbnailUrl || asset.previewUrl}
+                          alt={asset.alt || asset.title || asset.originalFilename || "Предпросмотр"}
+                          loading="lazy"
+                          decoding="async"
+                        />
                       ) : (
                         <span className={styles.mediaPlaceholder}>Нет предпросмотра</span>
                       )}

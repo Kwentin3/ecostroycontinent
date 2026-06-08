@@ -39,13 +39,31 @@ export async function GET(request, { params }, deps = defaultDeps) {
     return new Response("Не найдено", { status: 404 });
   }
 
+  const cacheHeaders = {
+    "cache-control": "private, max-age=300",
+    "vary": "Cookie",
+    "x-content-type-options": "nosniff"
+  };
+  const etag = revision?.id ? `"${revision.id}"` : "";
+
+  if (etag && request.headers.get("if-none-match") === etag) {
+    return new Response(null, {
+      status: 304,
+      headers: {
+        ...cacheHeaders,
+        etag
+      }
+    });
+  }
+
   try {
     const bytes = await deps.readMediaFile(storageKey);
 
     return new Response(bytes, {
       headers: {
         "content-type": revision?.payload?.mimeType || "application/octet-stream",
-        "cache-control": "no-store"
+        ...cacheHeaders,
+        ...(etag ? { etag } : {})
       }
     });
   } catch {

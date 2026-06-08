@@ -150,7 +150,7 @@ export default async function EntityListPage({ params, searchParams }) {
 
   if (normalizedType === ENTITY_TYPES.MEDIA_ASSET) {
     const [mediaItems, collectionItems] = await Promise.all([
-      listMediaLibraryCards(),
+      listMediaLibraryCards({ includeBinaryProbe: false }),
       listCollectionLibraryCards()
     ]);
     const selectedAssetId = query?.asset || query?.entityId || mediaItems[0]?.id || "";

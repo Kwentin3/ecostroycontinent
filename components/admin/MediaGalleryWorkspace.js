@@ -466,7 +466,11 @@ function MediaInspector({
       <div className={styles.mediaInspectorPreview}>
         {item.hasPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
+          <img
+            src={item.thumbnailUrl || item.previewUrl}
+            alt={item.alt || item.title || item.originalFilename || "Предпросмотр"}
+            decoding="async"
+          />
         ) : (
           <div className={styles.mediaInspectorPlaceholder}>Нет предпросмотра</div>
         )}
@@ -763,7 +767,7 @@ function MediaOverlay({
           <section className={styles.mediaOverlayPreview}>
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewUrl} alt={fields.alt || fields.title || fields.originalFilename || "Предпросмотр"} />
+              <img src={previewUrl} alt={fields.alt || fields.title || fields.originalFilename || "Предпросмотр"} decoding="async" />
             ) : (
               <div
                 className={`${styles.mediaOverlayDropzone} ${dragActive ? styles.mediaOverlayDropzoneActive : ""}`}
@@ -1713,7 +1717,12 @@ export function MediaGalleryWorkspace({
                         <span className={styles.mediaLibraryThumb}>
                           {item.hasPreview ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
+                            <img
+                              src={item.thumbnailUrl || item.previewUrl}
+                              alt={item.alt || item.title || item.originalFilename || "Предпросмотр"}
+                              loading="lazy"
+                              decoding="async"
+                            />
                           ) : (
                             <span className={styles.mediaPlaceholder}>Нет предпросмотра</span>
                           )}

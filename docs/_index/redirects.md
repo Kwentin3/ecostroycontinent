@@ -1,13 +1,38 @@
-| old_path | new_path |
+﻿| old_path | new_path |
 | --- | --- |
-| `docs/infra-ops/PRD.Infrastructure_Baseline_Р В­Р С”Р С•РЎРѓРЎвЂљРЎР‚Р С•Р в„–Р С”Р С•Р Р…РЎвЂљР С‘Р Р…Р ВµР Р…РЎвЂљ_v0.1.md` | `docs/selectel/PRD.Infrastructure_Baseline_Р В­Р С”Р С•РЎРѓРЎвЂљРЎР‚Р С•Р в„–Р С”Р С•Р Р…РЎвЂљР С‘Р Р…Р ВµР Р…РЎвЂљ_v0.1.md` |
-| `docs/infra-ops/INFRA.AUDIT.ANAMNESIS_Р В­Р С”Р С•РЎРѓРЎвЂљРЎР‚Р С•Р в„–Р С”Р С•Р Р…РЎвЂљР С‘Р Р…Р ВµР Р…РЎвЂљ_v0.1.md` | `docs/selectel/INFRA.AUDIT.ANAMNESIS_Р В­Р С”Р С•РЎРѓРЎвЂљРЎР‚Р С•Р в„–Р С”Р С•Р Р…РЎвЂљР С‘Р Р…Р ВµР Р…РЎвЂљ_v0.1.md` |
-| `docs/infra-ops/INFRA.GAPS_AND_INPUT_READINESS_Р В­Р С”Р С•РЎРѓРЎвЂљРЎР‚Р С•Р в„–Р С”Р С•Р Р…РЎвЂљР С‘Р Р…Р ВµР Р…РЎвЂљ_v0.1.md` | `docs/selectel/INFRA.GAPS_AND_INPUT_READINESS_Р В­Р С”Р С•РЎРѓРЎвЂљРЎР‚Р С•Р в„–Р С”Р С•Р Р…РЎвЂљР С‘Р Р…Р ВµР Р…РЎвЂљ_v0.1.md` |
-| `docs/selectel/UNBOOK.Infrastructure_Input_Pack_Р В­Р С”Р С•РЎРѓРЎвЂљРЎР‚Р С•Р в„–Р С”Р С•Р Р…РЎвЂљР С‘Р Р…Р ВµР Р…РЎвЂљ_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Input_Pack_Р В­Р С”Р С•РЎРѓРЎвЂљРЎР‚Р С•Р в„–Р С”Р С•Р Р…РЎвЂљР С‘Р Р…Р ВµР Р…РЎвЂљ_v0.1.md` |
-| `docs/product-ux/PRD_Admin_Console_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.1.md` | `docs/product-ux/PRD_Admin_Console_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.2.md` |
-| `docs/product-ux/Admin_Content_Contract_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.1.md` | `docs/product-ux/Admin_Content_Contract_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.2.md` |
-| `docs/product-ux/Admin_Operations_Contract_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.1.md` | `docs/product-ux/Admin_Operations_Contract_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.2.md` |
-| `docs/product-ux/Admin_Implementation_Backlog_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.1.md` | `docs/product-ux/Admin_Implementation_Backlog_First_Slice_Р­РєРѕСЃС‚СЂРѕР№РєРѕРЅС‚РёРЅРµРЅС‚_v0.2.md` |
+| `docs/infra-ops/PRD.Infrastructure_Baseline_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/infra-ops/INFRA.AUDIT.ANAMNESIS_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/infra-ops/INFRA.GAPS_AND_INPUT_READINESS_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/UNBOOK.Infrastructure_Input_Pack_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.AUDIT.ANAMNESIS_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.Contract_Deploy_GHCR_Runner_and_Compose_Surface.REVIEW_NOTES_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/INFRA.Contract_Deploy_GHCR_Runner_and_Compose_Surface_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/INFRA.Contract_VM_Runtime_and_Host_Setup.REVIEW_NOTES_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/INFRA.Contract_VM_Runtime_and_Host_Setup_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/INFRA.FACTUAL_RESOURCE_INVENTORY_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/INFRA.FACTUAL_RESOURCE_INVENTORY_Экостройконтинент_v0.2.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/INFRA.GAPS_AND_INPUT_READINESS_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.GIT_ORIGIN_REBIND_SUMMARY_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.OUTSTANDING_ITEMS_AUDIT_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.POST_PROVISION_GAPS_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.POST_PROVISION_GAPS_Экостройконтинент_v0.2.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.PROVISIONING_EXECUTION_REPORT_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.PROVISIONING_EXECUTION_REPORT_Экостройконтинент_v0.2.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.REPO_CANONICALIZATION_SYNC_SUMMARY_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.REVISION_SYNC_SUMMARY_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.SELECTEL_AUTH_DIAGNOSTICS.WINDOWS_CHECKLIST_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/INFRA.SELECTEL_AUTH_DIAGNOSTICS_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/PRD.Infrastructure_Baseline_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/RUNBOOK.Infrastructure_Input_Pack_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/RUNTIME_DEPLOY_ARTIFACTS.BASELINE_DESIGN.REVIEW_NOTES_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/RUNTIME_DEPLOY_ARTIFACTS.BASELINE_DESIGN_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/RUNTIME_DEPLOY_ARTIFACTS.IMPLEMENTATION_REPORT_Экостройконтинент_v0.1.md` | `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` |
+| `docs/selectel/RUNTIME_DEPLOY_ARTIFACTS.POST_IMPLEMENTATION_GAPS_Экостройконтинент_v0.1.md` | `docs/selectel/README.md` |
+| `docs/product-ux/PRD_Admin_Console_First_Slice_Экостройконтинент_v0.1.md` | `docs/product-ux/PRD_Admin_Console_First_Slice_Экостройконтинент_v0.2.md` |
+| `docs/product-ux/Admin_Content_Contract_First_Slice_Экостройконтинент_v0.1.md` | `docs/product-ux/Admin_Content_Contract_First_Slice_Экостройконтинент_v0.2.md` |
+| `docs/product-ux/Admin_Operations_Contract_First_Slice_Экостройконтинент_v0.1.md` | `docs/product-ux/Admin_Operations_Contract_First_Slice_Экостройконтинент_v0.2.md` |
+| `docs/product-ux/Admin_Implementation_Backlog_First_Slice_Экостройконтинент_v0.1.md` | `docs/product-ux/Admin_Implementation_Backlog_First_Slice_Экостройконтинент_v0.2.md` |
 | `reports/Admin_First_Slice_Acceptance_Report_Экостройконтинент_v0.1.md` | `docs/reports/2026-03-25/Admin_First_Slice_Acceptance_Report_Экостройконтинент_v0.1.md` |
 | `reports/Public_Shell_Polish_Plan_Экостройконтинент_v0.1.md` | `docs/reports/2026-03-25/Public_Shell_Polish_Plan_Экостройконтинент_v0.1.md` |
 | `reports/Admin_Closing_Batch_Acceptance_Report_Экостройконтинент_v0.1.md` | `docs/reports/2026-03-25/Admin_Closing_Batch_Acceptance_Report_Экостройконтинент_v0.1.md` |

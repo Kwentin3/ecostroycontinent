@@ -26,10 +26,15 @@ test("media workspace exposes operator filters without test-only or mine shortcu
 test("media workspace uses a separate selection control and bulk review action", () => {
   const source = readUtf8(new URL("../../components/admin/MediaGalleryWorkspace.js", import.meta.url));
   const css = readUtf8(new URL("../../components/admin/admin-ui.module.css", import.meta.url));
+  const pageSource = readUtf8(new URL("../../app/admin/(console)/entities/[entityType]/page.js", import.meta.url));
 
   assert.match(source, /selectedAssetIds/);
   assert.match(source, /mediaBulkActionBar/);
   assert.match(source, /\/api\/admin\/media\/library\/bulk-submit/);
+  assert.match(source, /item\.thumbnailUrl \|\| item\.previewUrl/);
+  assert.match(source, /loading="lazy"/);
+  assert.match(source, /decoding="async"/);
+  assert.match(pageSource, /listMediaLibraryCards\(\{ includeBinaryProbe: false \}\)/);
   assert.match(source, /<article\s+key=\{item\.id\}/);
   assert.match(source, /className=\{styles\.mediaSelectMarker\}/);
   assert.match(source, /className=\{styles\.mediaLibraryCardOpen\}/);

@@ -40,6 +40,7 @@ function mediaEditorState(payload = {}) {
     },
     revisions: [
       {
+        id: "rev_media_preview",
         payload: {
           storageKey: "media/review-photo.jpg",
           mimeType: "image/jpeg",
@@ -104,7 +105,41 @@ test("admin media preview route lets review users read only review-scoped media"
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("content-type"), "image/jpeg");
+  assert.equal(response.headers.get("cache-control"), "private, max-age=300");
+  assert.equal(response.headers.get("vary"), "Cookie");
+  assert.equal(response.headers.get("etag"), "\"rev_media_preview\"");
   assert.equal(await response.text(), "image-bytes");
+});
+
+test("admin media preview route returns a terminal private-cache 304 before reading storage", async () => {
+  let storageRead = false;
+  const response = await GET(
+    new Request("http://localhost/api/admin/media/media_editor/preview", {
+      headers: {
+        "if-none-match": "\"rev_media_preview\""
+      }
+    }),
+    { params: Promise.resolve({ entityId: "media_editor" }) },
+    {
+      requireRouteUser: async () => ({ user: { id: "seo_1", role: "seo_manager" }, response: null }),
+      userCanEditContent: () => true,
+      userCanReadAdminMediaPreview,
+      userCanReview: () => false,
+      mediaAssetIsVisibleInReviewQueue: async () => {
+        throw new Error("editor preview should not depend on review queue lookup");
+      },
+      getEntityEditorState: async () => mediaEditorState(),
+      readMediaFile: async () => {
+        storageRead = true;
+        return Buffer.from("editor-image");
+      }
+    }
+  );
+
+  assert.equal(response.status, 304);
+  assert.equal(response.headers.get("cache-control"), "private, max-age=300");
+  assert.equal(response.headers.get("etag"), "\"rev_media_preview\"");
+  assert.equal(storageRead, false);
 });
 
 test("admin media preview route hides unrelated media from review-only users", async () => {
