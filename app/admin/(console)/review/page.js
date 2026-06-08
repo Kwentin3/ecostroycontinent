@@ -274,6 +274,13 @@ export default async function ReviewQueuePage({ searchParams }) {
   const message = typeof query?.message === "string" ? query.message : "";
   const error = typeof query?.error === "string" ? query.error : "";
   const cards = buildOwnerReviewGalleryCards(queue);
+  // Quick filters are aliases over the existing read model, not a second queue.
+  const returnedFilterActive = status === "returned";
+  const returnedFilterCount = filterOwnerReviewGalleryCards(cards, {
+    query: search,
+    status: "returned",
+    type
+  }).length;
   const filteredCards = filterOwnerReviewGalleryCards(cards, {
     query: search,
     status,
@@ -370,6 +377,19 @@ export default async function ReviewQueuePage({ searchParams }) {
               {hasActiveFilters ? <Link href="/admin/review" className={styles.secondaryButton}>Сбросить</Link> : null}
             </div>
             <p className={styles.reviewGalleryResultCount} aria-live="polite">Найдено: {filteredCards.length}</p>
+          </form>
+          <form className={styles.reviewQuickFilters} action="/admin/review" method="get" aria-label="Быстрые фильтры проверки">
+            {search ? <input type="hidden" name="q" value={search} /> : null}
+            {type !== "all" ? <input type="hidden" name="type" value={type} /> : null}
+            {!returnedFilterActive ? <input type="hidden" name="status" value="returned" /> : null}
+            <button
+              type="submit"
+              className={returnedFilterActive ? `${styles.reviewQuickFilterButton} ${styles.reviewQuickFilterButtonActive}` : styles.reviewQuickFilterButton}
+              aria-pressed={returnedFilterActive}
+            >
+              <span>Требует доработки</span>
+              <span className={styles.reviewQuickFilterCount}>{returnedFilterCount}</span>
+            </button>
           </form>
         </section>
 

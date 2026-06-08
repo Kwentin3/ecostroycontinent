@@ -17,7 +17,8 @@ function buildQueueItem({
   ownerReviewRequired = true,
   ownerApprovalStatus = "pending",
   submittedAt = "2026-04-15T09:00:00.000Z",
-  previewStatus = PREVIEW_STATUS.RENDERABLE
+  previewStatus = PREVIEW_STATUS.RENDERABLE,
+  reviewComment = ""
 }) {
   return {
     entityId,
@@ -31,6 +32,7 @@ function buildQueueItem({
       ownerReviewRequired,
       ownerApprovalStatus,
       previewStatus,
+      reviewComment,
       submittedAt,
       updatedAt: submittedAt
     }
@@ -175,11 +177,24 @@ test("owner review gallery filters by status, type, and compact text content", (
         title: "Кейс по складу",
         result: "Складской фундамент под ключ."
       }
+    }),
+    buildQueueItem({
+      entityId: "media_returned",
+      entityType: ENTITY_TYPES.MEDIA_ASSET,
+      ownerApprovalStatus: "rejected",
+      reviewComment: "Уточнить подпись и alt.",
+      payload: {
+        title: "Фото бетонных работ",
+        caption: "Нужно доработать подпись по фото."
+      }
     })
   ]);
 
   assert.equal(filterOwnerReviewGalleryCards(cards, { status: "needs_owner" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { status: "approved" }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { status: "returned" }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { status: "returned", type: ENTITY_TYPES.MEDIA_ASSET }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { status: "returned", type: ENTITY_TYPES.SERVICE }).length, 0);
   assert.equal(filterOwnerReviewGalleryCards(cards, { type: ENTITY_TYPES.CASE }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "монолитные" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "склад" }).length, 1);

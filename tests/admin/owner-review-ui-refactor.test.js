@@ -27,6 +27,11 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(source, /styles\.reviewGalleryToolbar/);
   assert.match(source, /styles\.reviewFilterField/);
   assert.match(source, /styles\.reviewGalleryResultCount/);
+  assert.match(source, /returnedFilterActive/);
+  assert.match(source, /returnedFilterCount/);
+  assert.match(source, /aria-label="Быстрые фильтры проверки"/);
+  assert.match(source, />Требует доработки</);
+  assert.match(source, /name="status" value="returned"/);
   assert.match(source, /getReviewJournalEvents/);
   assert.match(source, /buildReviewJournalViewModel/);
   assert.match(source, /<ReviewJournal items=\{reviewJournalItems\}/);
@@ -52,6 +57,9 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(css, /\.reviewFilterField\s*\{/);
   assert.match(css, /\.reviewFilterInput,\s*\.reviewFilterSelect\s*\{/);
   assert.match(css, /\.reviewGalleryResultCount\s*\{/);
+  assert.match(css, /\.reviewQuickFilters\s*\{/);
+  assert.match(css, /\.reviewQuickFilterButton\s*\{/);
+  assert.match(css, /\.reviewQuickFilterButton:focus-visible\s*\{/);
   assert.match(css, /\.reviewJournal\s*\{/);
   assert.match(css, /\.reviewJournalList\s*\{/);
   assert.match(css, /\.reviewJournalAction\[data-tone="warning"\]\s*\{/);
