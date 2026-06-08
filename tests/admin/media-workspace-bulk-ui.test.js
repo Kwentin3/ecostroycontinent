@@ -8,13 +8,19 @@ function readUtf8(url) {
 
 test("media workspace exposes operator filters without test-only or mine shortcuts", () => {
   const source = readUtf8(new URL("../../components/admin/MediaGalleryWorkspace.js", import.meta.url));
+  const filtersSource = readUtf8(new URL("../../lib/admin/media-library-filters.js", import.meta.url));
 
   assert.doesNotMatch(source, /key: "test-only"/);
   assert.doesNotMatch(source, /key: "mine"/);
   assert.doesNotMatch(source, /Только тестовые/);
   assert.doesNotMatch(source, />Мои</);
-  assert.match(source, /key: "missing-alt"/);
-  assert.match(source, /key: "review"/);
+  assert.match(source, /MEDIA_LIBRARY_FILTERS/);
+  assert.match(source, /matchesMediaLibraryFilter\(item, filterKey\)/);
+  assert.match(source, /buildMediaLibrarySummaryItems\(items\)/);
+  assert.match(filtersSource, /key: "missing-alt"/);
+  assert.match(filtersSource, /key: "review"/);
+  assert.match(filtersSource, /key: "returned"/);
+  assert.doesNotMatch(filtersSource, /key: "broken"/);
 });
 
 test("media workspace uses a separate selection control and bulk review action", () => {

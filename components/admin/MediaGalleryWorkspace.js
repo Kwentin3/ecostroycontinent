@@ -12,6 +12,11 @@ import {
   COLLECTION_FILTER_ORPHAN,
   matchesCollectionFilter
 } from "../../lib/admin/media-gallery-filters";
+import {
+  MEDIA_LIBRARY_FILTERS,
+  buildMediaLibrarySummaryItems,
+  matchesMediaLibraryFilter
+} from "../../lib/admin/media-library-filters.js";
 import { appendAdminReturnTo } from "../../lib/admin/relation-navigation.js";
 import {
   getRemovalMarkHref,
@@ -28,20 +33,6 @@ import { userCanPublishRevision, userCanUnpublish } from "../../lib/auth/roles.j
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
-
-const FILTERS = [
-  { key: "all", label: "Все" },
-  { key: "recent", label: "Недавние" },
-  { key: "missing-alt", label: "Нет альтернативного текста" },
-  { key: "orphan", label: "Сироты" },
-  { key: "used", label: "Используется" },
-  { key: "unused", label: "Не используется" },
-  { key: "draft", label: "Черновики" },
-  { key: "review", label: "На проверке" },
-  { key: "published", label: "Опубликовано" },
-  { key: "archived", label: "В архиве" },
-  { key: "broken", label: "Проблемные" }
-];
 
 const STATUS_SORT_ORDER = {
   review: 0,
@@ -108,31 +99,6 @@ function formatDate(value) {
     minute: "2-digit",
     timeZone: "Europe/Moscow"
   }).format(new Date(parsed));
-}
-
-function matchesFilter(item, filterKey) {
-  switch (filterKey) {
-    case "recent":
-      return item.recent;
-    case "missing-alt":
-      return item.missingAlt;
-    case "orphan":
-      return item.orphaned;
-    case "used":
-      return item.usageCount > 0;
-    case "unused":
-      return item.usageCount === 0;
-    case "draft":
-    case "review":
-    case "published":
-      return item.statusKey === filterKey;
-    case "archived":
-      return item.archived;
-    case "broken":
-      return item.brokenBinary;
-    default:
-      return true;
-  }
 }
 
 function matchesQuery(item, normalizedQuery) {
@@ -1063,16 +1029,10 @@ export function MediaGalleryWorkspace({
   const collectionOptions = [...collections].sort((left, right) => left.title.localeCompare(right.title, "ru"));
   const filtered = [...items]
     .filter((item) => matchesQuery(item, normalizedQuery))
-    .filter((item) => matchesFilter(item, filterKey))
+    .filter((item) => matchesMediaLibraryFilter(item, filterKey))
     .filter((item) => matchesCollectionFilter(item, collectionFilterId))
     .sort((left, right) => compareItems(left, right, sortMode));
-  const summaryItems = [
-    { label: "Всего", value: items.length },
-    { label: "Нет альтернативного текста", value: items.filter((item) => item.missingAlt).length },
-    { label: "Сироты", value: items.filter((item) => item.orphaned).length },
-    { label: "На проверке", value: items.filter((item) => item.statusKey === "review").length },
-    { label: "Проблемные", value: items.filter((item) => item.brokenBinary).length }
-  ];
+  const summaryItems = buildMediaLibrarySummaryItems(items);
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
   const reviewSelection = getMediaReviewSelection(items, selectedAssetIds, { role: currentUserRole });
   const selectedAssetCount = reviewSelection.selectedCount;
@@ -1574,7 +1534,7 @@ export function MediaGalleryWorkspace({
     }
   }
 
-  const activeFilterLabel = FILTERS.find((filter) => filter.key === filterKey)?.label || "Все";
+  const activeFilterLabel = MEDIA_LIBRARY_FILTERS.find((filter) => filter.key === filterKey)?.label || "Все";
   const activeCollectionFilterLabel = getActiveCollectionFilterLabel(collectionFilterId, collectionOptions);
 
   return (
@@ -1633,7 +1593,7 @@ export function MediaGalleryWorkspace({
         </div>
 
         <div className={styles.mediaFilterRow} role="toolbar" aria-label="Быстрые фильтры медиатеки">
-          {FILTERS.map((filter) => (
+          {MEDIA_LIBRARY_FILTERS.map((filter) => (
             <button
               key={filter.key}
               type="button"
