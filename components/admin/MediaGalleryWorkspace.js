@@ -22,6 +22,7 @@ import {
   getMediaReviewSelection,
   mediaAssetCanSubmitForReview
 } from "../../lib/admin/media-review-actions.js";
+import { getVisibleReviewComment } from "../../lib/admin/review-comments.js";
 import { getPublishActionCopy, getWorkingRevisionStatusModel } from "../../lib/admin/workflow-status.js";
 import { userCanPublishRevision, userCanUnpublish } from "../../lib/auth/roles.js";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
@@ -478,6 +479,10 @@ function MediaInspector({
     ? getMediaUnpublishHref(item.id, returnTo)
     : "";
   const publicationNote = getPublicationNote(item, currentUserRole);
+  const visibleReviewComment = getVisibleReviewComment({
+    state: item.statusKey,
+    reviewComment: item.reviewComment
+  });
 
   return (
     <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
@@ -515,6 +520,12 @@ function MediaInspector({
 
       <section className={styles.mediaInspectorActionBlock} aria-label="Быстрые действия с выбранным медиа">
         <p className={styles.helpText}>{publicationNote}</p>
+        {visibleReviewComment ? (
+          <div className={styles.statusPanelWarning} aria-label="Замечание от проверки">
+            <strong>Замечание от проверки</strong>
+            <p className={styles.helpText}>{visibleReviewComment}</p>
+          </div>
+        ) : null}
         <div className={styles.inlineActions}>
           {canSubmitForReview ? (
             <form action={`/api/admin/revisions/${item.currentRevisionId}/submit`} method="post">

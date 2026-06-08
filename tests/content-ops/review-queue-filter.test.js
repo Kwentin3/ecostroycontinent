@@ -1,15 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { filterPendingReviewQueueItems, resolveReviewSubmissionCandidate } from "../../lib/content-ops/workflow.js";
 
-function buildQueueItem(id, ownerApprovalStatus) {
+function buildQueueItem(id, ownerApprovalStatus, state = "review") {
   return {
     entityId: `entity_${id}`,
     entityType: "service",
     revision: {
       id: `rev_${id}`,
-      state: "review",
+      state,
       ownerApprovalStatus
     }
   };
@@ -30,6 +31,18 @@ test("review queue keeps submitted revisions visible until explicit approval", (
     filtered.map((item) => item.revision.id),
     ["rev_pending", "rev_returned", "rev_not_required", "rev_legacy"]
   );
+});
+
+test("review queue source includes returned draft revisions for SEO follow-up", () => {
+  const repositorySource = readFileSync(new URL("../../lib/content-core/repository.js", import.meta.url), "utf8");
+  const workflowSource = readFileSync(new URL("../../lib/content-ops/workflow.js", import.meta.url), "utf8");
+  const filtered = filterPendingReviewQueueItems([
+    buildQueueItem("returned_draft", "rejected", "draft")
+  ]);
+
+  assert.deepEqual(filtered.map((item) => item.revision.id), ["rev_returned_draft"]);
+  assert.match(repositorySource, /r\.state = 'draft' AND r\.owner_approval_status = 'rejected'/);
+  assert.match(workflowSource, /reviewComment: ""/);
 });
 
 test("review queue hides superseded revisions", () => {

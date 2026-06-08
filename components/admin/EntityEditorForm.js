@@ -11,6 +11,7 @@ import { TimelineList } from "./TimelineList";
 import { ENTITY_TYPES, SERVICE_SCOPE_DISPLAY_MODES } from "../../lib/content-core/content-types.js";
 import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
 import { ADMIN_COPY, FIELD_LABELS, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { getVisibleReviewComment } from "../../lib/admin/review-comments.js";
 import { CHANGE_INTENT_LABEL, FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
 import { getEntityDeletePreviewHref, isDeleteToolEntityTypeSupported } from "../../lib/admin/entity-delete.js";
@@ -212,6 +213,7 @@ export function EntityEditorForm({
   const workflowStatus = getWorkingRevisionStatusModel({ currentRevision, activePublishedRevision });
   const liveStatus = getLivePublicationStatusModel({ currentRevision, activePublishedRevision });
   const publishAction = getPublishActionCopy({ activePublishedRevision });
+  const visibleReviewComment = normalizeLegacyCopy(getVisibleReviewComment(currentRevision));
   const mediaPreviewSrc = entityType === "media_asset" && entityId ? `/api/admin/media/${entityId}/preview` : null;
   const editorFormId = entityId ? `entity-editor-${entityType}-${entityId}` : `entity-editor-${entityType}-new`;
   const showMaintenanceTools = Boolean(
@@ -227,6 +229,12 @@ export function EntityEditorForm({
       <div className={styles.stack}>
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
+        {visibleReviewComment ? (
+          <section className={styles.statusPanelWarning} aria-label="Замечание от проверки">
+            <strong>Замечание от проверки</strong>
+            <p className={styles.helpText}>{visibleReviewComment}</p>
+          </section>
+        ) : null}
         {isMarkedForRemoval ? (
           <section className={styles.statusPanelInfo}>
             Объект помечен на удаление. Новые ссылки на него блокируются, а финальная очистка запускается из центра очистки.

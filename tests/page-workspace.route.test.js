@@ -113,6 +113,7 @@ function buildRouteDeps({ captured, withDraft = true } = {}) {
           previewStatus: "preview_renderable",
           ownerReviewRequired: false,
           ownerApprovalStatus: "not_required",
+          reviewComment: "Нужно точнее назвать услугу.",
           payload: input.payload
         }
       };
@@ -180,6 +181,7 @@ test("page workspace save_composition keeps metadata canonical and updates only 
   assert.equal(result.metadata.slug, "about");
   assert.equal(result.revision.ownerReviewRequired, false);
   assert.equal(result.revision.ownerApprovalStatus, "not_required");
+  assert.equal(result.revision.reviewComment, "Нужно точнее назвать услугу.");
 });
 
 test("page workspace save_metadata keeps page composition intact and removes hidden carry-through", async () => {

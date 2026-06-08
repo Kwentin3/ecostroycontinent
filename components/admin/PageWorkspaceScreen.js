@@ -44,6 +44,7 @@ import {
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import { getWorkspaceQuestionHint } from "../../lib/admin/question-model.js";
 import { getOwnerApprovalStatusLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { getVisibleReviewComment } from "../../lib/admin/review-comments.js";
 import {
   getLivePublicationStatusModel,
   getPublishActionCopy,
@@ -588,6 +589,7 @@ export function PageWorkspaceScreen({
     ? getOwnerApprovalStatusLabel(revision.ownerApprovalStatus)
     : "Согласование не требуется";
   const ownerApprovalPending = Boolean(revision && revision.ownerApprovalStatus !== "approved");
+  const visibleReviewComment = normalizeLegacyCopy(getVisibleReviewComment(revision));
   const canOpenPublishReadiness = Boolean(publishHref && revision?.state === "review");
   const activePublishedRevision = lifecycleState?.hasLivePublishedRevision
     ? {
@@ -1237,6 +1239,12 @@ export function PageWorkspaceScreen({
 
       {error ? <div className={adminStyles.statusPanelBlocking}>{normalizeLegacyCopy(error)}</div> : null}
       {status ? <div className={adminStyles.statusPanelInfo}>{normalizeLegacyCopy(status)}</div> : null}
+      {visibleReviewComment ? (
+        <section className={adminStyles.statusPanelWarning} aria-label="Замечание от проверки">
+          <strong>Замечание от проверки</strong>
+          <p className={adminStyles.helpText}>{visibleReviewComment}</p>
+        </section>
+      ) : null}
 
       <div className={styles.shell}>
         <aside className={styles.rail} data-layout-zone="sources">

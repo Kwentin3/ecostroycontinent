@@ -141,7 +141,8 @@ export default async function EntityEditorPage({ params, searchParams }) {
             state: data.currentRevision.state,
             previewStatus: data.currentRevision.previewStatus ?? null,
             ownerReviewRequired: Boolean(data.currentRevision.ownerReviewRequired),
-            ownerApprovalStatus: data.currentRevision.ownerApprovalStatus ?? "not_required"
+            ownerApprovalStatus: data.currentRevision.ownerApprovalStatus ?? "not_required",
+            reviewComment: data.currentRevision.reviewComment ?? ""
           } : null}
           reviewHref={reviewHref}
           publishHref={publishHref}
