@@ -1,7 +1,7 @@
 ﻿# Agent Runtime Context - Экостройконтинент
 
 Статус: короткая памятка для агентов.
-Обновлено: 2026-06-08.
+Обновлено: 2026-06-11.
 
 ## Главное
 
@@ -51,6 +51,16 @@ Production media truth:
 - `/api/media-public/:entityId` остается fallback/handoff route.
 
 Для админки не открывай draft/review media через CDN без отдельного решения: неопубликованные версии должны оставаться за авторизованными admin preview routes.
+
+## Backup/Restore Rule
+
+Production backup truth:
+
+- DB backup автоматизирован на VM и перед миграциями в deploy workflow;
+- текущий DB dump является SQL+gzip с checksum и S3 upload, но это не WAL/PITR;
+- restore сначала проверяется в disposable PostgreSQL target;
+- DB rollback не равен полному media rollback: бинарники живут в S3, поэтому media bucket versioning должен оставаться включённым;
+- backup S3 env не передаётся в app container.
 
 ## SEO/Analytics
 

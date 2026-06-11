@@ -1,12 +1,12 @@
 ﻿# Selectel Docs - Экостройконтинент
 
 Статус: индекс актуальных Selectel/runtime документов.
-Обновлено: 2026-06-08.
+Обновлено: 2026-06-11.
 
 ## Что осталось
 
 - `AGENT_RUNTIME_CONTEXT_Экостройконтинент.md` - короткая памятка для агентов: где runtime truth, что нельзя выводить из локального workspace, как не перепутать CDN delivery и content truth.
-- `RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` - текущий operations runbook: VM, compose, deploy, health/readiness, smoke, CDN, runner, logs, backups, SSH hardening.
+- `RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md` - текущий operations runbook: VM, compose, deploy, health/readiness, smoke, CDN, runner, logs, backups, restore drill, SSH hardening.
 - `README.md` - этот индекс.
 
 ## Что больше не держим здесь

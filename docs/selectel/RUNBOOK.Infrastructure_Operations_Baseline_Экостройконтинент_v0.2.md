@@ -1,7 +1,7 @@
 ﻿# Selectel Runtime Runbook - Экостройконтинент
 
 Статус: актуальный operations baseline для phase-1 production runtime.
-Обновлено: 2026-06-08.
+Обновлено: 2026-06-11.
 
 Этот документ оставлен как единственный операционный runbook в `docs/selectel`. Старые input packs, review notes, gaps, provisioning reports и v0.1-контракты удалены из этой папки как исторический шум.
 
@@ -74,6 +74,13 @@ Rules:
 ## Deploy Path
 
 Build and deploy are GitHub/GHCR/runner driven, not ad-hoc file copy.
+
+Deploy guardrail:
+
+- `deploy-phase1.yml` creates a fresh pre-migration PostgreSQL dump from `repo-sql-1`.
+- The pre-migration dump is uploaded to the backup S3 bucket before `npm run db:migrate`.
+- The app container never receives backup S3 credentials; backup env remains host/runner ops-only.
+- If the pre-migration backup or remote verification fails, deploy must stop before migrations.
 
 Manual build:
 
@@ -218,9 +225,23 @@ Host artifacts:
 
 - local backups: `/opt/ecostroycontinent/backups/local`
 - backup script: `/opt/ecostroycontinent/scripts/backup-db-local.sh`
+- backup verification script: `/opt/ecostroycontinent/scripts/verify-latest-backup.sh`
+- restore drill script: `/opt/ecostroycontinent/scripts/restore-drill-latest-backup.sh`
+- repo source scripts: `scripts/ops/*.sh`
 - cleanup script: `/opt/ecostroycontinent/scripts/docker-retention.sh`
 - cron file: `/etc/cron.d/ecostroycontinent-baseline`
 - logrotate file: `/etc/logrotate.d/ecostroycontinent`
+
+Current behavior:
+
+- cron runs DB backup daily at `02:15 UTC`;
+- deploy creates an extra pre-migration DB backup before migrations;
+- dumps are plain PostgreSQL SQL dumps compressed as `postgres-YYYYMMDDTHHMMSSZ.sql.gz`;
+- dumps are created with `pg_dump --no-owner --no-privileges` so clean-cluster restore does not require the production role to exist first;
+- each new dump gets a `.sha256` checksum uploaded beside the dump;
+- local retention is 7 days by default;
+- backup and media buckets have S3 versioning enabled as of 2026-06-11;
+- remote expiry/lifecycle is intentionally not configured yet; keep old backup removal as an explicit owner/operator decision.
 
 Manual checks:
 
@@ -228,9 +249,17 @@ Manual checks:
 ls -lah /opt/ecostroycontinent/backups/local
 tail -n 50 /var/log/ecostroycontinent/backup.log
 /opt/ecostroycontinent/scripts/backup-db-local.sh
+/opt/ecostroycontinent/scripts/verify-latest-backup.sh --max-age-hours 30 --require-remote
+/opt/ecostroycontinent/scripts/restore-drill-latest-backup.sh
 /opt/ecostroycontinent/scripts/docker-retention.sh
 df -h /
 ```
+
+Restore rule:
+
+- restore into a disposable PostgreSQL target first;
+- verify table/migration/content/media counts before touching production;
+- database restore does not itself restore deleted media binaries, so keep media S3 versioning enabled and do not treat DB rollback as full media rollback.
 
 Remote S3 backup listing requires operator-provided credentials. Do not paste real credentials into docs, shell history screenshots, reports, or commits.
 
@@ -270,4 +299,5 @@ These files may exist locally under `docs/selectel`, but they are not canonical 
 5. Run read-only launch smoke with expected about/contacts/media settings.
 6. Confirm latest backup exists locally.
 7. Confirm `backup_s3_ok` appears in backup log when checking backup pipeline.
-8. Confirm disk headroom with `df -h /`.
+8. Confirm restore drill passes on a disposable PostgreSQL container.
+9. Confirm disk headroom with `df -h /`.

@@ -1,6 +1,6 @@
 # Project Current State Agent Handoff - Экостройконтинент v0.1
 
-Date: 2026-06-03
+Date: 2026-06-11
 Purpose: fast current-state entrypoint for future agents after the launch-hardening tech debt epic.
 
 This document is intentionally compact. It does not replace PRDs or domain contracts; it tells a new agent what is already closed, what is current production truth, and which old decisions must not be reopened by accident.
@@ -9,7 +9,7 @@ This document is intentionally compact. It does not replace PRDs or domain contr
 
 - Do not infer deployed truth from branch name alone. Verify the running SHA from live `/api/readiness` and the GitHub Actions deploy run; recent delivery has used `feat/minimal-seo-admin-panel` with pinned GHCR image digests.
 - The project runs as a Next.js app behind Traefik with PostgreSQL and S3-compatible media storage.
-- Next.js high advisory is closed: committed runtime uses `next@16.2.4`; `npm audit --audit-level=high` passes. Moderate advisories remain a separate backlog, not this closed P1.
+- Next.js high advisories are closed: committed runtime uses `next@16.2.9`; `npm audit --audit-level=high` passes. Moderate advisories remain a separate backlog, not this closed P1.
 - `/api/health` is lightweight liveness.
 - `/api/readiness` is the strict production readiness endpoint. It performs DB-backed PostgreSQL connectivity via a safe read-only probe and returns `503` if DB readiness fails.
 - `/api/readiness` returns a safe runtime marker: `node`, `version`, `commit`, `buildTime`. It must not expose secrets, connection strings, hostnames, tokens, users, or stack traces.
@@ -27,12 +27,13 @@ This document is intentionally compact. It does not replace PRDs or domain contr
 
 ## Closed Tech Debt Items
 
-- Next.js dependency/security hardening: high advisory closed by updating Next.js to `16.2.4`.
+- Next.js dependency/security hardening: high advisories closed by updating Next.js to `16.2.9`.
 - DB-backed readiness: `/api/readiness` added and verified with real PostgreSQL connectivity.
 - Launch smoke matrix: read-only script checks runtime, public routes, SEO honesty, admin protection, known content blockers, runtime commit marker, and optional media URL.
 - Runtime commit marker: image build injects `APP_COMMIT_SHA`, `APP_VERSION`, and `BUILD_TIME`; readiness exposes only safe marker fields.
 - Branch/worktree cleanup: one canonical repo tree; verify the active branch and deploy SHA before delivery.
 - Media delivery launch posture: production runs `MEDIA_DELIVERY_MODE=auto`; public read-side markup uses direct CDN URLs, while app routes remain fallback/handoff delivery boundaries.
+- Backup/restore drill: DB backup is automated, pre-migration deploy backup is enforced, S3 backup verification passes, and clean-cluster restore drill passes against a disposable PostgreSQL target.
 
 ## Known Blockers
 
@@ -41,6 +42,7 @@ This document is intentionally compact. It does not replace PRDs or domain contr
 - Lead/intake: important P1 product/domain epic, but intentionally not implemented in launch-hardening closeout.
 - Yandex Metrica public counter and scheduled imports remain separate SEO/analytics follow-up work.
 - Moderate dependency advisories remain separate dependency-security backlog.
+- Backup is not WAL/PITR. Remote backup lifecycle/expiry and alerting remain owner/operator policy decisions, not app code blockers.
 
 ## Do Not Reopen By Default
 
@@ -109,6 +111,7 @@ Expected current production state:
 - `app/api/readiness/route.js`, `lib/health/readiness.js`: strict secret-free DB-backed readiness.
 - `app/api/health/route.js`: lightweight liveness only.
 - `scripts/smoke-launch-readonly.mjs`: read-only launch acceptance; no auth or production mutation.
+- `scripts/ops/backup-db-local.sh`, `scripts/ops/verify-latest-backup.sh`, `scripts/ops/restore-drill-latest-backup.sh`: repo source for VM backup/restore tooling; keep backup credentials host-only.
 - `lib/media/public-delivery.js`, `app/api/media-public/[entityId]/route.js`, `lib/read-side/public-media-url.js`: media delivery boundary. Keep CDN-vs-app route decisions centralized here, not in JSX renderers.
 - `app/api/analytics/events/route.js`, `lib/analytics/read-model.js`, `lib/analytics/route-resolver.js`: analytics/lead and route-owner boundaries.
 - `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md`: production acceptance/runbook truth.
@@ -134,4 +137,4 @@ Read these before reopening launch-hardening decisions:
 - Yandex Metrica public counter and scheduled imports after privacy/cookie decision.
 - CDN hardening now means object metadata/browser cache and derivative sizes (`thumb/card/gallery/hero`) unless direct-CDN rendering regresses.
 - Remaining moderate dependency advisories.
-- Backup restore drill / operational restore evidence.
+- Backup remote lifecycle/expiry policy and failure alerting.
