@@ -30,9 +30,9 @@ import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
 // The journal is a separate read-only memory over audit_events, not a queue source.
 const STATUS_OPTIONS = [
   { value: "all", label: "Все" },
-  { value: "needs_owner", label: "Требуют решения" },
-  { value: "returned", label: "Возвращены" },
-  { value: "in_review", label: "На проверке" }
+  { value: "needs_owner", label: "Ждут решения собственника" },
+  { value: "returned", label: "Доработки SEO" },
+  { value: "in_review", label: "Внутренняя проверка" }
 ];
 
 const TYPE_OPTIONS = [
@@ -110,6 +110,34 @@ function cardStatusClassName(card) {
   }
 
   return "";
+}
+
+function getReviewEmptyStateCopy(status) {
+  if (status === "needs_owner") {
+    return {
+      title: "Материалов, ожидающих решения собственника, нет.",
+      description: "Согласованные версии больше не считаются задачей собственника: их нужно публиковать из карточки материала."
+    };
+  }
+
+  if (status === "returned") {
+    return {
+      title: "Материалов, возвращённых SEO на доработку, нет.",
+      description: "Этот фильтр показывает только карточки с замечаниями, которые ещё не отправлены повторно."
+    };
+  }
+
+  if (status === "in_review") {
+    return {
+      title: "Материалов во внутренней проверке нет.",
+      description: "Это техническая проверка без отдельного решения собственника."
+    };
+  }
+
+  return {
+    title: "По текущему фильтру материалов нет.",
+    description: "Измените поиск, тип или статус, чтобы расширить выдачу."
+  };
 }
 
 function renderCompactSections(sections = []) {
@@ -286,6 +314,7 @@ export default async function ReviewQueuePage({ searchParams }) {
     status,
     type
   });
+  const emptyStateCopy = getReviewEmptyStateCopy(status);
   const reviewJournalItems = buildReviewJournalViewModel(reviewJournalEvents);
   const hasActiveFilters = Boolean(search || status !== "all" || type !== "all");
   const selectedCard = selectedRevisionId ? cards.find((card) => card.id === selectedRevisionId) ?? null : null;
@@ -387,7 +416,7 @@ export default async function ReviewQueuePage({ searchParams }) {
               className={returnedFilterActive ? `${styles.reviewQuickFilterButton} ${styles.reviewQuickFilterButtonActive}` : styles.reviewQuickFilterButton}
               aria-pressed={returnedFilterActive}
             >
-              <span>Требует доработки</span>
+              <span>Доработки SEO</span>
               <span className={styles.reviewQuickFilterCount}>{returnedFilterCount}</span>
             </button>
           </form>
@@ -397,7 +426,8 @@ export default async function ReviewQueuePage({ searchParams }) {
 
         {filteredCards.length === 0 ? (
           <div className={styles.emptyState}>
-            <p className={styles.mutedText}>По текущему фильтру материалов нет.</p>
+            <p className={styles.mutedText}>{emptyStateCopy.title}</p>
+            <p className={styles.helpText}>{emptyStateCopy.description}</p>
             <Link href="/admin/review" className={styles.secondaryButton}>Показать все материалы</Link>
           </div>
         ) : (
@@ -417,11 +447,11 @@ export default async function ReviewQueuePage({ searchParams }) {
                 <div className={styles.reviewGalleryCardTop}>
                   <div className={styles.reviewGalleryCardMeta}>
                     <span className={styles.reviewGalleryType}>{card.entityTypeLabel}</span>
-                    <span className={styles.reviewGallerySubmitted}>{card.submittedAtLabel || "На проверке"}</span>
+                    <span className={styles.reviewGallerySubmitted}>{card.submittedAtLabel || "Отправлено"}</span>
                   </div>
                   <div className={styles.reviewGallerySignals}>
                     {card.reviewContext?.supersedesRevisionId ? <span className={styles.reviewGalleryUpdateMark}>Обновлено</span> : null}
-                    {card.needsAttention ? <span className={styles.reviewGalleryAttentionMark} aria-label="Требует решения">!</span> : null}
+                    {card.needsAttention ? <span className={styles.reviewGalleryAttentionMark} aria-label="Ждёт решения собственника">!</span> : null}
                     <span className={styles.reviewGalleryStatus}>{card.status.label}</span>
                   </div>
                 </div>
@@ -467,7 +497,7 @@ export default async function ReviewQueuePage({ searchParams }) {
             summary={selectedModal.summary}
             meta={[
               selectedCard.status.label,
-              selectedCard.submittedAtLabel || "На проверке"
+              selectedCard.submittedAtLabel || "Отправлено"
             ]}
           >
             <div className={styles.reviewModalLayout}>

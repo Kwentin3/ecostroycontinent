@@ -5,6 +5,8 @@ import {
   MEDIA_LIBRARY_FILTERS,
   buildMediaLibrarySummaryItems,
   matchesMediaLibraryFilter,
+  mediaAssetNeedsOwnerDecision,
+  mediaAssetReadyToPublish,
   mediaAssetRequiresRevisionWork
 } from "../../lib/admin/media-library-filters.js";
 
@@ -17,9 +19,30 @@ test("media library filters expose returned work instead of the unclear broken s
   const filterLabels = MEDIA_LIBRARY_FILTERS.map((filter) => filter.label);
 
   assert.ok(filterKeys.includes("returned"));
-  assert.equal(MEDIA_LIBRARY_FILTERS.find((filter) => filter.key === "returned")?.label, "Требуются доработки");
+  assert.ok(filterKeys.includes("ready-to-publish"));
+  assert.equal(MEDIA_LIBRARY_FILTERS.find((filter) => filter.key === "review")?.label, "Ждут решения");
+  assert.equal(MEDIA_LIBRARY_FILTERS.find((filter) => filter.key === "ready-to-publish")?.label, "К публикации");
+  assert.equal(MEDIA_LIBRARY_FILTERS.find((filter) => filter.key === "returned")?.label, "Доработки SEO");
   assert.equal(filterKeys.includes("broken"), false);
   assert.equal(filterLabels.includes("Проблемные"), false);
+});
+
+test("media library review filter selects only assets waiting for owner decision", () => {
+  const pendingReview = {
+    statusKey: "review",
+    ownerApprovalStatus: "pending"
+  };
+  const approvedReview = {
+    statusKey: "review",
+    ownerApprovalStatus: "approved"
+  };
+
+  assert.equal(mediaAssetNeedsOwnerDecision(pendingReview), true);
+  assert.equal(mediaAssetReadyToPublish(approvedReview), true);
+  assert.equal(matchesMediaLibraryFilter(pendingReview, "review"), true);
+  assert.equal(matchesMediaLibraryFilter(approvedReview, "review"), false);
+  assert.equal(matchesMediaLibraryFilter(approvedReview, "ready-to-publish"), true);
+  assert.equal(matchesMediaLibraryFilter({ statusKey: "review", ownerApprovalStatus: "not_required" }, "review"), false);
 });
 
 test("returned media filter selects only rejected draft work for SEO follow-up", () => {
@@ -41,13 +64,15 @@ test("media library summary counts returned work with the same rule as the quick
   const items = [
     { statusKey: "draft", ownerApprovalStatus: "rejected", missingAlt: true, orphaned: false },
     { statusKey: "review", ownerApprovalStatus: "pending", missingAlt: false, orphaned: true },
+    { statusKey: "review", ownerApprovalStatus: "approved", missingAlt: false, orphaned: false },
     { statusKey: "draft", ownerApprovalStatus: "not_required", missingAlt: false, orphaned: false, brokenBinary: true }
   ];
 
   const summary = buildMediaLibrarySummaryItems(items);
 
-  assert.equal(getSummaryValue(summary, "Всего"), 3);
-  assert.equal(getSummaryValue(summary, "На проверке"), 1);
-  assert.equal(getSummaryValue(summary, "Требуются доработки"), 1);
+  assert.equal(getSummaryValue(summary, "Всего"), 4);
+  assert.equal(getSummaryValue(summary, "Ждут решения"), 1);
+  assert.equal(getSummaryValue(summary, "К публикации"), 1);
+  assert.equal(getSummaryValue(summary, "Доработки SEO"), 1);
   assert.equal(summary.some((item) => item.label === "Проблемные"), false);
 });

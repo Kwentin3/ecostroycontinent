@@ -15,7 +15,9 @@ import {
 import {
   MEDIA_LIBRARY_FILTERS,
   buildMediaLibrarySummaryItems,
-  matchesMediaLibraryFilter
+  matchesMediaLibraryFilter,
+  mediaAssetNeedsOwnerDecision,
+  mediaAssetReadyToPublish
 } from "../../lib/admin/media-library-filters.js";
 import { appendAdminReturnTo } from "../../lib/admin/relation-navigation.js";
 import {
@@ -350,11 +352,7 @@ function mergeById(currentItems, nextItems) {
 }
 
 function isWaitingForOwnerApproval(item) {
-  return Boolean(
-    item?.currentRevisionId
-    && item?.statusKey === "review"
-    && item?.ownerApprovalStatus !== "approved"
-  );
+  return Boolean(item?.currentRevisionId && mediaAssetNeedsOwnerDecision(item));
 }
 
 function canOpenMediaPublishReadiness(item, currentUserRole) {
@@ -368,8 +366,7 @@ function canOpenMediaPublishReadiness(item, currentUserRole) {
 
   return Boolean(
     item?.currentRevisionId
-    && item?.statusKey === "review"
-    && item?.ownerApprovalStatus === "approved"
+    && mediaAssetReadyToPublish(item)
     && userCanPublishRevision({ role: currentUserRole }, "media_asset", revision)
   );
 }
@@ -386,11 +383,11 @@ function getPublicationNote(item, currentUserRole) {
   }
 
   if (isWaitingForOwnerApproval(item)) {
-    return "Версия уже отправлена на согласование. Публикация откроется после решения собственника.";
+    return "Версия ждёт решения собственника. Публикация откроется после согласования.";
   }
 
   if (item?.statusKey === "review") {
-    return "Версия уже проходит общий этап согласования. Здесь можно открыть экран проверки и посмотреть замечания.";
+    return "Версия находится во внутренней проверке без отдельного решения собственника.";
   }
 
   return "Связанные техника, услуги, кейсы и страницы могут ссылаться только на опубликованное медиа. Сначала отправьте текущую версию на проверку.";
@@ -506,11 +503,11 @@ function MediaInspector({
           {canOpenPublishReadiness && publishHref ? (
             <Link href={publishHref} className={styles.primaryButton}>{publishAction.label}</Link>
           ) : null}
-          {item.statusKey === "review" && item.ownerApprovalStatus !== "approved" && reviewHref ? (
+          {waitingForOwnerApproval && reviewHref ? (
             <Link href={reviewHref} className={styles.secondaryButton}>Открыть проверку</Link>
           ) : null}
           {waitingForOwnerApproval ? (
-            <button type="button" className={styles.secondaryButton} disabled>Ждёт согласования</button>
+            <button type="button" className={styles.secondaryButton} disabled>Ждёт решения</button>
           ) : null}
           {unpublishHref ? (
             <Link href={unpublishHref} className={styles.secondaryButton}>Снять с публикации</Link>

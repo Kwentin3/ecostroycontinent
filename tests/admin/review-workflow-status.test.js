@@ -32,6 +32,6 @@ test("review workflow status keeps unresolved owner approval items in the decisi
   });
 
   assert.equal(status.key, "needs_owner");
-  assert.equal(status.label, "Требует решения");
+  assert.equal(status.label, "Ждёт решения собственника");
   assert.equal(status.attention, true);
 });

@@ -21,13 +21,14 @@ test("media workspace keeps the submit and publish path discoverable after the e
   assert.match(workspaceSource, /Отправить на проверку/);
   assert.match(workspaceSource, /publishAction\.label/);
   assert.match(workspaceSource, /Открыть проверку/);
-  assert.match(workspaceSource, /Ждёт согласования/);
+  assert.match(workspaceSource, /Ждёт решения/);
   assert.doesNotMatch(workspaceSource, /getOwnerApprovalStatusLabel/);
-  assert.match(workspaceSource, /можно опубликовать прямо из карточки|Публикация откроется после решения собственника/);
+  assert.match(workspaceSource, /можно опубликовать прямо из карточки|Публикация откроется после согласования/);
   assert.match(workspaceSource, /item\.statusKey === "published" && item\.currentRevisionId \? item\.currentRevisionId : "__live__"/);
   assert.match(workspaceSource, /userCanPublishRevision/);
   assert.match(workspaceSource, /ownerApprovalStatus: item\.ownerApprovalStatus/);
-  assert.match(workspaceSource, /item\.ownerApprovalStatus !== "approved"/);
+  assert.match(workspaceSource, /mediaAssetNeedsOwnerDecision/);
+  assert.match(workspaceSource, /mediaAssetReadyToPublish/);
   assert.match(workspaceSource, /\/api\/admin\/revisions\/\$\{item\.currentRevisionId\}\/submit/);
   assert.match(workspaceSource, /name="returnTo" value=\{returnTo\}/);
   assert.match(workspaceSource, /\/admin\/revisions\/\$\{item\.currentRevisionId\}\/publish/);

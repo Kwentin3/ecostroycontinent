@@ -30,7 +30,8 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(source, /returnedFilterActive/);
   assert.match(source, /returnedFilterCount/);
   assert.match(source, /aria-label="Быстрые фильтры проверки"/);
-  assert.match(source, />Требует доработки</);
+  assert.match(source, />Доработки SEO</);
+  assert.match(source, /Ждут решения собственника/);
   assert.match(source, /name="status" value="returned"/);
   assert.match(source, /getReviewJournalEvents/);
   assert.match(source, /buildReviewJournalViewModel/);
