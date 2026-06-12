@@ -37,11 +37,13 @@ const STATUS_OPTIONS = [
 
 const TYPE_OPTIONS = [
   { value: "all", label: "Все материалы" },
+  { value: ENTITY_TYPES.GLOBAL_SETTINGS, label: "Настройки" },
   { value: ENTITY_TYPES.SERVICE, label: "Услуги" },
   { value: ENTITY_TYPES.CASE, label: "Кейсы" },
   { value: ENTITY_TYPES.EQUIPMENT, label: "Техника" },
   { value: ENTITY_TYPES.PAGE, label: "Страницы" },
-  { value: ENTITY_TYPES.MEDIA_ASSET, label: "Медиа" }
+  { value: ENTITY_TYPES.MEDIA_ASSET, label: "Медиа" },
+  { value: ENTITY_TYPES.GALLERY, label: "Коллекции" }
 ];
 
 const MODAL_PAGE_PREVIEW_ZOOM = Object.freeze({

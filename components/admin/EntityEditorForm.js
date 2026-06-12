@@ -638,6 +638,8 @@ export function EntityEditorForm({
                 type="submit"
                 formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
                 formMethod="post"
+                name="intent"
+                value="save_and_submit"
                 className={styles.editorRailIconAction}
                 aria-label={ADMIN_COPY.sendForReview}
                 title={ADMIN_COPY.sendForReview}
@@ -667,12 +669,19 @@ export function EntityEditorForm({
             ) : null}
           </div>
           {canSubmit && currentRevision?.state === "draft" ? (
-            <form action={`/api/admin/revisions/${currentRevision.id}/submit`} method="post" className={styles.editorRailPrimaryFlow}>
-              <input type="hidden" name="returnTo" value={redirectTo} />
-              <button type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`}>
+            <div className={styles.editorRailPrimaryFlow}>
+              <button
+                form={editorFormId}
+                type="submit"
+                formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
+                formMethod="post"
+                name="intent"
+                value="save_and_submit"
+                className={`${styles.primaryButton} ${styles.stretchButton}`}
+              >
                 {ADMIN_COPY.sendForReview}
               </button>
-            </form>
+            </div>
           ) : null}
         </section>
         <ReadinessPanel

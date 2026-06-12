@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../lib/content-core/content-types.js";
 import {
@@ -199,6 +200,55 @@ test("owner review gallery filters by status, type, and compact text content", (
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "монолитные" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "склад" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "не существует" }).length, 0);
+});
+
+test("owner review gallery supports global settings and collection review items", () => {
+  const settingsItem = buildQueueItem({
+    entityId: "settings_1",
+    entityType: ENTITY_TYPES.GLOBAL_SETTINGS,
+    payload: {
+      publicBrandName: "Eco Repair",
+      legalName: "Eco Repair LLC",
+      primaryPhone: "+7 999 111 22 33",
+      publicEmail: "info@example.test",
+      serviceArea: "Moscow",
+      activeMessengers: ["telegram"],
+      defaultCtaLabel: "Call us",
+      contactTruthConfirmed: true
+    }
+  });
+  const galleryItem = buildQueueItem({
+    entityId: "gallery_1",
+    entityType: ENTITY_TYPES.GALLERY,
+    payload: {
+      title: "Before and after",
+      caption: "Facade repair photos",
+      primaryAssetId: "media_1",
+      assetIds: ["media_1", "media_2"],
+      relatedEntityIds: ["service_1"]
+    }
+  });
+  const cards = buildOwnerReviewGalleryCards([settingsItem, galleryItem]);
+  const settingsCard = cards.find((card) => card.entityType === ENTITY_TYPES.GLOBAL_SETTINGS);
+  const galleryCard = cards.find((card) => card.entityType === ENTITY_TYPES.GALLERY);
+  const settingsModal = buildOwnerReviewModalModel(settingsItem);
+  const galleryModal = buildOwnerReviewModalModel(galleryItem);
+
+  assert.equal(filterOwnerReviewGalleryCards(cards, { type: ENTITY_TYPES.GLOBAL_SETTINGS }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { type: ENTITY_TYPES.GALLERY }).length, 1);
+  assert.equal(settingsCard.title, "Eco Repair");
+  assert.match(settingsCard.summary, /\+7 999 111 22 33/);
+  assert.equal(settingsModal.sections.some((section) => section.value === "+7 999 111 22 33"), true);
+  assert.equal(galleryCard.title, "Before and after");
+  assert.equal(galleryCard.mediaUrl, "/api/admin/media/media_1/preview");
+  assert.equal(galleryModal.sections.some((section) => /2/.test(section.value)), true);
+});
+
+test("review page exposes settings and collections as explicit type filters", () => {
+  const source = readFileSync(new URL("../../app/admin/(console)/review/page.js", import.meta.url), "utf8");
+
+  assert.match(source, /ENTITY_TYPES\.GLOBAL_SETTINGS/);
+  assert.match(source, /ENTITY_TYPES\.GALLERY/);
 });
 
 test("owner review gallery sends corrected returned drafts back into owner decision filter", () => {

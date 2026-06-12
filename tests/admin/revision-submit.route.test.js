@@ -2,13 +2,25 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { POST } from "../../app/api/admin/revisions/[revisionId]/submit/route.js";
+import { buildEntityPayload } from "../../lib/admin/entity-form-data.js";
 import { FEEDBACK_COPY } from "../../lib/ui-copy.js";
 
-function buildRequest(returnTo = "") {
+function buildRequest(returnTo = "", fields = {}) {
   const formData = new FormData();
 
   if (returnTo) {
     formData.set("returnTo", returnTo);
+  }
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        formData.append(key, item);
+      }
+      continue;
+    }
+
+    formData.set(key, value);
   }
 
   return new Request("http://localhost/api/admin/revisions/rev_1/submit", {
@@ -119,6 +131,67 @@ test("submit route reports when a newer request replaces the previous review req
   assert.equal(response.status, 303);
   assert.equal(location.pathname, "/admin/review/rev_2");
   assert.equal(location.searchParams.get("message"), FEEDBACK_COPY.reviewUpdated);
+});
+
+test("submit route saves posted editor fields before sending the draft to review", async () => {
+  let savedInput = null;
+  let submittedRevisionId = null;
+  const response = await POST(
+    buildRequest("/admin/entities/global_settings/settings_1", {
+      intent: "save_and_submit",
+      changeIntent: "Уточнили основной телефон.",
+      publicBrandName: "Экостройконтинент",
+      legalName: "ООО Экостройконтинент",
+      primaryPhone: "+7 999 111 22 33",
+      publicEmail: "info@example.test",
+      serviceArea: "Москва и область",
+      contactTruthConfirmed: "on"
+    }),
+    { params: { revisionId: "rev_1" } },
+    {
+      ...buildDeps({ returnedRevisionId: "rev_saved" }),
+      buildEntityPayload,
+      findRevisionById: async () => ({
+        id: "rev_1",
+        entityId: "settings_1",
+        state: "draft",
+        revisionNumber: 3,
+        changeIntent: "Предыдущий черновик.",
+        payload: {}
+      }),
+      findEntityById: async () => ({
+        id: "settings_1",
+        entityType: "global_settings"
+      }),
+      saveDraft: async (input) => {
+        savedInput = input;
+        return {
+          entity: { id: "settings_1", entityType: "global_settings" },
+          revision: { id: "rev_saved", state: "draft" }
+        };
+      },
+      submitRevisionForReview: async (input) => {
+        submittedRevisionId = input.revisionId;
+        return {
+          revision: {
+            id: input.revisionId,
+            state: "review"
+          },
+          submissionStatus: "submitted"
+        };
+      }
+    }
+  );
+  const location = new URL(response.headers.get("location"), "http://localhost");
+
+  assert.equal(response.status, 303);
+  assert.equal(location.pathname, "/admin/review/rev_saved");
+  assert.equal(savedInput.entityType, "global_settings");
+  assert.equal(savedInput.entityId, "settings_1");
+  assert.equal(savedInput.changeIntent, "Уточнили основной телефон.");
+  assert.equal(savedInput.payload.primaryPhone, "+7 999 111 22 33");
+  assert.equal(savedInput.payload.contactTruthConfirmed, true);
+  assert.equal(submittedRevisionId, "rev_saved");
 });
 
 test("submit route returns errors back to the source screen when returnTo is present", async () => {

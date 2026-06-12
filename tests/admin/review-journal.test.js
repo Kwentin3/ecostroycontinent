@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 
 import { AUDIT_EVENT_KEYS, ENTITY_TYPES } from "../../lib/content-core/content-types.js";
 import { buildReviewJournalViewModel, formatReviewJournalTime } from "../../lib/admin/review-journal.js";
+import { REVIEW_JOURNAL_LIMIT } from "../../lib/content-ops/audit.js";
 
 function readUtf8(relativePath) {
   return readFileSync(new URL(`../../${relativePath}`, import.meta.url), "utf8").replace(/\r\n/g, "\n");
@@ -83,4 +84,26 @@ test("review journal time label is short and human-readable", () => {
 
   assert.match(label, /12:40/);
   assert.doesNotMatch(label, /2026-06-04T09:40:00\.000Z/);
+});
+
+test("review journal uses event snapshot titles and keeps enough rows for repeated review cycles", () => {
+  const [row] = buildReviewJournalViewModel([
+    {
+      id: "audit_approved_repeat",
+      eventKey: AUDIT_EVENT_KEYS.OWNER_APPROVED,
+      actorDisplayName: "Owner",
+      entityType: ENTITY_TYPES.GLOBAL_SETTINGS,
+      revisionPayload: { publicBrandName: "Current settings name" },
+      details: {
+        materialTitle: "Settings phone update",
+        comment: "Phone is correct."
+      },
+      createdAt: "2026-06-04T09:40:00.000Z"
+    }
+  ]);
+
+  assert.equal(REVIEW_JOURNAL_LIMIT, 50);
+  assert.match(row.summary, /Settings phone update/);
+  assert.doesNotMatch(row.summary, /Current settings name/);
+  assert.equal(row.comment, "Phone is correct.");
 });
