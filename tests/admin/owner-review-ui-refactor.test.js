@@ -29,10 +29,15 @@ test("review landing is gallery-first with modal detail instead of hero and diff
   assert.match(source, /styles\.reviewGalleryResultCount/);
   assert.match(source, /returnedFilterActive/);
   assert.match(source, /returnedFilterCount/);
+  assert.match(source, /DEFAULT_REVIEW_STATUS = "needs_owner"/);
+  assert.match(source, /needsOwnerFilterActive/);
+  assert.match(source, /needsOwnerFilterCount/);
   assert.match(source, /aria-label="Быстрые фильтры проверки"/);
+  assert.match(source, />Ждут решения</);
   assert.match(source, />Доработки SEO</);
   assert.match(source, /Ждут решения собственника/);
-  assert.match(source, /name="status" value="returned"/);
+  assert.match(source, /name="status"\s+value=\{needsOwnerFilterActive \? "all" : "needs_owner"\}/);
+  assert.match(source, /name="status"\s+value=\{returnedFilterActive \? "all" : "returned"\}/);
   assert.match(source, /getReviewJournalEvents/);
   assert.match(source, /buildReviewJournalViewModel/);
   assert.match(source, /<ReviewJournal items=\{reviewJournalItems\}/);

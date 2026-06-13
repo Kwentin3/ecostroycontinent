@@ -33,17 +33,17 @@ test("review journal projects audit rows into owner-facing action memory", () =>
       createdAt: "2026-06-04T08:30:00.000Z"
     },
     {
-      id: "audit_ignored",
+      id: "audit_published",
       eventKey: AUDIT_EVENT_KEYS.PUBLISHED,
       actorDisplayName: "SEO",
       entityType: ENTITY_TYPES.SERVICE,
-      revisionPayload: { title: "Не review-событие" },
+      revisionPayload: { title: "Опубликованная услуга" },
       details: {},
       createdAt: "2026-06-04T08:00:00.000Z"
     }
   ]);
 
-  assert.equal(rows.length, 2);
+  assert.equal(rows.length, 3);
   assert.equal(rows[0].actionLabel, "Возврат");
   assert.equal(rows[0].tone, "warning");
   assert.match(rows[0].summary, /Армен вернул с замечанием "Ремонт фасадов"/);
@@ -51,6 +51,8 @@ test("review journal projects audit rows into owner-facing action memory", () =>
   assert.equal(rows[0].comment, "Нужно убрать лишнее обещание и поправить запятую.");
   assert.equal(rows[1].actionLabel, "Одобрено");
   assert.match(rows[1].summary, /Армен одобрил "Кейс по складу"/);
+  assert.equal(rows[2].actionLabel, "Опубликовано");
+  assert.match(rows[2].summary, /SEO опубликовал "Опубликованная услуга"/);
 
   const serialized = JSON.stringify(rows);
   assert.equal(serialized.includes("rev_hidden"), false);
@@ -67,6 +69,7 @@ test("review journal keeps a thirty-day render window without physical audit cle
   assert.match(auditSource, /REVIEW_JOURNAL_EVENT_KEYS/);
   assert.match(auditSource, /AUDIT_EVENT_KEYS\.OWNER_APPROVED/);
   assert.match(auditSource, /AUDIT_EVENT_KEYS\.SENT_BACK_WITH_COMMENT/);
+  assert.match(auditSource, /AUDIT_EVENT_KEYS\.PUBLISHED/);
   assert.doesNotMatch(auditSource, /DELETE FROM audit_events/i);
 
   assert.match(repositorySource, /a\.created_at >= \$2/);
@@ -77,6 +80,7 @@ test("review journal keeps a thirty-day render window without physical audit cle
   assert.match(migrationSource, /audit_events_review_journal_recent_idx/);
   assert.match(migrationSource, /review_requested/);
   assert.match(migrationSource, /owner_approved/);
+  assert.match(readUtf8("db/migrations/015_review_journal_published_index.sql"), /published/);
 });
 
 test("review journal time label is short and human-readable", () => {

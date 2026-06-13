@@ -35,6 +35,9 @@ const STATUS_OPTIONS = [
   { value: "in_review", label: "Внутренняя проверка" }
 ];
 
+const DEFAULT_REVIEW_STATUS = "needs_owner";
+const STATUS_OPTION_VALUES = new Set(STATUS_OPTIONS.map((option) => option.value));
+
 const TYPE_OPTIONS = [
   { value: "all", label: "Все материалы" },
   { value: ENTITY_TYPES.GLOBAL_SETTINGS, label: "Настройки" },
@@ -57,12 +60,12 @@ function normalizeStatusFilter(value) {
     return "all";
   }
 
-  return value;
+  return STATUS_OPTION_VALUES.has(value) ? value : DEFAULT_REVIEW_STATUS;
 }
 
 function buildReviewUrl({
   query = "",
-  status = "all",
+  status = DEFAULT_REVIEW_STATUS,
   type = "all",
   selected = "",
   preview = "",
@@ -75,7 +78,7 @@ function buildReviewUrl({
     params.set("q", query);
   }
 
-  if (status && status !== "all") {
+  if (status && status !== DEFAULT_REVIEW_STATUS) {
     params.set("status", status);
   }
 
@@ -297,7 +300,9 @@ export default async function ReviewQueuePage({ searchParams }) {
   ]);
   const query = await searchParams;
   const search = typeof query?.q === "string" ? query.q : "";
-  const status = normalizeStatusFilter(typeof query?.status === "string" ? query.status : "all");
+  // Sticky canon: the owner screen opens on actionable owner decisions.
+  // "All materials" stays available as an explicit filter, not the default.
+  const status = normalizeStatusFilter(typeof query?.status === "string" ? query.status : DEFAULT_REVIEW_STATUS);
   const type = typeof query?.type === "string" ? query.type : "all";
   const selectedRevisionId = typeof query?.selected === "string" ? query.selected : "";
   const previewMode = typeof query?.preview === "string" ? query.preview : "desktop";
@@ -305,6 +310,12 @@ export default async function ReviewQueuePage({ searchParams }) {
   const error = typeof query?.error === "string" ? query.error : "";
   const cards = buildOwnerReviewGalleryCards(queue);
   // Quick filters are aliases over the existing read model, not a second queue.
+  const needsOwnerFilterActive = status === "needs_owner";
+  const needsOwnerFilterCount = filterOwnerReviewGalleryCards(cards, {
+    query: search,
+    status: "needs_owner",
+    type
+  }).length;
   const returnedFilterActive = status === "returned";
   const returnedFilterCount = filterOwnerReviewGalleryCards(cards, {
     query: search,
@@ -318,7 +329,8 @@ export default async function ReviewQueuePage({ searchParams }) {
   });
   const emptyStateCopy = getReviewEmptyStateCopy(status);
   const reviewJournalItems = buildReviewJournalViewModel(reviewJournalEvents);
-  const hasActiveFilters = Boolean(search || status !== "all" || type !== "all");
+  const hasActiveFilters = Boolean(search || status !== DEFAULT_REVIEW_STATUS || type !== "all");
+  const showAllMaterialsHref = buildReviewUrl({ query: search, status: "all", type });
   const selectedCard = selectedRevisionId ? cards.find((card) => card.id === selectedRevisionId) ?? null : null;
   const selectedQueueItem = selectedRevisionId ? queue.find((item) => item.revision.id === selectedRevisionId) ?? null : null;
   const selectedModal = selectedQueueItem ? buildOwnerReviewModalModel(selectedQueueItem) : null;
@@ -412,9 +424,20 @@ export default async function ReviewQueuePage({ searchParams }) {
           <form className={styles.reviewQuickFilters} action="/admin/review" method="get" aria-label="Быстрые фильтры проверки">
             {search ? <input type="hidden" name="q" value={search} /> : null}
             {type !== "all" ? <input type="hidden" name="type" value={type} /> : null}
-            {!returnedFilterActive ? <input type="hidden" name="status" value="returned" /> : null}
             <button
               type="submit"
+              name="status"
+              value={needsOwnerFilterActive ? "all" : "needs_owner"}
+              className={needsOwnerFilterActive ? `${styles.reviewQuickFilterButton} ${styles.reviewQuickFilterButtonActive}` : styles.reviewQuickFilterButton}
+              aria-pressed={needsOwnerFilterActive}
+            >
+              <span>Ждут решения</span>
+              <span className={styles.reviewQuickFilterCount}>{needsOwnerFilterCount}</span>
+            </button>
+            <button
+              type="submit"
+              name="status"
+              value={returnedFilterActive ? "all" : "returned"}
               className={returnedFilterActive ? `${styles.reviewQuickFilterButton} ${styles.reviewQuickFilterButtonActive}` : styles.reviewQuickFilterButton}
               aria-pressed={returnedFilterActive}
             >
@@ -430,7 +453,9 @@ export default async function ReviewQueuePage({ searchParams }) {
           <div className={styles.emptyState}>
             <p className={styles.mutedText}>{emptyStateCopy.title}</p>
             <p className={styles.helpText}>{emptyStateCopy.description}</p>
-            <Link href="/admin/review" className={styles.secondaryButton}>Показать все материалы</Link>
+            {status !== "all" ? (
+              <Link href={showAllMaterialsHref} className={styles.secondaryButton}>Показать все материалы</Link>
+            ) : null}
           </div>
         ) : (
           <section className={styles.reviewGalleryGrid} aria-label="Материалы на проверку">
