@@ -1,7 +1,7 @@
 ﻿# Selectel Runtime Runbook - Экостройконтинент
 
 Статус: актуальный operations baseline для phase-1 production runtime.
-Обновлено: 2026-06-11.
+Обновлено: 2026-06-24.
 
 Этот документ оставлен как единственный операционный runbook в `docs/selectel`. Старые input packs, review notes, gaps, provisioning reports и v0.1-контракты удалены из этой папки как исторический шум.
 
@@ -39,6 +39,7 @@ ssh -i "$env:USERPROFILE\.ssh\sait_selectel_rsa" root@178.72.179.66
 - Traefik config: `/opt/ecostroycontinent/traefik/traefik.yml`
 - Traefik dynamic config: `/opt/ecostroycontinent/traefik/dynamic/routes.yml`
 - Traefik certs: `/opt/ecostroycontinent/traefik/certs`
+- certbot hooks: `/etc/letsencrypt/renewal-hooks/{pre,deploy,post}`
 - scripts: `/opt/ecostroycontinent/scripts`
 - local backups: `/opt/ecostroycontinent/backups/local`
 - host logs: `/var/log/ecostroycontinent`
@@ -125,6 +126,59 @@ Expected production readiness:
 - `/api/health`: lightweight liveness, 200
 - `/api/readiness`: strict readiness, 200, `status=ready`, `database.status=ok`, non-null safe `runtime.commit`
 - no secrets, connection strings, stack traces, usernames, hostnames or tokens in readiness response
+
+## Public TLS
+
+Current public TLS model:
+
+- Traefik serves static cert/key files from `/opt/ecostroycontinent/traefik/certs`.
+- `ecostroycontinent.ru` and `www.ecostroycontinent.ru` are issued by Let's Encrypt through certbot standalone HTTP-01.
+- certbot is installed from Ubuntu packages and `certbot.timer` must stay enabled.
+- certbot renewal uses hooks copied from `scripts/ops`:
+  - `certbot-pre-stop-traefik.sh` stops `ecostroycontinent-traefik` only when a renewal challenge runs.
+  - `deploy-traefik-tls-cert.sh` copies `fullchain.pem` and `privkey.pem` into Traefik cert paths.
+  - `certbot-post-start-traefik.sh` starts Traefik again after the renewal attempt.
+- Expected renewal downtime is a short Traefik stop during the HTTP-01 challenge. App and PostgreSQL containers are not changed.
+
+Server-side hook install paths:
+
+```bash
+/etc/letsencrypt/renewal-hooks/pre/ecostroycontinent-stop-traefik.sh
+/etc/letsencrypt/renewal-hooks/deploy/ecostroycontinent-deploy-traefik-cert.sh
+/etc/letsencrypt/renewal-hooks/post/ecostroycontinent-start-traefik.sh
+```
+
+Read-only TLS checks:
+
+```bash
+certbot certificates
+openssl x509 -in /opt/ecostroycontinent/traefik/certs/ecostroycontinent.crt -noout -subject -issuer -dates -ext subjectAltName
+systemctl list-timers --all --no-pager | grep certbot
+curl -fsS https://ecostroycontinent.ru/api/readiness
+```
+
+Operator-side TLS checks:
+
+```powershell
+curl.exe -I https://ecostroycontinent.ru/
+curl.exe https://ecostroycontinent.ru/api/readiness
+```
+
+Renewal path check:
+
+```bash
+certbot renew --dry-run --cert-name ecostroycontinent.ru
+```
+
+Emergency manual reissue on VM:
+
+```bash
+docker stop ecostroycontinent-traefik
+certbot certonly --standalone --non-interactive --agree-tos --register-unsafely-without-email --cert-name ecostroycontinent.ru -d ecostroycontinent.ru -d www.ecostroycontinent.ru
+/opt/ecostroycontinent/scripts/deploy-traefik-tls-cert.sh
+docker start ecostroycontinent-traefik
+curl -fsS https://ecostroycontinent.ru/api/readiness
+```
 
 ## Launch Smoke
 
@@ -295,9 +349,10 @@ These files may exist locally under `docs/selectel`, but they are not canonical 
 1. SSH to VM.
 2. Confirm runner service is active.
 3. Confirm `docker ps` shows `ecostroycontinent-traefik`, `repo-app-1`, `repo-sql-1`.
-4. Confirm health and readiness.
-5. Run read-only launch smoke with expected about/contacts/media settings.
-6. Confirm latest backup exists locally.
-7. Confirm `backup_s3_ok` appears in backup log when checking backup pipeline.
-8. Confirm restore drill passes on a disposable PostgreSQL container.
-9. Confirm disk headroom with `df -h /`.
+4. Confirm public TLS certificate is valid and not near expiry.
+5. Confirm health and readiness over strict public HTTPS.
+6. Run read-only launch smoke with expected about/contacts/media settings.
+7. Confirm latest backup exists locally.
+8. Confirm `backup_s3_ok` appears in backup log when checking backup pipeline.
+9. Confirm restore drill passes on a disposable PostgreSQL container.
+10. Confirm disk headroom with `df -h /`.
