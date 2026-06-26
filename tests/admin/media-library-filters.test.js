@@ -2,8 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  MEDIA_COLLECTION_CANDIDATE_FILTERS,
   MEDIA_LIBRARY_FILTERS,
+  assetHasPublishedRevision,
   buildMediaLibrarySummaryItems,
+  matchesMediaCollectionCandidateFilter,
   matchesMediaLibraryFilter,
   mediaAssetNeedsOwnerDecision,
   mediaAssetReadyToPublish,
@@ -58,6 +61,31 @@ test("returned media filter selects only rejected draft work for SEO follow-up",
   assert.equal(matchesMediaLibraryFilter({ ...returnedDraft, statusKey: "review" }, "returned"), false);
   assert.equal(matchesMediaLibraryFilter({ ...returnedDraft, ownerApprovalStatus: "pending" }, "returned"), false);
   assert.equal(matchesMediaLibraryFilter({ statusKey: "draft", ownerApprovalStatus: "not_required", brokenBinary: true }, "returned"), false);
+});
+
+test("collection candidate filter separates approved review assets from live published assets", () => {
+  const approvedReview = {
+    statusKey: "review",
+    ownerApprovalStatus: "approved"
+  };
+  const livePublished = {
+    statusKey: "draft",
+    ownerApprovalStatus: "not_required",
+    publishedRevisionNumber: 7
+  };
+  const pendingReview = {
+    statusKey: "review",
+    ownerApprovalStatus: "pending"
+  };
+  const filterKeys = MEDIA_COLLECTION_CANDIDATE_FILTERS.map((filter) => filter.key);
+
+  assert.deepEqual(filterKeys, ["all", "ready-to-publish", "published"]);
+  assert.equal(matchesMediaCollectionCandidateFilter(approvedReview, "ready-to-publish"), true);
+  assert.equal(matchesMediaCollectionCandidateFilter(livePublished, "ready-to-publish"), false);
+  assert.equal(matchesMediaCollectionCandidateFilter(livePublished, "published"), true);
+  assert.equal(assetHasPublishedRevision(livePublished), true);
+  assert.equal(matchesMediaCollectionCandidateFilter(pendingReview, "ready-to-publish"), false);
+  assert.equal(matchesMediaCollectionCandidateFilter(pendingReview, "all"), true);
 });
 
 test("media library summary counts returned work with the same rule as the quick filter", () => {

@@ -24,7 +24,9 @@ test("media workspace and collection overlay expose removal quarantine controls"
   assert.match(workspaceSource, /getRemovalSweepHref\(\)/);
   assert.match(collectionSource, /getRemovalMarkHref\("gallery", selectedCollection\.id\)/);
   assert.match(collectionSource, /getRemovalUnmarkHref\("gallery", selectedCollection\.id\)/);
-  assert.match(collectionSource, /!item\.markedForRemovalAt \|\| fields\.assetIds\.includes\(item\.id\)/);
+  assert.match(collectionSource, /const selected = fields\.assetIds\.includes\(item\.id\)/);
+  assert.match(collectionSource, /if \(selected\) \{\s*return true;\s*\}/);
+  assert.match(collectionSource, /return !item\.markedForRemovalAt && matchesMediaCollectionCandidateFilter\(item, assetCandidateFilter\)/);
 });
 
 test("cleanup center is wired into admin navigation and purge flow", () => {

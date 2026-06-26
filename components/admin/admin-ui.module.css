@@ -2576,6 +2576,9 @@
 
 .collectionOverlayDialog {
   width: min(1280px, 100%);
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
 .mediaOverlayHeader {
@@ -2716,14 +2719,19 @@
 
 .collectionOverlayLayout {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(280px, 340px);
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .collectionOverlaySidebar {
   display: grid;
   gap: var(--space-3);
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .collectionOverlaySidebarHeader {
@@ -2734,7 +2742,7 @@
 .collectionList {
   display: grid;
   gap: var(--space-2);
-  max-height: 66vh;
+  min-height: 0;
   overflow: auto;
   padding-right: 2px;
 }
@@ -2768,6 +2776,69 @@
   display: grid;
   gap: var(--space-3);
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.collectionOverlayMain {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.collectionActionRail {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.collectionActionRail .relationChipList {
+  max-height: 240px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.collectionActionRail .relationChip {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.collectionActionRail .relationChipRemove {
+  justify-self: start;
+}
+
+.collectionCandidateToolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.collectionCandidateFilters {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.collectionOverlayActions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding-top: var(--space-2);
+  padding-bottom: 2px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), #fff 38%);
 }
 
 .mediaOverlayMeta {
@@ -3543,6 +3614,38 @@
   .mediaOverlayBody,
   .collectionOverlayLayout {
     grid-template-columns: 1fr;
+  }
+
+  .collectionOverlayDialog {
+    height: auto;
+    max-height: calc(100vh - 24px);
+    overflow: auto;
+  }
+
+  .collectionOverlayLayout,
+  .collectionOverlaySidebar,
+  .collectionOverlayForm,
+  .collectionOverlayMain,
+  .collectionActionRail {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .collectionOverlaySidebar {
+    grid-template-rows: auto;
+  }
+
+  .collectionCandidateToolbar {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .collectionCandidateFilters {
+    justify-content: flex-start;
+  }
+
+  .collectionOverlayActions {
+    position: static;
   }
 
   .mediaInspector {

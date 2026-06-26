@@ -37,11 +37,19 @@ test("media workspace keeps service cleanup and legacy tools out of the main too
 
 test("media collection overlay demotes cleanup controls behind a service disclosure", () => {
   const source = readUtf8("components/admin/MediaCollectionOverlay.js");
+  const css = readUtf8("components/admin/admin-ui.module.css");
 
   assert.match(source, /Служебные действия/);
   assert.match(source, /Очистка и редкие lifecycle-операции остаются доступны/);
   assert.match(source, /Центр очистки/);
   assert.match(source, /getRemovalMarkHref\("gallery"/);
+  assert.match(source, /collectionActionRail/);
+  assert.match(source, /collectionOverlayActions/);
+  assert.match(source, /Фильтр кандидатов коллекции/);
+  assert.match(css, /\.collectionOverlayDialog\s*\{/);
+  assert.match(css, /\.collectionActionRail\s*\{/);
+  assert.match(css, /\.collectionCandidateToolbar\s*\{/);
+  assert.match(css, /\.collectionOverlayActions\s*\{/);
 });
 
 test("page registry create modal keeps the fallback route secondary", () => {
