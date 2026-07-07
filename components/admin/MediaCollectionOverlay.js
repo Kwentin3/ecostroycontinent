@@ -4,13 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ConfirmActionForm } from "./ConfirmActionForm";
-import { RelationChipRow } from "./RelationChipRow";
 import {
   MEDIA_COLLECTION_CANDIDATE_FILTERS,
   assetHasPublishedRevision,
   matchesMediaCollectionCandidateFilter
 } from "../../lib/admin/media-library-filters.js";
-import { buildRelationSelectionModel } from "../../lib/admin/relation-navigation.js";
 import {
   getRemovalMarkHref,
   getRemovalSweepHref,
@@ -19,6 +17,17 @@ import {
 import styles from "./admin-ui.module.css";
 
 const NEW_COLLECTION_ID = "__new_collection__";
+
+function getCompactCandidateFilterLabel(filterKey) {
+  switch (filterKey) {
+    case "ready-to-publish":
+      return "К публ.";
+    case "published":
+      return "Live";
+    default:
+      return "Все";
+  }
+}
 
 function normalizeCollectionFields(collection, seedAssetId = "") {
   const assetIds = [...new Set([...(collection?.assetIds ?? []), seedAssetId].filter(Boolean))];
@@ -127,6 +136,7 @@ export function MediaCollectionOverlay({
   const [collectionQuery, setCollectionQuery] = useState("");
   const [assetQuery, setAssetQuery] = useState("");
   const [assetCandidateFilter, setAssetCandidateFilter] = useState("all");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [submitIntent, setSubmitIntent] = useState("");
   const [fields, setFields] = useState(() => createEmptyCollectionFields(seedAssetId));
 
@@ -149,6 +159,7 @@ export function MediaCollectionOverlay({
     setCollectionQuery("");
     setAssetQuery("");
     setAssetCandidateFilter("all");
+    setShowSelectedOnly(false);
     setSubmitIntent("");
     setFields(
       nextCollectionId === NEW_COLLECTION_ID
@@ -177,6 +188,10 @@ export function MediaCollectionOverlay({
     const visibleAssets = mediaItems.filter((item) => {
       const selected = fields.assetIds.includes(item.id);
 
+      if (showSelectedOnly) {
+        return selected;
+      }
+
       if (selected) {
         return true;
       }
@@ -189,7 +204,7 @@ export function MediaCollectionOverlay({
     }
 
     return visibleAssets.filter((item) => buildAssetHaystack(item).includes(normalized));
-  }, [assetCandidateFilter, assetQuery, fields.assetIds, mediaItems]);
+  }, [assetCandidateFilter, assetQuery, fields.assetIds, mediaItems, showSelectedOnly]);
 
   const selectedCollection = selectedCollectionId === NEW_COLLECTION_ID ? null : collectionMap.get(selectedCollectionId) ?? null;
   const selectedAssets = fields.assetIds.map((assetId) => mediaMap.get(assetId)).filter(Boolean);
@@ -201,7 +216,7 @@ export function MediaCollectionOverlay({
   const publishActionLabel = hasLiveCollection ? "Сохранить и опубликовать изменения" : "Сохранить и опубликовать";
   const draftActionLabel = selectedCollection ? "Сохранить черновик" : "Создать черновик";
   const selectedAssetIds = fields.assetIds;
-  const hasAssetCandidateConstraints = assetCandidateFilter !== "all" || Boolean(assetQuery.trim());
+  const hasAssetCandidateConstraints = assetCandidateFilter !== "all" || Boolean(assetQuery.trim()) || showSelectedOnly;
   const draftBusy = submitIntent === "draft" || (busy && !submitIntent);
   const publishBusy = submitIntent === "publish";
   const actionBusy = busy || Boolean(submitIntent);
@@ -209,24 +224,6 @@ export function MediaCollectionOverlay({
     id: item.id,
     label: item.title || item.originalFilename || item.id
   }));
-  const assetSearchRef = useRef(null);
-  const selectedAssetSummary = useMemo(
-    () => buildRelationSelectionModel({
-      entityType: "media_asset",
-      options: mediaItems.map((item) => ({
-        id: item.id,
-        label: item.title || item.originalFilename || item.id,
-        subtitle: "Медиафайл",
-        meta: [item.originalFilename, item.collectionLabel || item.whereUsedLabel].filter(Boolean).join(" • ")
-      })),
-      selectedIds: fields.assetIds,
-      returnTo,
-      emptyLabel: "Нет выбранных файлов",
-      fallbackLabel: "Неизвестный медиафайл"
-    }),
-    [fields.assetIds, mediaItems, returnTo]
-  );
-
   if (!open) {
     return null;
   }
@@ -376,85 +373,13 @@ export function MediaCollectionOverlay({
           <form className={styles.collectionOverlayForm} onSubmit={handleSubmit}>
             <main className={styles.collectionOverlayMain}>
               {seedAssetId ? (
-                <div className={styles.statusPanelInfo}>
-                  Текущий выбранный медиафайл будет сразу доступен в составе коллекции. Если он не нужен, его можно снять из списка справа.
+                <div className={`${styles.statusPanelInfo} ${styles.collectionCompactNotice}`}>
+                  Текущий выбранный медиафайл сразу включён в состав. Снимите галочку, если он не нужен.
                 </div>
               ) : null}
 
-              <div className={styles.gridTwo}>
-                <label className={styles.label}>
-                  <span>Название коллекции</span>
-                  <input
-                    name="title"
-                    value={fields.title}
-                    onChange={(event) => updateField("title", event.target.value)}
-                    placeholder="Например, Фасады и утепление"
-                  />
-                </label>
-                <label className={styles.label}>
-                  <span>Главный кадр</span>
-                  <select
-                    name="primaryAssetId"
-                    value={fields.primaryAssetId}
-                    onChange={(event) => updateField("primaryAssetId", event.target.value)}
-                  >
-                    <option value="">Не выбран</option>
-                    {selectedAssets.map((asset) => (
-                      <option key={asset.id} value={asset.id}>
-                        {asset.title || asset.originalFilename || asset.id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className={`${styles.label} ${styles.gridWide}`}>
-                  <span>Подпись коллекции</span>
-                  <textarea
-                    name="caption"
-                    value={fields.caption}
-                    onChange={(event) => updateField("caption", event.target.value)}
-                  />
-                </label>
-                <label className={`${styles.label} ${styles.gridWide}`}>
-                  <span>Что хотим изменить</span>
-                  <input
-                    name="changeIntent"
-                    value={fields.changeIntent}
-                    onChange={(event) => updateField("changeIntent", event.target.value)}
-                  />
-                  <p className={styles.helpText}>
-                    Комментарий необязателен, но он помогает потом быстрее понять, почему состав или главный кадр коллекции менялись.
-                  </p>
-                </label>
-              </div>
-
-              <fieldset className={styles.pickerFieldset}>
+              <fieldset className={`${styles.pickerFieldset} ${styles.collectionCompositionFieldset}`}>
                 <legend className={styles.pickerLegend}>Состав коллекции</legend>
-                <div className={styles.collectionCandidateToolbar}>
-                  <label className={styles.searchLabel}>
-                    <span>Поиск по медиа</span>
-                    <input
-                      ref={assetSearchRef}
-                      type="search"
-                      value={assetQuery}
-                      onChange={(event) => setAssetQuery(event.target.value)}
-                      className={styles.searchInput}
-                      placeholder="Название, альтернативный текст, имя файла"
-                    />
-                  </label>
-                  <div className={styles.collectionCandidateFilters} role="toolbar" aria-label="Фильтр кандидатов коллекции">
-                    {MEDIA_COLLECTION_CANDIDATE_FILTERS.map((filter) => (
-                      <button
-                        key={filter.key}
-                        type="button"
-                        className={`${styles.filterPill} ${assetCandidateFilter === filter.key ? styles.filterPillActive : ""}`}
-                        onClick={() => setAssetCandidateFilter(filter.key)}
-                        aria-pressed={assetCandidateFilter === filter.key}
-                      >
-                        {filter.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
                 <div className={styles.mediaOverlayMeta} aria-live="polite">
                   <span>Показано: {filteredAssets.length}</span>
                   <span>Выбрано: {selectedAssetIds.length}</span>
@@ -462,11 +387,14 @@ export function MediaCollectionOverlay({
                     Кандидаты: {MEDIA_COLLECTION_CANDIDATE_FILTERS.find((filter) => filter.key === assetCandidateFilter)?.label || "Все"}
                   </span>
                 </div>
+                <p className={styles.collectionMembershipHint}>
+                  Галочка означает членство в коллекции. Снимите галочку, чтобы убрать файл из состава после сохранения.
+                </p>
                 {filteredAssets.length === 0 ? (
                   <div className={styles.emptyState}>
-                    <p>{hasAssetCandidateConstraints ? "По текущему фильтру кандидатов ничего не найдено." : "В медиатеке пока нет доступных кандидатов для коллекции."}</p>
+                    <p>{showSelectedOnly ? "В этой коллекции пока нет выбранных файлов." : hasAssetCandidateConstraints ? "По текущему фильтру кандидатов ничего не найдено." : "В медиатеке пока нет доступных кандидатов для коллекции."}</p>
                     <p className={styles.helpText}>
-                      Уже выбранные файлы сохраняются в правой панели. Сбросьте поиск или фильтр, чтобы снова увидеть полный список кандидатов.
+                      Сбросьте поиск или фильтр, чтобы снова увидеть полный список кандидатов.
                     </p>
                     {hasAssetCandidateConstraints ? (
                       <div className={styles.inlineActions}>
@@ -476,6 +404,7 @@ export function MediaCollectionOverlay({
                           onClick={() => {
                             setAssetQuery("");
                             setAssetCandidateFilter("all");
+                            setShowSelectedOnly(false);
                           }}
                         >
                           Сбросить фильтр кандидатов
@@ -487,13 +416,15 @@ export function MediaCollectionOverlay({
                   <div className={styles.mediaGrid}>
                     {filteredAssets.map((asset) => {
                       const selected = selectedAssetIds.includes(asset.id);
+                      const primary = asset.id === fields.primaryAssetId;
 
                       return (
-                        <label key={asset.id} className={`${styles.mediaCard} ${selected ? styles.mediaCardSelected : ""}`}>
+                        <label key={asset.id} className={`${styles.mediaCard} ${styles.collectionCandidateCard} ${selected ? styles.mediaCardSelected : ""}`}>
                           <input
                             type="checkbox"
                             checked={selected}
                             onChange={() => toggleAsset(asset.id)}
+                            aria-label={selected ? `Убрать из коллекции: ${asset.title || asset.originalFilename || asset.id}` : `Добавить в коллекцию: ${asset.title || asset.originalFilename || asset.id}`}
                           />
                           <span className={styles.mediaThumb}>
                             {asset.previewUrl ? (
@@ -510,6 +441,7 @@ export function MediaCollectionOverlay({
                           </span>
                           <span className={styles.mediaInfo}>
                             <strong>{asset.title || asset.originalFilename || asset.id}</strong>
+                            {primary ? <span className={`${styles.badge} ${styles.mediaBadgesuccess}`}>Главный кадр</span> : null}
                             {asset.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
                             <span>Альтернативный текст: {asset.alt || "не заполнен"}</span>
                             <span>Коллекции: {asset.collectionLabel}</span>
@@ -521,207 +453,266 @@ export function MediaCollectionOverlay({
                 )}
               </fieldset>
 
-              <details className={styles.compactDisclosure}>
-                <summary className={styles.compactDisclosureSummary}>
-                  <div className={styles.compactDisclosureSummaryMain}>
-                    <strong>Дополнительно</strong>
-                    <span className={styles.compactDisclosureSummaryMeta}>Служебные метаданные коллекции остаются доступны, но не шумят на главном экране.</span>
-                  </div>
-                  <span className={styles.compactDisclosureMarker} aria-hidden="true" />
-                </summary>
-                <div className={styles.compactDisclosureBody}>
-                  <div className={styles.gridTwo}>
-                    <label className={styles.label}>
-                      <span>Заголовок для поиска</span>
-                      <input value={fields.metaTitle} onChange={(event) => updateField("metaTitle", event.target.value)} />
-                    </label>
-                    <label className={styles.label}>
-                      <span>Канонический адрес</span>
-                      <input value={fields.canonicalIntent} onChange={(event) => updateField("canonicalIntent", event.target.value)} />
-                    </label>
-                    <label className={`${styles.label} ${styles.gridWide}`}>
-                      <span>Описание для поиска</span>
-                      <textarea value={fields.metaDescription} onChange={(event) => updateField("metaDescription", event.target.value)} />
-                    </label>
-                    <label className={styles.label}>
-                      <span>Индексация</span>
-                      <select value={fields.indexationFlag} onChange={(event) => updateField("indexationFlag", event.target.value)}>
-                        <option value="index">Индексировать</option>
-                        <option value="noindex">Не индексировать</option>
-                      </select>
-                    </label>
-                    <label className={styles.label}>
-                      <span>OG-изображение</span>
-                      <select value={fields.openGraphImageAssetId} onChange={(event) => updateField("openGraphImageAssetId", event.target.value)}>
-                        <option value="">Не выбрано</option>
-                        {openGraphOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className={styles.label}>
-                      <span>OG-заголовок</span>
-                      <input value={fields.openGraphTitle} onChange={(event) => updateField("openGraphTitle", event.target.value)} />
-                    </label>
-                    <label className={`${styles.label} ${styles.gridWide}`}>
-                      <span>OG-описание</span>
-                      <textarea value={fields.openGraphDescription} onChange={(event) => updateField("openGraphDescription", event.target.value)} />
-                    </label>
-                  </div>
-                </div>
-              </details>
             </main>
           </form>
 
           <aside className={styles.collectionActionRail}>
-              {selectedCollection ? (
-                <div className={styles.statusPanelInfo}>
-                  <strong>{selectedCollection.liveStatusLabel || selectedCollection.statusLabel}</strong>
-                  <p className={styles.helpText}>
-                    {hasLiveCollection
-                      ? "Live-версия уже есть. Обычное сохранение создаёт черновик изменений, а публикация применяет их на сайте."
-                      : "Коллекция пока не опубликована и не появится в связях кейсов до явной публикации."}
-                  </p>
-                </div>
-              ) : null}
+            <section className={styles.collectionRailGroup}>
+              <div className={styles.collectionRailHeader}>
+                <span className={styles.collectionRailKicker}>Статус</span>
+                <strong>{selectedCollection ? selectedCollection.liveStatusLabel || selectedCollection.statusLabel : "Новый черновик"}</strong>
+              </div>
               {selectedCollection?.markedForRemovalAt ? (
-                <div className={styles.statusPanelInfo}>
-                  Коллекция помечена на удаление. Новые ссылки на неё блокируются, а финальная очистка запускается из центра очистки.
-                </div>
+                <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечена на удаление</span>
               ) : null}
+            </section>
 
-              <RelationChipRow
-                title="Выбранные файлы"
-                note={
-                  selectedAssetSummary.isPartial
-                    ? "Часть выбранных файлов не найдена в списке, но сохранена как резервный переход."
-                    : "Выбранные файлы можно открыть и убрать без потери контекста."
-                }
-                items={selectedAssetSummary.items}
-                emptyLabel="Нет выбранных файлов"
-                addLabel="К кандидатам"
-                onAdd={() => assetSearchRef.current?.focus()}
-                onRemove={toggleAsset}
-              />
-
-              <section className={styles.mediaInspectorSection} aria-live="polite">
-                <h4>Публикация</h4>
-                <div className={publishReadiness.ready ? styles.statusPanelInfo : styles.statusPanelBlocking}>
-                  <strong>{publishReadiness.ready ? "Готово к публикации" : "Публикация пока недоступна"}</strong>
-                  {publishReadiness.ready ? (
-                    <p className={styles.helpText}>
-                      Коллекция состоит из опубликованных медиа и после публикации станет доступна в связях кейсов.
-                    </p>
-                  ) : (
-                    <div className={styles.stack}>
-                      {publishReadiness.blockers.map((blocker) => (
-                        <p key={blocker} className={styles.helpText}>{blocker}</p>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              <div className={`${styles.mediaOverlayActions} ${styles.collectionOverlayActions}`}>
+            <section className={styles.collectionRailGroup}>
+              <label className={`${styles.label} ${styles.collectionRailField}`}>
+                <span>Название</span>
+                <input
+                  name="title"
+                  value={fields.title}
+                  onChange={(event) => updateField("title", event.target.value)}
+                  placeholder="Фасады"
+                />
+              </label>
+              <label className={`${styles.label} ${styles.collectionRailField}`}>
+                <span>Поиск</span>
+                <input
+                  type="search"
+                  value={assetQuery}
+                  onChange={(event) => setAssetQuery(event.target.value)}
+                  className={styles.searchInput}
+                  placeholder="Медиа"
+                />
+              </label>
+              <div className={styles.collectionCandidateFilters} role="toolbar" aria-label="Фильтр кандидатов коллекции">
+                {MEDIA_COLLECTION_CANDIDATE_FILTERS.map((filter) => (
+                  <button
+                    key={filter.key}
+                    type="button"
+                    className={`${styles.filterPill} ${assetCandidateFilter === filter.key && !showSelectedOnly ? styles.filterPillActive : ""}`}
+                    onClick={() => {
+                      setAssetCandidateFilter(filter.key);
+                      setShowSelectedOnly(false);
+                    }}
+                    aria-pressed={assetCandidateFilter === filter.key && !showSelectedOnly}
+                    title={filter.label}
+                  >
+                    {getCompactCandidateFilterLabel(filter.key)}
+                  </button>
+                ))}
                 <button
                   type="button"
-                  className={publishReadiness.ready ? styles.secondaryButton : styles.primaryButton}
-                  disabled={actionBusy}
-                  onClick={() => submitCollection({ publish: false })}
+                  className={`${styles.filterPill} ${showSelectedOnly ? styles.filterPillActive : ""}`}
+                  onClick={() => setShowSelectedOnly((current) => !current)}
+                  aria-pressed={showSelectedOnly}
+                  title="Показать только выбранные"
                 >
-                  {draftBusy ? "Сохраняем..." : draftActionLabel}
-                </button>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  disabled={actionBusy || !publishReadiness.ready}
-                  title={publishReadiness.ready ? publishActionLabel : publishReadiness.blockers.join(" ")}
-                  onClick={() => submitCollection({ publish: true })}
-                >
-                  {publishBusy ? "Публикуем..." : publishActionLabel}
-                </button>
-                <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={actionBusy}>
-                  Отмена
+                  Выбр.
                 </button>
               </div>
+            </section>
 
-              <section className={styles.mediaInspectorSection}>
-                <h4>Где используется коллекция</h4>
-                {selectedCollection?.usageEntries?.length ? (
-                  <div className={styles.mediaUsageList}>
-                    {selectedCollection.usageEntries.map((entry) => (
-                      <Link key={entry.key} href={entry.href} className={styles.mediaUsageItem}>
-                        <strong>{entry.entityLabel}</strong>
-                        <span>{entry.title}</span>
-                        <span className={styles.mutedText}>{entry.relationLabel} • {entry.statusLabel}</span>
-                      </Link>
+            <section className={styles.collectionRailGroup}>
+              <div className={styles.collectionRailStats} aria-live="polite">
+                <span><strong>{selectedAssetIds.length}</strong> выбрано</span>
+                <span><strong>{filteredAssets.length}</strong> показано</span>
+              </div>
+              <label className={`${styles.label} ${styles.collectionRailField}`}>
+                <span>Главный кадр</span>
+                <select
+                  name="primaryAssetId"
+                  value={fields.primaryAssetId}
+                  onChange={(event) => updateField("primaryAssetId", event.target.value)}
+                >
+                  <option value="">Не выбран</option>
+                  {selectedAssets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.title || asset.originalFilename || asset.id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </section>
+
+            <section className={styles.collectionRailGroup} aria-live="polite">
+              <div className={`${styles.collectionReadinessBadge} ${publishReadiness.ready ? styles.collectionReadinessReady : styles.collectionReadinessBlocked}`}>
+                <strong>{publishReadiness.ready ? "Готово" : "Блок"}</strong>
+                <span>{publishReadiness.ready ? "Можно публиковать" : `${publishReadiness.blockers.length} причины`}</span>
+              </div>
+              {!publishReadiness.ready ? (
+                <details className={styles.collectionRailDetails}>
+                  <summary>Причины</summary>
+                  <div className={styles.collectionRailDetailsBody}>
+                    {publishReadiness.blockers.map((blocker) => (
+                      <p key={blocker} className={styles.helpText}>{blocker}</p>
                     ))}
-                  </div>
-                ) : (
-                  <p className={styles.helpText}>
-                    Эта коллекция пока никуда не привязана. После публикации её можно выбирать в страницах, кейсах и услугах.
-                  </p>
-                )}
-              </section>
-
-              {selectedCollection ? (
-                <details className={styles.compactDisclosure}>
-                  <summary className={styles.compactDisclosureSummary}>
-                    <div className={styles.compactDisclosureSummaryMain}>
-                      <strong>Служебные действия</strong>
-                      <span className={styles.compactDisclosureSummaryMeta}>
-                        Очистка и редкие lifecycle-операции остаются доступны, но не занимают основной поток работы с коллекцией.
-                      </span>
-                    </div>
-                    <span className={styles.compactDisclosureMarker} aria-hidden="true" />
-                  </summary>
-                  <div className={styles.compactDisclosureBody}>
-                    <div className={styles.inlineActions}>
-                      {!selectedCollection.markedForRemovalAt ? (
-                        <ConfirmActionForm
-                          action={getRemovalMarkHref("gallery", selectedCollection.id)}
-                          confirmMessage="Пометить коллекцию на удаление? Новые ссылки на неё будут заблокированы."
-                        >
-                          <input
-                            type="hidden"
-                            name="redirectTo"
-                            value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
-                          />
-                          <input
-                            type="hidden"
-                            name="failureRedirectTo"
-                            value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
-                          />
-                          <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
-                        </ConfirmActionForm>
-                      ) : null}
-                      {selectedCollection.markedForRemovalAt ? (
-                        <ConfirmActionForm
-                          action={getRemovalUnmarkHref("gallery", selectedCollection.id)}
-                          confirmMessage="Снять пометку удаления?"
-                        >
-                          <input
-                            type="hidden"
-                            name="redirectTo"
-                            value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
-                          />
-                          <input
-                            type="hidden"
-                            name="failureRedirectTo"
-                            value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
-                          />
-                          <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
-                        </ConfirmActionForm>
-                      ) : null}
-                      <Link href={getRemovalSweepHref()} className={selectedCollection.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
-                        Центр очистки
-                      </Link>
-                    </div>
                   </div>
                 </details>
               ) : null}
+            </section>
+
+            <div className={`${styles.mediaOverlayActions} ${styles.collectionOverlayActions}`}>
+              <button
+                type="button"
+                className={`${publishReadiness.ready ? styles.secondaryButton : styles.primaryButton} ${styles.collectionIconButton}`}
+                disabled={actionBusy}
+                aria-label={draftActionLabel}
+                title={draftActionLabel}
+                onClick={() => submitCollection({ publish: false })}
+              >
+                <span aria-hidden="true">{draftBusy ? "..." : "✓"}</span>
+                <span className={styles.collectionActionText}>Сохр.</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.primaryButton} ${styles.collectionIconButton}`}
+                disabled={actionBusy || !publishReadiness.ready}
+                aria-label={publishActionLabel}
+                title={publishReadiness.ready ? publishActionLabel : publishReadiness.blockers.join(" ")}
+                onClick={() => submitCollection({ publish: true })}
+              >
+                <span aria-hidden="true">{publishBusy ? "..." : "↗"}</span>
+                <span className={styles.collectionActionText}>Публ.</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.secondaryButton} ${styles.collectionIconButton}`}
+                onClick={onClose}
+                disabled={actionBusy}
+                aria-label="Закрыть редактор коллекции"
+                title="Закрыть"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+
+            <details className={styles.collectionRailDetails}>
+              <summary>Описание и SEO</summary>
+              <div className={styles.collectionRailDetailsBody}>
+                <label className={styles.label}>
+                  <span>Подпись</span>
+                  <textarea
+                    name="caption"
+                    value={fields.caption}
+                    onChange={(event) => updateField("caption", event.target.value)}
+                  />
+                </label>
+                <label className={styles.label}>
+                  <span>Изменение</span>
+                  <input
+                    name="changeIntent"
+                    value={fields.changeIntent}
+                    onChange={(event) => updateField("changeIntent", event.target.value)}
+                  />
+                </label>
+                <label className={styles.label}>
+                  <span>Заголовок для поиска</span>
+                  <input value={fields.metaTitle} onChange={(event) => updateField("metaTitle", event.target.value)} />
+                </label>
+                <label className={styles.label}>
+                  <span>Канонический адрес</span>
+                  <input value={fields.canonicalIntent} onChange={(event) => updateField("canonicalIntent", event.target.value)} />
+                </label>
+                <label className={styles.label}>
+                  <span>Описание для поиска</span>
+                  <textarea value={fields.metaDescription} onChange={(event) => updateField("metaDescription", event.target.value)} />
+                </label>
+                <label className={styles.label}>
+                  <span>Индексация</span>
+                  <select value={fields.indexationFlag} onChange={(event) => updateField("indexationFlag", event.target.value)}>
+                    <option value="index">Индексировать</option>
+                    <option value="noindex">Не индексировать</option>
+                  </select>
+                </label>
+                <label className={styles.label}>
+                  <span>OG-изображение</span>
+                  <select value={fields.openGraphImageAssetId} onChange={(event) => updateField("openGraphImageAssetId", event.target.value)}>
+                    <option value="">Не выбрано</option>
+                    {openGraphOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={styles.label}>
+                  <span>OG-заголовок</span>
+                  <input value={fields.openGraphTitle} onChange={(event) => updateField("openGraphTitle", event.target.value)} />
+                </label>
+                <label className={styles.label}>
+                  <span>OG-описание</span>
+                  <textarea value={fields.openGraphDescription} onChange={(event) => updateField("openGraphDescription", event.target.value)} />
+                </label>
+              </div>
+            </details>
+
+            <details className={styles.collectionRailDetails}>
+              <summary>Служебное</summary>
+              <div className={styles.collectionRailDetailsBody}>
+                <p className={styles.helpText}>
+                  {selectedCollection?.usageEntries?.length
+                    ? selectedCollection.whereUsedLabel
+                    : "Эта коллекция пока никуда не привязана."}
+                </p>
+                {selectedCollection?.usageEntries?.length ? (
+                  <div className={styles.collectionUsageCompact}>
+                    {selectedCollection.usageEntries.slice(0, 3).map((entry) => (
+                      <Link key={entry.key} href={entry.href} className={styles.previewJumpLink}>
+                        {entry.entityLabel}: {entry.title}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+                {selectedCollection ? (
+                  <div className={styles.inlineActions}>
+                    {!selectedCollection.markedForRemovalAt ? (
+                      <ConfirmActionForm
+                        action={getRemovalMarkHref("gallery", selectedCollection.id)}
+                        confirmMessage="Пометить коллекцию на удаление? Новые ссылки на неё будут заблокированы."
+                      >
+                        <input
+                          type="hidden"
+                          name="redirectTo"
+                          value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                        />
+                        <input
+                          type="hidden"
+                          name="failureRedirectTo"
+                          value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                        />
+                        <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
+                      </ConfirmActionForm>
+                    ) : null}
+                    {selectedCollection.markedForRemovalAt ? (
+                      <ConfirmActionForm
+                        action={getRemovalUnmarkHref("gallery", selectedCollection.id)}
+                        confirmMessage="Снять пометку удаления?"
+                      >
+                        <input
+                          type="hidden"
+                          name="redirectTo"
+                          value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                        />
+                        <input
+                          type="hidden"
+                          name="failureRedirectTo"
+                          value={returnTo || `/admin/entities/media_asset?compose=collections&collection=${selectedCollection.id}`}
+                        />
+                        <button type="submit" className={styles.secondaryButton}>Снять пометку</button>
+                      </ConfirmActionForm>
+                    ) : null}
+                    <Link href={getRemovalSweepHref()} className={selectedCollection.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
+                      Центр очистки
+                    </Link>
+                  </div>
+                ) : (
+                  <p className={styles.helpText}>Служебные действия появятся после создания коллекции.</p>
+                )}
+              </div>
+            </details>
           </aside>
         </div>
       </div>

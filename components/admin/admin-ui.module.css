@@ -2719,8 +2719,8 @@
 
 .collectionOverlayLayout {
   display: grid;
-  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(280px, 340px);
-  gap: var(--space-4);
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(260px, 300px);
+  gap: var(--space-3);
   align-items: stretch;
   min-height: 0;
   overflow: hidden;
@@ -2774,7 +2774,7 @@
 
 .collectionOverlayForm {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -2782,7 +2782,7 @@
 
 .collectionOverlayMain {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   align-content: start;
   min-width: 0;
   min-height: 0;
@@ -2792,15 +2792,16 @@
 
 .collectionActionRail {
   display: grid;
-  gap: var(--space-3);
+  gap: 8px;
   align-content: start;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
-  padding: var(--space-3);
+  overflow: visible;
+  padding: 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
 }
 
 .collectionActionRail .relationChipList {
@@ -2826,19 +2827,201 @@
 
 .collectionCandidateFilters {
   display: flex;
-  gap: var(--space-2);
+  gap: 6px;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
+}
+
+.collectionActionRail .filterPill {
+  padding: 6px 8px;
+  font-size: 0.74rem;
+  line-height: 1.1;
 }
 
 .collectionOverlayActions {
-  position: sticky;
-  bottom: 0;
+  position: static;
   z-index: 1;
-  padding-top: var(--space-2);
-  padding-bottom: 2px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding-top: 6px;
+  padding-bottom: 0;
   border-top: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), #fff 38%);
+  background: transparent;
+}
+
+.collectionCompactNotice {
+  padding: 8px 10px;
+  font-size: 0.84rem;
+}
+
+.collectionCompositionFieldset {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.collectionCompositionFieldset .mediaGrid {
+  grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
+  gap: 8px;
+}
+
+.collectionMembershipHint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.collectionCandidateCard {
+  gap: 8px;
+  padding: 9px;
+  font-size: 0.86rem;
+}
+
+.collectionCandidateCard .mediaThumb {
+  min-height: 112px;
+}
+
+.collectionCandidateCard .mediaThumb img {
+  max-height: 140px;
+}
+
+.collectionRailGroup {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(190, 178, 159, 0.55);
+}
+
+.collectionRailHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.collectionRailHeader strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collectionRailKicker {
+  color: var(--subtle);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.collectionRailField {
+  gap: 4px;
+}
+
+.collectionRailField span {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.collectionRailField input,
+.collectionRailField select {
+  padding: 7px 9px;
+  font-size: 0.8rem;
+}
+
+.collectionRailStats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--subtle);
+}
+
+.collectionRailStats strong {
+  color: var(--text);
+}
+
+.collectionReadinessBadge {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.collectionReadinessReady {
+  background: #eef8f1;
+  border-color: #97c9a4;
+  color: #1f5132;
+}
+
+.collectionReadinessBlocked {
+  background: #fff1ed;
+  border-color: #d97b63;
+  color: #7d241b;
+}
+
+.collectionRailDetails {
+  min-width: 0;
+  border-bottom: 1px solid rgba(190, 178, 159, 0.55);
+  padding-bottom: 6px;
+}
+
+.collectionRailDetails summary {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+  list-style-position: inside;
+}
+
+.collectionRailDetailsBody {
+  display: grid;
+  gap: 6px;
+  padding-top: 6px;
+}
+
+.collectionRailDetailsBody .label {
+  gap: 4px;
+}
+
+.collectionRailDetailsBody .label span {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.collectionRailDetailsBody input,
+.collectionRailDetailsBody select,
+.collectionRailDetailsBody textarea {
+  padding: 7px 9px;
+  font-size: 0.8rem;
+}
+
+.collectionRailDetailsBody textarea {
+  min-height: 64px;
+}
+
+.collectionIconButton {
+  width: 100%;
+  padding: 7px 8px;
+  gap: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.collectionActionText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collectionUsageCompact {
+  display: grid;
+  gap: 4px;
 }
 
 .mediaOverlayMeta {

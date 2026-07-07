@@ -35,20 +35,28 @@ test("media workspace keeps service cleanup and legacy tools out of the main too
   assert.doesNotMatch(css, /\.mediaToolbarServiceDisclosure\s*\{/);
 });
 
-test("media collection overlay demotes cleanup controls behind a service disclosure", () => {
+test("media collection overlay keeps membership central and controls compact", () => {
   const source = readUtf8("components/admin/MediaCollectionOverlay.js");
   const css = readUtf8("components/admin/admin-ui.module.css");
 
-  assert.match(source, /Служебные действия/);
-  assert.match(source, /Очистка и редкие lifecycle-операции остаются доступны/);
+  assert.match(source, /Служебное/);
+  assert.match(source, /Галочка означает членство в коллекции/);
+  assert.match(source, /showSelectedOnly/);
+  assert.match(source, /Описание и SEO/);
   assert.match(source, /Центр очистки/);
   assert.match(source, /getRemovalMarkHref\("gallery"/);
   assert.match(source, /collectionActionRail/);
+  assert.match(source, /collectionRailGroup/);
   assert.match(source, /collectionOverlayActions/);
+  assert.match(source, /collectionIconButton/);
   assert.match(source, /Фильтр кандидатов коллекции/);
+  assert.doesNotMatch(source, /RelationChipRow/);
+  assert.doesNotMatch(source, /title="Выбранные файлы"/);
   assert.match(css, /\.collectionOverlayDialog\s*\{/);
   assert.match(css, /\.collectionActionRail\s*\{/);
-  assert.match(css, /\.collectionCandidateToolbar\s*\{/);
+  assert.match(css, /overflow:\s*visible;/);
+  assert.match(css, /\.collectionRailGroup\s*\{/);
+  assert.match(css, /\.collectionRailDetails\s*\{/);
   assert.match(css, /\.collectionOverlayActions\s*\{/);
 });
 
