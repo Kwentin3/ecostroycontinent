@@ -50,11 +50,11 @@ function getOutcomeLabel(outcome) {
   return "Зафиксировано";
 }
 
-function RemovalEntityVisual({ root }) {
+function RemovalEntityVisual({ root, showThumbnail }) {
   return (
     <span className={styles.removalSweepCardVisual} aria-hidden="true">
       <span>{getEntityTypeLabel(root.entityType).slice(0, 1)}</span>
-      {root.thumbnailUrl ? (
+      {showThumbnail && root.thumbnailUrl ? (
         <img
           src={root.thumbnailUrl}
           alt=""
@@ -68,7 +68,7 @@ function RemovalEntityVisual({ root }) {
   );
 }
 
-function RemovalMemberList({ title, items }) {
+function RemovalMemberList({ title, items, canOpenEntityDetails }) {
   return (
     <section className={styles.removalSweepDetailSection}>
       <h4>{title}</h4>
@@ -80,7 +80,7 @@ function RemovalMemberList({ title, items }) {
               <span>{getEntityTypeLabel(item.entityType)}</span>
               {item.reason ? <p>{item.reason}</p> : null}
             </div>
-            {item.href ? <Link href={item.href}>Открыть</Link> : null}
+            {canOpenEntityDetails && item.href ? <Link href={item.href}>Открыть</Link> : null}
           </li>
         ))}
       </ul>
@@ -88,7 +88,19 @@ function RemovalMemberList({ title, items }) {
   );
 }
 
-function RemovalSweepCard({ component, ready, canPurge, selected, expanded, onSelect, onToggle }) {
+function RemovalSweepCard({
+  component,
+  ready,
+  canExecuteRemovalSweep,
+  canOpenEntityDetails,
+  selected,
+  expanded,
+  busy,
+  removing,
+  onSelect,
+  onToggle,
+  onRemove
+}) {
   const cardKey = getRemovalSweepWorkspaceCardKey(component);
   const blockers = getRemovalSweepBlockers(component);
   const primaryBlocker = getPrimaryRemovalSweepBlocker(component);
@@ -98,7 +110,7 @@ function RemovalSweepCard({ component, ready, canPurge, selected, expanded, onSe
   return (
     <article className={`${styles.removalSweepCard} ${ready ? styles.removalSweepCardReady : styles.removalSweepCardBlocked}`}>
       <div className={styles.removalSweepCardMain}>
-        {ready && canPurge ? (
+        {ready && canExecuteRemovalSweep ? (
           <label className={styles.removalSweepCardCheckbox}>
             <input
               type="checkbox"
@@ -110,7 +122,7 @@ function RemovalSweepCard({ component, ready, canPurge, selected, expanded, onSe
           </label>
         ) : null}
 
-        <RemovalEntityVisual root={component.root} />
+        <RemovalEntityVisual root={component.root} showThumbnail={canOpenEntityDetails} />
 
         <div className={styles.removalSweepCardContent}>
           <div className={styles.removalSweepCardHeading}>
@@ -135,11 +147,32 @@ function RemovalSweepCard({ component, ready, canPurge, selected, expanded, onSe
         </div>
 
         <div className={styles.removalSweepCardActions}>
-          {!ready && primaryBlocker?.href ? (
-            <Link href={primaryBlocker.href} className={styles.secondaryButton}>Открыть причину</Link>
-          ) : (
-            <Link href={component.root.href} className={styles.secondaryButton}>Открыть объект</Link>
-          )}
+          {canOpenEntityDetails || (ready && canExecuteRemovalSweep) ? (
+            <div className={styles.removalSweepCardActionRow}>
+              {canOpenEntityDetails ? (
+                !ready && primaryBlocker?.href ? (
+                  <Link href={primaryBlocker.href} className={styles.secondaryButton}>Открыть причину</Link>
+                ) : (
+                  <Link href={component.root.href} className={styles.secondaryButton}>Открыть объект</Link>
+                )
+              ) : null}
+              {ready && canExecuteRemovalSweep ? (
+                <button
+                  type="button"
+                  className={`${styles.removalSweepDeleteIconButton} ${removing ? styles.removalSweepDeleteIconButtonBusy : ""}`}
+                  aria-label={removing ? `Проверяем «${component.root.label}»` : `Удалить «${component.root.label}»`}
+                  aria-busy={removing}
+                  title="Удалить"
+                  disabled={busy}
+                  onClick={() => onRemove(cardKey)}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z" />
+                  </svg>
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           <button
             type="button"
             className={styles.removalSweepDisclosureButton}
@@ -156,10 +189,14 @@ function RemovalSweepCard({ component, ready, canPurge, selected, expanded, onSe
         <div id={detailId} className={styles.removalSweepCardDetails}>
           {!ready ? (
             blockers.length > 0
-              ? <RemovalMemberList title="Почему пока нельзя удалить" items={blockers} />
+              ? <RemovalMemberList title="Почему пока нельзя удалить" items={blockers} canOpenEntityDetails={canOpenEntityDetails} />
               : <p className={styles.helpText}>{component.summary}</p>
           ) : null}
-          <RemovalMemberList title={ready ? "Что будет удалено" : "Заявлено на удаление"} items={component.members} />
+          <RemovalMemberList
+            title={ready ? "Что будет удалено" : "Заявлено на удаление"}
+            items={component.members}
+            canOpenEntityDetails={canOpenEntityDetails}
+          />
         </div>
       ) : null}
     </article>
@@ -200,7 +237,8 @@ function RemovalSweepHistory({ events }) {
 export function RemovalSweepWorkspace({
   initialComponents,
   initialEvents,
-  canPurge,
+  canExecuteRemovalSweep,
+  canOpenEntityDetails,
   initialMessage = "",
   initialError = ""
 }) {
@@ -211,6 +249,7 @@ export function RemovalSweepWorkspace({
   const [query, setQuery] = useState("");
   const [expandedKey, setExpandedKey] = useState("");
   const [selectedKeys, setSelectedKeys] = useState([]);
+  const [batchKeys, setBatchKeys] = useState([]);
   const [preview, setPreview] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
@@ -266,22 +305,23 @@ export function RemovalSweepWorkspace({
     setSelectedKeys(allVisibleSelected ? [] : visibleReadyKeys);
   }
 
-  function makeBatchFormData(intent) {
+  function makeBatchFormData(intent, componentKeys) {
     const formData = new FormData();
     formData.set("intent", intent);
 
-    for (const componentKey of selectedKeys) {
+    for (const componentKey of componentKeys) {
       formData.append("componentKey", componentKey);
     }
 
     return formData;
   }
 
-  async function openBatchDialog() {
-    if (selectedKeys.length === 0) {
+  async function openBatchDialog(componentKeys) {
+    if (componentKeys.length === 0) {
       return;
     }
 
+    setBatchKeys(componentKeys);
     setPreviewBusy(true);
     setMessage("");
     setError("");
@@ -289,7 +329,7 @@ export function RemovalSweepWorkspace({
     try {
       const response = await fetch("/api/admin/removal-sweep/bulk-purge", {
         method: "POST",
-        body: makeBatchFormData("preview")
+        body: makeBatchFormData("preview", componentKeys)
       });
       const payload = await response.json().catch(() => ({
         error: response.redirected
@@ -304,6 +344,7 @@ export function RemovalSweepWorkspace({
       setPreview(payload);
       setDialogOpen(true);
     } catch (previewError) {
+      setBatchKeys([]);
       setError(previewError.message || "Не удалось проверить выбранные карточки.");
     } finally {
       setPreviewBusy(false);
@@ -318,7 +359,7 @@ export function RemovalSweepWorkspace({
     try {
       const response = await fetch("/api/admin/removal-sweep/bulk-purge", {
         method: "POST",
-        body: makeBatchFormData("execute")
+        body: makeBatchFormData("execute", batchKeys)
       });
       const payload = await response.json().catch(() => ({
         error: response.redirected
@@ -347,11 +388,13 @@ export function RemovalSweepWorkspace({
       }
 
       setSelectedKeys([]);
+      setBatchKeys([]);
       setDialogOpen(false);
       setPreview(null);
       router.refresh();
     } catch (executeError) {
       setError(executeError.message || "Не удалось удалить выбранные объекты.");
+      setBatchKeys([]);
       setDialogOpen(false);
       setPreview(null);
       router.refresh();
@@ -430,7 +473,7 @@ export function RemovalSweepWorkspace({
         </label>
       ) : null}
 
-      {activeTab === REMOVAL_SWEEP_WORKSPACE_TABS.READY && canPurge ? (
+      {activeTab === REMOVAL_SWEEP_WORKSPACE_TABS.READY && canExecuteRemovalSweep ? (
         <section className={styles.removalSweepBulkBar} aria-label="Групповые действия">
           <label>
             <input
@@ -447,7 +490,7 @@ export function RemovalSweepWorkspace({
             <button
               type="button"
               className={styles.dangerButton}
-              onClick={openBatchDialog}
+              onClick={() => openBatchDialog(selectedKeys)}
               disabled={busy || selectedKeys.length === 0}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -467,8 +510,8 @@ export function RemovalSweepWorkspace({
         </section>
       ) : null}
 
-      {activeTab === REMOVAL_SWEEP_WORKSPACE_TABS.READY && !canPurge ? (
-        <div className={styles.statusPanelInfo}>Просматривать очередь могут редакторы. Окончательное удаление доступно только superadmin.</div>
+      {activeTab === REMOVAL_SWEEP_WORKSPACE_TABS.READY && !canExecuteRemovalSweep ? (
+        <div className={styles.statusPanelInfo}>У вас есть доступ к очереди без права окончательного удаления.</div>
       ) : null}
 
       <section
@@ -488,11 +531,15 @@ export function RemovalSweepWorkspace({
                   key={cardKey}
                   component={component}
                   ready={activeTab === REMOVAL_SWEEP_WORKSPACE_TABS.READY}
-                  canPurge={canPurge}
+                  canExecuteRemovalSweep={canExecuteRemovalSweep}
+                  canOpenEntityDetails={canOpenEntityDetails}
                   selected={selectedKeys.includes(cardKey)}
                   expanded={expandedKey === cardKey}
+                  busy={busy}
+                  removing={previewBusy && batchKeys.includes(cardKey)}
                   onSelect={toggleSelection}
                   onToggle={toggleExpanded}
+                  onRemove={(key) => openBatchDialog([key])}
                 />
               );
             })}
@@ -513,6 +560,7 @@ export function RemovalSweepWorkspace({
           if (!executeBusy) {
             setDialogOpen(false);
             setPreview(null);
+            setBatchKeys([]);
           }
         }}
         onConfirm={executeBatchRemoval}

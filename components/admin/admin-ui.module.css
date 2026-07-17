@@ -3962,6 +3962,7 @@
 
 .removalSweepTabs button:focus-visible,
 .removalSweepDisclosureButton:focus-visible,
+.removalSweepDeleteIconButton:focus-visible,
 .removalSweepSearch input:focus-visible,
 .removalSweepCardCheckbox input:focus-visible,
 .removalSweepBulkBar input:focus-visible {
@@ -4174,6 +4175,71 @@
 
 .removalSweepCardActions .secondaryButton {
   width: 100%;
+}
+
+.removalSweepCardActionRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.removalSweepCardActionRow .secondaryButton {
+  flex: 1 1 auto;
+}
+
+.removalSweepDeleteIconButton {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 1px solid #e2aaa2;
+  border-radius: 10px;
+  background: #fff8f6;
+  color: #a53025;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.removalSweepDeleteIconButton:hover:not(:disabled) {
+  border-color: #b83a2f;
+  background: #fff0ed;
+  color: #86251d;
+}
+
+.removalSweepDeleteIconButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.removalSweepDeleteIconButton svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+}
+
+.removalSweepDeleteIconButtonBusy svg {
+  visibility: hidden;
+}
+
+.removalSweepDeleteIconButtonBusy::after {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  content: "";
+  animation: removalSweepActionSpin 700ms linear infinite;
+}
+
+@keyframes removalSweepActionSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .removalSweepDisclosureButton {

@@ -10,7 +10,9 @@ import {
   userCanPublishEntity,
   userCanReadAdminMediaPreview,
   userCanRollback,
+  userCanExecuteRemovalSweep,
   userCanRunMaintenancePurge,
+  userCanViewRemovalSweep,
   userCanPublishRevision,
   userCanUnpublish
 } from "../lib/auth/roles.js";
@@ -24,6 +26,22 @@ test("auth policy is the canonical permission matrix behind runtime role helpers
   assert.equal(canUser(owner, AUTH_PERMISSIONS.OWNER_APPROVE), userCanOwnerApprove(owner));
   assert.equal(canUser(superadmin, AUTH_PERMISSIONS.REVISION_ROLLBACK), userCanRollback(superadmin));
   assert.equal(canUser(superadmin, AUTH_PERMISSIONS.MAINTENANCE_PURGE), userCanRunMaintenancePurge(superadmin));
+  assert.equal(canUser(owner, AUTH_PERMISSIONS.REMOVAL_SWEEP_EXECUTE), userCanExecuteRemovalSweep(owner));
+});
+
+test("removal sweep permissions stay narrow and role-specific", () => {
+  const superadmin = { role: AUTH_ROLES.SUPERADMIN };
+  const seoUser = { role: AUTH_ROLES.SEO_MANAGER };
+  const owner = { role: AUTH_ROLES.BUSINESS_OWNER };
+
+  assert.equal(userCanViewRemovalSweep(superadmin), true);
+  assert.equal(userCanViewRemovalSweep(seoUser), true);
+  assert.equal(userCanViewRemovalSweep(owner), true);
+  assert.equal(userCanExecuteRemovalSweep(superadmin), true);
+  assert.equal(userCanExecuteRemovalSweep(owner), true);
+  assert.equal(userCanExecuteRemovalSweep(seoUser), false);
+  assert.equal(userCanRunMaintenancePurge(owner), false);
+  assert.equal(userCanEditContent(owner), false);
 });
 
 test("publish role matrix keeps global publish reserved for superadmin", () => {

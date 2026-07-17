@@ -11,12 +11,12 @@ import {
   parseRemovalSweepRootKey
 } from "../../../../../lib/admin/removal-quarantine.js";
 import { requireRouteUser } from "../../../../../lib/admin/route-helpers.js";
-import { userCanRunMaintenancePurge } from "../../../../../lib/auth/roles.js";
+import { userCanExecuteRemovalSweep } from "../../../../../lib/auth/roles.js";
 import { ENTITY_TYPES } from "../../../../../lib/content-core/content-types.js";
 
 const defaultDeps = {
   requireRouteUser,
-  userCanRunMaintenancePurge,
+  userCanExecuteRemovalSweep,
   previewRemovalSweepBatch,
   executeRemovalSweepBatch,
   revalidatePath
@@ -74,10 +74,10 @@ export async function POST(request, _context = {}, deps = defaultDeps) {
     return response;
   }
 
-  if (!routeDeps.userCanRunMaintenancePurge(user)) {
+  if (!routeDeps.userCanExecuteRemovalSweep(user)) {
     return NextResponse.json({
       ok: false,
-      error: "Групповая очистка доступна только superadmin."
+      error: "У вас нет права выполнять окончательную очистку."
     }, { status: 403 });
   }
 

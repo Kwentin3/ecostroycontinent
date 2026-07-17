@@ -318,7 +318,7 @@ Purge execution must write audit evidence that the component was:
 
 ### 14.5 Bounded batch purge
 
-The cleanup center may let a superadmin explicitly select several currently ready component cards and confirm them in one bounded batch interaction.
+The cleanup center may let an authorized sweep executor (`superadmin` or `business_owner`) start the same bounded interaction from one ready-card trash icon or explicitly select several currently ready component cards.
 
 This extension does not change the purge unit:
 
@@ -331,7 +331,12 @@ This extension does not change the purge unit:
 - a component that becomes blocked between preview and execution must be skipped, not forced;
 - batch execution may return a partial outcome, but it must separately report `deletedComponents` and `failedComponents` with readable reasons;
 - a late failure must never relabel an already committed component deletion as rolled back;
-- batch purge remains superadmin-only and never deletes an unmarked object.
+- `superadmin`, `seo_manager` and `business_owner` may view the cleanup center;
+- bounded sweep execution is allowed only to `superadmin` and `business_owner`;
+- `business_owner` sweep access must not imply content edit, publish/unpublish, mark/unmark, user management or generic maintenance-purge authority;
+- the legacy `/api/admin/removal-sweep/purge` maintenance endpoint remains superadmin-only;
+- role-specific UI projection must omit entity-editor links and private thumbnails that the current role cannot open;
+- bounded sweep execution never deletes an unmarked object.
 
 ## 15. Coexistence with current delete tools
 
