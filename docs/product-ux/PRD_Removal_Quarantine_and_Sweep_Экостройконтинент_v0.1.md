@@ -264,6 +264,19 @@ Marked objects:
 
 Этот экран — главный operational center нового контура.
 
+Экран проектируется как директорская очередь решений, а не как раскрытый отчёт анализатора:
+
+- по умолчанию показываются компактные карточки групп, готовых к безопасному удалению;
+- отдельная вкладка показывает карточки, которые пока нельзя удалить, с одной главной причиной обычным языком и ссылкой на точный блокирующий объект;
+- технический состав группы и все причины доступны только после раскрытия одной конкретной карточки;
+- forensic history вынесена в отдельную вторичную вкладку и не конкурирует с текущей очередью;
+- ready-карточки поддерживают выбор нескольких видимых групп и sticky toolbar `Удалить выбранные` / `Снять выделение`;
+- изменение вкладки или поискового фильтра сбрасывает destructive selection, поэтому скрытые карточки не попадают в batch незаметно;
+- финальное подтверждение показывает число готовых групп и точное общее число объектов, которые будут удалены;
+- экран имеет explicit loading, empty, error, busy, full-success и partial-success states.
+
+Визуальная карточка использует понятный оператору root object как заголовок, но обязана показывать, сколько дополнительных marked objects входит в ту же removal component. Скрывать такой collateral scope запрещено.
+
 ### 10.6 Legacy/manual path labeling
 
 Существующий current delete flow остаётся доступным, но маркируется явно как:
@@ -305,10 +318,21 @@ Marked objects:
 Если компонент safe:
 
 1. система показывает точный summary;
-2. оператор подтверждает purge один раз на компонент;
+2. оператор подтверждает purge один раз на компонент либо одним bounded batch-confirm для явно выбранных ready-компонентов;
 3. система исполняет dependency-aware cleanup order;
 4. все удалённые объекты получают audit trace;
 5. экран пересчитывается.
+
+### 11.4.1 Purge selected ready components
+
+Групповое действие не превращает sweep в слепой mass delete:
+
+1. оператор выбирает только видимые ready-карточки;
+2. сервер повторно анализирует каждую выбранную removal component и дедуплицирует пересекающиеся root selections;
+3. confirm показывает точное число ready-компонентов и объектов, а ставшие blocked компоненты перечисляет отдельно;
+4. после подтверждения каждая ready component ещё раз проходит канонический `executeRemovalSweep` и удаляется в своей transaction boundary;
+5. отказ одной компоненты не переопределяет уже завершённое удаление другой компоненты;
+6. terminal feedback разделяет `deleted` и `failed/skipped` components и показывает человеческие причины пропуска.
 
 ### 11.5 Blocked component
 
@@ -484,4 +508,3 @@ Verdict may still be `ready`, if no reverse dependency and no state blocker exis
 - sweep deletes only safe closed marked components;
 - exact blockers are shown when safe purge is impossible;
 - current delete flow survives as legacy/manual fallback until the new contour proves itself.
-

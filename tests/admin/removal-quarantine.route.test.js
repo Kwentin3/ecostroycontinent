@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { POST as markRemovalPost } from "../../app/api/admin/entities/[entityType]/[entityId]/mark-removal/route.js";
 import { POST as unmarkRemovalPost } from "../../app/api/admin/entities/[entityType]/[entityId]/unmark-removal/route.js";
+import { POST as bulkPurgeRemovalSweepPost } from "../../app/api/admin/removal-sweep/bulk-purge/route.js";
 import { POST as purgeRemovalSweepPost } from "../../app/api/admin/removal-sweep/purge/route.js";
 
 function buildRequest(url, fields = {}) {
@@ -10,7 +11,13 @@ function buildRequest(url, fields = {}) {
 
   for (const [key, value] of Object.entries(fields)) {
     if (value !== undefined && value !== null) {
-      formData.set(key, String(value));
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          formData.append(key, String(item));
+        }
+      } else {
+        formData.set(key, String(value));
+      }
     }
   }
 
@@ -168,4 +175,154 @@ test("removal sweep purge route rejects non-superadmin users", async () => {
 
   assert.equal(response.status, 303);
   assert.equal(response.headers.get("location"), "http://localhost:3000/admin/no-access");
+});
+
+test("bulk purge preview returns exact ready and blocked counts without mutation", async () => {
+  let capturedInput = null;
+
+  const response = await bulkPurgeRemovalSweepPost(
+    buildRequest("http://localhost/api/admin/removal-sweep/bulk-purge", {
+      intent: "preview",
+      componentKey: ["service:service_1", "media_asset:media_1"]
+    }),
+    {},
+    {
+      requireRouteUser: async () => ({ user: { id: "user_super", role: "superadmin" }, response: null }),
+      userCanRunMaintenancePurge: () => true,
+      previewRemovalSweepBatch: async (input) => {
+        capturedInput = input;
+        return {
+          selectedRootCount: 2,
+          componentCount: 2,
+          readyComponentCount: 1,
+          readyObjectCount: 2,
+          blockedComponentCount: 1,
+          blockedObjectCount: 1,
+          readyComponents: [],
+          blockedComponents: []
+        };
+      },
+      executeRemovalSweepBatch: async () => {
+        throw new Error("execute must not run during preview");
+      },
+      revalidatePath: () => {}
+    }
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.ok, true);
+  assert.equal(payload.intent, "preview");
+  assert.equal(payload.readyObjectCount, 2);
+  assert.deepEqual(capturedInput, {
+    roots: [
+      { entityType: "service", entityId: "service_1" },
+      { entityType: "media_asset", entityId: "media_1" }
+    ]
+  });
+});
+
+test("bulk purge execute returns terminal 207 with deleted and skipped groups", async () => {
+  const revalidated = [];
+  let capturedInput = null;
+
+  const response = await bulkPurgeRemovalSweepPost(
+    buildRequest("http://localhost/api/admin/removal-sweep/bulk-purge", {
+      intent: "execute",
+      componentKey: ["service:service_1", "service:service_2"]
+    }),
+    {},
+    {
+      requireRouteUser: async () => ({ user: { id: "user_super", role: "superadmin" }, response: null }),
+      userCanRunMaintenancePurge: () => true,
+      previewRemovalSweepBatch: async () => {
+        throw new Error("preview route helper must not replace execute");
+      },
+      executeRemovalSweepBatch: async (input) => {
+        capturedInput = input;
+        return {
+          selectedRootCount: 2,
+          deletedComponentCount: 1,
+          deletedObjectCount: 2,
+          failedComponentCount: 1,
+          deletedComponents: [
+            {
+              componentKey: "service:service_1|media_asset:media_1",
+              root: { entityType: "service", entityId: "service_1", label: "Service 1" },
+              deleted: [
+                { entityType: "service", entityId: "service_1" },
+                { entityType: "media_asset", entityId: "media_1" }
+              ],
+              deletedCount: 2
+            }
+          ],
+          failedComponents: [
+            {
+              componentKey: "service:service_2",
+              root: { entityType: "service", entityId: "service_2", label: "Service 2" },
+              error: "Используется в опубликованном материале.",
+              blockers: []
+            }
+          ]
+        };
+      },
+      revalidatePath: (path) => revalidated.push(path)
+    }
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 207);
+  assert.equal(payload.ok, false);
+  assert.equal(payload.deletedComponentCount, 1);
+  assert.equal(payload.failedComponentCount, 1);
+  assert.equal(payload.deletedObjectCount, 2);
+  assert.deepEqual(capturedInput, {
+    roots: [
+      { entityType: "service", entityId: "service_1" },
+      { entityType: "service", entityId: "service_2" }
+    ],
+    actorUserId: "user_super"
+  });
+  assert.deepEqual(revalidated.sort(), [
+    "/admin",
+    "/admin/entities/media_asset",
+    "/admin/entities/service",
+    "/admin/removal-sweep"
+  ]);
+});
+
+test("bulk purge route rejects non-superadmin and invalid selection with JSON terminal outcomes", async () => {
+  const forbiddenResponse = await bulkPurgeRemovalSweepPost(
+    buildRequest("http://localhost/api/admin/removal-sweep/bulk-purge", {
+      intent: "execute",
+      componentKey: ["service:service_1"]
+    }),
+    {},
+    {
+      requireRouteUser: async () => ({ user: { id: "user_editor", role: "seo_manager" }, response: null }),
+      userCanRunMaintenancePurge: () => false
+    }
+  );
+  const forbiddenPayload = await forbiddenResponse.json();
+
+  assert.equal(forbiddenResponse.status, 403);
+  assert.equal(forbiddenPayload.ok, false);
+  assert.match(forbiddenPayload.error, /superadmin/);
+
+  const invalidResponse = await bulkPurgeRemovalSweepPost(
+    buildRequest("http://localhost/api/admin/removal-sweep/bulk-purge", {
+      intent: "preview",
+      componentKey: ["unsupported:entity_1"]
+    }),
+    {},
+    {
+      requireRouteUser: async () => ({ user: { id: "user_super", role: "superadmin" }, response: null }),
+      userCanRunMaintenancePurge: () => true
+    }
+  );
+  const invalidPayload = await invalidResponse.json();
+
+  assert.equal(invalidResponse.status, 400);
+  assert.equal(invalidPayload.ok, false);
+  assert.match(invalidPayload.error, /неподдерживаемая карточка/i);
 });

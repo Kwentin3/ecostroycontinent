@@ -32,14 +32,35 @@ test("media workspace and collection overlay expose removal quarantine controls"
 test("cleanup center is wired into admin navigation and purge flow", () => {
   const navSource = readUtf8(new URL("../../lib/admin/nav.js", import.meta.url));
   const pageSource = readUtf8(new URL("../../app/admin/(console)/removal-sweep/page.js", import.meta.url));
+  const workspaceSource = readUtf8(new URL("../../components/admin/RemovalSweepWorkspace.js", import.meta.url));
+  const dialogSource = readUtf8(new URL("../../components/admin/RemovalSweepBatchDialog.js", import.meta.url));
+  const loadingSource = readUtf8(new URL("../../app/admin/(console)/removal-sweep/loading.js", import.meta.url));
+  const errorSource = readUtf8(new URL("../../app/admin/(console)/removal-sweep/error.js", import.meta.url));
   const routeSource = readUtf8(new URL("../../app/api/admin/removal-sweep/purge/route.js", import.meta.url));
+  const bulkRouteSource = readUtf8(new URL("../../app/api/admin/removal-sweep/bulk-purge/route.js", import.meta.url));
 
   assert.match(navSource, /\/admin\/removal-sweep/);
   assert.match(navSource, /visible: userCanEditContent/);
   assert.match(pageSource, /listRemovalSweepComponents/);
   assert.match(pageSource, /listRecentDestructiveEvents/);
-  assert.match(pageSource, /Destructive ledger/);
-  assert.match(pageSource, /\/api\/admin\/removal-sweep\/purge/);
+  assert.match(pageSource, /operationKind: "removal_sweep"/);
+  assert.match(pageSource, /RemovalSweepWorkspace/);
+  assert.doesNotMatch(pageSource, /\/api\/admin\/removal-sweep\/purge/);
+  assert.match(workspaceSource, /Можно удалить/);
+  assert.match(workspaceSource, /Пока нельзя/);
+  assert.match(workspaceSource, /Удалить выбранные/);
+  assert.match(workspaceSource, /aria-expanded/);
+  assert.match(workspaceSource, /role="status"/);
+  assert.match(workspaceSource, /role="alert"/);
+  assert.match(workspaceSource, /\/api\/admin\/removal-sweep\/bulk-purge/);
+  assert.match(dialogSource, /Удалить выбранные объекты навсегда/);
+  assert.match(dialogSource, /readyObjectCount/);
+  assert.match(dialogSource, /event\.key === "Tab"/);
+  assert.match(loadingSource, /Загружаем очередь очистки/);
+  assert.match(errorSource, /Повторить загрузку/);
   assert.match(routeSource, /executeRemovalSweep/);
   assert.match(routeSource, /userCanRunMaintenancePurge/);
+  assert.match(bulkRouteSource, /previewRemovalSweepBatch/);
+  assert.match(bulkRouteSource, /executeRemovalSweepBatch/);
+  assert.match(bulkRouteSource, /status = result\.deletedComponentCount > 0/);
 });
