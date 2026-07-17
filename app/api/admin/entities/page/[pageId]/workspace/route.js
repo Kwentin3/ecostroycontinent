@@ -39,7 +39,8 @@ function serializeRevision(revision = null) {
     state: revision.state,
     previewStatus: revision.previewStatus ?? null,
     ownerReviewRequired: Boolean(revision.ownerReviewRequired),
-    ownerApprovalStatus: revision.ownerApprovalStatus ?? "not_required"
+    ownerApprovalStatus: revision.ownerApprovalStatus ?? "not_required",
+    reviewComment: revision.reviewComment ?? ""
   };
 }
 

@@ -10,7 +10,7 @@ import {
   toBoolean,
   requiresOwnerReview
 } from "../lib/content-core/pure.js";
-import { getEditableDraftRevision, getWorkingRevision } from "../lib/content-core/service.js";
+import { getEditableDraftRevision, getWorkingRevision, resolveDraftOwnerApprovalStatus } from "../lib/content-core/service.js";
 
 function buildRevision(id, revisionNumber, state, payload = {}) {
   return {
@@ -43,6 +43,24 @@ test("working revision keeps drafts above the active publication", () => {
 
   assert.equal(getEditableDraftRevision(aggregate), draft);
   assert.equal(getWorkingRevision(aggregate), draft);
+});
+
+test("returned drafts keep the rejected owner status until resubmitted", () => {
+  assert.equal(
+    resolveDraftOwnerApprovalStatus({
+      currentDraft: { ownerApprovalStatus: "rejected" },
+      ownerReviewRequired: true
+    }),
+    "rejected"
+  );
+  assert.equal(resolveDraftOwnerApprovalStatus({ ownerReviewRequired: true }), "pending");
+  assert.equal(
+    resolveDraftOwnerApprovalStatus({
+      currentDraft: { ownerApprovalStatus: "rejected" },
+      ownerReviewRequired: false
+    }),
+    "not_required"
+  );
 });
 
 test("normalizeEntityInput keeps fixed page route truth for contacts pages", () => {

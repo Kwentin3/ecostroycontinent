@@ -18,7 +18,7 @@ import { requireEditorUser } from "../../../../../../lib/admin/page-helpers";
 import { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "../../../../../../lib/content-core/content-types.js";
 import { assertEntityType } from "../../../../../../lib/content-core/service";
 import { buildPublishedLookups, getPublishedGlobalSettings } from "../../../../../../lib/read-side/public-content.js";
-import { userCanEditContent, userCanPublish, userCanPublishRevision } from "../../../../../../lib/auth/session.js";
+import { userCanEditContent, userCanPublishRevision, userCanUnpublish } from "../../../../../../lib/auth/session.js";
 
 function serializeLookupMap(map) {
   return Object.fromEntries(Array.from(map?.entries?.() ?? []));
@@ -101,7 +101,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
     const lifecycle = buildPageWorkspaceLifecycleState({
       aggregate: data.state,
       permissions: {
-        canArchive: userCanPublish(user),
+        canUnpublish: userCanUnpublish(user, ENTITY_TYPES.PAGE),
         canDelete: userCanEditContent(user)
       }
     });
@@ -141,7 +141,8 @@ export default async function EntityEditorPage({ params, searchParams }) {
             state: data.currentRevision.state,
             previewStatus: data.currentRevision.previewStatus ?? null,
             ownerReviewRequired: Boolean(data.currentRevision.ownerReviewRequired),
-            ownerApprovalStatus: data.currentRevision.ownerApprovalStatus ?? "not_required"
+            ownerApprovalStatus: data.currentRevision.ownerApprovalStatus ?? "not_required",
+            reviewComment: data.currentRevision.reviewComment ?? ""
           } : null}
           reviewHref={reviewHref}
           publishHref={publishHref}
@@ -162,7 +163,7 @@ export default async function EntityEditorPage({ params, searchParams }) {
           globalSettings={globalSettings}
           lifecycle={{
             ...lifecycle,
-            archiveUrl: `/api/admin/entities/page/${entityId}/live-deactivation`,
+            unpublishUrl: `/api/admin/entities/page/${entityId}/unpublish`,
             deleteUrl: "/api/admin/entities/page/delete",
             registryHref: "/admin/entities/page"
           }}

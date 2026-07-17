@@ -600,93 +600,233 @@
 
 .reviewGalleryControls {
   display: grid;
-  gap: var(--space-3);
-}
-
-.reviewScreenBar {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.reviewScreenStats {
-  display: flex;
-  flex-wrap: wrap;
   gap: 10px;
-  align-items: center;
-}
-
-.reviewGalleryHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.reviewGalleryHeaderCopy {
-  display: grid;
-  gap: 6px;
-}
-
-.reviewGalleryCounters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.reviewGalleryCounter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(38, 76, 59, 0.14);
-  background: rgba(255, 255, 255, 0.78);
-  color: #234535;
-  font-size: 0.88rem;
-  font-weight: 600;
 }
 
 .reviewGalleryToolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(150px, 190px) minmax(150px, 190px) auto auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid rgba(38, 76, 59, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 12px 32px rgba(37, 28, 18, 0.06);
+}
+
+.reviewFilterField {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reviewFilterSearch {
+  min-width: 0;
+}
+
+.reviewFilterLabel {
+  color: var(--subtle);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.reviewFilterInput,
+.reviewFilterSelect {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+}
+
+.reviewFilterInput:focus-visible,
+.reviewFilterSelect:focus-visible {
+  outline: 2px solid #264c3b;
+  outline-offset: 2px;
 }
 
 .reviewGalleryToolbarActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
+  justify-content: flex-end;
 }
 
-.reviewGalleryStatusFilters {
+.reviewGalleryResultCount {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.9rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.reviewQuickFilters {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+  align-items: center;
 }
 
-.reviewGalleryStatusFilter {
+.reviewQuickFilterButton {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid rgba(126, 55, 36, 0.24);
   border-radius: 999px;
-  border: 1px solid rgba(38, 76, 59, 0.14);
-  background: rgba(255, 255, 255, 0.72);
-  color: #234535;
-  text-decoration: none;
+  background: #fff;
+  color: #7a3422;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
 }
 
-.reviewGalleryStatusFilterActive {
-  border-color: #264c3b;
-  background: #264c3b;
-  color: #fff;
+.reviewQuickFilterButton:hover {
+  background: #fff4ef;
+}
+
+.reviewQuickFilterButton:focus-visible {
+  outline: 2px solid #7a3422;
+  outline-offset: 2px;
+}
+
+.reviewQuickFilterButtonActive {
+  background: #fff0ea;
+  border-color: rgba(126, 55, 36, 0.48);
+  box-shadow: inset 0 0 0 1px rgba(126, 55, 36, 0.12);
+}
+
+.reviewQuickFilterCount {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(126, 55, 36, 0.1);
+  color: #6d2f1f;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.reviewJournal {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.reviewJournalHeader,
+.reviewJournalItemTop,
+.reviewJournalMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reviewJournalHeader {
+  justify-content: space-between;
+}
+
+.reviewJournalTitle {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.reviewJournalWindow,
+.reviewJournalTime,
+.reviewJournalMeta {
+  color: var(--subtle);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.reviewJournalList {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+
+.reviewJournalItem {
+  display: grid;
+  gap: 5px;
+  padding: 9px 0 10px;
+  border-top: 1px solid rgba(38, 76, 59, 0.1);
+}
+
+.reviewJournalItem:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.reviewJournalAction {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(38, 76, 59, 0.1);
+  color: #264c3b;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.reviewJournalAction[data-tone="success"] {
+  background: rgba(38, 110, 71, 0.12);
+  color: #22623f;
+}
+
+.reviewJournalAction[data-tone="warning"] {
+  background: rgba(165, 92, 23, 0.14);
+  color: #8a4b12;
+}
+
+.reviewJournalAction[data-tone="danger"] {
+  background: rgba(139, 46, 46, 0.12);
+  color: #8b2e2e;
+}
+
+.reviewJournalAction[data-tone="info"] {
+  background: rgba(41, 95, 128, 0.12);
+  color: #245b7a;
+}
+
+.reviewJournalAction[data-tone="muted"] {
+  background: rgba(71, 83, 77, 0.1);
+  color: #47534d;
+}
+
+.reviewJournalSummary,
+.reviewJournalEmpty {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.reviewJournalSummary {
+  font-weight: 650;
+}
+
+.reviewJournalComment {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .reviewGalleryGrid {
@@ -750,7 +890,8 @@
 .reviewGalleryType,
 .reviewGallerySubmitted,
 .reviewGalleryStatus,
-.reviewGalleryWarning {
+.reviewGalleryWarning,
+.reviewGalleryUpdateMark {
   display: inline-flex;
   align-items: center;
   padding: 5px 9px;
@@ -987,6 +1128,11 @@
   color: #8a5a00;
 }
 
+.reviewGalleryUpdateMark {
+  background: #e7f1ee;
+  color: #264c3b;
+}
+
 .reviewModalLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
@@ -1044,6 +1190,8 @@
   margin: 0;
   color: #31463a;
   line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .reviewModalSections {
@@ -1072,6 +1220,8 @@
   margin: 0;
   color: var(--text);
   line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .reviewModalActionCard {
@@ -1098,6 +1248,36 @@
   color: var(--subtle);
   font-size: 0.86rem;
   line-height: 1.45;
+}
+
+.reviewContentDiff {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid rgba(38, 76, 59, 0.12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.reviewContentDiffHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.reviewContentDiffHeader h3,
+.reviewContentDiffHeader p {
+  margin: 0;
+}
+
+.reviewContentDiffHeader p {
+  color: var(--subtle);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.reviewContentDiffList {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .reviewModalPageFallback {
@@ -1925,18 +2105,17 @@
 }
 
 .mediaToolbar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(360px, auto);
   align-items: flex-start;
   gap: var(--space-3);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .mediaToolbarIntro {
-  min-width: min(100%, 360px);
   display: grid;
   gap: 4px;
+  max-width: 760px;
 }
 
 .mediaToolbarTitle {
@@ -1945,15 +2124,15 @@
 
 .mediaToolbarStats {
   display: flex;
-  gap: var(--space-2);
+  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .mediaToolbarStat {
   display: inline-grid;
   gap: 2px;
-  padding: 8px 10px;
+  padding: 6px 9px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--panel-muted);
@@ -1969,9 +2148,9 @@
 
 .mediaToolbarControls {
   display: grid;
-  gap: var(--space-2);
+  gap: 10px;
   justify-items: end;
-  flex: 1 1 420px;
+  min-width: 0;
 }
 
 .mediaToolbarFieldRow,
@@ -1983,20 +2162,12 @@
   justify-content: flex-end;
 }
 
-.mediaToolbarServiceDisclosure {
-  width: min(100%, 420px);
-}
-
-.mediaToolbarServiceBody {
-  justify-items: end;
-}
-
 .mediaFilterRow {
   display: flex;
-  gap: var(--space-2);
+  gap: 8px;
   flex-wrap: wrap;
   align-items: end;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .mediaFilterSelect {
@@ -2032,10 +2203,110 @@
   color: #fff;
 }
 
+.mediaBulkActionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+  padding: 10px 12px;
+  border: 1px solid rgba(38, 76, 59, 0.18);
+  border-radius: var(--radius-sm);
+  background: rgba(38, 76, 59, 0.06);
+}
+
+.mediaBulkSummary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: var(--subtle);
+  font-size: 0.9rem;
+}
+
+.mediaBulkSummary strong {
+  color: var(--text);
+}
+
+.mediaBulkDestructiveActions {
+  display: inline-flex;
+  align-items: center;
+  padding-left: 10px;
+  border-left: 1px solid rgba(139, 46, 46, 0.22);
+}
+
+.mediaBulkIconButton {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(139, 46, 46, 0.32);
+  border-radius: 999px;
+  background: #fff;
+  color: #8b2e2e;
+  cursor: pointer;
+}
+
+.mediaBulkIconButton:hover,
+.mediaBulkIconButton:focus-visible {
+  border-color: #8b2e2e;
+  background: #fde5e2;
+}
+
+.mediaBulkIconButton:focus-visible {
+  outline: 3px solid rgba(139, 46, 46, 0.2);
+  outline-offset: 2px;
+}
+
+.mediaBulkIconButton:disabled {
+  opacity: 0.48;
+  cursor: default;
+  background: #fff;
+}
+
+.mediaBulkIconButton svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.mediaBulkRemovalDialog {
+  width: min(520px, 100%);
+}
+
+.mediaBulkRemovalSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.mediaBulkRemovalSummary div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-muted);
+}
+
+.mediaBulkRemovalSummary dt {
+  color: var(--subtle);
+  font-size: 0.8rem;
+}
+
+.mediaBulkRemovalSummary dd {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
 .mediaWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: var(--space-3);
   align-items: start;
 }
 
@@ -2059,32 +2330,48 @@
   gap: var(--space-3);
 }
 
-.mediaLibraryCardButton {
+.mediaLibraryCard {
+  position: relative;
   display: grid;
-  gap: 12px;
-  padding: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: #fff;
-  text-align: left;
   color: inherit;
-  cursor: pointer;
   box-shadow: none;
 }
 
-.mediaLibraryCardButton:hover {
+.mediaLibraryCard:hover {
   border-color: #bfb3a1;
   transform: translateY(-1px);
 }
 
-.mediaLibraryCardButton:focus-visible {
+.mediaLibraryCardOpen {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mediaLibraryCardOpen:focus-visible {
   outline: 3px solid rgba(38, 76, 59, 0.22);
   outline-offset: 2px;
 }
 
-.mediaLibraryCardButtonActive {
+.mediaLibraryCardActive {
   border-color: #264c3b;
   box-shadow: 0 0 0 2px rgba(38, 76, 59, 0.12);
+}
+
+.mediaLibraryCardChecked {
+  border-color: rgba(38, 76, 59, 0.46);
+  background: rgba(38, 76, 59, 0.04);
 }
 
 .mediaLibraryCardPinned {
@@ -2101,11 +2388,11 @@
   background: var(--panel-muted);
 }
 
-.mediaDeleteMarker {
+.mediaSelectMarker {
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 1;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2115,9 +2402,10 @@
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(38, 76, 59, 0.18);
   box-shadow: 0 4px 10px rgba(31, 42, 34, 0.12);
+  cursor: pointer;
 }
 
-.mediaDeleteMarker input {
+.mediaSelectMarker input {
   margin: 0;
 }
 
@@ -2160,15 +2448,13 @@
 
 .mediaInspector {
   position: sticky;
-  top: var(--space-4);
+  top: var(--space-3);
   display: grid;
-  gap: var(--space-3);
+  gap: 10px;
   min-width: 0;
   max-width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-gutter: stable;
-  font-size: clamp(0.9rem, 0.3vw + 0.78rem, 0.98rem);
+  overflow: visible;
+  font-size: 0.92rem;
 }
 
 .mediaInspectorHeader {
@@ -2187,7 +2473,7 @@
 .mediaInspectorPreview {
   display: grid;
   place-items: center;
-  min-height: 240px;
+  min-height: 172px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -2196,7 +2482,7 @@
 
 .mediaInspectorPreview img {
   width: 100%;
-  height: 240px;
+  height: 172px;
   object-fit: cover;
 }
 
@@ -2208,6 +2494,11 @@
   display: grid;
   gap: 10px;
   margin: 0;
+}
+
+.mediaMetaListCompact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .mediaMetaList div {
@@ -2237,11 +2528,55 @@
 
 .mediaSnippet {
   margin: 0;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--panel-muted);
   white-space: pre-wrap;
+  font-size: 0.88rem;
+}
+
+.mediaInspectorActionBlock {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(38, 76, 59, 0.14);
+  border-radius: var(--radius-sm);
+  background: rgba(38, 76, 59, 0.05);
+}
+
+.mediaInspectorDisclosure,
+.mediaInspectorNestedDisclosure {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.mediaInspectorDisclosure > summary,
+.mediaInspectorNestedDisclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mediaInspectorDisclosure > summary:focus-visible,
+.mediaInspectorNestedDisclosure > summary:focus-visible {
+  outline: 2px solid rgba(38, 76, 59, 0.28);
+  outline-offset: 2px;
+}
+
+.mediaInspectorDisclosureBody {
+  display: grid;
+  gap: 10px;
+  padding: 0 10px 10px;
+}
+
+.mediaInspectorNestedDisclosure {
+  background: var(--panel-muted);
 }
 
 .mediaUsageList {
@@ -2315,6 +2650,9 @@
 
 .collectionOverlayDialog {
   width: min(1280px, 100%);
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
 .mediaOverlayHeader {
@@ -2455,14 +2793,19 @@
 
 .collectionOverlayLayout {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
-  gap: var(--space-4);
-  align-items: start;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(260px, 300px);
+  gap: var(--space-3);
+  align-items: stretch;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .collectionOverlaySidebar {
   display: grid;
   gap: var(--space-3);
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .collectionOverlaySidebarHeader {
@@ -2473,7 +2816,7 @@
 .collectionList {
   display: grid;
   gap: var(--space-2);
-  max-height: 66vh;
+  min-height: 0;
   overflow: auto;
   padding-right: 2px;
 }
@@ -2505,8 +2848,254 @@
 
 .collectionOverlayForm {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.collectionOverlayMain {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.collectionActionRail {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+}
+
+.collectionActionRail .relationChipList {
+  max-height: 240px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.collectionActionRail .relationChip {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.collectionActionRail .relationChipRemove {
+  justify-self: start;
+}
+
+.collectionCandidateToolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.collectionCandidateFilters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.collectionActionRail .filterPill {
+  padding: 6px 8px;
+  font-size: 0.74rem;
+  line-height: 1.1;
+}
+
+.collectionOverlayActions {
+  position: static;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding-top: 6px;
+  padding-bottom: 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+}
+
+.collectionCompactNotice {
+  padding: 8px 10px;
+  font-size: 0.84rem;
+}
+
+.collectionCompositionFieldset {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.collectionCompositionFieldset .mediaGrid {
+  grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
+  gap: 8px;
+}
+
+.collectionMembershipHint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.collectionCandidateCard {
+  gap: 8px;
+  padding: 9px;
+  font-size: 0.86rem;
+}
+
+.collectionCandidateCard .mediaThumb {
+  min-height: 112px;
+}
+
+.collectionCandidateCard .mediaThumb img {
+  max-height: 140px;
+}
+
+.collectionRailGroup {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(190, 178, 159, 0.55);
+}
+
+.collectionRailHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.collectionRailHeader strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collectionRailKicker {
+  color: var(--subtle);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.collectionRailField {
+  gap: 4px;
+}
+
+.collectionRailField span {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.collectionRailField input,
+.collectionRailField select {
+  padding: 7px 9px;
+  font-size: 0.8rem;
+}
+
+.collectionRailStats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--subtle);
+}
+
+.collectionRailStats strong {
+  color: var(--text);
+}
+
+.collectionReadinessBadge {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.collectionReadinessReady {
+  background: #eef8f1;
+  border-color: #97c9a4;
+  color: #1f5132;
+}
+
+.collectionReadinessBlocked {
+  background: #fff1ed;
+  border-color: #d97b63;
+  color: #7d241b;
+}
+
+.collectionRailDetails {
+  min-width: 0;
+  border-bottom: 1px solid rgba(190, 178, 159, 0.55);
+  padding-bottom: 6px;
+}
+
+.collectionRailDetails summary {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+  list-style-position: inside;
+}
+
+.collectionRailDetailsBody {
+  display: grid;
+  gap: 6px;
+  padding-top: 6px;
+}
+
+.collectionRailDetailsBody .label {
+  gap: 4px;
+}
+
+.collectionRailDetailsBody .label span {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.collectionRailDetailsBody input,
+.collectionRailDetailsBody select,
+.collectionRailDetailsBody textarea {
+  padding: 7px 9px;
+  font-size: 0.8rem;
+}
+
+.collectionRailDetailsBody textarea {
+  min-height: 64px;
+}
+
+.collectionIconButton {
+  width: 100%;
+  padding: 7px 8px;
+  gap: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.collectionActionText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collectionUsageCompact {
+  display: grid;
+  gap: 4px;
 }
 
 .mediaOverlayMeta {
@@ -2660,6 +3249,13 @@
   gap: var(--space-2);
 }
 
+.diffSummary {
+  margin: 4px 0 0;
+  color: var(--subtle);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
 .previewJumpLink {
   flex: 0 0 auto;
   color: #264c3b;
@@ -2693,6 +3289,31 @@
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   font: inherit;
+}
+
+.diffAddedText,
+.diffRemovedText {
+  border-radius: 4px;
+  padding: 0 2px;
+  font: inherit;
+}
+
+.diffAddedText {
+  background: #dff3e7;
+  color: #153d2b;
+}
+
+.diffRemovedText {
+  background: #ffe3de;
+  color: #7d241b;
+}
+
+.diffDetailList {
+  margin: var(--space-2) 0 0;
+  padding-left: 18px;
+  color: var(--subtle);
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
 .split {
@@ -3252,17 +3873,47 @@
     grid-template-columns: 1fr;
   }
 
+  .collectionOverlayDialog {
+    height: auto;
+    max-height: calc(100vh - 24px);
+    overflow: auto;
+  }
+
+  .collectionOverlayLayout,
+  .collectionOverlaySidebar,
+  .collectionOverlayForm,
+  .collectionOverlayMain,
+  .collectionActionRail {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .collectionOverlaySidebar {
+    grid-template-rows: auto;
+  }
+
+  .collectionCandidateToolbar {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .collectionCandidateFilters {
+    justify-content: flex-start;
+  }
+
+  .collectionOverlayActions {
+    position: static;
+  }
+
   .mediaInspector {
     position: static;
   }
 
-  .reviewGalleryHeader,
   .reviewGalleryToolbar {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     align-items: stretch;
   }
 
-  .reviewScreenBar,
   .reviewModalLayout,
   .reviewModalEntityHero {
     grid-template-columns: 1fr;
@@ -3270,15 +3921,17 @@
     align-items: stretch;
   }
 
-  .reviewGalleryCounters,
-  .reviewGalleryToolbarActions,
-  .reviewGalleryStatusFilters {
+  .reviewGalleryToolbarActions {
     justify-content: flex-start;
   }
 
   .reviewGalleryCardFooter {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .mediaToolbar {
+    grid-template-columns: 1fr;
   }
 
   .mediaToolbarControls,
@@ -3288,12 +3941,8 @@
     justify-content: flex-start;
   }
 
-  .mediaToolbarServiceDisclosure {
-    width: 100%;
-  }
-
-  .mediaToolbarServiceBody {
-    justify-items: stretch;
+  .mediaMetaListCompact {
+    grid-template-columns: 1fr;
   }
 
   .editorRail {

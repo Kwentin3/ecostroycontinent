@@ -44,6 +44,7 @@ import {
 import { LANDING_PAGE_THEME_REGISTRY } from "../../lib/landing-composition/visual-semantics.js";
 import { getWorkspaceQuestionHint } from "../../lib/admin/question-model.js";
 import { getOwnerApprovalStatusLabel, getRevisionStateLabel, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { getVisibleReviewComment } from "../../lib/admin/review-comments.js";
 import {
   getLivePublicationStatusModel,
   getPublishActionCopy,
@@ -588,6 +589,7 @@ export function PageWorkspaceScreen({
     ? getOwnerApprovalStatusLabel(revision.ownerApprovalStatus)
     : "Согласование не требуется";
   const ownerApprovalPending = Boolean(revision && revision.ownerApprovalStatus !== "approved");
+  const visibleReviewComment = normalizeLegacyCopy(getVisibleReviewComment(revision));
   const canOpenPublishReadiness = Boolean(publishHref && revision?.state === "review");
   const activePublishedRevision = lifecycleState?.hasLivePublishedRevision
     ? {
@@ -1073,8 +1075,8 @@ export function PageWorkspaceScreen({
     }
   };
 
-  const handleArchivePage = async () => {
-    if (!lifecycleState?.canArchive || lifecycleBusy) {
+  const handleUnpublishPage = async () => {
+    if (!lifecycleState?.canUnpublish || lifecycleBusy) {
       return;
     }
 
@@ -1082,14 +1084,14 @@ export function PageWorkspaceScreen({
       return;
     }
 
-    setLifecycleBusy("archive");
+    setLifecycleBusy("unpublish");
     setError("");
     setStatus("");
 
     try {
       const formData = new FormData();
       formData.set("responseMode", "json");
-      const response = await fetch(lifecycleState.archiveUrl, {
+      const response = await fetch(lifecycleState.unpublishUrl, {
         method: "POST",
         body: formData
       });
@@ -1101,7 +1103,7 @@ export function PageWorkspaceScreen({
 
       setLifecycleState((current) => current ? {
         ...current,
-        canArchive: false,
+        canUnpublish: false,
         hasLivePublishedRevision: false,
         canDelete: false
       } : current);
@@ -1216,9 +1218,9 @@ export function PageWorkspaceScreen({
                     Ждет согласования
                   </button>
                 ) : null}
-                {lifecycleState?.canArchive ? (
-                  <button type="button" className={adminStyles.secondaryButton} onClick={handleArchivePage} disabled={Boolean(lifecycleBusy)}>
-                    {lifecycleBusy === "archive" ? "Снимаем..." : "Снять с публикации"}
+                {lifecycleState?.canUnpublish ? (
+                  <button type="button" className={adminStyles.secondaryButton} onClick={handleUnpublishPage} disabled={Boolean(lifecycleBusy)}>
+                    {lifecycleBusy === "unpublish" ? "Снимаем..." : "Снять с публикации"}
                   </button>
                 ) : null}
                 {lifecycleState?.canDelete ? (
@@ -1237,6 +1239,12 @@ export function PageWorkspaceScreen({
 
       {error ? <div className={adminStyles.statusPanelBlocking}>{normalizeLegacyCopy(error)}</div> : null}
       {status ? <div className={adminStyles.statusPanelInfo}>{normalizeLegacyCopy(status)}</div> : null}
+      {visibleReviewComment ? (
+        <section className={adminStyles.statusPanelWarning} aria-label="Замечание от проверки">
+          <strong>Замечание от проверки</strong>
+          <p className={adminStyles.helpText}>{visibleReviewComment}</p>
+        </section>
+      ) : null}
 
       <div className={styles.shell}>
         <aside className={styles.rail} data-layout-zone="sources">

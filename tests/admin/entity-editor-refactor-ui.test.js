@@ -64,6 +64,8 @@ test("entity editor keeps right rail status and actions compact", () => {
   assert.match(source, /formMethod="post"/);
   assert.match(source, /editorRailPrimaryFlow/);
   assert.match(source, /\{ADMIN_COPY\.sendForReview\}/);
+  assert.match(source, /name="intent"/);
+  assert.match(source, /value="save_and_submit"/);
   assert.match(source, /EntityEditorValidationNotice formId=\{editorFormId\}/);
   assert.match(source, /RailActionIcon icon="↺"/);
   assert.match(source, /RailActionIcon icon="↩"/);

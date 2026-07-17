@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
+import { createClientEventId, mirrorTelemetryEventToMetrica } from "./telemetry-metrica-adapter.js";
+
 const ENDPOINT = "/api/telemetry/events";
 const EVENT_VERSION = "1.0";
 // UI emits only into the telemetry contract; external counters live behind adapters.
@@ -124,32 +126,54 @@ function scrollDepth() {
   return Math.min(100, Math.max(0, Math.round((scrollTop / height) * 100)));
 }
 
-function send(payload, { beacon = false } = {}) {
+function send(payload, { beacon = false, fallbackAllowed = false, metricaConfig = null } = {}) {
   if (window.location.pathname.startsWith("/admin")) {
-    return;
+    return Promise.resolve({ accepted: false, skipped: true });
   }
 
-  const body = JSON.stringify({
+  const clientEventId = createClientEventId();
+  const telemetryPayload = {
     event_version: EVENT_VERSION,
     page_path: currentPath(),
     page_title: document.title || "",
     referrer: document.referrer || "",
     ...payload,
     metadata: trimMetadata(payload.metadata || {})
+  };
+  const body = JSON.stringify(telemetryPayload);
+  const mirrorToMetrica = ({ telemetryAccepted = false, fallback = false } = {}) => mirrorTelemetryEventToMetrica({
+    payload: telemetryPayload,
+    clientEventId,
+    config: metricaConfig,
+    telemetryAccepted,
+    fallbackAllowed: fallback
   });
 
   if (beacon && navigator.sendBeacon) {
     const blob = new Blob([body], { type: "application/json" });
-    navigator.sendBeacon(ENDPOINT, blob);
-    return;
+    const queued = navigator.sendBeacon(ENDPOINT, blob);
+
+    if (queued && fallbackAllowed) {
+      mirrorToMetrica({ fallback: true });
+    }
+
+    return Promise.resolve({ accepted: false, beaconQueued: queued });
   }
 
-  fetch(ENDPOINT, {
+  return fetch(ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body,
     keepalive: true
-  }).catch(() => {});
+  }).then((response) => {
+    const telemetryAccepted = response.status === 202;
+
+    if (telemetryAccepted) {
+      mirrorToMetrica({ telemetryAccepted: true });
+    }
+
+    return { accepted: telemetryAccepted, status: response.status };
+  }).catch(() => ({ accepted: false, error: "FETCH_FAILED" }));
 }
 
 function rootContextFor(element) {
@@ -164,7 +188,7 @@ function rootContextFor(element) {
   };
 }
 
-export function AnalyticsTracker() {
+export function AnalyticsTracker({ metricaConfig = null }) {
   const viewedElementsRef = useRef(new Set());
   const engagementSentRef = useRef(false);
   const activeStartedAtRef = useRef(0);
@@ -210,7 +234,7 @@ export function AnalyticsTracker() {
           section_id: "page",
           flush_reason: reason
         }
-      }, { beacon });
+      }, { beacon, metricaConfig });
     };
 
     send({
@@ -220,7 +244,7 @@ export function AnalyticsTracker() {
         analytics_id: "page",
         section_id: "page"
       }
-    });
+    }, { metricaConfig });
 
     const handleClick = (event) => {
       const element = event.target?.closest?.("[data-analytics-event]");
@@ -236,13 +260,19 @@ export function AnalyticsTracker() {
       }
 
       updateScrollDepth();
+      const useBeacon = eventName.endsWith("_clicked");
+
       send({
         event_name: eventName,
         ...rootContextFor(element),
         active_time_ms: Math.min(30 * 60 * 1000, Math.round(getActiveTime())),
         max_scroll_depth: maxScrollDepthRef.current,
         metadata: metadataFor(element)
-      }, { beacon: eventName.endsWith("_clicked") });
+      }, {
+        beacon: useBeacon,
+        fallbackAllowed: useBeacon,
+        metricaConfig
+      });
     };
 
     document.addEventListener("click", handleClick, true);
@@ -267,7 +297,7 @@ export function AnalyticsTracker() {
               event_name: eventName,
               ...rootContextFor(element),
               metadata: metadataFor(element)
-            });
+            }, { metricaConfig });
           }
         }, { threshold: [0.4] })
       : null;
@@ -315,7 +345,7 @@ export function AnalyticsTracker() {
       observer?.disconnect();
       flushEngagement("unmount", { beacon: true });
     };
-  }, []);
+  }, [metricaConfig]);
 
   return null;
 }

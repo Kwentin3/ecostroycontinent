@@ -354,6 +354,44 @@ test("buildServiceLandingVerificationReport distinguishes pass, warning, and blo
   );
 });
 
+test("buildServiceLandingVerificationReport treats unpublished child refs as publishable warnings", () => {
+  const payload = makeServicePayload();
+  const spec = buildServiceLandingCandidateSpec({
+    candidateId: "service_candidate_unpublished_refs",
+    baseRevisionId: "rev_1",
+    sourceContextSummary: "entity=entity_1 | proof=gallery_1",
+    payload
+  });
+  const report = buildServiceLandingVerificationReport({
+    candidateSpec: spec,
+    readiness: {
+      results: [
+        {
+          severity: "warning",
+          code: "unpublished_gallery_refs",
+          message: "Linked gallery is currently unpublished.",
+          field: "galleryIds"
+        }
+      ],
+      hasBlocking: false
+    },
+    revision: {
+      state: "review",
+      ownerReviewRequired: false,
+      ownerApprovalStatus: "approved",
+      previewStatus: "preview_renderable"
+    }
+  });
+  const referenceClass = report.classResults.find((result) => result.classId === "reference/truth");
+  const editorialClass = report.classResults.find((result) => result.classId === "editorial/publish-readiness");
+
+  assert.equal(referenceClass.status, "pass");
+  assert.equal(editorialClass.status, "warning");
+  assert.equal(report.hasBlocking, false);
+  assert.equal(report.overallStatus, "pass_with_warnings");
+  assert.equal(report.approvalEligible, true);
+});
+
 test("getLatestServiceLandingFactoryRecord returns the most recent landing-factory audit entry", () => {
   const latest = getLatestServiceLandingFactoryRecord([
     { id: "audit_1", details: {} },

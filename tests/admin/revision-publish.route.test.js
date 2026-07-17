@@ -49,6 +49,68 @@ test("publish route revalidates follow-up paths after successful publish", async
   assert.deepEqual(revalidated, ["/services", "/services/new", "/sitemap.xml"]);
 });
 
+test("publish route lets seo manager publish an approved content revision", async () => {
+  let published = false;
+
+  const response = await POST(
+    buildRequest(),
+    { params: { revisionId: "rev_approved" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_seo", role: "seo_manager" }, response: null }),
+      findRevisionById: async () => ({
+        id: "rev_approved",
+        entityId: "entity_media",
+        state: "review",
+        ownerApprovalStatus: "approved"
+      }),
+      findEntityById: async () => ({ id: "entity_media", entityType: "media_asset" }),
+      publishRevision: async () => {
+        published = true;
+
+        return {
+          entity: { id: "entity_media", entityType: "media_asset" },
+          publishFollowUp: { revalidationPaths: [] }
+        };
+      },
+      revalidatePath: () => {}
+    }
+  );
+
+  assert.equal(response.status, 303);
+  assert.equal(
+    response.headers.get("location")?.startsWith("http://localhost:3000/admin/entities/media_asset/entity_media?message="),
+    true
+  );
+  assert.equal(published, true);
+});
+
+test("publish route blocks seo manager before owner approval", async () => {
+  let published = false;
+
+  const response = await POST(
+    buildRequest(),
+    { params: { revisionId: "rev_pending" } },
+    {
+      requireRouteUser: async () => ({ user: { id: "user_seo", role: "seo_manager" }, response: null }),
+      findRevisionById: async () => ({
+        id: "rev_pending",
+        entityId: "entity_media",
+        state: "review",
+        ownerApprovalStatus: "pending"
+      }),
+      findEntityById: async () => ({ id: "entity_media", entityType: "media_asset" }),
+      publishRevision: async () => {
+        published = true;
+      },
+      revalidatePath: () => {}
+    }
+  );
+
+  assert.equal(response.status, 303);
+  assert.equal(response.headers.get("location"), "http://localhost:3000/admin/no-access");
+  assert.equal(published, false);
+});
+
 test("publish route redirects to no-access when role cannot publish", async () => {
   const response = await POST(
     buildRequest(),

@@ -26,21 +26,38 @@ test("media workspace keeps service cleanup and legacy tools out of the main too
 
   assert.match(source, /mediaToolbarFieldRow/);
   assert.match(source, /mediaToolbarPrimaryActions/);
-  assert.match(source, /Cleanup-операции остаются под рукой, но не забирают место у основного сценария медиатеки/);
-  assert.match(source, /Cleanup, legacy-проверка и история остаются доступны отдельно/);
+  assert.match(source, /mediaBulkActionBar/);
+  assert.match(source, /Дополнительно/);
   assert.equal((source.match(/Проверить удаление \(legacy\)/g) || []).length, 1);
-  assert.equal((source.match(/Служебные действия/g) || []).length, 2);
+  assert.equal((source.match(/Служебные действия/g) || []).length, 0);
   assert.match(css, /\.mediaToolbarFieldRow,\s*\.mediaToolbarPrimaryActions\s*\{/);
-  assert.match(css, /\.mediaToolbarServiceDisclosure\s*\{/);
+  assert.match(css, /\.mediaBulkActionBar\s*\{/);
+  assert.doesNotMatch(css, /\.mediaToolbarServiceDisclosure\s*\{/);
 });
 
-test("media collection overlay demotes cleanup controls behind a service disclosure", () => {
+test("media collection overlay keeps membership central and controls compact", () => {
   const source = readUtf8("components/admin/MediaCollectionOverlay.js");
+  const css = readUtf8("components/admin/admin-ui.module.css");
 
-  assert.match(source, /Служебные действия/);
-  assert.match(source, /Очистка и редкие lifecycle-операции остаются доступны/);
+  assert.match(source, /Служебное/);
+  assert.match(source, /Галочка означает членство в коллекции/);
+  assert.match(source, /showSelectedOnly/);
+  assert.match(source, /Описание и SEO/);
   assert.match(source, /Центр очистки/);
   assert.match(source, /getRemovalMarkHref\("gallery"/);
+  assert.match(source, /collectionActionRail/);
+  assert.match(source, /collectionRailGroup/);
+  assert.match(source, /collectionOverlayActions/);
+  assert.match(source, /collectionIconButton/);
+  assert.match(source, /Фильтр кандидатов коллекции/);
+  assert.doesNotMatch(source, /RelationChipRow/);
+  assert.doesNotMatch(source, /title="Выбранные файлы"/);
+  assert.match(css, /\.collectionOverlayDialog\s*\{/);
+  assert.match(css, /\.collectionActionRail\s*\{/);
+  assert.match(css, /overflow:\s*visible;/);
+  assert.match(css, /\.collectionRailGroup\s*\{/);
+  assert.match(css, /\.collectionRailDetails\s*\{/);
+  assert.match(css, /\.collectionOverlayActions\s*\{/);
 });
 
 test("page registry create modal keeps the fallback route secondary", () => {
@@ -55,11 +72,14 @@ test("page registry create modal keeps the fallback route secondary", () => {
   assert.match(css, /\.createServiceBody\s*\{/);
 });
 
-test("review queue keeps operator guidance compact and collapsible", () => {
+test("review queue starts with one compact filter toolbar before the gallery", () => {
   const source = readUtf8("app/admin/(console)/review/page.js");
 
-  assert.match(source, /В очереди остаются только материалы, по которым еще нужно решение или возврат/);
-  assert.match(source, /Как устроена очередь/);
-  assert.match(source, /После согласования карточка уходит из review-очереди/);
-  assert.match(source, /compactDisclosureSummary/);
+  assert.match(source, /aria-label="Фильтры проверки"/);
+  assert.match(source, /reviewGalleryToolbar/);
+  assert.match(source, /reviewFilterSearch/);
+  assert.match(source, /reviewGalleryResultCount/);
+  assert.doesNotMatch(source, /В очереди остаются только материалы, по которым еще нужно решение или возврат/);
+  assert.doesNotMatch(source, /Как устроена очередь/);
+  assert.doesNotMatch(source, /После согласования карточка уходит из review-очереди/);
 });

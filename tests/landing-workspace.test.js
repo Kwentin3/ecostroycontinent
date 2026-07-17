@@ -316,6 +316,46 @@ test("landing workspace verification warns when stage A visual semantics create 
   assert.equal(report.warnings.some((issue) => issue.code === "contrast_warning_content_band"), true);
 });
 
+test("landing workspace verification treats unpublished child refs as render-time omissions, not blockers", () => {
+  const spec = buildLandingWorkspaceCandidateSpec({
+    candidateId: "landing_candidate_unpublished_refs",
+    pageId: "page_1",
+    landingDraftId: "rev_2",
+    baseRevisionId: "rev_base",
+    sourceContextSummary: "page=page_1 | proof=media_2",
+    payload: makeLandingDraft()
+  });
+  const report = buildLandingWorkspaceVerificationReport({
+    candidateSpec: spec,
+    readiness: {
+      summary: "Unpublished child media will be omitted from public assembly.",
+      hasBlocking: false,
+      results: [
+        {
+          severity: "warning",
+          code: "unpublished_primary_media_ref",
+          message: "Primary media is currently unpublished.",
+          field: "primaryMediaAssetId"
+        }
+      ]
+    },
+    revision: {
+      state: "review",
+      ownerReviewRequired: false,
+      ownerApprovalStatus: "approved",
+      previewStatus: "preview_renderable"
+    }
+  });
+  const referenceClass = report.classResults.find((result) => result.classId === "reference/truth");
+  const editorialClass = report.classResults.find((result) => result.classId === "editorial/publish-readiness");
+
+  assert.equal(referenceClass.status, "pass");
+  assert.equal(editorialClass.status, "warning");
+  assert.equal(report.hasBlocking, false);
+  assert.equal(report.overallStatus, "pass_with_warnings");
+  assert.equal(report.approvalEligible, true);
+});
+
 test("landing workspace session anchoring persists a pageId mismatch once and then stays stable", async () => {
   const baseSlice = makeMemorySlice("other_page");
   let anchoredCalls = 0;

@@ -79,8 +79,9 @@ export default async function AboutPage({ searchParams }) {
   const page = publishedPage || placeholderPage;
 
   if (!page) {
-    // Sticky canon: keep this 404 honest until owner-approved Page(type=about)
-    // exists and is explicitly published. Do not add hardcoded fallback content.
+    // Sticky canon: /about is Content Core sourced. Production currently has
+    // an owner-approved Page(type=about); if it is unpublished or removed,
+    // keep this honest 404 instead of adding hardcoded fallback content.
     notFound();
   }
 

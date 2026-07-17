@@ -14,19 +14,15 @@ test("review workflow status surfaces owner-approved items as agreed even withou
   assert.equal(status.tone, "success");
 });
 
-test("review workflow status keeps non-owner review items pending until explicit approval", () => {
+test("review workflow status keeps non-owner review items visible without owner decision", () => {
   const status = getReviewWorkflowStatusModel({
     ownerReviewRequired: false,
     ownerApprovalStatus: "not_required"
   });
-  const approvedStatus = getReviewWorkflowStatusModel({
-    ownerReviewRequired: false,
-    ownerApprovalStatus: "approved"
-  });
 
-  assert.equal(status.key, "needs_owner");
-  assert.notEqual(status.label, approvedStatus.label);
+  assert.equal(status.key, "in_review");
   assert.equal(status.tone, "warning");
+  assert.equal(status.attention, false);
 });
 
 test("review workflow status keeps unresolved owner approval items in the decision bucket", () => {
@@ -36,6 +32,6 @@ test("review workflow status keeps unresolved owner approval items in the decisi
   });
 
   assert.equal(status.key, "needs_owner");
-  assert.equal(status.label, "Требует решения");
+  assert.equal(status.label, "Ждёт решения собственника");
   assert.equal(status.attention, true);
 });

@@ -1,34 +1,10 @@
 import Link from "next/link";
 
 import { getInfraHealthSnapshot } from "../../lib/admin/infra-health.js";
+import { getNavItems } from "../../lib/admin/nav.js";
 import { getRoleLabel } from "../../lib/auth/session.js";
-import { userIsSuperadmin } from "../../lib/auth/roles.js";
 import { ADMIN_COPY } from "../../lib/ui-copy.js";
 import styles from "./admin-ui.module.css";
-
-const baseNavItems = [
-  { href: "/admin", label: "Главная" },
-  { href: "/admin/review", label: "Проверка" },
-  { href: "/admin/removal-sweep", label: "Очистка" },
-  { href: "/admin/visibility", label: "Видимость" },
-  { href: "/admin/entities/global_settings", label: "Настройки" },
-  { href: "/admin/entities/media_asset", label: "Медиа" },
-  { href: "/admin/entities/service", label: "Услуги" },
-  { href: "/admin/entities/equipment", label: "Техника" },
-  { href: "/admin/entities/case", label: "Кейсы" },
-  { href: "/admin/entities/page", label: "Страницы" },
-  { href: "/admin/users", label: "Пользователи" }
-];
-
-export function getNavItems(user) {
-  const navItems = [...baseNavItems];
-
-  if (userIsSuperadmin(user)) {
-    navItems.push({ href: "/admin/diagnostics/llm", label: "LLM диагностика" });
-  }
-
-  return navItems;
-}
 
 function renderBreadcrumbs(breadcrumbs) {
   return breadcrumbs.map((crumb, index) => {

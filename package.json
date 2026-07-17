@@ -21,11 +21,19 @@
     "yandex:exchange-oauth-code": "node scripts/yandex/exchange-oauth-code.mjs",
     "yandex:check-metrica": "node scripts/yandex/bootstrap.mjs check-metrica",
     "yandex:bootstrap-metrica-goals": "node scripts/yandex/bootstrap.mjs bootstrap-goals",
-    "yandex:check-webmaster": "node scripts/yandex/bootstrap.mjs check-webmaster"
+    "yandex:check-webmaster": "node scripts/yandex/bootstrap.mjs check-webmaster",
+    "yandex:metrica-import:dry-run": "node scripts/yandex/import-metrica-aggregates.mjs --dry-run",
+    "yandex:metrica-import:r2a": "node scripts/yandex/import-metrica-aggregates.mjs --write",
+    "yandex:metrica-import:r2b:dry-run": "node scripts/yandex/import-metrica-aggregates.mjs --dry-run --mode=r2b",
+    "yandex:metrica-import:r2b": "node scripts/yandex/import-metrica-aggregates.mjs --write --mode=r2b",
+    "yandex:webmaster-import:dry-run": "node scripts/yandex/import-webmaster-data.mjs --dry-run",
+    "yandex:webmaster-import:r3a": "node scripts/yandex/import-webmaster-data.mjs --write",
+    "yandex:webmaster-query-import:dry-run": "node scripts/yandex/import-webmaster-query-visibility.mjs --dry-run",
+    "yandex:webmaster-query-import:r3b": "node scripts/yandex/import-webmaster-query-visibility.mjs --write"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1018.0",
-    "next": "16.2.4",
+    "next": "16.2.9",
     "pg": "^8.16.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",

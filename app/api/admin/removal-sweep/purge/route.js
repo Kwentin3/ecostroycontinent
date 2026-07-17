@@ -6,7 +6,7 @@ import { redirectToAdmin, redirectWithError, redirectWithQuery, toOperatorMessag
 import { requireRouteUser } from "../../../../../lib/admin/route-helpers.js";
 import { executeRemovalSweep } from "../../../../../lib/admin/removal-sweep-analysis.js";
 import { getRemovalSweepHref, isRemovalQuarantineEntityTypeSupported } from "../../../../../lib/admin/removal-quarantine.js";
-import { userIsSuperadmin } from "../../../../../lib/auth/roles.js";
+import { userCanRunMaintenancePurge } from "../../../../../lib/auth/roles.js";
 import { ENTITY_TYPES } from "../../../../../lib/content-core/content-types.js";
 
 function collectRevalidationPaths(result = {}) {
@@ -31,7 +31,7 @@ function makeSuccessMessage() {
 export async function POST(request, _context, deps = {}) {
   const routeDeps = {
     requireRouteUser,
-    userIsSuperadmin,
+    userCanRunMaintenancePurge,
     executeRemovalSweep,
     revalidatePath,
     ...deps
@@ -42,7 +42,7 @@ export async function POST(request, _context, deps = {}) {
     return response;
   }
 
-  if (!routeDeps.userIsSuperadmin(user)) {
+  if (!routeDeps.userCanRunMaintenancePurge(user)) {
     return redirectToAdmin("/admin/no-access");
   }
 

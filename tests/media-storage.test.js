@@ -8,6 +8,8 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import {
+  MEDIA_S3_OBJECT_CACHE_CONTROL,
+  buildMediaPutObjectCommandInput,
   createFallbackMediaStorageAdapter,
   createMediaStorageAdapter,
   createMediaStorageKey,
@@ -141,6 +143,26 @@ test("media storage keys are created under the bounded media prefix", () => {
     createMediaStorageKey("nested\\photo.PNG", { id: "asset_789" }),
     "media/asset_789.png"
   );
+});
+
+test("s3 media upload input carries browser-cache metadata for CDN delivery", () => {
+  const bytes = Buffer.from("media-bytes");
+  const input = buildMediaPutObjectCommandInput({
+    config: {
+      mediaS3Bucket: "media-bucket"
+    },
+    storageKey: "media/asset.webp",
+    bytes,
+    contentType: "image/webp"
+  });
+
+  assert.deepEqual(input, {
+    Bucket: "media-bucket",
+    Key: "media/asset.webp",
+    Body: bytes,
+    ContentType: "image/webp",
+    CacheControl: MEDIA_S3_OBJECT_CACHE_CONTROL
+  });
 });
 
 test("s3 media config does not require MEDIA_STORAGE_DIR to be set", async () => {

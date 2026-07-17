@@ -79,8 +79,9 @@ export default async function ContactsPage({ searchParams }) {
   const page = publishedPage || placeholderPage;
 
   if (!page) {
-    // Sticky canon: keep this 404 honest until owner-approved Page(type=contacts)
-    // exists and is explicitly published. Do not add hardcoded fallback content.
+    // Sticky canon: /contacts is Content Core sourced. Production currently
+    // has an owner-approved Page(type=contacts); if it is unpublished or
+    // removed, keep this honest 404 instead of hardcoding contact content.
     notFound();
   }
 

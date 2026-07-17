@@ -1,4 +1,4 @@
-# YANDEX_SEO_DASHBOARD_BOOTSTRAP_Экостройконтинент_v0.1
+﻿# YANDEX_SEO_DASHBOARD_BOOTSTRAP_Экостройконтинент_v0.1
 
 Статус: tooling/bootstrap note  
 Дата: 2026-05-04  
@@ -90,6 +90,44 @@ printf '%s' "$YANDEX_OAUTH_AUTH_CODE" | npm run yandex:exchange-oauth-code -- \
 npm run yandex:check-metrica
 ```
 
+R2A Metrica aggregate import commands:
+
+```bash
+# Dry-run: validates env, counter, goals and Reporting API plan; writes nothing.
+npm run yandex:metrica-import:dry-run -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD
+
+# Write import: server-only aggregate import into project storage and analytics_source_sync_state.
+npm run yandex:metrica-import:r2a -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD
+```
+
+R2A importer rules:
+
+- uses only server-side `YANDEX_METRICA_OAUTH_TOKEN`;
+- writes external aggregate enrichment into `external_metrica_daily_aggregate`;
+- updates `analytics_source_sync_state` for `source_system = yandex_metrica`;
+- imports only minimal daily traffic/goals in R2A: `visits`, `pageviews`, `users` if supported, and reaches for the 11 configured goals;
+- if Reporting API returns empty rows with zero totals, writes explicit zero-valued daily rows with safe metadata instead of treating internal telemetry as zero;
+- does not schedule imports, change `/admin/visibility`, or wire imported rows into the analytics read model.
+
+R2B Metrica source/device/country/landing import commands:
+
+```bash
+# Dry-run: validates env and bounded Reporting API plans; writes nothing.
+npm run yandex:metrica-import:r2b:dry-run -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD
+
+# Write import: server-only external aggregate enrichment with landing diagnostics.
+npm run yandex:metrica-import:r2b -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD
+```
+
+R2B importer rules:
+
+- uses only server-side `YANDEX_METRICA_OAUTH_TOKEN`;
+- imports bounded external aggregate reports for traffic source, device, country and landing URL/path;
+- may safe-skip optional source detail or region reports when cardinality is too high;
+- normalizes landing URLs and writes unmapped paths as diagnostics only;
+- does not import raw sessions/logs, city reports, dimensioned goals or source-device-region-landing cross-products;
+- does not schedule imports, change `/admin/visibility`, or wire imported rows into the analytics read model.
+
 Создать недостающие цели Метрики:
 
 ```bash
@@ -101,6 +139,46 @@ npm run yandex:bootstrap-metrica-goals
 ```bash
 npm run yandex:check-webmaster
 ```
+
+R3A Webmaster import commands:
+
+```bash
+# Dry-run: validates env, host, verification and selected endpoint capability; writes nothing.
+npm run yandex:webmaster-import:dry-run -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD --observed-date=YYYY-MM-DD --limit=10
+
+# Write import: server-only Webmaster enrichment import into dedicated storage and analytics_source_sync_state.
+npm run yandex:webmaster-import:r3a -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD --observed-date=YYYY-MM-DD --limit=10
+```
+
+R3A importer rules:
+
+- uses only server-side `YANDEX_WEBMASTER_OAUTH_TOKEN`;
+- checks `YANDEX_WEBMASTER_HOST_ID` and host verification before import;
+- writes accepted external search/indexation enrichment into dedicated `external_webmaster_*` tables;
+- updates `analytics_source_sync_state` for `source_system = yandex_webmaster`;
+- normalizes Webmaster URLs and writes unmapped URLs to diagnostics when applicable;
+- treats query data as aggregate page-level evidence only, never as user/session/lead attribution;
+- does not schedule imports, change `/admin/visibility`, mutate Content Core, or wire imported rows into the analytics read model.
+R3B Webmaster query/page visibility import commands:
+
+```bash
+# Dry-run: checks beta export capabilities and synchronous query analytics fallback; writes nothing.
+npm run yandex:webmaster-query-import:dry-run -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD --limit=100 --max-pages=2
+
+# Write import: imports accepted aggregate query/page rows if the endpoint returns rows, then updates analytics_source_sync_state.
+npm run yandex:webmaster-query-import:r3b -- --date1=YYYY-MM-DD --date2=YYYY-MM-DD --limit=100 --max-pages=2
+```
+
+R3B importer rules:
+
+- uses only server-side `YANDEX_WEBMASTER_OAUTH_TOKEN`;
+- checks advanced export beta capability endpoints, but defaults to synchronous `query-analytics/list` fallback when beta export is async/deferred;
+- writes only aggregate query/page visibility rows to `external_webmaster_query_visibility_daily` when rows exist;
+- treats a successful zero-row API response as a truthful zero-row external result, not fabricated data and not proof of zero demand;
+- updates `analytics_source_sync_state` for `source_system = yandex_webmaster`;
+- normalizes Webmaster URLs and writes unmapped URLs to diagnostics when applicable;
+- keeps query data aggregate-only and never joins it to users, sessions, contact journeys or leads;
+- does not schedule imports, change `/admin/visibility`, mutate Content Core, or wire imported rows into the analytics read model.
 
 Скрипты автоматически читают локальный `.env`, если он есть, и не перезаписывают уже экспортированные переменные окружения.
 
@@ -178,6 +256,20 @@ YANDEX_WEBMASTER_OAUTH_TOKEN=
   }
 }
 ```
+
+### 5.1. R1 public runtime mirror
+
+R1 public runtime behavior is separate from bootstrap tooling:
+
+- internal first-party telemetry remains the operational source of truth;
+- public actions continue to be ingested through `/api/telemetry/events`;
+- Yandex Metrica is an optional external mirror, not the source of truth for Content Core mapping, operational dashboard decisions or lead/contact distinction;
+- public counter loading is controlled only by browser-safe `NEXT_PUBLIC_YANDEX_METRICA_ENABLED` and `NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID`;
+- OAuth tokens, Webmaster tokens, client secret and refresh tokens must never be exposed through public config or browser bundles;
+- default R1 init posture is conservative: `webvisor=false`, `clickmap=false`, `ecommerce=false`, `trackLinks=false`, `accurateTrackBounce=false`;
+- `reachGoal` calls are allowed only through the approved centralized Metrica bootstrap/adapter boundary.
+
+Production enablement of the public counter remains gated by privacy/cookie approval. If the flag stays disabled, internal telemetry is still valid and operational.
 
 ## 6. Яндекс Вебмастер
 

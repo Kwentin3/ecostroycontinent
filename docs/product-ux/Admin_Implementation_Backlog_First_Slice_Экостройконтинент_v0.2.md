@@ -294,9 +294,9 @@ Implement minimal role-gated access for the three fixed roles.
 
 #### Done when
 
-- `SEO Manager` cannot publish
+- `SEO Manager` can publish only approved review revisions
 - `Business Owner` cannot bypass editor flow and publish
-- `Superadmin` can manage users and publish
+- `Superadmin` can manage users, rollback and publish
 
 ### WP-8. Admin UI vertical slices
 

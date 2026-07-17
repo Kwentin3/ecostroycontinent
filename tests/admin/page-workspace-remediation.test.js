@@ -219,14 +219,14 @@ test("home preview payload does not synthesize an about block", () => {
   assert.equal(preview.sections.find((section) => section.type === PAGE_SECTION_TYPES.SERVICE_LIST).title, "");
 });
 
-test("page lifecycle stays bounded: archive for live, delete for never-published only", () => {
+test("page lifecycle stays bounded: unpublish for live, delete for never-published only", () => {
   const liveLifecycle = buildPageWorkspaceLifecycleState({
     aggregate: {
       entity: { activePublishedRevisionId: "rev_live" },
       revisions: [{ id: "rev_live", state: "published" }]
     },
     permissions: {
-      canArchive: true,
+      canUnpublish: true,
       canDelete: true
     }
   });
@@ -236,14 +236,14 @@ test("page lifecycle stays bounded: archive for live, delete for never-published
       revisions: [{ id: "rev_draft", state: "draft" }]
     },
     permissions: {
-      canArchive: true,
+      canUnpublish: true,
       canDelete: true
     }
   });
 
-  assert.equal(liveLifecycle.canArchive, true);
+  assert.equal(liveLifecycle.canUnpublish, true);
   assert.equal(liveLifecycle.canDelete, false);
-  assert.equal(draftOnlyLifecycle.canArchive, false);
+  assert.equal(draftOnlyLifecycle.canUnpublish, false);
   assert.equal(draftOnlyLifecycle.canDelete, true);
 });
 

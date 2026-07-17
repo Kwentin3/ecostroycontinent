@@ -12,32 +12,30 @@ import {
   COLLECTION_FILTER_ORPHAN,
   matchesCollectionFilter
 } from "../../lib/admin/media-gallery-filters";
+import {
+  MEDIA_LIBRARY_FILTERS,
+  buildMediaLibrarySummaryItems,
+  matchesMediaLibraryFilter,
+  mediaAssetNeedsOwnerDecision,
+  mediaAssetReadyToPublish
+} from "../../lib/admin/media-library-filters.js";
 import { appendAdminReturnTo } from "../../lib/admin/relation-navigation.js";
 import {
   getRemovalMarkHref,
   getRemovalSweepHref,
   getRemovalUnmarkHref
 } from "../../lib/admin/removal-quarantine.js";
+import {
+  getMediaReviewSelection,
+  mediaAssetCanSubmitForReview
+} from "../../lib/admin/media-review-actions.js";
+import { getVisibleReviewComment } from "../../lib/admin/review-comments.js";
 import { getPublishActionCopy, getWorkingRevisionStatusModel } from "../../lib/admin/workflow-status.js";
+import { userCanPublishRevision, userCanUnpublish } from "../../lib/auth/roles.js";
+import { MediaBulkRemovalDialog } from "./MediaBulkRemovalDialog";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
-
-const FILTERS = [
-  { key: "test-only", label: "Только тестовые" },
-  { key: "all", label: "Все" },
-  { key: "recent", label: "Недавние" },
-  { key: "mine", label: "Мои" },
-  { key: "missing-alt", label: "Нет альтернативного текста" },
-  { key: "orphan", label: "Сироты" },
-  { key: "used", label: "Используется" },
-  { key: "unused", label: "Не используется" },
-  { key: "draft", label: "Черновики" },
-  { key: "review", label: "На проверке" },
-  { key: "published", label: "Опубликовано" },
-  { key: "archived", label: "В архиве" },
-  { key: "broken", label: "Проблемные" }
-];
 
 const STATUS_SORT_ORDER = {
   review: 0,
@@ -53,8 +51,8 @@ function getDeletePreviewHref(entityType, entityId, returnTo = "") {
   return appendAdminReturnTo(`/admin/entities/${entityType}/${entityId}/delete`, returnTo);
 }
 
-function getMediaLiveDeactivationHref(entityId, returnTo = "") {
-  return appendAdminReturnTo(`/admin/entities/media_asset/${entityId}/live-deactivation`, returnTo);
+function getMediaUnpublishHref(entityId, returnTo = "") {
+  return appendAdminReturnTo(`/admin/entities/media_asset/${entityId}/unpublish`, returnTo);
 }
 
 function buildTitleFromFilename(filename) {
@@ -104,35 +102,6 @@ function formatDate(value) {
     minute: "2-digit",
     timeZone: "Europe/Moscow"
   }).format(new Date(parsed));
-}
-
-function matchesFilter(item, filterKey, currentUsername) {
-  switch (filterKey) {
-    case "test-only":
-      return item.isTestData;
-    case "recent":
-      return item.recent;
-    case "mine":
-      return Boolean(item.uploadedBy) && item.uploadedBy === currentUsername;
-    case "missing-alt":
-      return item.missingAlt;
-    case "orphan":
-      return item.orphaned;
-    case "used":
-      return item.usageCount > 0;
-    case "unused":
-      return item.usageCount === 0;
-    case "draft":
-    case "review":
-    case "published":
-      return item.statusKey === filterKey;
-    case "archived":
-      return item.archived;
-    case "broken":
-      return item.brokenBinary;
-    default:
-      return true;
-  }
 }
 
 function matchesQuery(item, normalizedQuery) {
@@ -383,28 +352,23 @@ function mergeById(currentItems, nextItems) {
   return Array.from(map.values());
 }
 
-function isEditorRole(role) {
-  return role === "superadmin" || role === "seo_manager";
-}
-
-function canSubmitMediaForReview(item, currentUserRole) {
-  return Boolean(item?.currentRevisionId) && item?.statusKey === "draft" && isEditorRole(currentUserRole);
-}
-
 function isWaitingForOwnerApproval(item) {
-  return Boolean(
-    item?.currentRevisionId
-    && item?.statusKey === "review"
-    && item?.ownerApprovalStatus !== "approved"
-  );
+  return Boolean(item?.currentRevisionId && mediaAssetNeedsOwnerDecision(item));
 }
 
 function canOpenMediaPublishReadiness(item, currentUserRole) {
+  // Approved media leaves the review queue; publish from the card through RBAC.
+  const revision = item?.currentRevisionId
+    ? {
+      state: item.statusKey,
+      ownerApprovalStatus: item.ownerApprovalStatus
+    }
+    : null;
+
   return Boolean(
     item?.currentRevisionId
-    && item?.statusKey === "review"
-    && currentUserRole === "superadmin"
-    && item?.ownerApprovalStatus === "approved"
+    && mediaAssetReadyToPublish(item)
+    && userCanPublishRevision({ role: currentUserRole }, "media_asset", revision)
   );
 }
 
@@ -420,11 +384,11 @@ function getPublicationNote(item, currentUserRole) {
   }
 
   if (isWaitingForOwnerApproval(item)) {
-    return "Версия уже отправлена на согласование. Публикация откроется после решения собственника.";
+    return "Версия ждёт решения собственника. Публикация откроется после согласования.";
   }
 
   if (item?.statusKey === "review") {
-    return "Версия уже проходит общий этап согласования. Здесь можно открыть экран проверки и посмотреть замечания.";
+    return "Версия находится во внутренней проверке без отдельного решения собственника.";
   }
 
   return "Связанные техника, услуги, кейсы и страницы могут ссылаться только на опубликованное медиа. Сначала отправьте текущую версию на проверку.";
@@ -452,7 +416,7 @@ function MediaInspector({
     );
   }
 
-  const canSubmitForReview = canSubmitMediaForReview(item, currentUserRole);
+  const canSubmitForReview = mediaAssetCanSubmitForReview(item, { role: currentUserRole });
   const waitingForOwnerApproval = isWaitingForOwnerApproval(item);
   const canOpenPublishReadiness = canOpenMediaPublishReadiness(item, currentUserRole);
   // Media library rows expose the live marker as publishedRevisionNumber plus
@@ -475,10 +439,14 @@ function MediaInspector({
   const publishAction = getPublishActionCopy({ activePublishedRevision });
   const reviewHref = item.currentRevisionId ? `/admin/review/${item.currentRevisionId}` : "";
   const publishHref = item.currentRevisionId ? `/admin/revisions/${item.currentRevisionId}/publish` : "";
-  const liveDeactivationHref = item.publishedRevisionNumber && currentUserRole === "superadmin"
-    ? getMediaLiveDeactivationHref(item.id, returnTo)
+  const unpublishHref = item.publishedRevisionNumber && userCanUnpublish({ role: currentUserRole }, "media_asset")
+    ? getMediaUnpublishHref(item.id, returnTo)
     : "";
   const publicationNote = getPublicationNote(item, currentUserRole);
+  const visibleReviewComment = getVisibleReviewComment({
+    state: item.statusKey,
+    reviewComment: item.reviewComment
+  });
 
   return (
     <aside className={`${styles.panel} ${styles.mediaInspector}`} aria-live="polite">
@@ -496,7 +464,11 @@ function MediaInspector({
       <div className={styles.mediaInspectorPreview}>
         {item.hasPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
+          <img
+            src={item.thumbnailUrl || item.previewUrl}
+            alt={item.alt || item.title || item.originalFilename || "Предпросмотр"}
+            decoding="async"
+          />
         ) : (
           <div className={styles.mediaInspectorPlaceholder}>Нет предпросмотра</div>
         )}
@@ -505,22 +477,46 @@ function MediaInspector({
       <div className={styles.badgeRow}>
         <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{workingStatus.label}</span>
         <span className={`${styles.badge} ${styles[`mediaBadge${getBadgeTone(item.liveStatusTone)}`]}`}>{item.liveStatusLabel}</span>
-        {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тестовые</span> : null}
-        {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Помечено на удаление</span> : null}
-        {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>{item.lifecycleLabel}</span> : null}
         <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
-          {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст есть"}
+          {item.missingAlt ? "Нет alt" : "Alt есть"}
         </span>
-        <span className={`${styles.badge} ${item.orphaned ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
-          {item.orphaned ? "Сирота" : item.collectionShortLabel}
-        </span>
-        <span className={`${styles.badge} ${item.usageCount ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
-          {item.whereUsedLabel}
-        </span>
+        {item.orphaned ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Сирота</span> : null}
+        {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
+        {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Удаление</span> : null}
         {item.brokenBinary ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Сломан</span> : null}
       </div>
 
-      <dl className={styles.mediaMetaList}>
+      <section className={styles.mediaInspectorActionBlock} aria-label="Быстрые действия с выбранным медиа">
+        <p className={styles.helpText}>{publicationNote}</p>
+        {visibleReviewComment ? (
+          <div className={styles.statusPanelWarning} aria-label="Замечание от проверки">
+            <strong>Замечание от проверки</strong>
+            <p className={styles.helpText}>{visibleReviewComment}</p>
+          </div>
+        ) : null}
+        <div className={styles.inlineActions}>
+          {canSubmitForReview ? (
+            <form action={`/api/admin/revisions/${item.currentRevisionId}/submit`} method="post">
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <button type="submit" className={styles.primaryButton}>Отправить на проверку</button>
+            </form>
+          ) : null}
+          {canOpenPublishReadiness && publishHref ? (
+            <Link href={publishHref} className={styles.primaryButton}>{publishAction.label}</Link>
+          ) : null}
+          {waitingForOwnerApproval && reviewHref ? (
+            <Link href={reviewHref} className={styles.secondaryButton}>Открыть проверку</Link>
+          ) : null}
+          {waitingForOwnerApproval ? (
+            <button type="button" className={styles.secondaryButton} disabled>Ждёт решения</button>
+          ) : null}
+          {unpublishHref ? (
+            <Link href={unpublishHref} className={styles.secondaryButton}>Снять с публикации</Link>
+          ) : null}
+        </div>
+      </section>
+
+      <dl className={`${styles.mediaMetaList} ${styles.mediaMetaListCompact}`}>
         <div>
           <dt>Формат</dt>
           <dd>{item.mimeType || "Не указан"}</dd>
@@ -533,163 +529,121 @@ function MediaInspector({
           <dt>Обновлено</dt>
           <dd>{formatDate(item.updatedAt)}</dd>
         </div>
-        <div>
-          <dt>Загрузил</dt>
-          <dd>{item.uploadedBy || "Не указано"}</dd>
-        </div>
       </dl>
 
-      <section className={styles.mediaInspectorSection}>
-        <h4>Быстрые сигналы</h4>
-        <p className={styles.helpText}>{getWarningNote(item)}</p>
-        {item.caption ? <p className={styles.mediaSnippet}>{item.caption}</p> : null}
-      </section>
+      <p className={styles.helpText}>{getWarningNote(item)}</p>
+      {item.caption ? <p className={styles.mediaSnippet}>{item.caption}</p> : null}
 
-      <section className={styles.mediaInspectorSection}>
-        <h4>Использование</h4>
-        <dl className={styles.mediaMetaList}>
-          {item.usageSummaryItems.map((summaryItem) => (
-            <div key={summaryItem.key}>
-              <dt>{summaryItem.label}</dt>
-              <dd>{summaryItem.value}</dd>
+      <details className={styles.mediaInspectorDisclosure}>
+        <summary>Коллекции: {item.collectionShortLabel}</summary>
+        <div className={styles.mediaInspectorDisclosureBody}>
+          {item.collectionEntries.length === 0 ? (
+            <p className={styles.helpText}>Карточка пока никуда не входит.</p>
+          ) : (
+            <div className={styles.mediaUsageList}>
+              {item.collectionEntries.map((entry) => (
+                <button
+                  key={entry.key}
+                  type="button"
+                  className={styles.mediaUsageButton}
+                  onClick={() => onOpenCollectionManager({ collectionId: entry.id, seedAssetId: item.id })}
+                >
+                  <strong>{entry.title}</strong>
+                  <span>{entry.memberCount} файлов</span>
+                  <span className={styles.mutedText}>{entry.statusLabel}</span>
+                </button>
+              ))}
             </div>
-          ))}
-        </dl>
-      </section>
-
-      <section className={styles.mediaInspectorSection}>
-        <h4>Коллекции</h4>
-        {item.collectionEntries.length === 0 ? (
-          <p className={styles.helpText}>
-            Карточка пока никуда не входит. Это честный статус сироты: ассет живёт отдельно, пока вы не привяжете его к подборке.
-          </p>
-        ) : (
-          <div className={styles.mediaUsageList}>
-            {item.collectionEntries.map((entry) => (
-              <button
-                key={entry.key}
-                type="button"
-                className={styles.mediaUsageButton}
-                onClick={() => onOpenCollectionManager({ collectionId: entry.id, seedAssetId: item.id })}
-              >
-                <strong>{entry.title}</strong>
-                <span>{entry.memberCount} файлов</span>
-                <span className={styles.mutedText}>{entry.statusLabel}</span>
-              </button>
-            ))}
-          </div>
-        )}
-        <div className={styles.inlineActions}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={() => onOpenCollectionManager({ seedAssetId: item.id })}
-          >
-            В коллекцию
-          </button>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={() => onCreateCollection(item.id)}
-          >
-            Новая коллекция
-          </button>
-        </div>
-      </section>
-
-      <section className={styles.mediaInspectorSection}>
-        <h4>Публикация</h4>
-        <p className={styles.helpText}>{publicationNote}</p>
-        <div className={styles.inlineActions}>
-          {canSubmitForReview ? (
-            <form action={`/api/admin/revisions/${item.currentRevisionId}/submit`} method="post">
-              <input type="hidden" name="returnTo" value={returnTo} />
-              <button type="submit" className={styles.primaryButton}>Отправить на проверку</button>
-            </form>
-          ) : null}
-          {canOpenPublishReadiness && publishHref ? (
-            <Link href={publishHref} className={styles.primaryButton}>{publishAction.label}</Link>
-          ) : null}
-          {item.statusKey === "review" && reviewHref ? (
-            <Link href={reviewHref} className={styles.secondaryButton}>Открыть проверку</Link>
-          ) : null}
-          {waitingForOwnerApproval ? (
-            <button type="button" className={styles.secondaryButton} disabled>Ждёт согласования</button>
-          ) : null}
-          {liveDeactivationHref ? (
-            <Link href={liveDeactivationHref} className={styles.secondaryButton}>Снять с публикации</Link>
-          ) : null}
-        </div>
-      </section>
-
-      <section className={styles.mediaInspectorSection}>
-        <h4>Где используется</h4>
-        {item.usageEntries.length === 0 ? (
-          <p className={styles.helpText}>
-            Пока нет ссылок на этот ассет. Это хороший момент для спокойной доводки метаданных и коллекций.
-          </p>
-        ) : (
-          <div className={styles.mediaUsageList}>
-            {item.usageEntries.map((entry) => (
-              <Link key={entry.key} href={appendAdminReturnTo(entry.href, returnTo)} className={styles.mediaUsageItem}>
-                <strong>{entry.entityLabel}</strong>
-                <span>{entry.title}</span>
-                <span className={styles.mutedText}>{entry.relationLabel} вЂў {entry.statusLabel}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className={styles.mediaInspectorSection}>
-        <h4>Безопасность</h4>
-        <p className={styles.helpText}>{item.archiveReason}</p>
-        {item.markedForRemovalAt ? (
-          <p className={styles.helpText}>
-            Этот медиафайл уже помечен на удаление. Новые ссылки на него блокируются, а финальная очистка запускается из центра очистки.
-          </p>
-        ) : null}
-        <div className={styles.inlineActions}>
-          {!item.markedForRemovalAt ? (
-            <ConfirmActionForm
-              action={getRemovalMarkHref("media_asset", item.id)}
-              confirmMessage="Пометить медиафайл на удаление? Новые ссылки на него будут заблокированы."
+          )}
+          <div className={styles.inlineActions}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => onOpenCollectionManager({ seedAssetId: item.id })}
             >
-              <input type="hidden" name="redirectTo" value={returnTo} />
-              <input type="hidden" name="failureRedirectTo" value={returnTo} />
-              <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
-            </ConfirmActionForm>
-          ) : null}
+              В коллекцию
+            </button>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => onCreateCollection(item.id)}
+            >
+              Новая коллекция
+            </button>
+          </div>
+        </div>
+      </details>
+
+      <details className={styles.mediaInspectorDisclosure}>
+        <summary>Связи: {item.usageCount}</summary>
+        <div className={styles.mediaInspectorDisclosureBody}>
+          <dl className={`${styles.mediaMetaList} ${styles.mediaMetaListCompact}`}>
+            {item.usageSummaryItems.map((summaryItem) => (
+              <div key={summaryItem.key}>
+                <dt>{summaryItem.label}</dt>
+                <dd>{summaryItem.value}</dd>
+              </div>
+            ))}
+          </dl>
+          {item.usageEntries.length === 0 ? (
+            <p className={styles.helpText}>
+              Пока нет ссылок на этот ассет.
+            </p>
+          ) : (
+            <div className={styles.mediaUsageList}>
+              {item.usageEntries.map((entry) => (
+                <Link key={entry.key} href={appendAdminReturnTo(entry.href, returnTo)} className={styles.mediaUsageItem}>
+                  <strong>{entry.entityLabel}</strong>
+                  <span>{entry.title}</span>
+                  <span className={styles.mutedText}>{entry.relationLabel} - {entry.statusLabel}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </details>
+
+      <details className={styles.mediaInspectorDisclosure}>
+        <summary>Безопасность</summary>
+        <div className={styles.mediaInspectorDisclosureBody}>
+          <p className={styles.helpText}>{item.archiveReason}</p>
           {item.markedForRemovalAt ? (
-            <ConfirmActionForm
-              action={getRemovalUnmarkHref("media_asset", item.id)}
-              confirmMessage="Снять пометку удаления?"
-            >
-              <input type="hidden" name="redirectTo" value={returnTo} />
-              <input type="hidden" name="failureRedirectTo" value={returnTo} />
-              <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
-            </ConfirmActionForm>
+            <p className={styles.helpText}>
+              Этот медиафайл уже помечен на удаление.
+            </p>
           ) : null}
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={() => onLifecycleAction(item.archived ? "restore" : "archive")}
-            disabled={lifecycleBusy || (!item.canArchive && !item.canRestore)}
-          >
-            {lifecycleBusy ? "Сохраняем..." : item.archived ? "Вернуть из архива" : "В архив"}
-          </button>
-        </div>
-        <details className={styles.compactDisclosure}>
-          <summary className={styles.compactDisclosureSummary}>
-            <div className={styles.compactDisclosureSummaryMain}>
-              <strong>Служебные действия</strong>
-              <span className={styles.compactDisclosureSummaryMeta}>
-                Cleanup, legacy-проверка и история остаются доступны отдельно, чтобы секция безопасности не разрасталась.
-              </span>
-            </div>
-            <span className={styles.compactDisclosureMarker} aria-hidden="true" />
-          </summary>
-          <div className={styles.compactDisclosureBody}>
+          <div className={styles.inlineActions}>
+            {!item.markedForRemovalAt ? (
+              <ConfirmActionForm
+                action={getRemovalMarkHref("media_asset", item.id)}
+                confirmMessage="Пометить медиафайл на удаление? Новые ссылки на него будут заблокированы."
+              >
+                <input type="hidden" name="redirectTo" value={returnTo} />
+                <input type="hidden" name="failureRedirectTo" value={returnTo} />
+                <button type="submit" className={styles.secondaryButton}>Пометить на удаление</button>
+              </ConfirmActionForm>
+            ) : null}
+            {item.markedForRemovalAt ? (
+              <ConfirmActionForm
+                action={getRemovalUnmarkHref("media_asset", item.id)}
+                confirmMessage="Снять пометку удаления?"
+              >
+                <input type="hidden" name="redirectTo" value={returnTo} />
+                <input type="hidden" name="failureRedirectTo" value={returnTo} />
+                <button type="submit" className={styles.secondaryButton}>Снять пометку удаления</button>
+              </ConfirmActionForm>
+            ) : null}
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => onLifecycleAction(item.archived ? "restore" : "archive")}
+              disabled={lifecycleBusy || (!item.canArchive && !item.canRestore)}
+            >
+              {lifecycleBusy ? "Сохраняем..." : item.archived ? "Вернуть из архива" : "В архив"}
+            </button>
+          </div>
+          <details className={styles.mediaInspectorNestedDisclosure}>
+            <summary>Дополнительно</summary>
             <div className={styles.inlineActions}>
               <Link href={getRemovalSweepHref()} className={item.markedForRemovalAt ? styles.primaryButton : styles.secondaryButton}>
                 Центр очистки
@@ -704,9 +658,9 @@ function MediaInspector({
                 История
               </Link>
             </div>
-          </div>
-        </details>
-      </section>
+          </details>
+        </div>
+      </details>
     </aside>
   );
 }
@@ -811,7 +765,7 @@ function MediaOverlay({
           <section className={styles.mediaOverlayPreview}>
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewUrl} alt={fields.alt || fields.title || fields.originalFilename || "Предпросмотр"} />
+              <img src={previewUrl} alt={fields.alt || fields.title || fields.originalFilename || "Предпросмотр"} decoding="async" />
             ) : (
               <div
                 className={`${styles.mediaOverlayDropzone} ${dragActive ? styles.mediaOverlayDropzoneActive : ""}`}
@@ -980,7 +934,6 @@ export function MediaGalleryWorkspace({
   initialCollectionId = "",
   initialCompose = "",
   initialFilterKey = "all",
-  currentUsername,
   currentUserRole = "",
   initialMessage = "",
   initialError = "",
@@ -994,7 +947,7 @@ export function MediaGalleryWorkspace({
   const [collectionFilterId, setCollectionFilterId] = useState(initialCollectionId || COLLECTION_FILTER_ALL);
   const [sortMode, setSortMode] = useState("newest");
   const [selectedId, setSelectedId] = useState(initialSelectedId || initialItems[0]?.id || "");
-  const [selectedDeleteIds, setSelectedDeleteIds] = useState([]);
+  const [selectedAssetIds, setSelectedAssetIds] = useState([]);
   const [message, setMessage] = useState(initialMessage);
   const [error, setError] = useState(initialError);
   const [recentlySavedId, setRecentlySavedId] = useState("");
@@ -1008,7 +961,10 @@ export function MediaGalleryWorkspace({
   const [overlayBusy, setOverlayBusy] = useState(false);
   const [overlayError, setOverlayError] = useState("");
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
-  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [bulkSubmitBusy, setBulkSubmitBusy] = useState(false);
+  const [bulkRemovalBusy, setBulkRemovalBusy] = useState(false);
+  const [bulkRemovalDialogOpen, setBulkRemovalDialogOpen] = useState(false);
+  const [showRemovalSweepLink, setShowRemovalSweepLink] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [draftFile, setDraftFile] = useState(null);
   const [editedBinaryFile, setEditedBinaryFile] = useState(null);
@@ -1047,7 +1003,7 @@ export function MediaGalleryWorkspace({
   }, [items, selectedId]);
 
   useEffect(() => {
-    setSelectedDeleteIds((current) => current.filter((entityId) => items.some((item) => item.id === entityId && item.isTestData)));
+    setSelectedAssetIds((current) => current.filter((entityId) => items.some((item) => item.id === entityId)));
   }, [items]);
 
   useEffect(() => {
@@ -1078,20 +1034,20 @@ export function MediaGalleryWorkspace({
   const collectionOptions = [...collections].sort((left, right) => left.title.localeCompare(right.title, "ru"));
   const filtered = [...items]
     .filter((item) => matchesQuery(item, normalizedQuery))
-    .filter((item) => matchesFilter(item, filterKey, currentUsername))
+    .filter((item) => matchesMediaLibraryFilter(item, filterKey))
     .filter((item) => matchesCollectionFilter(item, collectionFilterId))
     .sort((left, right) => compareItems(left, right, sortMode));
-  const summaryItems = [
-    { label: "Тестовые", value: items.filter((item) => item.isTestData).length },
-    { label: "Всего", value: items.length },
-    { label: "Нет альтернативного текста", value: items.filter((item) => item.missingAlt).length },
-    { label: "Сироты", value: items.filter((item) => item.orphaned).length },
-    { label: "Используется", value: items.filter((item) => item.usageCount > 0).length },
-    { label: "В архиве", value: items.filter((item) => item.archived).length },
-    { label: "Сломанные", value: items.filter((item) => item.brokenBinary).length }
-  ];
+  const summaryItems = buildMediaLibrarySummaryItems(items);
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
-  const selectedTestDeleteCount = selectedDeleteIds.length;
+  const reviewSelection = getMediaReviewSelection(items, selectedAssetIds, { role: currentUserRole });
+  const selectedAssetCount = reviewSelection.selectedCount;
+  const selectedSubmittableCount = reviewSelection.submittableCount;
+  const selectedBlockedCount = reviewSelection.blockedCount;
+  const filteredIdSet = new Set(filtered.map((item) => item.id));
+  const selectedHiddenCount = reviewSelection.selectedItems.filter((item) => !filteredIdSet.has(item.id)).length;
+  const selectedAlreadyMarkedCount = reviewSelection.selectedItems.filter((item) => item.markedForRemovalAt).length;
+  const selectedMarkableCount = selectedAssetCount - selectedAlreadyMarkedCount;
+  const bulkActionBusy = bulkSubmitBusy || bulkRemovalBusy;
   const currentWorkspaceHref = typeof window === "undefined"
     ? workspaceContextHref
     : `${window.location.pathname}${window.location.search}`;
@@ -1196,6 +1152,7 @@ export function MediaGalleryWorkspace({
     setSelectedId(itemId);
     setMessage("");
     setError("");
+    setShowRemovalSweepLink(false);
     updateWorkspaceUrl({
       assetId: itemId,
       compose: overlayMode === "asset-create"
@@ -1207,74 +1164,131 @@ export function MediaGalleryWorkspace({
     });
   }
 
-  function toggleDeleteSelection(entityId) {
-    setSelectedDeleteIds((current) => (
+  function toggleAssetSelection(entityId) {
+    setSelectedAssetIds((current) => (
       current.includes(entityId)
         ? current.filter((value) => value !== entityId)
         : [...current, entityId]
     ));
   }
 
-  async function performDeleteRequest(entityIds, { testOnly = false } = {}) {
-    const formData = new FormData();
-
-    for (const entityId of entityIds) {
-      formData.append("entityId", entityId);
-    }
-
-    if (testOnly) {
-      formData.set("testOnly", "true");
-    }
-
-    formData.set("responseMode", "json");
-    const response = await fetch("/api/admin/entities/media_asset/delete", {
-      method: "POST",
-      body: formData
-    });
-    const payload = await response.json();
-
-    if ((payload.deletedIds ?? []).length > 0) {
-      setItems((current) => current.filter((item) => !(payload.deletedIds ?? []).includes(item.id)));
-      setSelectedDeleteIds((current) => current.filter((entityId) => !(payload.deletedIds ?? []).includes(entityId)));
-    }
-
-    if (payload.message) {
-      setMessage(payload.message);
-    }
-
-    if (payload.error) {
-      setError(payload.error);
-    } else {
-      setError("");
-    }
-
-    if (!response.ok && (payload.deletedCount ?? 0) === 0) {
-      throw new Error(payload.error || "Не удалось удалить выбранные объекты.");
-    }
-
-    return payload;
+  function clearAssetSelection() {
+    setSelectedAssetIds([]);
   }
 
-  async function handleBulkDeleteTestData() {
-    if (selectedDeleteIds.length === 0) {
-      setError("Сначала выберите тестовые объекты для удаления.");
+  async function handleBulkSubmitForReview() {
+    const submitItems = reviewSelection.submittableItems;
+
+    if (submitItems.length === 0) {
+      setError("В выбранном пуле нет черновиков, которые можно отправить на проверку.");
       return;
     }
 
-    if (!window.confirm("Удалить выбранные тестовые объекты? Действие необратимо.")) {
-      return;
-    }
-
-    setDeleteBusy(true);
+    setBulkSubmitBusy(true);
     setMessage("");
     setError("");
+    setShowRemovalSweepLink(false);
 
     try {
-      await performDeleteRequest(selectedDeleteIds, { testOnly: true });
-    } catch (deleteError) {
-      setError(deleteError.message || "Не удалось удалить тестовые объекты.");
+      const formData = new FormData();
+
+      for (const item of submitItems) {
+        formData.append("entityId", item.id);
+      }
+
+      const response = await fetch("/api/admin/media/library/bulk-submit", {
+        method: "POST",
+        body: formData
+      });
+      const payload = await response.json();
+      const submittedIds = payload.submittedIds ?? [];
+
+      if ((payload.items ?? []).length > 0) {
+        setItems((current) => mergeById(current, payload.items));
+      }
+
+      setSelectedAssetIds((current) => current.filter((entityId) => !submittedIds.includes(entityId)));
+      setMessage(payload.message || "");
+      setError(payload.failed?.length > 0 || !response.ok ? (payload.error || "Не все выбранные медиа удалось отправить на проверку.") : "");
+
+      if (!response.ok && submittedIds.length === 0) {
+        throw new Error(payload.error || "Не удалось отправить выбранные медиа на проверку.");
+      }
+    } catch (submitError) {
+      setError(submitError.message || "Не удалось отправить выбранные медиа на проверку.");
     } finally {
-      setDeleteBusy(false);
+      setBulkSubmitBusy(false);
+    }
+  }
+
+  function openBulkRemovalDialog() {
+    if (selectedMarkableCount === 0) {
+      setError("Все выбранные медиафайлы уже помечены на удаление.");
+      return;
+    }
+
+    setMessage("");
+    setError("");
+    setShowRemovalSweepLink(false);
+    setBulkRemovalDialogOpen(true);
+  }
+
+  function closeBulkRemovalDialog() {
+    if (!bulkRemovalBusy) {
+      setBulkRemovalDialogOpen(false);
+    }
+  }
+
+  async function handleBulkMarkForRemoval() {
+    const selectedItems = reviewSelection.selectedItems;
+
+    if (selectedItems.length === 0) {
+      setBulkRemovalDialogOpen(false);
+      setError("Сначала выберите медиафайлы.");
+      return;
+    }
+
+    setBulkRemovalBusy(true);
+    setMessage("");
+    setError("");
+    setShowRemovalSweepLink(false);
+
+    try {
+      const formData = new FormData();
+
+      for (const item of selectedItems) {
+        formData.append("entityId", item.id);
+      }
+
+      const response = await fetch("/api/admin/media/library/bulk-removal", {
+        method: "POST",
+        body: formData
+      });
+      const payload = await response.json();
+      const processedIds = [...(payload.markedIds ?? []), ...(payload.alreadyMarkedIds ?? [])];
+      const markById = new Map((payload.marks ?? []).map((mark) => [mark.id, mark.markedForRemovalAt]));
+
+      if (markById.size > 0) {
+        setItems((current) => current.map((item) => (
+          markById.has(item.id)
+            ? { ...item, markedForRemovalAt: markById.get(item.id) || item.markedForRemovalAt || new Date().toISOString() }
+            : item
+        )));
+      }
+
+      setSelectedAssetIds((current) => current.filter((entityId) => !processedIds.includes(entityId)));
+      setMessage(processedIds.length > 0 ? (payload.message || "Выбранные медиа помечены на удаление.") : "");
+      setError(payload.failed?.length > 0 || !response.ok ? (payload.error || "Не все выбранные медиа удалось пометить на удаление.") : "");
+      setShowRemovalSweepLink(processedIds.length > 0);
+
+      if (!response.ok && processedIds.length === 0) {
+        throw new Error(payload.error || "Не удалось пометить выбранные медиа на удаление.");
+      }
+    } catch (removalError) {
+      setError(removalError.message || "Не удалось пометить выбранные медиа на удаление.");
+    } finally {
+      setBulkRemovalBusy(false);
+      setBulkRemovalDialogOpen(false);
     }
   }
 
@@ -1469,7 +1483,7 @@ export function MediaGalleryWorkspace({
     }
   }
 
-  async function handleCollectionSubmit({ entityId, fields }) {
+  async function handleCollectionSubmit({ entityId, fields, publish = false }) {
     setOverlayBusy(true);
     setOverlayError("");
 
@@ -1485,6 +1499,7 @@ export function MediaGalleryWorkspace({
     formData.set("openGraphTitle", fields.openGraphTitle);
     formData.set("openGraphDescription", fields.openGraphDescription);
     formData.set("openGraphImageAssetId", fields.openGraphImageAssetId);
+    formData.set("publicationIntent", publish ? "publish" : "draft");
 
     for (const assetId of fields.assetIds) {
       formData.append("assetIds", assetId);
@@ -1602,12 +1617,21 @@ export function MediaGalleryWorkspace({
     }
   }
 
-  const activeFilterLabel = FILTERS.find((filter) => filter.key === filterKey)?.label || "Все";
+  const activeFilterLabel = MEDIA_LIBRARY_FILTERS.find((filter) => filter.key === filterKey)?.label || "Все";
   const activeCollectionFilterLabel = getActiveCollectionFilterLabel(collectionFilterId, collectionOptions);
 
   return (
     <div className={styles.stack}>
-      {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
+      {message ? (
+        <div className={styles.statusPanelInfo}>
+          <span>{message}</span>
+          {showRemovalSweepLink ? (
+            <div className={styles.inlineActions}>
+              <Link href={getRemovalSweepHref()} className={styles.secondaryButton}>Открыть Центр очистки</Link>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
 
       <section className={styles.panel}>
@@ -1616,7 +1640,7 @@ export function MediaGalleryWorkspace({
             <p className={styles.eyebrow}>Рабочее место</p>
             <h3 className={styles.mediaToolbarTitle}>Медиатека</h3>
             <p className={styles.helpText}>
-              Библиотека медиа и коллекции живут в одном экране: карточки остаются в центре, справа быстрый инспектор, а большое редактирование открывается поверх того же контекста.
+              Быстро найдите медиа, выберите нужные карточки и отправьте черновики на проверку.
             </p>
             <div className={styles.mediaToolbarStats} aria-label="Сводка медиатеки">
               {summaryItems.map((item) => (
@@ -1657,29 +1681,11 @@ export function MediaGalleryWorkspace({
                 Коллекции
               </button>
             </div>
-            {selectedTestDeleteCount > 0 ? (
-              <details className={`${styles.compactDisclosure} ${styles.mediaToolbarServiceDisclosure}`}>
-                <summary className={styles.compactDisclosureSummary}>
-                  <div className={styles.compactDisclosureSummaryMain}>
-                    <strong>Служебные действия</strong>
-                    <span className={styles.compactDisclosureSummaryMeta}>
-                      Cleanup-операции остаются под рукой, но не забирают место у основного сценария медиатеки.
-                    </span>
-                  </div>
-                  <span className={styles.compactDisclosureMarker} aria-hidden="true" />
-                </summary>
-                <div className={`${styles.compactDisclosureBody} ${styles.mediaToolbarServiceBody}`}>
-                  <button type="button" className={styles.dangerButton} onClick={handleBulkDeleteTestData} disabled={deleteBusy}>
-                    {deleteBusy ? "Удаляем..." : `Удалить тестовые (${selectedTestDeleteCount})`}
-                  </button>
-                </div>
-              </details>
-            ) : null}
           </div>
         </div>
 
         <div className={styles.mediaFilterRow} role="toolbar" aria-label="Быстрые фильтры медиатеки">
-          {FILTERS.map((filter) => (
+          {MEDIA_LIBRARY_FILTERS.map((filter) => (
             <button
               key={filter.key}
               type="button"
@@ -1702,6 +1708,46 @@ export function MediaGalleryWorkspace({
             </select>
           </label>
         </div>
+
+        {selectedAssetCount > 0 ? (
+          <section className={styles.mediaBulkActionBar} aria-live="polite" aria-label="Групповые действия с выбранными медиа">
+            <div className={styles.mediaBulkSummary}>
+              <strong>Выбрано: {selectedAssetCount}</strong>
+              <span>Можно отправить: {selectedSubmittableCount}</span>
+              {selectedBlockedCount > 0 ? <span>Не подходят: {selectedBlockedCount}</span> : null}
+              {selectedHiddenCount > 0 ? <span>Скрыто фильтром: {selectedHiddenCount}</span> : null}
+            </div>
+            <div className={styles.inlineActions}>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={handleBulkSubmitForReview}
+                disabled={bulkActionBusy || selectedSubmittableCount === 0}
+              >
+                {bulkSubmitBusy ? "Отправляем..." : "Отправить на проверку"}
+              </button>
+              <button type="button" className={styles.secondaryButton} onClick={clearAssetSelection} disabled={bulkActionBusy}>
+                Снять выбор
+              </button>
+              {selectedAssetCount > 1 ? (
+                <div className={styles.mediaBulkDestructiveActions}>
+                  <button
+                    type="button"
+                    className={styles.mediaBulkIconButton}
+                    onClick={openBulkRemovalDialog}
+                    disabled={bulkActionBusy || selectedMarkableCount === 0}
+                    aria-label={`Пометить выбранные медиа на удаление: ${selectedMarkableCount}`}
+                    title={selectedMarkableCount > 0 ? "Пометить выбранные на удаление" : "Все выбранные уже помечены на удаление"}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z" />
+                    </svg>
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
 
         <div className={styles.mediaWorkspace}>
           <section className={styles.mediaCanvas}>
@@ -1748,60 +1794,65 @@ export function MediaGalleryWorkspace({
               <div className={styles.mediaGalleryGrid}>
                 {displayedItems.map((item, index) => {
                   const selected = item.id === selectedId;
+                  const checked = selectedAssetIds.includes(item.id);
 
                   return (
-                    <button
+                    <article
                       key={item.id}
-                      ref={(node) => {
-                        cardRefs.current[index] = node;
-                      }}
-                      type="button"
-                      className={`${styles.mediaLibraryCardButton} ${selected ? styles.mediaLibraryCardButtonActive : ""} ${item.forcedVisible ? styles.mediaLibraryCardPinned : ""}`}
-                      onClick={() => selectCard(item.id)}
-                      onKeyDown={(event) => handleCardKeyDown(event, index)}
-                      aria-pressed={selected}
+                      className={`${styles.mediaLibraryCard} ${selected ? styles.mediaLibraryCardActive : ""} ${checked ? styles.mediaLibraryCardChecked : ""} ${item.forcedVisible ? styles.mediaLibraryCardPinned : ""}`}
                     >
-                      <span className={styles.mediaLibraryThumb}>
-                        {item.isTestData ? (
-                          <label
-                            className={styles.mediaDeleteMarker}
-                            onClick={(event) => event.stopPropagation()}
-                            onKeyDown={(event) => event.stopPropagation()}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedDeleteIds.includes(item.id)}
-                              onChange={() => toggleDeleteSelection(item.id)}
+                      <label className={styles.mediaSelectMarker}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleAssetSelection(item.id)}
+                          aria-label={`Выбрать ${item.title}`}
+                        />
+                      </label>
+                      <button
+                        ref={(node) => {
+                          cardRefs.current[index] = node;
+                        }}
+                        type="button"
+                        className={styles.mediaLibraryCardOpen}
+                        onClick={() => selectCard(item.id)}
+                        onKeyDown={(event) => handleCardKeyDown(event, index)}
+                        aria-pressed={selected}
+                      >
+                        <span className={styles.mediaLibraryThumb}>
+                          {item.hasPreview ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.thumbnailUrl || item.previewUrl}
+                              alt={item.alt || item.title || item.originalFilename || "Предпросмотр"}
+                              loading="lazy"
+                              decoding="async"
                             />
-                          </label>
-                        ) : null}
-                        {item.hasPreview ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.previewUrl} alt={item.alt || item.title || item.originalFilename || "Предпросмотр"} />
-                        ) : (
-                          <span className={styles.mediaPlaceholder}>Нет предпросмотра</span>
-                        )}
-                      </span>
-                      <span className={styles.mediaLibraryBody}>
-                        <strong>{item.title}</strong>
-                        <span className={styles.mutedText}>{item.originalFilename || "Имя файла не задано"}</span>
-                        <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
-                        <span className={styles.mediaBadgeCluster}>
-                          <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
-                          <span className={`${styles.badge} ${styles[`mediaBadge${getBadgeTone(item.liveStatusTone)}`]}`}>{item.liveStatusLabel}</span>
-                          {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тест</span> : null}
-                          {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Удаление</span> : null}
-                          {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
-                          <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
-                          {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст"}
-                          </span>
-                          <span className={`${styles.badge} ${item.usageCount ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
-                            {item.usageCount ? `Связи ${item.usageCount}` : "Не используется"}
-                          </span>
-                          {item.brokenBinary ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Сломан</span> : null}
+                          ) : (
+                            <span className={styles.mediaPlaceholder}>Нет предпросмотра</span>
+                          )}
                         </span>
-                      </span>
-                    </button>
+                        <span className={styles.mediaLibraryBody}>
+                          <strong>{item.title}</strong>
+                          <span className={styles.mutedText}>{item.originalFilename || "Имя файла не задано"}</span>
+                          <span className={styles.mutedText}>Коллекции: {item.collectionLabel}</span>
+                          <span className={styles.mediaBadgeCluster}>
+                            <span className={`${styles.badge} ${styles[`mediaBadge${getToneForItem(item)}`]}`}>{item.statusLabel}</span>
+                            <span className={`${styles.badge} ${styles[`mediaBadge${getBadgeTone(item.liveStatusTone)}`]}`}>{item.liveStatusLabel}</span>
+                            {item.isTestData ? <span className={`${styles.badge} ${styles.mediaBadgewarning}`}>Тест</span> : null}
+                            {item.markedForRemovalAt ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Удаление</span> : null}
+                            {item.archived ? <span className={`${styles.badge} ${styles.mediaBadgemuted}`}>Архив</span> : null}
+                            <span className={`${styles.badge} ${item.missingAlt ? styles.mediaBadgewarning : styles.mediaBadgesuccess}`}>
+                              {item.missingAlt ? "Нет альтернативного текста" : "Альтернативный текст"}
+                            </span>
+                            <span className={`${styles.badge} ${item.usageCount ? styles.mediaBadgesuccess : styles.mediaBadgemuted}`}>
+                              {item.usageCount ? `Связи ${item.usageCount}` : "Не используется"}
+                            </span>
+                            {item.brokenBinary ? <span className={`${styles.badge} ${styles.mediaBadgedanger}`}>Сломан</span> : null}
+                          </span>
+                        </span>
+                      </button>
+                    </article>
                   );
                 })}
               </div>
@@ -1859,6 +1910,17 @@ export function MediaGalleryWorkspace({
           setDragActive(false);
           handleFileSelect(event.dataTransfer.files?.[0] ?? null);
         }}
+      />
+
+      <MediaBulkRemovalDialog
+        open={bulkRemovalDialogOpen}
+        busy={bulkRemovalBusy}
+        selectedCount={selectedAssetCount}
+        markableCount={selectedMarkableCount}
+        alreadyMarkedCount={selectedAlreadyMarkedCount}
+        hiddenCount={selectedHiddenCount}
+        onClose={closeBulkRemovalDialog}
+        onConfirm={handleBulkMarkForRemoval}
       />
 
       <MediaCollectionOverlay

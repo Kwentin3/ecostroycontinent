@@ -42,6 +42,11 @@ Implementation planning должно либо:
 - различать эти failure classes,
 - либо честно зафиксировать, какой именно broken signal входит в V1 и какой не входит.
 
+### 2.5 Collection candidate filter copy
+
+В редакторе коллекции пользовательский фильтр кандидатов с ключом `published` называется `Опубликованным`.
+Внутренний термин `Live` не используется как подпись фильтра: он смешивает техническую live-state лексику с понятным пользователю состоянием опубликованного медиа.
+
 ## 3. Explicit prerequisite decisions before autonomous implementation planning
 
 ### 3.1 Upload lifecycle prerequisite
@@ -84,6 +89,7 @@ Overlay-first upload flow считается уже зафиксированны
 5. Не трактовать upload overlay как purely visual concern: за ним должен стоять утверждённый lifecycle.
 6. Не оставлять `derived variant` внутри V1 как размытый “можно потом додумать”. Либо contract note, либо defer.
 7. Не менять draft reuse policy молча в процессе реализации.
+8. Не возвращать техническую подпись `Live` в пользовательский фильтр опубликованных кандидатов коллекции.
 
 ## 5. Final readiness statement
 

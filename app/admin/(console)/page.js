@@ -24,7 +24,7 @@ import {
   normalizeLegacyCopy
 } from "../../../lib/ui-copy.js";
 import { getReviewQueue } from "../../../lib/content-ops/workflow";
-import { userIsSuperadmin } from "../../../lib/auth/roles.js";
+import { userIsBusinessOwner, userIsSuperadmin } from "../../../lib/auth/roles.js";
 
 function getCardLabel(card) {
   return (
@@ -41,7 +41,7 @@ function getCardTypeLabel(card) {
 }
 
 function pickRequiresYourAction(items, user) {
-  if (user.role === "business_owner") {
+  if (userIsBusinessOwner(user)) {
     return items.filter((item) => item.revision.ownerReviewRequired && item.revision.ownerApprovalStatus === "pending");
   }
 

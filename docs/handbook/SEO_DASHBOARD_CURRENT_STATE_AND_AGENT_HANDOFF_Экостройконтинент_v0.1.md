@@ -6,18 +6,34 @@
 
 Launch-hardening current state now lives in `docs/handbook/PROJECT_CURRENT_STATE_AGENT_HANDOFF_Экостройконтинент_v0.1.md`. Read it first for readiness, smoke, media delivery and known owner/content blockers.
 
+Current roadmap for this domain: `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTICS_ROADMAP_Экостройконтинент_v0.1.md`.
+
 ## 2. Executive current state
 
 - SEO Dashboard MVP backend/foundation реализован.
-- `/admin/visibility` существует как первичная техническая визуализация analytics read model.
+- `/admin/visibility` существует как минимальная операционная SEO-панель поверх analytics read model.
 - First-party event endpoint `/api/analytics/events` реализован.
 - Analytics read model MVP реализован.
 - Yandex Webmaster подключен и verified.
 - Yandex Metrica counter `109037342` доступен, 11 required goals созданы.
 - Scheduled imports Яндекс Метрики/Вебмастера еще не реализованы.
-- Public Metrica counter script еще не включен на public site.
+- Public Metrica counter script реализован и включен в production после owner prototype-stage approval; enablement остается env-controlled and reversible.
 - LLM provider/UI не подключались.
-- `/about` и `/contacts` сейчас 404 по content-state: нет опубликованных Content Core pages `Page(type=about)` и `Page(type=contacts)`.
+- `/about` и `/contacts` опубликованы в production и отдают `200` (verified 2026-05-19): есть published Content Core pages `Page(type=about)` и `Page(type=contacts)` с `active_published_revision_id`; sitemap включает оба URL.
+- R1 implementation deployed on 2026-05-19 at commit `64599542d2da214378298356f5afe1002b1ff5f5`: internal telemetry remains operational truth; optional Metrica mirror is implemented as env-gated external mirror.
+- R1 public Metrica enablement deployed on canonical runtime at commit `90896a9e4015864f15fb633cfc2259af8cce99cb`: `NEXT_PUBLIC_YANDEX_METRICA_ENABLED=true`, counter `109037342`, conservative init options, browser/network reachGoal proof passed. Yandex Reporting API stats visibility for visits/goals was still delayed/pending as of `2026-05-19T10:19:00Z`.
+- R2/R3 PRD and Blueprint drafts are created and refined for external imports. R2A is implemented and accepted on canonical runtime at commit `6d5d976abcb086edb15b5c1a6a62a25d8876a5e8`: dry-run/write commands exist, `external_metrica_daily_aggregate` stores minimal daily traffic/goals, `analytics_source_sync_state` for `yandex_metrica` is `ok`, and same-period rerun is idempotent.
+- R3A `Webmaster Host / Indexation / Query Visibility Dry Run` is implemented and accepted on canonical runtime at commit `8a8e2e5ea6668375637fc4fdd16ea3b2e77a22c8`: dry-run/write commands exist, dedicated `external_webmaster_*` tables store host/indexation/URL sample rows, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and same snapshot/period rerun is idempotent. Query analytics was capability-checked but returned `0` rows for the accepted period.
+- R4 Readiness Audit is complete. Full R4 was later implemented in bounded external evidence/read model scope after R2B/R3B acceptance.
+- R4-lite PRD/Blueprint are created: `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md` and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
+- R4-lite `External Source State and Readiness Integration` is implemented and accepted on canonical runtime at code commit `6bc7d11ce6c30dfb38a9de79e791048077f8ec25`. The read model exposes `external_source_readiness` for `yandex_metrica` and `yandex_webmaster`; `/admin/visibility` renders compact source readiness diagnostics; Metrica zeros and absent Webmaster query rows remain limitations, not primary metrics or recommendation triggers.
+- R3B `Webmaster Query / Page Visibility Import` is implemented and accepted on canonical runtime at code commit `d7d35d7f4df60f57443372e664d37a79b0ceb92f`: dry-run/write commands exist, advanced export beta capability checks pass, synchronous `query-analytics/list` fallback is implemented, `external_webmaster_query_visibility_daily` remains the storage target, `analytics_source_sync_state` for `yandex_webmaster` is `ok`, and the accepted period `2026-05-04..2026-05-17` returned a valid zero-row result with explicit limitations.
+- R2B `Metrica Traffic Source / Device / Region / Landing Import` is implemented and accepted on canonical runtime at deployed commit `d008b4bb5dc3ebf9d075b83194fba422f42181f3` (implementation commit `1cec46216e996ae27d2393b3a7fcc3e67ef0eae7`): bounded server-side source/device/country/landing imports, optional source detail/region, landing URL diagnostics and no read model/UI/scheduler changes. Accepted period `2026-05-17..2026-05-19` imported `30` rows; source state `yandex_metrica` is `ok`; unmapped landing diagnostics `0`; same-period rerun is idempotent.
+- R4 `External Aggregates in Analytics Read Model / External Evidence Integration` is implemented and accepted on canonical runtime at commit `e3f9749f409258f8ebbfdd7b8de2101e07ede9d3`: read model exposes additive `external_evidence` for Metrica R2B source/detail/device/country/region/landing evidence and Webmaster R3A/R3B host/indexation/URL/query evidence. `/admin/visibility` renders a compact external evidence block. Metrica remains external enrichment, Webmaster remains external search evidence, primary overview remains first-party, R3B zero query rows remain a limitation, and no recommendations/scheduler/live Yandex API calls were added.
+- SEO Dashboard backend/data-foundation epic is closed as of `2026-05-20`. Closure report: `docs/reports/2026-05-20/SEO_DASHBOARD_BACKEND_DATA_FOUNDATION_EPIC_CLOSURE_Экостройконтинент_v0.1.report.md`.
+- Minimal SEO Admin Panel / Минимальная операционная SEO-панель в админке is implemented and accepted on canonical runtime at commit `1a37fce8e1eba4c72ebd3983590251d967b544ee`. `/admin/visibility` now renders top summary, base metrics, traffic composition, Metrica source/device/geo/landing evidence, landing diagnostics, internal actions/clicks, Webmaster/search state, visible data limitations and separated existing diagnostic signals. Implementation/conformity reports:
+  - `docs/reports/2026-05-20/MINIMAL_SEO_ADMIN_PANEL_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`;
+  - `docs/reports/2026-05-20/MINIMAL_SEO_ADMIN_PANEL_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
 
 ## 3. Architecture snapshot
 
@@ -41,7 +57,7 @@ UI не должен собирать метрики напрямую из Ян�
 - External imports - будущий слой для Яндекс/Google агрегатов.
 - Analytics read model - view model / DTO для потребителей.
 - Recommendation state - work-management signal, не публикация и не Content Core mutation.
-- Яндекс Метрика - внешний aggregate layer, не замена first-party events.
+- Яндекс Метрика - optional external mirror/aggregate layer, не замена first-party events и не operational source of truth.
 - Яндекс Вебмастер - внешний visibility/indexation layer.
 - LLM - advisory/draft-only layer, не source of truth.
 
@@ -67,14 +83,25 @@ UI не должен собирать метрики напрямую из Ян�
 - Yandex bootstrap tooling.
 - Webmaster verification.
 - Metrica goals.
+- R2A server-side Metrica aggregate importer.
+- `external_metrica_daily_aggregate`.
+- `analytics_source_sync_state` row for `yandex_metrica` from accepted R2A import.
+- R3A server-side Webmaster import foundation.
+- `external_webmaster_host_snapshot`, `external_webmaster_indexation_snapshot`, `external_webmaster_url_sample`, `external_webmaster_query_visibility_daily`.
+- `analytics_source_sync_state` row for `yandex_webmaster` from accepted R3A import.
+- R4-lite `external_source_readiness` block in analytics read model.
+- R4 `external_evidence` block in analytics read model.
+- Minimal `/admin/visibility` SEO panel with source readiness, external evidence, landing diagnostics, internal actions, Webmaster/search state and visible limitations.
+- PRD/Blueprint for Minimal SEO Admin Panel.
+- R3B server-side Webmaster query/page visibility importer and commands: `npm run yandex:webmaster-query-import:dry-run` and `npm run yandex:webmaster-query-import:r3b`.
+- R2B server-side Metrica source/device/country/landing importer and commands: `npm run yandex:metrica-import:r2b:dry-run` and `npm run yandex:metrica-import:r2b`.
 
 ## 6. What is intentionally not implemented yet
 
-- Yandex Metrica public counter injection.
-- First-party event -> `ym(..., "reachGoal", ...)` bridge.
-- Scheduled Yandex Metrica imports.
-- Scheduled Yandex Webmaster imports.
-- Real external aggregates in read model.
+- Delayed external Yandex Reporting API visibility for the live Metrica goal smoke; browser/network proof already passed.
+- Scheduled Yandex Metrica imports beyond operator-triggered R2A/R2B. R2B is accepted as operator-triggered only; no scheduler/read model/UI changes were added.
+- Scheduled Yandex Webmaster imports beyond operator-triggered R3A/R3B.
+- R5 recommendation refinement from external evidence.
 - Lead/intake domain as a separate future epic; intent events are not lead records.
 - LLM provider integration.
 - LLM UI.
@@ -82,13 +109,13 @@ UI не должен собирать метрики напрямую из Ян�
 - Owner reduced DTO.
 - Full UX/UI design of `/admin/visibility`.
 
-## 7. Critical known content-state blocker
+## 7. Public about/contacts current state
 
-`/about` и `/contacts` сейчас 404. Это не route-code bug.
+`/about` и `/contacts` больше не являются content-state blocker.
 
-Причина: в `published_only` режиме нет опубликованных `Page(type=about)` и `Page(type=contacts)`. `app/about/page.js` и `app/contacts/page.js` корректно вызывают `notFound()` при отсутствии published Content Core page. `app/sitemap.js` корректно не публикует эти URL, пока они разрешаются в 404.
+Факт на 2026-05-19: в `published_only` режиме оба маршрута отдают `200`, потому что существуют опубликованные Content Core pages `Page(type=about)` и `Page(type=contacts)` с `active_published_revision_id`. `app/about/page.js` и `app/contacts/page.js` остаются честными: при отсутствии published page они вызывают `notFound()` и не должны получать hardcoded fallback content. `app/sitemap.js` теперь корректно публикует `/about` и `/contacts`, так как live routes разрешаются в `200`.
 
-Не создавать fake content и не добавлять fallback content без Content Core решения. Правильный следующий шаг - создать, review и publish approved Content Core pages через Admin Console / Content Core workflow.
+Не создавать fake content и не добавлять fallback content без Content Core решения. Если эти pages когда-либо пропадут из published state, правильный repair path остается через Admin Console / Content Core workflow, а не через route fallback.
 
 ## 8. Yandex state
 
@@ -113,15 +140,54 @@ UI не должен собирать метрики напрямую из Ян�
 
 ## 10. Next recommended steps
 
-1. Publish owner-approved Content Core pages for `/about` and `/contacts`.
-2. Enable Yandex Metrica counter on public site via env flag after privacy/cookie decision.
-3. Add first-party event -> `ym` reachGoal bridge.
-4. Live smoke: first-party event + Metrica goal.
-5. Implement scheduled Metrica imports.
-6. Implement scheduled Webmaster imports.
-7. Integrate imported aggregates into read model.
-8. UX/UI refine `/admin/visibility`.
-9. Later LLM Copilot Safety Gate and UI.
+1. Review R1 implementation/conformity/final enablement reports:
+   `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   `docs/reports/2026-05-19/R1_PUBLIC_TELEMETRY_METRICA_MIRROR_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R1_METRICA_PUBLIC_ENABLEMENT_AND_FINAL_SMOKE_Экостройконтинент_v0.1.report.md`.
+2. Review R2/R3 design docs:
+   `docs/product-ux/PRD_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/BLUEPRINT_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/product-ux/PRD_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/BLUEPRINT_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`,
+   `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`.
+3. Optionally rerun delayed Yandex Reporting API stats visibility check for `click_to_call` after processing delay.
+4. Review R2A implementation/conformity reports:
+   `docs/reports/2026-05-19/R2A_METRICA_IMPORT_FOUNDATION_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R2A_METRICA_IMPORT_FOUNDATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+5. Review R3A implementation/conformity reports:
+   `docs/reports/2026-05-19/R3A_WEBMASTER_IMPORT_FOUNDATION_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R3A_WEBMASTER_IMPORT_FOUNDATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+6. Review R4-lite implementation/conformity reports:
+   `docs/reports/2026-05-19/R4_LITE_EXTERNAL_SOURCE_READINESS_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R4_LITE_EXTERNAL_SOURCE_READINESS_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+7. Review R4 readiness/design docs:
+   `docs/reports/2026-05-19/R4_READINESS_AUDIT_Экостройконтинент_v0.1.report.md`,
+   `docs/product-ux/PRD_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`,
+   and `docs/blueprints/BLUEPRINT_R4_Lite_External_Source_State_Readiness_Integration_Экостройконтинент_v0.1.md`.
+8. Review R3B implementation/conformity reports:
+   `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-19/R3B_WEBMASTER_QUERY_PAGE_VISIBILITY_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+9. Review R2B implementation/conformity reports:
+   `docs/reports/2026-05-20/R2B_METRICA_TRAFFIC_SOURCE_DEVICE_REGION_LANDING_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-20/R2B_METRICA_TRAFFIC_SOURCE_DEVICE_REGION_LANDING_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+10. R2B source docs remain authoritative for scope:
+   `docs/product-ux/PRD_R2B_Metrica_Traffic_Source_Device_Region_Landing_Import_Экостройконтинент_v0.1.md`
+   and `docs/blueprints/BLUEPRINT_R2B_Metrica_Traffic_Source_Device_Region_Landing_Import_Экостройконтинент_v0.1.md`.
+11. Review R4 implementation/conformity reports:
+   `docs/reports/2026-05-20/R4_EXTERNAL_EVIDENCE_READ_MODEL_INTEGRATION_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-20/R4_EXTERNAL_EVIDENCE_READ_MODEL_INTEGRATION_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+12. R4 source addendum:
+   `docs/blueprints/ADDENDUM_R4_External_Evidence_Read_Model_Integration_Экостройконтинент_v0.1.md`.
+13. Review backend/data-foundation closure, Minimal SEO Admin Panel design and implementation closure:
+   `docs/reports/2026-05-20/SEO_DASHBOARD_BACKEND_DATA_FOUNDATION_EPIC_CLOSURE_Экостройконтинент_v0.1.report.md`
+   `docs/reports/2026-05-20/MINIMAL_SEO_ADMIN_PANEL_PRD_BLUEPRINT_DESIGN_Экостройконтинент_v0.1.report.md`
+   `docs/reports/2026-05-20/MINIMAL_SEO_ADMIN_PANEL_IMPLEMENTATION_Экостройконтинент_v0.1.report.md`
+   and `docs/reports/2026-05-20/MINIMAL_SEO_ADMIN_PANEL_CONFORMITY_AUDIT_Экостройконтинент_v0.1.report.md`.
+14. Next choice should be explicit: UX refinement of the minimal panel, R2C/R3C scheduling/cadence, or R5 only after enough evidence/sample-size guards.
+15. R5 remains deferred. Do not start recommendation rules from R3B zero-row data or low-volume Metrica evidence.
+16. No direct UI -> Yandex API and no read model request-path external API calls.
+17. Later LLM Copilot Safety Gate and UI.
+
 
 ## 11. Do-not-do list
 
@@ -145,6 +211,16 @@ Primary product docs:
 - `docs/product-ux/SEO_Dashboard_Data_and_Event_Taxonomy_Экостройконтинент_v0.1.md`
 - `docs/product-ux/SEO_Dashboard_Analytics_Read_Model_Contract_Экостройконтинент_v0.1.md`
 - `docs/product-ux/SEO_Dashboard_LLM_Context_Contract_Экостройконтинент_v0.1.md`
+- `docs/roadmaps/SEO_DASHBOARD_VISIBILITY_ANALYTICS_ROADMAP_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R1_Public_Metrica_Counter_Telemetry_ReachGoal_Bridge_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R2_Metrica_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R3_Webmaster_Import_Foundation_Экостройконтинент_v0.1.md`
+- `docs/product-ux/PRD_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`
+- `docs/blueprints/BLUEPRINT_R3B_Webmaster_Query_Page_Visibility_Import_Экостройконтинент_v0.1.md`
+- `docs/blueprints/ADDENDUM_R2_R3_External_Imports_Storage_Direction_Экостройконтинент_v0.1.md`
 - `docs/mockups/fixtures/seo-dashboard-analytics-contract.sample.json`
 
 Fresh reports:

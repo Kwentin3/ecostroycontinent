@@ -53,6 +53,31 @@ jobs:
 
           printf 'APP_IMAGE=%s\n' "$image_ref" > /opt/ecostroycontinent/runtime/app-image.env
 
+      - name: Ensure SQL is up before pre-migration backup
+        run: |
+          docker compose \
+            --env-file /opt/ecostroycontinent/runtime/.env \
+            --env-file /opt/ecostroycontinent/runtime/app-image.env \
+            --project-name repo \
+            -f compose.yaml \
+            up -d sql
+
+      - name: Create and verify pre-migration database backup
+        run: |
+          # Backup credentials stay in the host ops env; the app container never
+          # receives them. The dump is role-agnostic so restore drills can use a
+          # clean PostgreSQL target.
+          backup_dir="${RUNNER_TEMP:-/tmp}/ecostroycontinent-predeploy-backups"
+          mkdir -p "$backup_dir"
+
+          BACKUP_LOCAL_DIR="$backup_dir" \
+            BACKUP_LOG_FILE="$backup_dir/backup.log" \
+            BACKUP_REQUIRE_S3=true \
+            bash scripts/ops/backup-db-local.sh
+
+          BACKUP_LOCAL_DIR="$backup_dir" \
+            bash scripts/ops/verify-latest-backup.sh --max-age-hours 1 --require-remote
+
       - name: Pull and refresh app runtime
         run: |
           image_ref='${{ inputs.image_ref }}'

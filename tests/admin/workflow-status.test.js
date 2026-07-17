@@ -23,6 +23,7 @@ test("approved review with a live version becomes ready to publish while staying
   const liveStatus = getLivePublicationStatusModel({ currentRevision, activePublishedRevision });
 
   assert.equal(workingStatus.key, "ready_to_publish");
+  assert.equal(workingStatus.label, "К публикации");
   assert.equal(liveStatus.key, "published_with_pending_changes");
 });
 
@@ -36,6 +37,7 @@ test("rejected draft becomes changes requested", () => {
   });
 
   assert.equal(workingStatus.key, "changes_requested");
+  assert.equal(workingStatus.label, "Доработки SEO");
 });
 
 test("publish action switches copy when live version already exists", () => {

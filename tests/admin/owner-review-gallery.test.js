@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../lib/content-core/content-types.js";
 import {
@@ -17,7 +18,8 @@ function buildQueueItem({
   ownerReviewRequired = true,
   ownerApprovalStatus = "pending",
   submittedAt = "2026-04-15T09:00:00.000Z",
-  previewStatus = PREVIEW_STATUS.RENDERABLE
+  previewStatus = PREVIEW_STATUS.RENDERABLE,
+  reviewComment = ""
 }) {
   return {
     entityId,
@@ -31,6 +33,7 @@ function buildQueueItem({
       ownerReviewRequired,
       ownerApprovalStatus,
       previewStatus,
+      reviewComment,
       submittedAt,
       updatedAt: submittedAt
     }
@@ -45,7 +48,7 @@ test("owner review status model prioritizes materials that still need owner deci
   assert.equal(approvedStatus.key, "approved");
   assert.match(approvedStatus.label, /Согласовано/);
   assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "approved" }).key, "approved");
-  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "needs_owner");
+  assert.equal(getOwnerReviewStatusModel({ ownerReviewRequired: false, ownerApprovalStatus: "not_required" }).key, "in_review");
 });
 
 test("owner review gallery cards sort attention-first and keep page-specific preview fields", () => {
@@ -124,7 +127,7 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
 
   assert.equal(cards[0].status.key, "needs_owner");
   assert.equal(cards[1].status.key, "needs_owner");
-  assert.equal(cards.filter((card) => card.status.key === "needs_owner").length, 3);
+  assert.equal(cards.filter((card) => card.status.key === "needs_owner").length, 2);
   const returnedCard = cards.find((card) => card.status.key === "returned");
   assert.ok(returnedCard);
   assert.equal(returnedCard.mediaUrl, "/api/admin/media/media_1/preview");
@@ -136,7 +139,7 @@ test("owner review gallery cards sort attention-first and keep page-specific pre
   assert.equal(caseCard.status.key, "approved");
   assert.match(caseCard.status.label, /Согласовано/);
   assert.match(caseCard.summary, /Объект сдан в срок/);
-  assert.equal(pageCard.status.key, "needs_owner");
+  assert.equal(pageCard.status.key, "in_review");
   assert.match(pageCard.summary, /Свяжитесь с нами/);
   assert.equal(pageCard.previewTitle, "Контакты");
   assert.equal(pageCard.previewThemeKey, "forest_contrast");
@@ -175,15 +178,134 @@ test("owner review gallery filters by status, type, and compact text content", (
         title: "Кейс по складу",
         result: "Складской фундамент под ключ."
       }
+    }),
+    buildQueueItem({
+      entityId: "media_returned",
+      entityType: ENTITY_TYPES.MEDIA_ASSET,
+      ownerApprovalStatus: "rejected",
+      reviewComment: "Уточнить подпись и alt.",
+      payload: {
+        title: "Фото бетонных работ",
+        caption: "Нужно доработать подпись по фото."
+      }
     })
   ]);
 
   assert.equal(filterOwnerReviewGalleryCards(cards, { status: "needs_owner" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { status: "approved" }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { status: "returned" }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { status: "returned", type: ENTITY_TYPES.MEDIA_ASSET }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { status: "returned", type: ENTITY_TYPES.SERVICE }).length, 0);
   assert.equal(filterOwnerReviewGalleryCards(cards, { type: ENTITY_TYPES.CASE }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "монолитные" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "склад" }).length, 1);
   assert.equal(filterOwnerReviewGalleryCards(cards, { query: "не существует" }).length, 0);
+});
+
+test("owner review gallery supports global settings and collection review items", () => {
+  const settingsItem = buildQueueItem({
+    entityId: "settings_1",
+    entityType: ENTITY_TYPES.GLOBAL_SETTINGS,
+    payload: {
+      publicBrandName: "Eco Repair",
+      legalName: "Eco Repair LLC",
+      primaryPhone: "+7 999 111 22 33",
+      publicEmail: "info@example.test",
+      serviceArea: "Moscow",
+      activeMessengers: ["telegram"],
+      defaultCtaLabel: "Call us",
+      contactTruthConfirmed: true
+    }
+  });
+  const galleryItem = buildQueueItem({
+    entityId: "gallery_1",
+    entityType: ENTITY_TYPES.GALLERY,
+    payload: {
+      title: "Before and after",
+      caption: "Facade repair photos",
+      primaryAssetId: "media_1",
+      assetIds: ["media_1", "media_2"],
+      relatedEntityIds: ["service_1"]
+    }
+  });
+  const cards = buildOwnerReviewGalleryCards([settingsItem, galleryItem]);
+  const settingsCard = cards.find((card) => card.entityType === ENTITY_TYPES.GLOBAL_SETTINGS);
+  const galleryCard = cards.find((card) => card.entityType === ENTITY_TYPES.GALLERY);
+  const settingsModal = buildOwnerReviewModalModel(settingsItem);
+  const galleryModal = buildOwnerReviewModalModel(galleryItem);
+
+  assert.equal(filterOwnerReviewGalleryCards(cards, { type: ENTITY_TYPES.GLOBAL_SETTINGS }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(cards, { type: ENTITY_TYPES.GALLERY }).length, 1);
+  assert.equal(settingsCard.title, "Eco Repair");
+  assert.match(settingsCard.summary, /\+7 999 111 22 33/);
+  assert.equal(settingsModal.sections.some((section) => section.value === "+7 999 111 22 33"), true);
+  assert.equal(galleryCard.title, "Before and after");
+  assert.equal(galleryCard.mediaUrl, "/api/admin/media/media_1/preview");
+  assert.equal(galleryModal.sections.some((section) => /2/.test(section.value)), true);
+});
+
+test("review page exposes settings and collections as explicit type filters", () => {
+  const source = readFileSync(new URL("../../app/admin/(console)/review/page.js", import.meta.url), "utf8");
+
+  assert.match(source, /ENTITY_TYPES\.GLOBAL_SETTINGS/);
+  assert.match(source, /ENTITY_TYPES\.GALLERY/);
+});
+
+test("owner review gallery sends corrected returned drafts back into owner decision filter", () => {
+  const returnedDraft = buildOwnerReviewGalleryCards([
+    buildQueueItem({
+      entityId: "service_returned",
+      entityType: ENTITY_TYPES.SERVICE,
+      ownerApprovalStatus: "rejected",
+      reviewComment: "Уточнить состав работ.",
+      payload: {
+        title: "Дренаж участка",
+        summary: "Первичная версия."
+      }
+    })
+  ]);
+  const resubmittedForOwner = buildOwnerReviewGalleryCards([
+    buildQueueItem({
+      entityId: "service_returned",
+      entityType: ENTITY_TYPES.SERVICE,
+      ownerApprovalStatus: "pending",
+      reviewComment: "",
+      payload: {
+        title: "Дренаж участка",
+        summary: "Уточненный состав работ."
+      }
+    })
+  ]);
+
+  assert.equal(filterOwnerReviewGalleryCards(returnedDraft, { status: "returned" }).length, 1);
+  assert.equal(filterOwnerReviewGalleryCards(returnedDraft, { status: "needs_owner" }).length, 0);
+  assert.equal(filterOwnerReviewGalleryCards(resubmittedForOwner, { status: "needs_owner" }).length, 1);
+  assert.equal(resubmittedForOwner[0].revision.reviewComment, "");
+});
+
+test("owner review gallery stays compact while modal model keeps full owner-facing text", () => {
+  const longSummary = Array.from({ length: 18 }, (_, index) => `Summary sentence ${index + 1} keeps business context readable.`).join(" ");
+  const longScope = Array.from({ length: 16 }, (_, index) => `Scope item ${index + 1} describes the real work without truncation.`).join(" ");
+  const item = buildQueueItem({
+    entityId: "service_long_content",
+    entityType: ENTITY_TYPES.SERVICE,
+    payload: {
+      title: "Long service",
+      summary: longSummary,
+      serviceScope: longScope,
+      problemsSolved: "Owner can read the complete problem statement.",
+      methods: "Owner can read the complete execution method.",
+      primaryMediaAssetId: "media_service"
+    }
+  });
+  const [card] = buildOwnerReviewGalleryCards([item]);
+  const modalModel = buildOwnerReviewModalModel(item);
+
+  assert.ok(card.summary.length < longSummary.length);
+  assert.equal(modalModel.summary, longSummary);
+  assert.equal(modalModel.sections[0].value, longScope);
+  assert.equal(modalModel.sections[1].value, "Owner can read the complete problem statement.");
+  assert.equal(modalModel.sections[2].value, "Owner can read the complete execution method.");
 });
 
 test("owner review gallery summary exposes compact counts for filters", () => {

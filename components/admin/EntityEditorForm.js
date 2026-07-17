@@ -11,6 +11,7 @@ import { TimelineList } from "./TimelineList";
 import { ENTITY_TYPES, SERVICE_SCOPE_DISPLAY_MODES } from "../../lib/content-core/content-types.js";
 import { getEditorFallbackAnchor } from "../../lib/admin/editor-anchors.js";
 import { ADMIN_COPY, FIELD_LABELS, normalizeLegacyCopy } from "../../lib/ui-copy.js";
+import { getVisibleReviewComment } from "../../lib/admin/review-comments.js";
 import { CHANGE_INTENT_LABEL, FIELD_HINTS } from "../../lib/admin/screen-copy.js";
 import { getPayloadLabel } from "../../lib/admin/entity-ui.js";
 import { getEntityDeletePreviewHref, isDeleteToolEntityTypeSupported } from "../../lib/admin/entity-delete.js";
@@ -26,13 +27,13 @@ import {
   isRemovalQuarantineEntityTypeSupported
 } from "../../lib/admin/removal-quarantine.js";
 import { getTestGraphTeardownHref, isTestGraphTeardownEntityTypeSupported } from "../../lib/admin/test-graph-teardown.js";
-import { getLiveDeactivationHref, isLiveDeactivationEntityTypeSupported } from "../../lib/admin/live-deactivation.js";
+import { getUnpublishHref, isUnpublishEntityTypeSupported } from "../../lib/admin/unpublish-workflow.js";
 import {
   getLivePublicationStatusModel,
   getPublishActionCopy,
   getWorkingRevisionStatusModel
 } from "../../lib/admin/workflow-status.js";
-import { userCanPublishRevision } from "../../lib/auth/session.js";
+import { userCanEditContent, userCanPublish, userCanPublishRevision, userCanUnpublish } from "../../lib/auth/session.js";
 import styles from "./admin-ui.module.css";
 
 const OBLIGATION_LABELS = {
@@ -167,14 +168,14 @@ export function EntityEditorForm({
   const canUseRemovalQuarantine = Boolean(entityId && isRemovalQuarantineEntityTypeSupported(entityType));
   const canDeletePreview = Boolean(entityId && isDeleteToolEntityTypeSupported(entityType));
   const canDeleteEntity = false; // Entity delete now always goes through the explicit preview screen.
-  const canPublish = user.role === "superadmin";
+  const canPublish = userCanPublish(user);
+  const canUnpublish = userCanUnpublish(user, entityType);
   const isMarkedForRemoval = Boolean(markedForRemovalAt);
-  const canLiveDeactivate = Boolean(
+  const canUnpublishEntity = Boolean(
     entityId
-    && canPublish
+    && canUnpublish
     && activePublishedRevision
-    && !isAgentTestCreationOrigin(entityCreationOrigin)
-    && isLiveDeactivationEntityTypeSupported(entityType)
+    && isUnpublishEntityTypeSupported(entityType)
   );
   const canTeardownTestGraph = Boolean(
     entityId
@@ -189,7 +190,12 @@ export function EntityEditorForm({
   );
   const reviewHref = currentRevision ? `/admin/review/${currentRevision.id}` : "";
   const publishHref = currentRevision ? `/admin/revisions/${currentRevision.id}/publish` : "";
-  const canOpenReview = Boolean(currentRevision && currentRevision.state === "review" && reviewHref);
+  const canOpenReview = Boolean(
+    currentRevision
+    && currentRevision.state === "review"
+    && currentRevision.ownerApprovalStatus !== "approved"
+    && reviewHref
+  );
   // Publish stays on the entity surface on purpose. Review grants approval for
   // the candidate revision, but the live pointer changes only through the
   // explicit publish action opened from this screen.
@@ -199,7 +205,7 @@ export function EntityEditorForm({
     && userCanPublishRevision(user, entityType, currentRevision)
     && currentRevision.ownerApprovalStatus === "approved"
   );
-  const canSubmit = user.role === "superadmin" || user.role === "seo_manager";
+  const canSubmit = userCanEditContent(user);
   const surfaceTitle = entityType === "global_settings" ? "Глобальные настройки" : getPayloadLabel(value);
   const readinessBlocking = readiness ? readiness.results.filter((result) => result.severity === "blocking").length : 0;
   const readinessWarnings = readiness ? readiness.results.filter((result) => result.severity === "warning").length : 0;
@@ -207,13 +213,14 @@ export function EntityEditorForm({
   const workflowStatus = getWorkingRevisionStatusModel({ currentRevision, activePublishedRevision });
   const liveStatus = getLivePublicationStatusModel({ currentRevision, activePublishedRevision });
   const publishAction = getPublishActionCopy({ activePublishedRevision });
+  const visibleReviewComment = normalizeLegacyCopy(getVisibleReviewComment(currentRevision));
   const mediaPreviewSrc = entityType === "media_asset" && entityId ? `/api/admin/media/${entityId}/preview` : null;
   const editorFormId = entityId ? `entity-editor-${entityType}-${entityId}` : `entity-editor-${entityType}-new`;
   const showMaintenanceTools = Boolean(
     canUseRemovalQuarantine
     || canTeardownTestGraph
     || canNormalizeLegacyTestFixture
-    || canLiveDeactivate
+    || canUnpublishEntity
     || canDeletePreview
     || canDeleteEntity
   );
@@ -222,6 +229,12 @@ export function EntityEditorForm({
       <div className={styles.stack}>
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
+        {visibleReviewComment ? (
+          <section className={styles.statusPanelWarning} aria-label="Замечание от проверки">
+            <strong>Замечание от проверки</strong>
+            <p className={styles.helpText}>{visibleReviewComment}</p>
+          </section>
+        ) : null}
         {isMarkedForRemoval ? (
           <section className={styles.statusPanelInfo}>
             Объект помечен на удаление. Новые ссылки на него блокируются, а финальная очистка запускается из центра очистки.
@@ -564,7 +577,7 @@ export function EntityEditorForm({
                 <div key={obligation.id} className={styles.timelineItem}>
                   <strong>{OBLIGATION_LABELS[obligation.obligationType] || obligation.obligationType}</strong>
                   <p className={styles.mutedText}>{OBLIGATION_STATUS_LABELS[obligation.status] || obligation.status}</p>
-                  {user.role === "superadmin" && obligation.status === "open" ? (
+                  {canPublish && obligation.status === "open" ? (
                     <form action={`/api/admin/obligations/${obligation.id}/complete`} method="post">
                       <input type="hidden" name="redirectTo" value={redirectTo} />
                       <button type="submit" className={styles.secondaryButton}>Отметить выполненным</button>
@@ -625,6 +638,8 @@ export function EntityEditorForm({
                 type="submit"
                 formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
                 formMethod="post"
+                name="intent"
+                value="save_and_submit"
                 className={styles.editorRailIconAction}
                 aria-label={ADMIN_COPY.sendForReview}
                 title={ADMIN_COPY.sendForReview}
@@ -654,12 +669,19 @@ export function EntityEditorForm({
             ) : null}
           </div>
           {canSubmit && currentRevision?.state === "draft" ? (
-            <form action={`/api/admin/revisions/${currentRevision.id}/submit`} method="post" className={styles.editorRailPrimaryFlow}>
-              <input type="hidden" name="returnTo" value={redirectTo} />
-              <button type="submit" className={`${styles.primaryButton} ${styles.stretchButton}`}>
+            <div className={styles.editorRailPrimaryFlow}>
+              <button
+                form={editorFormId}
+                type="submit"
+                formAction={`/api/admin/revisions/${currentRevision.id}/submit`}
+                formMethod="post"
+                name="intent"
+                value="save_and_submit"
+                className={`${styles.primaryButton} ${styles.stretchButton}`}
+              >
                 {ADMIN_COPY.sendForReview}
               </button>
-            </form>
+            </div>
           ) : null}
         </section>
         <ReadinessPanel
@@ -751,8 +773,8 @@ export function EntityEditorForm({
                     Пометить как тестовые
                   </Link>
                 ) : null}
-                {canLiveDeactivate ? (
-                  <Link href={getLiveDeactivationHref(entityType, entityId)} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
+                {canUnpublishEntity ? (
+                  <Link href={getUnpublishHref(entityType, entityId)} className={`${styles.secondaryButton} ${styles.stretchButton}`}>
                     Снять с публикации
                   </Link>
                 ) : null}

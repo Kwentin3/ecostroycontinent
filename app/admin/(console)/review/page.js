@@ -5,17 +5,21 @@ import { OwnerReviewDialog } from "../../../../components/admin/OwnerReviewDialo
 import { PagePreview } from "../../../../components/admin/PagePreview";
 import { PagePreviewThumbnail } from "../../../../components/admin/PagePreviewThumbnail";
 import { PreviewViewport } from "../../../../components/admin/PreviewViewport";
+import { ReviewContentDiffSummary } from "../../../../components/admin/ReviewContentDiffSummary";
+import { ReviewJournal } from "../../../../components/admin/ReviewJournal";
 import styles from "../../../../components/admin/admin-ui.module.css";
 import { getEntityAdminHref } from "../../../../lib/admin/entity-links.js";
+import { buildReviewJournalViewModel } from "../../../../lib/admin/review-journal.js";
 import { requireReviewUser } from "../../../../lib/admin/page-helpers";
 import { loadAdminPagePreviewPayload } from "../../../../lib/admin/page-preview-loader.js";
 import { appendAdminReturnTo } from "../../../../lib/admin/relation-navigation.js";
+import { userCanEditContent, userCanOwnerApprove } from "../../../../lib/auth/roles.js";
 import {
   buildOwnerReviewGalleryCards,
   buildOwnerReviewModalModel,
-  filterOwnerReviewGalleryCards,
-  summarizeOwnerReviewGallery
+  filterOwnerReviewGalleryCards
 } from "../../../../lib/admin/owner-review.js";
+import { getReviewJournalEvents } from "../../../../lib/content-ops/audit.js";
 import { getReviewQueue } from "../../../../lib/content-ops/workflow";
 import { ENTITY_TYPES, PREVIEW_STATUS } from "../../../../lib/content-core/content-types.js";
 import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
@@ -23,20 +27,26 @@ import { PAGE_TYPE_LABELS } from "../../../../lib/admin/page-workspace.js";
 // The review screen is intentionally limited to unresolved review-lane work.
 // Once a revision is agreed or no owner decision is required, publishing moves
 // to the source entity screen and the card should leave this queue.
+// The journal is a separate read-only memory over audit_events, not a queue source.
 const STATUS_OPTIONS = [
   { value: "all", label: "Все" },
-  { value: "needs_owner", label: "Требуют решения" },
-  { value: "returned", label: "Возвращены" },
-  { value: "in_review", label: "На проверке" }
+  { value: "needs_owner", label: "Ждут решения собственника" },
+  { value: "returned", label: "Доработки SEO" },
+  { value: "in_review", label: "Внутренняя проверка" }
 ];
+
+const DEFAULT_REVIEW_STATUS = "needs_owner";
+const STATUS_OPTION_VALUES = new Set(STATUS_OPTIONS.map((option) => option.value));
 
 const TYPE_OPTIONS = [
   { value: "all", label: "Все материалы" },
+  { value: ENTITY_TYPES.GLOBAL_SETTINGS, label: "Настройки" },
   { value: ENTITY_TYPES.SERVICE, label: "Услуги" },
   { value: ENTITY_TYPES.CASE, label: "Кейсы" },
   { value: ENTITY_TYPES.EQUIPMENT, label: "Техника" },
   { value: ENTITY_TYPES.PAGE, label: "Страницы" },
-  { value: ENTITY_TYPES.MEDIA_ASSET, label: "Медиа" }
+  { value: ENTITY_TYPES.MEDIA_ASSET, label: "Медиа" },
+  { value: ENTITY_TYPES.GALLERY, label: "Коллекции" }
 ];
 
 const MODAL_PAGE_PREVIEW_ZOOM = Object.freeze({
@@ -50,12 +60,12 @@ function normalizeStatusFilter(value) {
     return "all";
   }
 
-  return value;
+  return STATUS_OPTION_VALUES.has(value) ? value : DEFAULT_REVIEW_STATUS;
 }
 
 function buildReviewUrl({
   query = "",
-  status = "all",
+  status = DEFAULT_REVIEW_STATUS,
   type = "all",
   selected = "",
   preview = "",
@@ -68,7 +78,7 @@ function buildReviewUrl({
     params.set("q", query);
   }
 
-  if (status && status !== "all") {
+  if (status && status !== DEFAULT_REVIEW_STATUS) {
     params.set("status", status);
   }
 
@@ -105,6 +115,34 @@ function cardStatusClassName(card) {
   }
 
   return "";
+}
+
+function getReviewEmptyStateCopy(status) {
+  if (status === "needs_owner") {
+    return {
+      title: "Материалов, ожидающих решения собственника, нет.",
+      description: "Согласованные версии больше не считаются задачей собственника: их нужно публиковать из карточки материала."
+    };
+  }
+
+  if (status === "returned") {
+    return {
+      title: "Материалов, возвращённых SEO на доработку, нет.",
+      description: "Этот фильтр показывает только карточки с замечаниями, которые ещё не отправлены повторно."
+    };
+  }
+
+  if (status === "in_review") {
+    return {
+      title: "Материалов во внутренней проверке нет.",
+      description: "Это техническая проверка без отдельного решения собственника."
+    };
+  }
+
+  return {
+    title: "По текущему фильтру материалов нет.",
+    description: "Измените поиск, тип или статус, чтобы расширить выдачу."
+  };
 }
 
 function renderCompactSections(sections = []) {
@@ -256,25 +294,56 @@ function renderPagePreview(card, modalModel, previewMode, search, status, type, 
 
 export default async function ReviewQueuePage({ searchParams }) {
   const user = await requireReviewUser();
-  const queue = await getReviewQueue();
+  const [queue, reviewJournalEvents] = await Promise.all([
+    getReviewQueue(),
+    getReviewJournalEvents()
+  ]);
   const query = await searchParams;
   const search = typeof query?.q === "string" ? query.q : "";
-  const status = normalizeStatusFilter(typeof query?.status === "string" ? query.status : "all");
+  // Sticky canon: the owner screen opens on actionable owner decisions.
+  // "All materials" stays available as an explicit filter, not the default.
+  const status = normalizeStatusFilter(typeof query?.status === "string" ? query.status : DEFAULT_REVIEW_STATUS);
   const type = typeof query?.type === "string" ? query.type : "all";
   const selectedRevisionId = typeof query?.selected === "string" ? query.selected : "";
   const previewMode = typeof query?.preview === "string" ? query.preview : "desktop";
   const message = typeof query?.message === "string" ? query.message : "";
   const error = typeof query?.error === "string" ? query.error : "";
   const cards = buildOwnerReviewGalleryCards(queue);
+  // Quick filters are aliases over the existing read model, not a second queue.
+  const needsOwnerFilterActive = status === "needs_owner";
+  const needsOwnerFilterCount = filterOwnerReviewGalleryCards(cards, {
+    query: search,
+    status: "needs_owner",
+    type
+  }).length;
+  const returnedFilterActive = status === "returned";
+  const returnedFilterCount = filterOwnerReviewGalleryCards(cards, {
+    query: search,
+    status: "returned",
+    type
+  }).length;
   const filteredCards = filterOwnerReviewGalleryCards(cards, {
     query: search,
     status,
     type
   });
-  const summary = summarizeOwnerReviewGallery(cards);
+  const emptyStateCopy = getReviewEmptyStateCopy(status);
+  const reviewJournalItems = buildReviewJournalViewModel(reviewJournalEvents);
+  const hasActiveFilters = Boolean(search || status !== DEFAULT_REVIEW_STATUS || type !== "all");
+  const showAllMaterialsHref = buildReviewUrl({ query: search, status: "all", type });
   const selectedCard = selectedRevisionId ? cards.find((card) => card.id === selectedRevisionId) ?? null : null;
   const selectedQueueItem = selectedRevisionId ? queue.find((item) => item.revision.id === selectedRevisionId) ?? null : null;
   const selectedModal = selectedQueueItem ? buildOwnerReviewModalModel(selectedQueueItem) : null;
+  const selectedReviewContext = selectedQueueItem?.reviewContext ?? null;
+  const selectedDiffRows = selectedReviewContext?.previousReviewDiffRows?.length
+    ? selectedReviewContext.previousReviewDiffRows
+    : selectedReviewContext?.publishedDiffRows || [];
+  const selectedDiffTitle = selectedReviewContext?.previousReviewDiffRows?.length
+    ? "Что изменилось после предыдущей отправки"
+    : "Что отличается от опубликованной версии";
+  const selectedDiffBasisLabel = selectedReviewContext?.previousReviewDiffRows?.length
+    ? "Показаны только изменения в содержимом карточки относительно предыдущей заявки на проверку."
+    : "Показаны только изменения в содержимом карточки относительно опубликованной версии.";
   const closeHref = buildReviewUrl({ query: search, status, type });
   const errorReturnTo = selectedCard
     ? buildReviewUrl({
@@ -286,6 +355,7 @@ export default async function ReviewQueuePage({ searchParams }) {
     })
     : closeHref;
   const entityHref = selectedCard
+    && userCanEditContent(user)
     ? appendAdminReturnTo(getEntityAdminHref(selectedCard.entityType, selectedCard.entityId), errorReturnTo)
     : "";
   const pageModalModels = new Map(
@@ -296,7 +366,7 @@ export default async function ReviewQueuePage({ searchParams }) {
   let pagePreviewPayload = null;
   const canResolveOwnerReview = Boolean(
     selectedCard
-    && (user.role === "business_owner" || user.role === "superadmin")
+    && userCanOwnerApprove(user)
     && selectedCard.status.key === "needs_owner"
   );
 
@@ -317,58 +387,29 @@ export default async function ReviewQueuePage({ searchParams }) {
       <div className={styles.stack}>
         {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
         {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
-        <div className={styles.statusPanelInfo}>
-          В очереди остаются только материалы, по которым еще нужно решение или возврат.
-        </div>
-        <details className={styles.compactDisclosure}>
-          <summary className={styles.compactDisclosureSummary}>
-            <span className={styles.compactDisclosureMarker} aria-hidden="true" />
-            <span className={styles.compactDisclosureSummaryMain}>
-              <strong>Как устроена очередь</strong>
-              <span className={styles.compactDisclosureSummaryMeta}>
-                После согласования карточка уходит из review-очереди, а публикация выполняется уже в карточке сущности.
-              </span>
-            </span>
-          </summary>
-          <div className={styles.compactDisclosureBody}>
-            <p className={styles.mutedText}>
-              Здесь остаются только незавершенные решения. Как только материал согласован или возвращен с замечанием, дальнейшая ежедневная работа снова идет из карточки сущности.
-            </p>
-          </div>
-        </details>
-
         <section className={styles.reviewGalleryControls}>
-          <div className={styles.reviewScreenBar}>
-            <div className={styles.reviewScreenStats} aria-label="Сводка по материалам">
-              <span className={styles.reviewGalleryCounter}>Всего: {summary.total}</span>
-              <span className={styles.reviewGalleryCounter}>Требуют решения: {summary.byStatus.needs_owner || 0}</span>
-              <span className={styles.reviewGalleryCounter}>Возвращены: {summary.byStatus.returned || 0}</span>
-              <span className={styles.reviewGalleryCounter}>На проверке: {summary.byStatus.in_review || 0}</span>
-            </div>
-          </div>
-
-          <form className={styles.reviewGalleryToolbar} action="/admin/review" method="get">
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Поиск</span>
+          <form className={styles.reviewGalleryToolbar} action="/admin/review" method="get" aria-label="Фильтры проверки">
+            <label className={`${styles.reviewFilterField} ${styles.reviewFilterSearch}`}>
+              <span className={styles.reviewFilterLabel}>Поиск</span>
               <input
                 type="search"
                 name="q"
                 defaultValue={search}
-                className={styles.input}
+                className={styles.reviewFilterInput}
                 placeholder="Название, описание, содержание"
               />
             </label>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Статус</span>
-              <select name="status" defaultValue={status} className={styles.select}>
+            <label className={styles.reviewFilterField}>
+              <span className={styles.reviewFilterLabel}>Статус</span>
+              <select name="status" defaultValue={status} className={styles.reviewFilterSelect}>
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
             </label>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Тип</span>
-              <select name="type" defaultValue={type} className={styles.select}>
+            <label className={styles.reviewFilterField}>
+              <span className={styles.reviewFilterLabel}>Тип</span>
+              <select name="type" defaultValue={type} className={styles.reviewFilterSelect}>
                 {TYPE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
@@ -376,39 +417,45 @@ export default async function ReviewQueuePage({ searchParams }) {
             </label>
             <div className={styles.reviewGalleryToolbarActions}>
               <button type="submit" className={styles.primaryButton}>Применить</button>
-              <Link href="/admin/review" className={styles.secondaryButton}>Сбросить</Link>
+              {hasActiveFilters ? <Link href="/admin/review" className={styles.secondaryButton}>Сбросить</Link> : null}
             </div>
+            <p className={styles.reviewGalleryResultCount} aria-live="polite">Найдено: {filteredCards.length}</p>
           </form>
-
-          <div className={styles.reviewGalleryStatusFilters} role="list" aria-label="Быстрые фильтры по статусу">
-            {STATUS_OPTIONS.map((option) => {
-              const count = option.value === "all" ? summary.total : summary.byStatus[option.value] || 0;
-              const href = buildReviewUrl({
-                query: search,
-                type,
-                status: option.value
-              });
-              const active = option.value === status;
-
-              return (
-                <Link
-                  key={option.value}
-                  href={href}
-                  scroll={false}
-                  className={active ? `${styles.reviewGalleryStatusFilter} ${styles.reviewGalleryStatusFilterActive}` : styles.reviewGalleryStatusFilter}
-                >
-                  <span>{option.label}</span>
-                  <strong>{count}</strong>
-                </Link>
-              );
-            })}
-          </div>
+          <form className={styles.reviewQuickFilters} action="/admin/review" method="get" aria-label="Быстрые фильтры проверки">
+            {search ? <input type="hidden" name="q" value={search} /> : null}
+            {type !== "all" ? <input type="hidden" name="type" value={type} /> : null}
+            <button
+              type="submit"
+              name="status"
+              value={needsOwnerFilterActive ? "all" : "needs_owner"}
+              className={needsOwnerFilterActive ? `${styles.reviewQuickFilterButton} ${styles.reviewQuickFilterButtonActive}` : styles.reviewQuickFilterButton}
+              aria-pressed={needsOwnerFilterActive}
+            >
+              <span>Ждут решения</span>
+              <span className={styles.reviewQuickFilterCount}>{needsOwnerFilterCount}</span>
+            </button>
+            <button
+              type="submit"
+              name="status"
+              value={returnedFilterActive ? "all" : "returned"}
+              className={returnedFilterActive ? `${styles.reviewQuickFilterButton} ${styles.reviewQuickFilterButtonActive}` : styles.reviewQuickFilterButton}
+              aria-pressed={returnedFilterActive}
+            >
+              <span>Доработки SEO</span>
+              <span className={styles.reviewQuickFilterCount}>{returnedFilterCount}</span>
+            </button>
+          </form>
         </section>
+
+        <ReviewJournal items={reviewJournalItems} />
 
         {filteredCards.length === 0 ? (
           <div className={styles.emptyState}>
-            <p className={styles.mutedText}>По текущему фильтру материалов нет.</p>
-            <Link href="/admin/review" className={styles.secondaryButton}>Показать все материалы</Link>
+            <p className={styles.mutedText}>{emptyStateCopy.title}</p>
+            <p className={styles.helpText}>{emptyStateCopy.description}</p>
+            {status !== "all" ? (
+              <Link href={showAllMaterialsHref} className={styles.secondaryButton}>Показать все материалы</Link>
+            ) : null}
           </div>
         ) : (
           <section className={styles.reviewGalleryGrid} aria-label="Материалы на проверку">
@@ -427,10 +474,11 @@ export default async function ReviewQueuePage({ searchParams }) {
                 <div className={styles.reviewGalleryCardTop}>
                   <div className={styles.reviewGalleryCardMeta}>
                     <span className={styles.reviewGalleryType}>{card.entityTypeLabel}</span>
-                    <span className={styles.reviewGallerySubmitted}>{card.submittedAtLabel || "На проверке"}</span>
+                    <span className={styles.reviewGallerySubmitted}>{card.submittedAtLabel || "Отправлено"}</span>
                   </div>
                   <div className={styles.reviewGallerySignals}>
-                    {card.needsAttention ? <span className={styles.reviewGalleryAttentionMark} aria-label="Требует решения">!</span> : null}
+                    {card.reviewContext?.supersedesRevisionId ? <span className={styles.reviewGalleryUpdateMark}>Обновлено</span> : null}
+                    {card.needsAttention ? <span className={styles.reviewGalleryAttentionMark} aria-label="Ждёт решения собственника">!</span> : null}
                     <span className={styles.reviewGalleryStatus}>{card.status.label}</span>
                   </div>
                 </div>
@@ -476,7 +524,7 @@ export default async function ReviewQueuePage({ searchParams }) {
             summary={selectedModal.summary}
             meta={[
               selectedCard.status.label,
-              selectedCard.submittedAtLabel || "На проверке"
+              selectedCard.submittedAtLabel || "Отправлено"
             ]}
           >
             <div className={styles.reviewModalLayout}>
@@ -484,6 +532,14 @@ export default async function ReviewQueuePage({ searchParams }) {
                 {selectedCard.entityType === ENTITY_TYPES.PAGE && pagePreviewPayload?.globalSettings
                   ? renderPagePreview(selectedCard, selectedModal, previewMode, search, status, type, message, error, pagePreviewPayload)
                   : renderCompactEntityCard(selectedCard, selectedModal)}
+                {selectedReviewContext?.supersedesRevisionId || selectedReviewContext?.publishedRevisionId ? (
+                  <ReviewContentDiffSummary
+                    title={selectedDiffTitle}
+                    basisLabel={selectedDiffBasisLabel}
+                    rows={selectedDiffRows}
+                    emptyLabel="Контентных изменений не найдено."
+                  />
+                ) : null}
               </div>
 
               <section className={styles.reviewModalActionCard}>
@@ -518,7 +574,7 @@ export default async function ReviewQueuePage({ searchParams }) {
                       Если нужно доработать материал, просто опишите, что исправить. После возврата он снова появится в галерее, когда SEO пришлет обновленную версию.
                     </p>
                   </form>
-                ) : (user.role === "business_owner" || user.role === "superadmin") ? (
+                ) : userCanOwnerApprove(user) ? (
                   <p className={styles.reviewModalActionNote}>
                     {selectedCard.status.key === "approved"
                       ? "Согласование уже получено. Публикация и снятие с публикации выполняются в карточке сущности."

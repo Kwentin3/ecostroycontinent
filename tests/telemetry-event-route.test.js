@@ -180,6 +180,68 @@ test("internal and test markers are added by domain layer", async () => {
   assert.equal(capturedEvents[1].is_test, true);
 });
 
+test("telemetry endpoint stores events independently from public Metrica env", async () => {
+  const previousEnabled = process.env.NEXT_PUBLIC_YANDEX_METRICA_ENABLED;
+  const previousCounterId = process.env.NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID;
+  const storedEvents = [];
+
+  try {
+    process.env.NEXT_PUBLIC_YANDEX_METRICA_ENABLED = "false";
+    process.env.NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID = "";
+
+    const disabledResponse = await POST(request(validPayload({
+      event_name: "phone_clicked",
+      contact_channel: "phone",
+      metadata: {
+        analytics_id: "contact_phone",
+        section_id: "hero",
+        cta_kind: "contact",
+        destination_kind: "phone"
+      }
+    })), {}, deps({
+      recordTelemetryEvent: async (event) => {
+        storedEvents.push(event);
+        return { id: `event_${storedEvents.length}`, ...event };
+      }
+    }));
+
+    process.env.NEXT_PUBLIC_YANDEX_METRICA_ENABLED = "true";
+    process.env.NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID = "109037342";
+
+    const enabledResponse = await POST(request(validPayload({
+      event_name: "messenger_clicked",
+      contact_channel: "telegram",
+      metadata: {
+        analytics_id: "contact_telegram",
+        section_id: "hero",
+        cta_kind: "contact",
+        destination_kind: "messenger"
+      }
+    })), {}, deps({
+      recordTelemetryEvent: async (event) => {
+        storedEvents.push(event);
+        return { id: `event_${storedEvents.length}`, ...event };
+      }
+    }));
+
+    assert.equal(disabledResponse.status, 202);
+    assert.equal(enabledResponse.status, 202);
+    assert.deepEqual(storedEvents.map((event) => event.event_name), ["phone_clicked", "messenger_clicked"]);
+  } finally {
+    if (previousEnabled === undefined) {
+      delete process.env.NEXT_PUBLIC_YANDEX_METRICA_ENABLED;
+    } else {
+      process.env.NEXT_PUBLIC_YANDEX_METRICA_ENABLED = previousEnabled;
+    }
+
+    if (previousCounterId === undefined) {
+      delete process.env.NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID;
+    } else {
+      process.env.NEXT_PUBLIC_YANDEX_METRICA_COUNTER_ID = previousCounterId;
+    }
+  }
+});
+
 test("write failure returns generic safe error", async () => {
   const response = await POST(request(validPayload()), {}, deps({
     recordTelemetryEvent: async () => {

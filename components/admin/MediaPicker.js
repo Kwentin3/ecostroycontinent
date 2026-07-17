@@ -147,7 +147,12 @@ export function MediaPicker({
               <span className={styles.mediaThumb}>
                 {asset.previewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={asset.previewUrl} alt={asset.alt || asset.label || asset.originalFilename || ADMIN_COPY.noPreview} />
+                  <img
+                    src={asset.thumbnailUrl || asset.previewUrl}
+                    alt={asset.alt || asset.label || asset.originalFilename || ADMIN_COPY.noPreview}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <span className={styles.mediaPlaceholder}>{ADMIN_COPY.noPreview}</span>
                 )}

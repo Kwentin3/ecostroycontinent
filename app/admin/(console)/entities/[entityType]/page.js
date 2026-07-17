@@ -26,7 +26,7 @@ import { findEntityByTypeSingleton, findRevisionById, getEntityAggregate, listPu
 import { assertEntityType, listEntityCards } from "../../../../../lib/content-core/service.js";
 import { evaluateReadiness } from "../../../../../lib/content-ops/readiness.js";
 import { ADMIN_COPY, normalizeLegacyCopy } from "../../../../../lib/ui-copy.js";
-import { userCanEditContent, userCanPublish } from "../../../../../lib/auth/session.js";
+import { userCanEditContent, userCanUnpublish } from "../../../../../lib/auth/session.js";
 
 function supportsDeleteTool(entityType) {
   return entityType === ENTITY_TYPES.MEDIA_ASSET
@@ -66,7 +66,7 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
     const pageValue = buildPageWorkspaceBaseValue(card?.latestRevision ?? null);
     const metadata = buildPageWorkspaceMetadataState(pageValue);
     const lifecycle = lifecycleById.get(row.entityId) || {
-      canArchive: false,
+      canUnpublish: false,
       canDelete: false,
       hasLivePublishedRevision: false
     };
@@ -94,7 +94,7 @@ function buildPageRegistryRecords(cards, rows, lifecycleById = new Map()) {
       updatedAtLabel: formatUpdatedAtLabel(row.updatedAtTs),
       lifecycle: {
         ...lifecycle,
-        archiveUrl: `/api/admin/entities/page/${row.entityId}/live-deactivation`,
+        unpublishUrl: `/api/admin/entities/page/${row.entityId}/unpublish`,
         deleteUrl: "/api/admin/entities/page/delete"
       }
     };
@@ -150,7 +150,7 @@ export default async function EntityListPage({ params, searchParams }) {
 
   if (normalizedType === ENTITY_TYPES.MEDIA_ASSET) {
     const [mediaItems, collectionItems] = await Promise.all([
-      listMediaLibraryCards(),
+      listMediaLibraryCards({ includeBinaryProbe: false }),
       listCollectionLibraryCards()
     ]);
     const selectedAssetId = query?.asset || query?.entityId || mediaItems[0]?.id || "";
@@ -179,10 +179,6 @@ export default async function EntityListPage({ params, searchParams }) {
       workspaceQuery.set("error", query.error);
     }
 
-    if (testOnly) {
-      workspaceQuery.set("testOnly", "1");
-    }
-
     if (workspaceReturnTo) {
       workspaceQuery.set("returnTo", workspaceReturnTo);
     }
@@ -207,8 +203,7 @@ export default async function EntityListPage({ params, searchParams }) {
             initialSelectedId={selectedAssetId}
             initialCollectionId={initialCollectionId}
             initialCompose={initialCompose}
-            initialFilterKey={testOnly ? "test-only" : "all"}
-            currentUsername={user.username}
+            initialFilterKey="all"
             currentUserRole={user.role}
             initialMessage={query?.message ? normalizeLegacyCopy(query.message) : ""}
             initialError={query?.error ? normalizeLegacyCopy(query.error) : ""}
@@ -299,7 +294,7 @@ export default async function EntityListPage({ params, searchParams }) {
         buildPageWorkspaceLifecycleState({
           aggregate,
           permissions: {
-            canArchive: userCanPublish(user),
+            canUnpublish: userCanUnpublish(user, ENTITY_TYPES.PAGE),
             canDelete: userCanEditContent(user)
           }
         })

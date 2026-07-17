@@ -3,14 +3,14 @@
 ## Executive Framing
 This pass turns the current SEO UI/runtime surface into a deterministic, role-safe test contour for agent-driven verification.
 
-We are not building a broad QA platform. We are not widening SEO permissions. We are not introducing a hidden admin backdoor. We are formalizing the smallest possible support layer so an agent can later test the real SEO role with less chaos and fewer brittle assumptions.
+We are not building a broad QA platform. We are not widening SEO permissions beyond approved-review publish. We are not introducing a hidden admin backdoor. We are formalizing the smallest possible support layer so an agent can later test the real SEO role with less chaos and fewer brittle assumptions.
 
 Success state for this pass:
 - the current SEO surface is clearly inventoried from code and runtime reality;
 - the test matrix covers positive, negative, boundary, and validation cases;
 - the minimal support interface is defined as a narrow probe contour;
 - a minimal implementation exists if and only if it stays bounded;
-- no canon drift or role widening is introduced.
+- no canon drift or hidden role widening is introduced.
 
 ## Scope Of Execution
 In scope:
@@ -26,7 +26,7 @@ Out of scope:
 - auth/IAM redesign;
 - raw DB or storage shell access;
 - publish bypass;
-- role widening;
+- role widening beyond approved-review publish;
 - production user activation policy;
 - SEO dashboard product features.
 
@@ -37,7 +37,7 @@ Intentionally blocked:
 - any helper that would become a general admin operator.
 
 ## Canon Constraints That Must Not Be Reopened
-- `SEO Manager` is not a publisher.
+- `SEO Manager` may publish only approved review revisions.
 - `Approval != Publish`.
 - `Business Owner` remains review-first.
 - `Admin Console` remains write-side only.

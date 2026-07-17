@@ -1,4 +1,4 @@
-# ADMIN_CONTENT_LANDSCAPE_ZERO_CONTEXT_MAP_v1
+﻿# ADMIN_CONTENT_LANDSCAPE_ZERO_CONTEXT_MAP_v1
 
 ## Status
 
@@ -157,8 +157,8 @@ If you start from the terminal, these symbols recover the right landscape quickl
 
 Relevant infra anchors:
 
-- `docs/selectel/INFRA.AUDIT.ANAMNESIS_Экостройконтинент_v0.1.md`
-- `docs/selectel/RUNTIME_DEPLOY_ARTIFACTS.IMPLEMENTATION_REPORT_Экостройконтинент_v0.1.md`
+- `docs/selectel/README.md`
+- `docs/selectel/RUNBOOK.Infrastructure_Operations_Baseline_Экостройконтинент_v0.2.md`
 
 Do not invent a second "local-only" workflow truth to compensate for missing runtime context.
 
