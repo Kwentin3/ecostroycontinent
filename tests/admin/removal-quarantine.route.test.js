@@ -20,9 +20,8 @@ function buildRequest(url, fields = {}) {
   });
 }
 
-test("mark removal route marks supported entity and records audit evidence", async () => {
-  let capturedMark = null;
-  let capturedAudit = null;
+test("mark removal route delegates to the canonical audited command", async () => {
+  let capturedInput = null;
 
   const response = await markRemovalPost(
     buildRequest("http://localhost/api/admin/entities/service/entity_1/mark-removal", {
@@ -32,17 +31,9 @@ test("mark removal route marks supported entity and records audit evidence", asy
     {
       requireRouteUser: async () => ({ user: { id: "user_editor", role: "seo_manager" }, response: null }),
       userCanEditContent: () => true,
-      findEntityById: async () => ({
-        id: "entity_1",
-        entityType: "service",
-        markedForRemovalAt: null
-      }),
-      markEntityForRemoval: async (entityId, actorUserId, note) => {
-        capturedMark = { entityId, actorUserId, note };
-        return { id: entityId, entityType: "service" };
-      },
-      recordAuditEvent: async (input) => {
-        capturedAudit = input;
+      markEntityForRemovalWithAudit: async (input) => {
+        capturedInput = input;
+        return { status: "marked", entity: { id: input.entityId, entityType: input.entityType } };
       }
     }
   );
@@ -52,13 +43,12 @@ test("mark removal route marks supported entity and records audit evidence", asy
     response.headers.get("location"),
     "http://localhost:3000/admin/entities/service/entity_1?message=%D0%9E%D0%B1%D1%8A%D0%B5%D0%BA%D1%82+%D0%BF%D0%BE%D0%BC%D0%B5%D1%87%D0%B5%D0%BD+%D0%BD%D0%B0+%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5."
   );
-  assert.deepEqual(capturedMark, {
+  assert.deepEqual(capturedInput, {
+    entityType: "service",
     entityId: "entity_1",
     actorUserId: "user_editor",
-    note: null
+    removalNote: null
   });
-  assert.equal(capturedAudit.eventKey, "removal_marked");
-  assert.equal(capturedAudit.entityId, "entity_1");
 });
 
 test("mark removal route rejects unsupported entity types with readable error", async () => {
@@ -70,15 +60,9 @@ test("mark removal route rejects unsupported entity types with readable error", 
     {
       requireRouteUser: async () => ({ user: { id: "user_editor", role: "seo_manager" }, response: null }),
       userCanEditContent: () => true,
-      findEntityById: async () => ({
-        id: "entity_1",
-        entityType: "global_settings",
-        markedForRemovalAt: null
-      }),
-      markEntityForRemoval: async () => {
-        throw new Error("should not execute");
-      },
-      recordAuditEvent: async () => {}
+      markEntityForRemovalWithAudit: async () => {
+        throw new Error("Этот тип сущности пока не поддерживает пометку удаления.");
+      }
     }
   );
 

@@ -169,6 +169,20 @@ Marking an object does not change the canonical meaning of:
 
 Removal quarantine is an additional lifecycle axis, not a replacement for revision semantics.
 
+### 8.4 Canonical single and bulk mark command
+
+Одиночная и групповая постановка removal mark используют один application command со следующей границей:
+
+- actor identity приходит только из authenticated session;
+- command проверяет поддерживаемый entity type и фактический тип найденной сущности;
+- `marked_for_removal_at` и audit event записываются внутри одной DB transaction;
+- повторная пометка возвращает terminal outcome `already_marked` без повторной мутации и audit-дубликата;
+- bulk media route нормализует и дедуплицирует выбранные `media_asset` IDs, затем вызывает тот же command для каждой карточки;
+- частичный bulk outcome допустим, потому что mark обратим и не является hard delete, но response обязан отдельно вернуть `marked`, `already_marked` и `failed` IDs;
+- ни одиночный, ни bulk route не имеют права выполнять analyze, sweep, unpublish или storage deletion.
+
+UI владеет только selection, confirmation, busy/disabled state и terminal feedback. Removal policy, persistence и audit остаются за command/repository boundary.
+
 ## 9. Graph rules
 
 ### 9.1 Main blocker rule

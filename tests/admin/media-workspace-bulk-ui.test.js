@@ -23,14 +23,22 @@ test("media workspace exposes operator filters without test-only or mine shortcu
   assert.doesNotMatch(filtersSource, /key: "broken"/);
 });
 
-test("media workspace uses a separate selection control and bulk review action", () => {
+test("media workspace uses one explicit selection control for review and quarantine actions", () => {
   const source = readUtf8(new URL("../../components/admin/MediaGalleryWorkspace.js", import.meta.url));
+  const dialogSource = readUtf8(new URL("../../components/admin/MediaBulkRemovalDialog.js", import.meta.url));
   const css = readUtf8(new URL("../../components/admin/admin-ui.module.css", import.meta.url));
   const pageSource = readUtf8(new URL("../../app/admin/(console)/entities/[entityType]/page.js", import.meta.url));
 
   assert.match(source, /selectedAssetIds/);
   assert.match(source, /mediaBulkActionBar/);
   assert.match(source, /\/api\/admin\/media\/library\/bulk-submit/);
+  assert.match(source, /\/api\/admin\/media\/library\/bulk-removal/);
+  assert.match(source, /selectedHiddenCount/);
+  assert.match(source, /mediaBulkIconButton/);
+  assert.match(source, /selectedAssetCount > 1/);
+  assert.match(source, /Пометить выбранные медиа на удаление/);
+  assert.match(dialogSource, /aria-modal="true"/);
+  assert.match(dialogSource, /Окончательное удаление сейчас не выполняется/);
   assert.match(source, /item\.thumbnailUrl \|\| item\.previewUrl/);
   assert.match(source, /loading="lazy"/);
   assert.match(source, /decoding="async"/);
@@ -40,6 +48,7 @@ test("media workspace uses a separate selection control and bulk review action",
   assert.match(source, /className=\{styles\.mediaLibraryCardOpen\}/);
   assert.doesNotMatch(source, /selectedDeleteIds|mediaDeleteMarker|handleBulkDeleteTestData/);
   assert.match(css, /\.mediaBulkActionBar\s*\{/);
+  assert.match(css, /\.mediaBulkIconButton:focus-visible\s*\{/);
   assert.match(css, /\.mediaLibraryCardOpen:focus-visible\s*\{/);
   assert.match(css, /\.mediaInspectorDisclosure,\s*\.mediaInspectorNestedDisclosure\s*\{/);
 });

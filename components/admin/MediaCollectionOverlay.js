@@ -23,7 +23,7 @@ function getCompactCandidateFilterLabel(filterKey) {
     case "ready-to-publish":
       return "К публ.";
     case "published":
-      return "Live";
+      return "Опубликованным";
     default:
       return "Все";
   }

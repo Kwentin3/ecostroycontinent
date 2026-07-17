@@ -25,6 +25,8 @@ test("collection overlay exposes draft save and explicit direct publish workflow
   assert.match(overlaySource, /Галочка означает членство в коллекции/);
   assert.match(overlaySource, /В составе есть неопубликованные медиафайлы/);
   assert.match(overlaySource, /Сбросить фильтр кандидатов/);
+  assert.match(overlaySource, /Опубликованным/);
+  assert.doesNotMatch(overlaySource, /return "Live"/);
   assert.match(overlaySource, /Описание и SEO/);
   assert.doesNotMatch(overlaySource, /RelationChipRow/);
   assert.doesNotMatch(overlaySource, /title="Выбранные файлы"/);

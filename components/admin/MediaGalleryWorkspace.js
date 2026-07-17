@@ -32,6 +32,7 @@ import {
 import { getVisibleReviewComment } from "../../lib/admin/review-comments.js";
 import { getPublishActionCopy, getWorkingRevisionStatusModel } from "../../lib/admin/workflow-status.js";
 import { userCanPublishRevision, userCanUnpublish } from "../../lib/auth/roles.js";
+import { MediaBulkRemovalDialog } from "./MediaBulkRemovalDialog";
 import { MediaCollectionOverlay } from "./MediaCollectionOverlay";
 import { MediaImageEditorPanel } from "./MediaImageEditorPanel";
 import styles from "./admin-ui.module.css";
@@ -961,6 +962,9 @@ export function MediaGalleryWorkspace({
   const [overlayError, setOverlayError] = useState("");
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const [bulkSubmitBusy, setBulkSubmitBusy] = useState(false);
+  const [bulkRemovalBusy, setBulkRemovalBusy] = useState(false);
+  const [bulkRemovalDialogOpen, setBulkRemovalDialogOpen] = useState(false);
+  const [showRemovalSweepLink, setShowRemovalSweepLink] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [draftFile, setDraftFile] = useState(null);
   const [editedBinaryFile, setEditedBinaryFile] = useState(null);
@@ -1039,6 +1043,11 @@ export function MediaGalleryWorkspace({
   const selectedAssetCount = reviewSelection.selectedCount;
   const selectedSubmittableCount = reviewSelection.submittableCount;
   const selectedBlockedCount = reviewSelection.blockedCount;
+  const filteredIdSet = new Set(filtered.map((item) => item.id));
+  const selectedHiddenCount = reviewSelection.selectedItems.filter((item) => !filteredIdSet.has(item.id)).length;
+  const selectedAlreadyMarkedCount = reviewSelection.selectedItems.filter((item) => item.markedForRemovalAt).length;
+  const selectedMarkableCount = selectedAssetCount - selectedAlreadyMarkedCount;
+  const bulkActionBusy = bulkSubmitBusy || bulkRemovalBusy;
   const currentWorkspaceHref = typeof window === "undefined"
     ? workspaceContextHref
     : `${window.location.pathname}${window.location.search}`;
@@ -1143,6 +1152,7 @@ export function MediaGalleryWorkspace({
     setSelectedId(itemId);
     setMessage("");
     setError("");
+    setShowRemovalSweepLink(false);
     updateWorkspaceUrl({
       assetId: itemId,
       compose: overlayMode === "asset-create"
@@ -1177,6 +1187,7 @@ export function MediaGalleryWorkspace({
     setBulkSubmitBusy(true);
     setMessage("");
     setError("");
+    setShowRemovalSweepLink(false);
 
     try {
       const formData = new FormData();
@@ -1207,6 +1218,77 @@ export function MediaGalleryWorkspace({
       setError(submitError.message || "Не удалось отправить выбранные медиа на проверку.");
     } finally {
       setBulkSubmitBusy(false);
+    }
+  }
+
+  function openBulkRemovalDialog() {
+    if (selectedMarkableCount === 0) {
+      setError("Все выбранные медиафайлы уже помечены на удаление.");
+      return;
+    }
+
+    setMessage("");
+    setError("");
+    setShowRemovalSweepLink(false);
+    setBulkRemovalDialogOpen(true);
+  }
+
+  function closeBulkRemovalDialog() {
+    if (!bulkRemovalBusy) {
+      setBulkRemovalDialogOpen(false);
+    }
+  }
+
+  async function handleBulkMarkForRemoval() {
+    const selectedItems = reviewSelection.selectedItems;
+
+    if (selectedItems.length === 0) {
+      setBulkRemovalDialogOpen(false);
+      setError("Сначала выберите медиафайлы.");
+      return;
+    }
+
+    setBulkRemovalBusy(true);
+    setMessage("");
+    setError("");
+    setShowRemovalSweepLink(false);
+
+    try {
+      const formData = new FormData();
+
+      for (const item of selectedItems) {
+        formData.append("entityId", item.id);
+      }
+
+      const response = await fetch("/api/admin/media/library/bulk-removal", {
+        method: "POST",
+        body: formData
+      });
+      const payload = await response.json();
+      const processedIds = [...(payload.markedIds ?? []), ...(payload.alreadyMarkedIds ?? [])];
+      const markById = new Map((payload.marks ?? []).map((mark) => [mark.id, mark.markedForRemovalAt]));
+
+      if (markById.size > 0) {
+        setItems((current) => current.map((item) => (
+          markById.has(item.id)
+            ? { ...item, markedForRemovalAt: markById.get(item.id) || item.markedForRemovalAt || new Date().toISOString() }
+            : item
+        )));
+      }
+
+      setSelectedAssetIds((current) => current.filter((entityId) => !processedIds.includes(entityId)));
+      setMessage(processedIds.length > 0 ? (payload.message || "Выбранные медиа помечены на удаление.") : "");
+      setError(payload.failed?.length > 0 || !response.ok ? (payload.error || "Не все выбранные медиа удалось пометить на удаление.") : "");
+      setShowRemovalSweepLink(processedIds.length > 0);
+
+      if (!response.ok && processedIds.length === 0) {
+        throw new Error(payload.error || "Не удалось пометить выбранные медиа на удаление.");
+      }
+    } catch (removalError) {
+      setError(removalError.message || "Не удалось пометить выбранные медиа на удаление.");
+    } finally {
+      setBulkRemovalBusy(false);
+      setBulkRemovalDialogOpen(false);
     }
   }
 
@@ -1540,7 +1622,16 @@ export function MediaGalleryWorkspace({
 
   return (
     <div className={styles.stack}>
-      {message ? <div className={styles.statusPanelInfo}>{message}</div> : null}
+      {message ? (
+        <div className={styles.statusPanelInfo}>
+          <span>{message}</span>
+          {showRemovalSweepLink ? (
+            <div className={styles.inlineActions}>
+              <Link href={getRemovalSweepHref()} className={styles.secondaryButton}>Открыть Центр очистки</Link>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {error ? <div className={styles.statusPanelBlocking}>{error}</div> : null}
 
       <section className={styles.panel}>
@@ -1624,19 +1715,36 @@ export function MediaGalleryWorkspace({
               <strong>Выбрано: {selectedAssetCount}</strong>
               <span>Можно отправить: {selectedSubmittableCount}</span>
               {selectedBlockedCount > 0 ? <span>Не подходят: {selectedBlockedCount}</span> : null}
+              {selectedHiddenCount > 0 ? <span>Скрыто фильтром: {selectedHiddenCount}</span> : null}
             </div>
             <div className={styles.inlineActions}>
               <button
                 type="button"
                 className={styles.primaryButton}
                 onClick={handleBulkSubmitForReview}
-                disabled={bulkSubmitBusy || selectedSubmittableCount === 0}
+                disabled={bulkActionBusy || selectedSubmittableCount === 0}
               >
                 {bulkSubmitBusy ? "Отправляем..." : "Отправить на проверку"}
               </button>
-              <button type="button" className={styles.secondaryButton} onClick={clearAssetSelection} disabled={bulkSubmitBusy}>
+              <button type="button" className={styles.secondaryButton} onClick={clearAssetSelection} disabled={bulkActionBusy}>
                 Снять выбор
               </button>
+              {selectedAssetCount > 1 ? (
+                <div className={styles.mediaBulkDestructiveActions}>
+                  <button
+                    type="button"
+                    className={styles.mediaBulkIconButton}
+                    onClick={openBulkRemovalDialog}
+                    disabled={bulkActionBusy || selectedMarkableCount === 0}
+                    aria-label={`Пометить выбранные медиа на удаление: ${selectedMarkableCount}`}
+                    title={selectedMarkableCount > 0 ? "Пометить выбранные на удаление" : "Все выбранные уже помечены на удаление"}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z" />
+                    </svg>
+                  </button>
+                </div>
+              ) : null}
             </div>
           </section>
         ) : null}
@@ -1802,6 +1910,17 @@ export function MediaGalleryWorkspace({
           setDragActive(false);
           handleFileSelect(event.dataTransfer.files?.[0] ?? null);
         }}
+      />
+
+      <MediaBulkRemovalDialog
+        open={bulkRemovalDialogOpen}
+        busy={bulkRemovalBusy}
+        selectedCount={selectedAssetCount}
+        markableCount={selectedMarkableCount}
+        alreadyMarkedCount={selectedAlreadyMarkedCount}
+        hiddenCount={selectedHiddenCount}
+        onClose={closeBulkRemovalDialog}
+        onConfirm={handleBulkMarkForRemoval}
       />
 
       <MediaCollectionOverlay
