@@ -112,7 +112,8 @@ test("removal sweep analysis blocks component when unmarked published page still
   assert.equal(evaluation.exists, true);
   assert.equal(evaluation.verdict, "blocked");
   assert.equal(evaluation.publishedIncomingRefs.length, 1);
-  assert.match(evaluation.summary, /живой непомеченный контур/i);
+  assert.match(evaluation.summary, /используются в опубликованных материалах/i);
+  assert.equal(evaluation.publishedIncomingRefs[0].reason, "Используется в опубликованном объекте «Live Page».");
 });
 
 test("removal sweep passes full component ids into safe-delete execution for cyclic teardown", async () => {

@@ -316,6 +316,23 @@ Purge execution must write audit evidence that the component was:
 - evaluated as safe;
 - executed in bounded destructive flow.
 
+### 14.5 Bounded batch purge
+
+The cleanup center may let a superadmin explicitly select several currently ready component cards and confirm them in one bounded batch interaction.
+
+This extension does not change the purge unit:
+
+- the purge unit remains one removal component;
+- selected roots must be normalized and components must be deduplicated before confirmation;
+- server preview must re-run the canonical analyzer and return exact `ready` and `blocked` component sets;
+- confirmation must show the number of ready components and the total number of marked objects covered by them;
+- execution must route every ready component through the canonical `executeRemovalSweep` service;
+- each component keeps its own transaction boundary and dependency-aware purge order;
+- a component that becomes blocked between preview and execution must be skipped, not forced;
+- batch execution may return a partial outcome, but it must separately report `deletedComponents` and `failedComponents` with readable reasons;
+- a late failure must never relabel an already committed component deletion as rolled back;
+- batch purge remains superadmin-only and never deletes an unmarked object.
+
 ## 15. Coexistence with current delete tools
 
 ### 15.1 Legacy manual safe delete
@@ -349,6 +366,15 @@ The new operator surfaces must always answer three questions clearly:
 3. `Что именно блокирует остальное?`
 
 The operator must not be forced to infer blockers from hidden graph state.
+
+The default cleanup view must therefore use progressive disclosure:
+
+- ready and blocked queues are visually separated;
+- cards are collapsed by default;
+- a blocked card shows one primary human-readable reason before expansion;
+- exact members, all blockers and links remain available inside the selected card;
+- destructive bulk controls operate only on visible ready cards;
+- the destructive ledger is secondary to the active decision queue.
 
 ## 17. Minimal audit contract
 

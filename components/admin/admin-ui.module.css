@@ -1816,6 +1816,13 @@
   cursor: default;
 }
 
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.dangerButton:focus-visible {
+  outline: 3px solid rgba(38, 76, 59, 0.22);
+  outline-offset: 2px;
+}
+
 .stretchButton {
   width: 100%;
   grid-column: 1 / -1;
@@ -3842,6 +3849,504 @@
   width: 390px;
 }
 
+.removalSweepWorkspace {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.removalSweepOverview {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #fff 0%, var(--panel-muted) 100%);
+  box-shadow: var(--shadow);
+}
+
+.removalSweepOverview h2,
+.removalSweepOverview p,
+.removalSweepCardHeading h3,
+.removalSweepDetailSection h4,
+.removalSweepDialogSection h3,
+.removalSweepDialogWarning h3,
+.removalSweepEmptyState h3,
+.removalSweepFatalError h2,
+.removalSweepFatalError p {
+  margin: 0;
+}
+
+.removalSweepOverview > div:first-child {
+  display: grid;
+  gap: 6px;
+  max-width: 720px;
+}
+
+.removalSweepOverview p,
+.removalSweepEmptyState p,
+.removalSweepFatalError p {
+  color: var(--subtle);
+  line-height: 1.5;
+}
+
+.removalSweepOverviewCounts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.removalSweepOverviewCounts span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--subtle);
+  white-space: nowrap;
+}
+
+.removalSweepOverviewCounts strong {
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.removalSweepTabs {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-muted);
+}
+
+.removalSweepTabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--subtle);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.removalSweepTabs button span {
+  display: inline-grid;
+  min-width: 24px;
+  min-height: 24px;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(38, 76, 59, 0.08);
+  font-size: 0.82rem;
+}
+
+.removalSweepTabs button:hover,
+.removalSweepTabs button:focus-visible,
+.removalSweepTabs .removalSweepTabActive {
+  background: #fff;
+  color: var(--text);
+}
+
+.removalSweepTabs button:focus-visible,
+.removalSweepDisclosureButton:focus-visible,
+.removalSweepSearch input:focus-visible,
+.removalSweepCardCheckbox input:focus-visible,
+.removalSweepBulkBar input:focus-visible {
+  outline: 3px solid rgba(38, 76, 59, 0.22);
+  outline-offset: 2px;
+}
+
+.removalSweepTabs button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.removalSweepSearch {
+  display: grid;
+  gap: 6px;
+  max-width: 560px;
+  font-weight: 700;
+}
+
+.removalSweepSearch input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+}
+
+.removalSweepBulkBar {
+  position: sticky;
+  top: 12px;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  justify-content: space-between;
+  padding: 11px 13px;
+  border: 1px solid rgba(139, 46, 46, 0.22);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 30px rgba(31, 42, 34, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.removalSweepBulkBar > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.removalSweepBulkBar input,
+.removalSweepCardCheckbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #264c3b;
+}
+
+.removalSweepBulkBar .dangerButton {
+  gap: 8px;
+}
+
+.removalSweepBulkBar .dangerButton svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+.removalSweepPanel,
+.removalSweepCardList {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.removalSweepCard {
+  display: grid;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.removalSweepCardReady {
+  border-left: 4px solid #397557;
+}
+
+.removalSweepCardBlocked {
+  border-left: 4px solid #b36b3d;
+}
+
+.removalSweepCardMain {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  min-width: 0;
+}
+
+.removalSweepCardCheckbox {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  cursor: pointer;
+}
+
+.removalSweepCardVisual {
+  position: relative;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel-muted);
+  color: #264c3b;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.removalSweepCardVisual img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removalSweepCardContent {
+  display: grid;
+  gap: 7px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.removalSweepCardHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.removalSweepCardHeading > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.removalSweepCardHeading h3,
+.removalSweepCardSummary,
+.removalSweepDetailList strong,
+.removalSweepDialogList strong {
+  overflow-wrap: anywhere;
+}
+
+.removalSweepCardType {
+  color: var(--subtle);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.removalSweepCardSummary {
+  margin: 0;
+  color: var(--subtle);
+  line-height: 1.45;
+}
+
+.removalSweepCardMeta {
+  display: flex;
+  gap: 7px 12px;
+  flex-wrap: wrap;
+  color: var(--subtle);
+  font-size: 0.84rem;
+}
+
+.removalSweepStatus {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.removalSweepStatusReady {
+  background: #e2f2e8;
+  color: #22593c;
+}
+
+.removalSweepStatusBlocked {
+  background: #fff0df;
+  color: #7c4626;
+}
+
+.removalSweepCardActions {
+  display: grid;
+  gap: 8px;
+  flex: 0 0 180px;
+  justify-items: stretch;
+}
+
+.removalSweepCardActions .secondaryButton {
+  width: 100%;
+}
+
+.removalSweepDisclosureButton {
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: #264c3b;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.removalSweepCardDetails {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-top: 1px solid var(--border);
+  background: var(--panel-muted);
+}
+
+.removalSweepDetailSection {
+  display: grid;
+  gap: 9px;
+}
+
+.removalSweepDetailList,
+.removalSweepDialogList,
+.removalSweepHistoryList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.removalSweepDetailList li,
+.removalSweepDialogList li,
+.removalSweepHistoryList li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.removalSweepDetailList li > div,
+.removalSweepDialogList li,
+.removalSweepHistoryList li > div {
+  min-width: 0;
+}
+
+.removalSweepDetailList li > div,
+.removalSweepHistoryList li > div {
+  display: grid;
+  gap: 3px;
+}
+
+.removalSweepDetailList span,
+.removalSweepDetailList p,
+.removalSweepDialogList span,
+.removalSweepHistoryList span {
+  color: var(--subtle);
+  font-size: 0.86rem;
+}
+
+.removalSweepDetailList p {
+  margin: 3px 0 0;
+  line-height: 1.4;
+}
+
+.removalSweepDetailList a {
+  flex: 0 0 auto;
+  color: #264c3b;
+  font-weight: 700;
+}
+
+.removalSweepEmptyState,
+.removalSweepFatalError {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  padding: var(--space-4);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-muted);
+}
+
+.removalSweepHistoryList li {
+  align-items: center;
+}
+
+.removalSweepBatchDialog {
+  width: min(680px, 100%);
+}
+
+.removalSweepDialogSection,
+.removalSweepDialogWarning {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.removalSweepDialogWarning {
+  border-color: rgba(179, 107, 61, 0.38);
+  background: #fff8ee;
+}
+
+.removalSweepDialogList li {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+}
+
+.removalSweepDialogMemberList {
+  display: grid;
+  gap: 3px;
+  margin: 4px 0 0;
+  padding: 0 0 0 18px;
+  color: var(--subtle);
+  font-size: 0.84rem;
+}
+
+.removalSweepDialogMemberList li {
+  display: list-item;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.removalSweepLoading {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.removalSweepLoadingHeader,
+.removalSweepLoadingTabs,
+.removalSweepLoadingCard {
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, #ece7dc 25%, #f7f4ed 50%, #ece7dc 75%);
+  background-size: 200% 100%;
+  animation: removalSweepLoadingPulse 1.3s ease-in-out infinite;
+}
+
+.removalSweepLoadingHeader {
+  height: 112px;
+}
+
+.removalSweepLoadingTabs {
+  width: 360px;
+  max-width: 100%;
+  height: 48px;
+}
+
+.removalSweepLoadingCard {
+  height: 132px;
+}
+
+@keyframes removalSweepLoadingPulse {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 1040px) {
   .appShell {
     grid-template-columns: 1fr;
@@ -3939,6 +4444,41 @@
   .mediaToolbarPrimaryActions {
     justify-items: stretch;
     justify-content: flex-start;
+  }
+
+  .removalSweepOverview,
+  .removalSweepBulkBar,
+  .removalSweepCardMain {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .removalSweepOverviewCounts {
+    justify-content: flex-start;
+  }
+
+  .removalSweepBulkBar {
+    position: static;
+  }
+
+  .removalSweepCardCheckbox {
+    align-self: flex-start;
+  }
+
+  .removalSweepCardVisual {
+    width: 72px;
+    height: 72px;
+    flex-basis: 72px;
+  }
+
+  .removalSweepCardActions {
+    flex-basis: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .removalSweepDetailList li,
+  .removalSweepHistoryList li {
+    flex-direction: column;
   }
 
   .mediaMetaListCompact {
