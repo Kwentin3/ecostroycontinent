@@ -5,6 +5,7 @@ import { POST as markRemovalPost } from "../../app/api/admin/entities/[entityTyp
 import { POST as unmarkRemovalPost } from "../../app/api/admin/entities/[entityType]/[entityId]/unmark-removal/route.js";
 import { POST as bulkPurgeRemovalSweepPost } from "../../app/api/admin/removal-sweep/bulk-purge/route.js";
 import { POST as purgeRemovalSweepPost } from "../../app/api/admin/removal-sweep/purge/route.js";
+import { userCanExecuteRemovalSweep } from "../../lib/auth/roles.js";
 
 function buildRequest(url, fields = {}) {
   const formData = new FormData();
@@ -187,8 +188,8 @@ test("bulk purge preview returns exact ready and blocked counts without mutation
     }),
     {},
     {
-      requireRouteUser: async () => ({ user: { id: "user_super", role: "superadmin" }, response: null }),
-      userCanRunMaintenancePurge: () => true,
+      requireRouteUser: async () => ({ user: { id: "owner_1", role: "business_owner" }, response: null }),
+      userCanExecuteRemovalSweep,
       previewRemovalSweepBatch: async (input) => {
         capturedInput = input;
         return {
@@ -222,7 +223,7 @@ test("bulk purge preview returns exact ready and blocked counts without mutation
   });
 });
 
-test("bulk purge execute returns terminal 207 with deleted and skipped groups", async () => {
+test("business owner bulk purge returns terminal 207 with deleted and skipped groups", async () => {
   const revalidated = [];
   let capturedInput = null;
 
@@ -233,8 +234,8 @@ test("bulk purge execute returns terminal 207 with deleted and skipped groups", 
     }),
     {},
     {
-      requireRouteUser: async () => ({ user: { id: "user_super", role: "superadmin" }, response: null }),
-      userCanRunMaintenancePurge: () => true,
+      requireRouteUser: async () => ({ user: { id: "owner_1", role: "business_owner" }, response: null }),
+      userCanExecuteRemovalSweep,
       previewRemovalSweepBatch: async () => {
         throw new Error("preview route helper must not replace execute");
       },
@@ -281,7 +282,7 @@ test("bulk purge execute returns terminal 207 with deleted and skipped groups", 
       { entityType: "service", entityId: "service_1" },
       { entityType: "service", entityId: "service_2" }
     ],
-    actorUserId: "user_super"
+    actorUserId: "owner_1"
   });
   assert.deepEqual(revalidated.sort(), [
     "/admin",
@@ -291,7 +292,7 @@ test("bulk purge execute returns terminal 207 with deleted and skipped groups", 
   ]);
 });
 
-test("bulk purge route rejects non-superadmin and invalid selection with JSON terminal outcomes", async () => {
+test("bulk purge route rejects users without execute permission and invalid selection", async () => {
   const forbiddenResponse = await bulkPurgeRemovalSweepPost(
     buildRequest("http://localhost/api/admin/removal-sweep/bulk-purge", {
       intent: "execute",
@@ -300,14 +301,14 @@ test("bulk purge route rejects non-superadmin and invalid selection with JSON te
     {},
     {
       requireRouteUser: async () => ({ user: { id: "user_editor", role: "seo_manager" }, response: null }),
-      userCanRunMaintenancePurge: () => false
+      userCanExecuteRemovalSweep
     }
   );
   const forbiddenPayload = await forbiddenResponse.json();
 
   assert.equal(forbiddenResponse.status, 403);
   assert.equal(forbiddenPayload.ok, false);
-  assert.match(forbiddenPayload.error, /superadmin/);
+  assert.match(forbiddenPayload.error, /нет права/i);
 
   const invalidResponse = await bulkPurgeRemovalSweepPost(
     buildRequest("http://localhost/api/admin/removal-sweep/bulk-purge", {
@@ -317,7 +318,7 @@ test("bulk purge route rejects non-superadmin and invalid selection with JSON te
     {},
     {
       requireRouteUser: async () => ({ user: { id: "user_super", role: "superadmin" }, response: null }),
-      userCanRunMaintenancePurge: () => true
+      userCanExecuteRemovalSweep
     }
   );
   const invalidPayload = await invalidResponse.json();

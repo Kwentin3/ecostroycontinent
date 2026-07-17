@@ -16,7 +16,8 @@ test("admin shell navigation follows role boundaries", () => {
   assert.deepEqual(hrefs(businessOwnerNav), [
     "/admin",
     "/admin/review",
-    "/admin/visibility"
+    "/admin/visibility",
+    "/admin/removal-sweep"
   ]);
   assert.deepEqual(hrefs(guestNav), ["/admin"]);
   assert.equal(hrefs(seoManagerNav).includes("/admin/entities/page"), true);

@@ -40,15 +40,24 @@ test("cleanup center is wired into admin navigation and purge flow", () => {
   const bulkRouteSource = readUtf8(new URL("../../app/api/admin/removal-sweep/bulk-purge/route.js", import.meta.url));
 
   assert.match(navSource, /\/admin\/removal-sweep/);
-  assert.match(navSource, /visible: userCanEditContent/);
+  assert.match(navSource, /visible: userCanViewRemovalSweep/);
   assert.match(pageSource, /listRemovalSweepComponents/);
   assert.match(pageSource, /listRecentDestructiveEvents/);
   assert.match(pageSource, /operationKind: "removal_sweep"/);
   assert.match(pageSource, /RemovalSweepWorkspace/);
+  assert.match(pageSource, /requireRemovalSweepUser/);
+  assert.match(pageSource, /canExecuteRemovalSweep=\{userCanExecuteRemovalSweep\(user\)\}/);
+  assert.match(pageSource, /canOpenEntityDetails=\{userCanEditContent\(user\)\}/);
   assert.doesNotMatch(pageSource, /\/api\/admin\/removal-sweep\/purge/);
   assert.match(workspaceSource, /Можно удалить/);
   assert.match(workspaceSource, /Пока нельзя/);
   assert.match(workspaceSource, /Удалить выбранные/);
+  assert.match(workspaceSource, /className=\{`\$\{styles\.removalSweepDeleteIconButton\}/);
+  assert.match(workspaceSource, /aria-label=\{removing \? `Проверяем/);
+  assert.match(workspaceSource, /onRemove=\{\(key\) => openBatchDialog\(\[key\]\)\}/);
+  assert.match(workspaceSource, /makeBatchFormData\("execute", batchKeys\)/);
+  assert.match(workspaceSource, /showThumbnail=\{canOpenEntityDetails\}/);
+  assert.match(workspaceSource, /canOpenEntityDetails && item\.href/);
   assert.match(workspaceSource, /aria-expanded/);
   assert.match(workspaceSource, /role="status"/);
   assert.match(workspaceSource, /role="alert"/);
@@ -60,6 +69,7 @@ test("cleanup center is wired into admin navigation and purge flow", () => {
   assert.match(errorSource, /Повторить загрузку/);
   assert.match(routeSource, /executeRemovalSweep/);
   assert.match(routeSource, /userCanRunMaintenancePurge/);
+  assert.match(bulkRouteSource, /userCanExecuteRemovalSweep/);
   assert.match(bulkRouteSource, /previewRemovalSweepBatch/);
   assert.match(bulkRouteSource, /executeRemovalSweepBatch/);
   assert.match(bulkRouteSource, /status = result\.deletedComponentCount > 0/);
